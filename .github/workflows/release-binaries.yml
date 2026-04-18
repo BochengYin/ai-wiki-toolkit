@@ -74,6 +74,8 @@ jobs:
     name: Publish GitHub Release assets
     runs-on: ubuntu-24.04
     needs: build
+    env:
+      HOMEBREW_TAP_PAT: ${{ secrets.HOMEBREW_TAP_PAT }}
 
     steps:
       - name: Check out source
@@ -118,15 +120,15 @@ jobs:
           printf 'repo=%s\n' "$repo" >> "$GITHUB_OUTPUT"
 
       - name: Check out Homebrew tap repository
-        if: ${{ secrets.HOMEBREW_TAP_PAT != '' }}
+        if: ${{ env.HOMEBREW_TAP_PAT != '' }}
         uses: actions/checkout@v4
         with:
           repository: ${{ steps.tap_repo.outputs.repo }}
-          token: ${{ secrets.HOMEBREW_TAP_PAT }}
+          token: ${{ env.HOMEBREW_TAP_PAT }}
           path: homebrew-tap
 
       - name: Sync Homebrew formula into tap
-        if: ${{ secrets.HOMEBREW_TAP_PAT != '' }}
+        if: ${{ env.HOMEBREW_TAP_PAT != '' }}
         id: sync_tap
         run: >
           python scripts/sync_homebrew_tap.py
@@ -135,7 +137,7 @@ jobs:
           --version "${{ github.ref_name }}"
 
       - name: Commit and push Homebrew tap update
-        if: ${{ secrets.HOMEBREW_TAP_PAT != '' }}
+        if: ${{ env.HOMEBREW_TAP_PAT != '' }}
         shell: bash
         run: |
           cd homebrew-tap
