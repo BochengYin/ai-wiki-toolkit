@@ -19,9 +19,6 @@ jobs:
           - runner: ubuntu-24.04
             target: linux-x64
             binary_path: dist/aiwiki-toolkit
-          - runner: windows-2025
-            target: windows-x64
-            binary_path: dist/aiwiki-toolkit.exe
           - runner: macos-15
             target: macos-arm64
             binary_path: dist/aiwiki-toolkit

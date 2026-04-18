@@ -23,9 +23,10 @@ This workflow is the base distribution layer for later package-manager integrati
 The workflow currently builds these targets:
 
 - `linux-x64`
-- `windows-x64`
 - `macos-arm64`
 - `macos-x64`
+
+Windows packaging remains implemented in the codebase, but it is currently excluded from the release matrix until the Windows test lane is stabilized.
 
 The target labels map to GitHub-hosted runners and determine the release asset names.
 
@@ -42,12 +43,10 @@ Examples:
 
 - `ai-wiki-toolkit-v0.1.0-linux-x64.tar.gz`
 - `ai-wiki-toolkit-v0.1.0-macos-arm64.tar.gz`
-- `ai-wiki-toolkit-v0.1.0-windows-x64.zip`
 
 The archive contains a single executable:
 
 - Unix-like targets: `aiwiki-toolkit`
-- Windows: `aiwiki-toolkit.exe`
 
 ## Release Steps
 
@@ -82,7 +81,7 @@ python -m PyInstaller --clean --noconfirm --onefile --name aiwiki-toolkit --path
 python scripts/build_release_archive.py --binary dist/aiwiki-toolkit --version v0.1.0 --target linux-x64 --output-dir release-assets
 ```
 
-On Windows, point `--binary` at `dist/aiwiki-toolkit.exe` and use `--target windows-x64`.
+Windows local dry runs can still be performed manually with `--binary dist/aiwiki-toolkit.exe --target windows-x64`, but that target is not part of the automated public release matrix yet.
 
 ## Next Distribution Layers
 

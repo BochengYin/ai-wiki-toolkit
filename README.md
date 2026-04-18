@@ -102,7 +102,7 @@ Even with `--purge-user-docs --yes`, the shared home wiki under `~/ai-wiki/syste
 
 The intended public distribution model is:
 
-- GitHub Releases for versioned cross-platform binaries
+- GitHub Releases for versioned release binaries, with macOS and Linux as the current public matrix
 - Homebrew tap for macOS and Linux users
 - npm wrapper for Node users who prefer `npm install -g`
 
