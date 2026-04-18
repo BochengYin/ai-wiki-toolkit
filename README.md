@@ -111,6 +111,7 @@ The goal is to make the final end-user install independent of a local Python set
 The first release skeleton is documented in [docs/releasing.md](docs/releasing.md).
 The Homebrew tap plan is documented in [docs/homebrew-tap.md](docs/homebrew-tap.md).
 The npm wrapper plan is documented in [docs/npm-wrapper.md](docs/npm-wrapper.md).
+The npm publishing plan is documented in [docs/npm-publish.md](docs/npm-publish.md).
 
 ## Path examples
 

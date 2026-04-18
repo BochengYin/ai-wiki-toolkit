@@ -1,0 +1,38 @@
+name: Publish npm Package
+
+on:
+  workflow_run:
+    workflows:
+      - Release Binaries
+    types:
+      - completed
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && vars.NPM_PUBLISH_ENABLED == 'true' }}
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Check out source at released commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Show package version
+        run: node -p "require('./package.json').version"
+
+      - name: Show package contents
+        run: npm pack --dry-run --ignore-scripts
+
+      - name: Publish to npm
+        run: npm publish --provenance --ignore-scripts

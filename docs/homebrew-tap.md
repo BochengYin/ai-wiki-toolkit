@@ -77,3 +77,38 @@ For example, if the main repository owner is `BochengYin`, the default tap repos
 - `BochengYin/homebrew-tap`
 
 If `HOMEBREW_TAP_PAT` is not configured, the workflow remains read-only and only uploads the generated formula as a release asset.
+
+### How to configure `HOMEBREW_TAP_PAT`
+
+Recommended: create a fine-grained personal access token that can access only the tap repository.
+
+For example:
+
+1. GitHub Settings -> Developer settings -> Personal access tokens -> Fine-grained tokens
+2. Create a token scoped to the tap repository
+3. Grant:
+   - `Contents: Read and write`
+   - `Metadata: Read`
+4. Save the token as a repository secret named `HOMEBREW_TAP_PAT` in the main `ai-wiki-toolkit` repository
+
+This secret is used only when the workflow needs to push an updated formula into the tap repository.
+
+### How to configure `HOMEBREW_TAP_REPOSITORY`
+
+This is an optional GitHub Actions repository variable in the main `ai-wiki-toolkit` repository.
+
+Expected format:
+
+- `owner/repo`
+
+Example:
+
+- `BochengYin/homebrew-tap`
+
+If you do not set it, the workflow defaults to:
+
+- `<main-repo-owner>/homebrew-tap`
+
+So in your current repository, the default is already:
+
+- `BochengYin/homebrew-tap`

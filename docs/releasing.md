@@ -98,3 +98,4 @@ See also:
 
 - [docs/homebrew-tap.md](homebrew-tap.md)
 - [docs/npm-wrapper.md](npm-wrapper.md)
+- [docs/npm-publish.md](npm-publish.md)

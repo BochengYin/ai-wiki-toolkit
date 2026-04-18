@@ -47,10 +47,13 @@ The intended npm flow is:
 2. publish the npm package with the same version
 3. npm `postinstall` downloads the matching release asset
 
+The publishing workflow is documented in [docs/npm-publish.md](npm-publish.md).
+
 ## Open Work
 
-This repository now contains the wrapper skeleton, but not the npm publishing workflow yet. Before publishing to npm, verify:
+The repository now contains both the wrapper skeleton and an npm publishing workflow skeleton. Before publishing to npm, verify:
 
 - the GitHub Releases are public and stable
 - the asset naming is frozen
 - the npm package version always matches the Python package version
+- npm trusted publishing is configured for the package
