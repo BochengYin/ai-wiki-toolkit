@@ -14,9 +14,10 @@ runner = CliRunner()
 @pytest.mark.parametrize(
     ("existing_files", "expected_files"),
     [
+        (["AGENTS.md"], ["AGENTS.md"]),
         (["AGENT.md"], ["AGENT.md"]),
         (["CLAUDE.md"], ["CLAUDE.md"]),
-        (["AGENT.md", "CLAUDE.md"], ["AGENT.md", "CLAUDE.md"]),
+        (["AGENTS.md", "CLAUDE.md"], ["AGENTS.md", "CLAUDE.md"]),
     ],
 )
 def test_init_updates_only_existing_prompt_files(
@@ -34,7 +35,7 @@ def test_init_updates_only_existing_prompt_files(
         assert PROMPT_BLOCK_START in text
         assert "ai-wiki/people/<handle>/drafts/" in text
 
-    for filename in {"AGENT.md", "CLAUDE.md"} - set(expected_files):
+    for filename in {"AGENTS.md", "AGENT.md", "CLAUDE.md"} - set(expected_files):
         assert not (repo / filename).exists()
 
 
@@ -97,3 +98,25 @@ def test_init_does_not_churn_prompt_block_across_different_handles(
 
     assert second.exit_code == 0
     assert agent_path.read_text(encoding="utf-8") == first_text
+
+
+def test_init_appends_managed_block_when_marker_strings_appear_inline(
+    repo_env: dict[str, Path],
+) -> None:
+    agents = repo_env["repo"] / "AGENTS.md"
+    agents.write_text(
+        "Keep edits inside the `<!-- aiwiki-toolkit:start -->` and "
+        "`<!-- aiwiki-toolkit:end -->` markers.\n",
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["init", "--handle", "alice"])
+
+    assert result.exit_code == 0
+    updated = agents.read_text(encoding="utf-8")
+    assert updated.startswith(
+        "Keep edits inside the `<!-- aiwiki-toolkit:start -->` and "
+        "`<!-- aiwiki-toolkit:end -->` markers.\n\n"
+    )
+    assert updated.count(PROMPT_BLOCK_START) == 2
+    assert updated.count(PROMPT_BLOCK_END) == 2

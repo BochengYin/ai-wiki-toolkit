@@ -12,8 +12,7 @@ from ai_wiki_toolkit.content import (
 )
 
 _MANAGED_BLOCK_RE = re.compile(
-    rf"{re.escape(PROMPT_BLOCK_START)}.*?{re.escape(PROMPT_BLOCK_END)}",
-    re.DOTALL,
+    rf"(?ms)^[ \t]*{re.escape(PROMPT_BLOCK_START)}[ \t]*\n.*?^[ \t]*{re.escape(PROMPT_BLOCK_END)}[ \t]*(?:\n|$)",
 )
 
 

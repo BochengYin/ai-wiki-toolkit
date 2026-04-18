@@ -23,7 +23,7 @@ HOST_MODEL_ENV_VARS = (
     "OPENCODE_MODEL",
     "AI_MODEL",
 )
-PROMPT_FILENAMES = ("AGENT.md", "CLAUDE.md")
+PROMPT_FILENAMES = ("AGENTS.md", "AGENT.md", "CLAUDE.md")
 _NON_ALNUM_RE = re.compile(r"[^a-z0-9]+")
 _GITHUB_NOREPLY_RE = re.compile(
     r"^(?:\d+\+)?(?P<username>[^@+]+)@users\.noreply\.github\.com$", re.IGNORECASE
