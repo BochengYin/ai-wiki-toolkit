@@ -16,6 +16,10 @@ def test_install_command_matches_init_behavior(repo_env: dict[str, Path]) -> Non
     assert result.exit_code == 0
     assert (repo_env["repo"] / "ai-wiki" / "people" / "alice" / "drafts").is_dir()
     assert (repo_env["repo"] / "AGENT.md").exists()
+    assert (
+        "Recommendation: configure git user.name and git user.email for stable handle resolution."
+        in result.output
+    )
 
 
 def test_uninstall_default_removes_managed_layer_but_preserves_user_docs(

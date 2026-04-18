@@ -23,6 +23,9 @@ def _echo_install_result(result) -> None:
     typer.echo(f"Created files: {len(result.created_files)}")
     typer.echo(f"Updated managed files: {len(result.updated_managed_files)}")
     typer.echo(f"Updated prompt files: {len(result.updated_prompt_files)}")
+    typer.echo(
+        "Recommendation: configure git user.name and git user.email for stable handle resolution."
+    )
 
 
 @app.command("install")

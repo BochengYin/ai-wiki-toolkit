@@ -22,6 +22,16 @@ The current scope is intentionally strict about compatibility:
 pip install -e .
 ```
 
+## Recommendations
+
+Recommended before running `install`:
+
+- initialize the repository with git
+- configure `git user.name` and `git user.email` so the toolkit can derive a stable handle
+- if you already ran Claude Code or Codex init and already have `AGENT.md` or `CLAUDE.md`, the toolkit will update that file in place
+
+Claude Code / Codex init is not required. If neither `AGENT.md` nor `CLAUDE.md` exists, `ai-wiki-toolkit` creates `AGENT.md` automatically.
+
 ## Usage
 
 Run inside a git repository:
@@ -44,6 +54,8 @@ If `--handle` is not passed, the tool resolves a handle from:
 1. `AIWIKI_TOOLKIT_HANDLE`
 2. local or global git config
 3. `unknown`
+
+The tool works best when `git user.name` and `git user.email` are configured first.
 
 `init` remains as a backward-compatible alias for `install`.
 
@@ -81,3 +93,17 @@ aiwiki-toolkit uninstall --purge-user-docs --yes
 ```
 
 - Future `opencode.json` integration is limited to a single top-level `aiwikiToolkit` key.
+
+## Path examples
+
+The repo-local wiki is always:
+
+- `ai-wiki/`
+
+The home-level system wiki resolves from the current user's home directory:
+
+- macOS: `/Users/<username>/ai-wiki/system`
+- Linux: `/home/<username>/ai-wiki/system`
+- Windows: `C:\Users\<username>\ai-wiki\system`
+
+In Python terms, the path comes from `Path.home() / "ai-wiki" / "system"`, so it follows the current platform automatically.
