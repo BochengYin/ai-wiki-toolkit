@@ -60,6 +60,8 @@ The workflow:
 3. runs `npm pack --dry-run --ignore-scripts`
 4. runs `npm publish --provenance --ignore-scripts`
 
+Before enabling `NPM_PUBLISH_ENABLED`, make sure the npm wrapper only advertises targets that the `Release Binaries` workflow actually publishes.
+
 The package is published from `package.json` in this repository, so its version must stay in sync with:
 
 - `package.json`

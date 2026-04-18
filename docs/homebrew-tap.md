@@ -1,6 +1,21 @@
-# Homebrew Tap Plan
+# Homebrew Tap
 
-This repository does not publish directly to Homebrew yet. Instead, it now generates a versioned formula file from the GitHub Release assets.
+`ai-wiki-toolkit` is installed through the Homebrew tap repository at `BochengYin/homebrew-tap`.
+
+The formula in that tap is generated from versioned GitHub Release assets published by the main repository.
+
+## Install
+
+```bash
+brew tap BochengYin/tap
+brew install aiwiki-toolkit
+```
+
+Or without tapping first:
+
+```bash
+brew install BochengYin/tap/aiwiki-toolkit
+```
 
 ## Intended Tap Layout
 
@@ -47,8 +62,8 @@ After a tagged release completes:
 4. Verify installation from the tap:
 
    ```bash
-   brew tap your-org/tap
-   brew install your-org/tap/aiwiki-toolkit
+   brew tap BochengYin/tap
+   brew install BochengYin/tap/aiwiki-toolkit
    aiwiki-toolkit --version
    ```
 

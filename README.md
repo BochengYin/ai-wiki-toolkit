@@ -20,6 +20,12 @@ Teams doing vibe coding usually hit the same problems:
 
 The result is that useful knowledge exists, but it does not compound.
 
+## The Flywheel
+
+The point of an AI wiki is not just to answer one more question today. It is to create a compounding loop where each completed task can leave behind better repo context for the next one.
+
+As you accumulate more constraints, workflows, decisions, review patterns, and draft notes, the agent starts each task with a better prior. Over time it becomes more familiar with your repository, your development habits, and the kinds of mistakes you want to avoid. That usually means less re-explaining, fewer repeated errors, and noticeably faster execution.
+
 ## What This Tool Does
 
 `ai-wiki-toolkit` applies a harness engineering approach to agent work: make the repo memory, prompt wiring, and reusable workflow checks explicit enough that agents can reliably follow them without rediscovering them from scratch.
@@ -40,6 +46,12 @@ It creates two isolated namespaces:
 
 It also adds a managed instruction block to your agent prompt file so the agent knows where to read from and where to write back durable notes.
 
+## Why The Files Look Like This
+
+The AI wiki structure is deliberately inspired by how `SKILL.md` files work well: keep a small stable entrypoint, then fan out into focused references.
+
+Each wiki namespace starts with an `index.md` and then links to narrower files such as `constraints.md`, `workflows.md`, `decisions.md`, `review-patterns/`, `trails/`, and personal `drafts/`. That keeps the top-level entrypoint easy for both humans and agents to scan, while still letting the repo accumulate detailed guidance without collapsing into one giant prompt blob.
+
 ## Current Scope
 
 The current scope is intentionally strict about compatibility:
@@ -52,13 +64,38 @@ The current scope is intentionally strict about compatibility:
 - update managed instruction blocks inside `AGENT.md`, `AGENTS.md`, and `CLAUDE.md`
 - avoid rewriting existing user-owned `ai-wiki/**/*.md` documents outside `_toolkit/`
 
-## Install For Local Development
+## Install
+
+For end users on macOS and Linux, the simplest install paths are Homebrew and npm.
+
+### Homebrew
+
+```bash
+brew tap BochengYin/tap
+brew install aiwiki-toolkit
+```
+
+Or in one command:
+
+```bash
+brew install BochengYin/tap/aiwiki-toolkit
+```
+
+### npm
+
+```bash
+npm install -g ai-wiki-toolkit
+```
+
+The Homebrew formula and npm wrapper both consume the same versioned GitHub Release assets.
+
+### Local development
 
 ```bash
 pip install -e .
 ```
 
-This is the current developer install path. Public binary distribution is planned separately.
+This remains the simplest contributor workflow inside the repository.
 
 ## Recommendations
 
@@ -138,15 +175,15 @@ Even with `--purge-user-docs --yes`, the shared home wiki under `~/ai-wiki/syste
 
 - Future `opencode.json` integration is limited to a single top-level `aiwikiToolkit` key.
 
-## Planned Distribution
+## Distribution
 
-The intended public distribution model is:
+The public distribution model is:
 
-- GitHub Releases for versioned release binaries, with macOS and Linux as the current public matrix
-- Homebrew tap for macOS and Linux users
-- npm wrapper for Node users who prefer `npm install -g`
+- GitHub Releases are the source of truth for versioned release binaries
+- Homebrew tap `BochengYin/tap` consumes those release assets for macOS and Linux users
+- npm package `ai-wiki-toolkit` consumes those same release assets for macOS and Linux users who prefer `npm install -g`
 
-The goal is to make the final end-user install independent of a local Python setup. Until that release pipeline exists, the repository uses the Python developer install shown above.
+The goal is to make end-user installation independent of a local Python setup, while keeping `pip install -e .` as the simplest contributor workflow inside this repository.
 
 The first release skeleton is documented in [docs/releasing.md](docs/releasing.md).
 The Homebrew tap plan is documented in [docs/homebrew-tap.md](docs/homebrew-tap.md).

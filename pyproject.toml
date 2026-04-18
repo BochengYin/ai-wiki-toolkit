@@ -7,10 +7,16 @@ name = "ai-wiki-toolkit"
 version = "0.1.2"
 description = "Minimal scaffold for repo-local and home-level AI wiki prompts."
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.11"
 dependencies = [
   "typer>=0.12,<1.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/BochengYin/ai-wiki-toolkit"
+Repository = "https://github.com/BochengYin/ai-wiki-toolkit.git"
+Issues = "https://github.com/BochengYin/ai-wiki-toolkit/issues"
 
 [project.optional-dependencies]
 dev = [

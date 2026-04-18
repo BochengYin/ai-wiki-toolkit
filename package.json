@@ -2,6 +2,11 @@
   "name": "ai-wiki-toolkit",
   "version": "0.1.2",
   "description": "Thin npm wrapper for ai-wiki-toolkit release binaries.",
+  "license": "MIT",
+  "homepage": "https://github.com/BochengYin/ai-wiki-toolkit#readme",
+  "bugs": {
+    "url": "https://github.com/BochengYin/ai-wiki-toolkit/issues"
+  },
   "bin": {
     "aiwiki-toolkit": "npm/bin/aiwiki-toolkit.js"
   },
@@ -10,7 +15,12 @@
   },
   "files": [
     "npm/**/*",
+    "LICENSE",
     "README.md"
+  ],
+  "os": [
+    "darwin",
+    "linux"
   ],
   "engines": {
     "node": ">=18"

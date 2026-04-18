@@ -122,6 +122,7 @@ jobs:
           --repository "${{ github.repository }}"
           --version "${{ github.ref_name }}"
           --asset-dir release-assets
+          --license MIT
           --output release-assets/aiwiki-toolkit.rb
 
       - name: Resolve Homebrew tap repository

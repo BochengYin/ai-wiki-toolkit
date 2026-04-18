@@ -1,6 +1,18 @@
-# npm Wrapper Plan
+# npm Wrapper
 
-The npm package for `ai-wiki-toolkit` is intended to be a thin wrapper around the GitHub Release binaries.
+The npm package for `ai-wiki-toolkit` is a thin wrapper around the GitHub Release binaries.
+
+## Install
+
+```bash
+npm install -g ai-wiki-toolkit
+```
+
+The global command is:
+
+```bash
+aiwiki-toolkit
+```
 
 ## Current Design
 
@@ -25,9 +37,10 @@ The wrapper currently maps:
 - `darwin-arm64` -> `macos-arm64`
 - `darwin-x64` -> `macos-x64`
 - `linux-x64` -> `linux-x64`
-- `win32-x64` -> `windows-x64`
 
 Unsupported platforms fail fast during installation.
+
+Windows is intentionally excluded from the public npm target map until the main release workflow publishes matching `windows-x64` assets.
 
 ## Why Keep It Thin
 
@@ -49,11 +62,12 @@ The intended npm flow is:
 
 The publishing workflow is documented in [docs/npm-publish.md](npm-publish.md).
 
-## Open Work
+## Release Expectations
 
-The repository now contains both the wrapper skeleton and an npm publishing workflow skeleton. Before publishing to npm, verify:
+The published npm package should continue to satisfy these constraints:
 
 - the GitHub Releases are public and stable
 - the asset naming is frozen
+- the npm wrapper target map matches the current public release asset matrix
 - the npm package version always matches the Python package version
 - npm trusted publishing is configured for the package

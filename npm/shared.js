@@ -21,11 +21,6 @@ const TARGETS = {
     archiveExtension: "tar.gz",
     binaryName: BINARY_NAME,
   },
-  "win32-x64": {
-    target: "windows-x64",
-    archiveExtension: "zip",
-    binaryName: `${BINARY_NAME}.exe`,
-  },
 };
 
 function releaseVersion() {

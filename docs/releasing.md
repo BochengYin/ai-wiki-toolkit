@@ -51,6 +51,7 @@ The archive contains a single executable:
 ## Release Steps
 
 1. Update the version in:
+   - `package.json`
    - `pyproject.toml`
    - `src/ai_wiki_toolkit/__init__.py`
 2. Run the test suite locally:
