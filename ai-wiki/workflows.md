@@ -30,7 +30,10 @@ These are repeatable repo-specific workflows worth following when changing scaff
 
 ## AI Wiki Maintenance
 
-1. Put reusable repo-specific lessons in `ai-wiki/review-patterns/`.
-2. Put task-specific chronology and dead ends in `ai-wiki/trails/`.
-3. Put raw personal draft notes in `ai-wiki/people/<handle>/drafts/`.
-4. Promote only stable, reviewable rules into shared patterns.
+1. Run one AI wiki update check at the end of every completed task, even when the result is `None`.
+2. Always end with exactly one status line: `AI Wiki Update Candidate: None`, `Draft`, or `PromotionCandidate`.
+3. If the result is `Draft` or `PromotionCandidate`, also print `AI Wiki Update Path: <path>`.
+4. Put reusable repo-specific lessons in `ai-wiki/review-patterns/`.
+5. Put task-specific chronology and dead ends in `ai-wiki/trails/`.
+6. Put raw personal draft notes in `ai-wiki/people/<handle>/drafts/`.
+7. Promote only stable, reviewable rules into shared patterns.

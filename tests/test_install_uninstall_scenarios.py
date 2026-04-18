@@ -17,6 +17,13 @@ def test_install_command_matches_init_behavior(repo_env: dict[str, Path]) -> Non
     assert (repo_env["repo"] / "ai-wiki" / "people" / "alice" / "drafts").is_dir()
     assert (repo_env["repo"] / "AGENT.md").exists()
     assert (
+        repo_env["repo"]
+        / ".agents"
+        / "skills"
+        / "ai-wiki-update-check"
+        / "SKILL.md"
+    ).exists()
+    assert (
         "Recommendation: configure git user.name and git user.email for stable handle resolution."
         in result.output
     )
@@ -52,6 +59,9 @@ def test_uninstall_default_removes_managed_layer_but_preserves_user_docs(
     assert uninstall_result.exit_code == 0
     assert not (repo / "ai-wiki" / "_toolkit").exists()
     assert not (home / "system" / "_toolkit").exists()
+    assert (
+        repo / ".agents" / "skills" / "ai-wiki-update-check" / "SKILL.md"
+    ).exists()
     assert (repo / "ai-wiki" / "constraints.md").read_text(encoding="utf-8") == "# User constraints\n"
     assert (repo / "ai-wiki" / "review-patterns" / "boundary.md").exists()
     assert (repo / "ai-wiki" / "people" / "alice" / "drafts" / "draft.md").exists()
@@ -96,6 +106,32 @@ def test_reinstall_restores_managed_layer_without_overwriting_user_docs(
     assert (repo / "ai-wiki" / "_toolkit" / "system.md").exists()
     assert (repo / "AGENT.md").exists()
     assert (repo / "ai-wiki" / "constraints.md").read_text(encoding="utf-8") == "# User constraints\n"
+
+
+def test_install_skips_existing_repo_skill_files_and_reports_manual_merge(
+    repo_env: dict[str, Path],
+) -> None:
+    skill_file = (
+        repo_env["repo"]
+        / ".agents"
+        / "skills"
+        / "ai-wiki-update-check"
+        / "references"
+        / "decision-rules.md"
+    )
+    skill_file.parent.mkdir(parents=True, exist_ok=True)
+    skill_file.write_text("# Custom decision rules\n", encoding="utf-8")
+
+    result = runner.invoke(app, ["install", "--handle", "alice"])
+
+    assert result.exit_code == 0
+    assert skill_file.read_text(encoding="utf-8") == "# Custom decision rules\n"
+    assert "Skipped existing skill files: 1" in result.output
+    assert f"Skipped skill file: {skill_file}" in result.output
+    assert (
+        "Manual merge guide: https://github.com/BochengYin/ai-wiki-toolkit/tree/main/.agents/skills/ai-wiki-update-check"
+        in result.output
+    )
 
 
 def test_uninstall_with_purge_requires_yes(repo_env: dict[str, Path]) -> None:

@@ -8,6 +8,21 @@ This file is managed by ai-wiki-toolkit. Future package versions may update it.
 2. Read `ai-wiki/review-patterns/` before implementation or review work.
 3. Read `ai-wiki/people/<handle>/drafts/` when continuing draft work.
 4. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
+5. If an `ai-wiki-update-check` skill is available, use it for end-of-task AI wiki checks.
+
+## AI Wiki Update Check
+
+1. Run one AI wiki update check at the end of every completed task, even when you expect the result to be `None`.
+2. Choose exactly one outcome:
+   - `None`: you checked and found no durable lesson worth recording.
+   - `Draft`: you found a durable lesson, recorded it under `ai-wiki/people/<handle>/drafts/`, and it is not yet ready for shared promotion.
+   - `PromotionCandidate`: you recorded or updated a draft, the two-signal gate is satisfied, and human confirmation is still required before creating `ai-wiki/review-patterns/*.md`.
+3. Always print exactly one final status line:
+   - `AI Wiki Update Candidate: None`
+   - `AI Wiki Update Candidate: Draft`
+   - `AI Wiki Update Candidate: PromotionCandidate`
+4. If the outcome is `Draft` or `PromotionCandidate`, also print:
+   - `AI Wiki Update Path: <path>`
 
 ## Review Draft Workflow
 

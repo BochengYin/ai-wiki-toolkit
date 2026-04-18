@@ -1,6 +1,6 @@
 {
   "name": "ai-wiki-toolkit",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Thin npm wrapper for ai-wiki-toolkit release binaries.",
   "bin": {
     "aiwiki-toolkit": "npm/bin/aiwiki-toolkit.js"

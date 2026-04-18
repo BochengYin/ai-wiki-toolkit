@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Wiki Update Check"
+  short_description: "Run the mandatory end-of-task AI wiki check"
+  default_prompt: "Run the ai-wiki end-of-task update check for this completed task."

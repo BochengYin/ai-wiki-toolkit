@@ -32,10 +32,16 @@ Before starting work:
 7. Keep cross-project reusable notes in `<home>/ai-wiki/system/`.
 8. Only suggest promotion from a draft to a shared pattern when the two-signal gate is satisfied.
 9. Agents may suggest promotion candidates, but humans confirm shared patterns.
+10. If an `ai-wiki-update-check` skill is available, use it for the end-of-task AI wiki update check.
 
 ## End Of Task
 
-1. If you discovered a new review or implementation lesson, record it in your own folder under `ai-wiki/people/<handle>/drafts/`.
-2. If it meets the promotion gate, mark it as a promotion candidate and ask for human confirmation before creating `ai-wiki/review-patterns/*.md`.
-3. If no durable pattern was found, explicitly say `AI Wiki Update Candidate: None`.
+1. Run one AI wiki update check for every completed task, even if the result is `None`.
+2. Choose exactly one result: `None`, `Draft`, or `PromotionCandidate`.
+3. If the result is `Draft`, record the lesson under `ai-wiki/people/<handle>/drafts/` and print `AI Wiki Update Path: <path>`.
+4. If the result is `PromotionCandidate`, mark or update the draft as a promotion candidate, print `AI Wiki Update Path: <path>`, and ask for human confirmation before creating `ai-wiki/review-patterns/*.md`.
+5. Always print exactly one final status line:
+   - `AI Wiki Update Candidate: None`
+   - `AI Wiki Update Candidate: Draft`
+   - `AI Wiki Update Candidate: PromotionCandidate`
 <!-- aiwiki-toolkit:end -->

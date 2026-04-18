@@ -15,6 +15,15 @@ def test_init_empty_repo_creates_expected_tree(repo_env: dict[str, Path]) -> Non
 
     assert result.exit_code == 0
     assert snapshot_tree(repo_env["repo"]) == [
+        ".agents/",
+        ".agents/skills/",
+        ".agents/skills/ai-wiki-update-check/",
+        ".agents/skills/ai-wiki-update-check/SKILL.md",
+        ".agents/skills/ai-wiki-update-check/agents/",
+        ".agents/skills/ai-wiki-update-check/agents/openai.yaml",
+        ".agents/skills/ai-wiki-update-check/references/",
+        ".agents/skills/ai-wiki-update-check/references/decision-rules.md",
+        ".agents/skills/ai-wiki-update-check/references/output-contract.md",
         ".git/",
         ".git/config",
         "AGENT.md",
@@ -62,12 +71,18 @@ def test_init_writes_expected_agent_snapshot(repo_env: dict[str, Path]) -> None:
         7. Keep cross-project reusable notes in `<home>/ai-wiki/system/`.
         8. Only suggest promotion from a draft to a shared pattern when the two-signal gate is satisfied.
         9. Agents may suggest promotion candidates, but humans confirm shared patterns.
+        10. If an `ai-wiki-update-check` skill is available, use it for the end-of-task AI wiki update check.
 
         ## End Of Task
 
-        1. If you discovered a new review or implementation lesson, record it in your own folder under `ai-wiki/people/<handle>/drafts/`.
-        2. If it meets the promotion gate, mark it as a promotion candidate and ask for human confirmation before creating `ai-wiki/review-patterns/*.md`.
-        3. If no durable pattern was found, explicitly say `AI Wiki Update Candidate: None`.
+        1. Run one AI wiki update check for every completed task, even if the result is `None`.
+        2. Choose exactly one result: `None`, `Draft`, or `PromotionCandidate`.
+        3. If the result is `Draft`, record the lesson under `ai-wiki/people/<handle>/drafts/` and print `AI Wiki Update Path: <path>`.
+        4. If the result is `PromotionCandidate`, mark or update the draft as a promotion candidate, print `AI Wiki Update Path: <path>`, and ask for human confirmation before creating `ai-wiki/review-patterns/*.md`.
+        5. Always print exactly one final status line:
+           - `AI Wiki Update Candidate: None`
+           - `AI Wiki Update Candidate: Draft`
+           - `AI Wiki Update Candidate: PromotionCandidate`
         <!-- aiwiki-toolkit:end -->
         """
     )
@@ -120,6 +135,21 @@ def test_init_writes_expected_toolkit_managed_files(repo_env: dict[str, Path]) -
         2. Read `ai-wiki/review-patterns/` before implementation or review work.
         3. Read `ai-wiki/people/<handle>/drafts/` when continuing draft work.
         4. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
+        5. If an `ai-wiki-update-check` skill is available, use it for end-of-task AI wiki checks.
+
+        ## AI Wiki Update Check
+
+        1. Run one AI wiki update check at the end of every completed task, even when you expect the result to be `None`.
+        2. Choose exactly one outcome:
+           - `None`: you checked and found no durable lesson worth recording.
+           - `Draft`: you found a durable lesson, recorded it under `ai-wiki/people/<handle>/drafts/`, and it is not yet ready for shared promotion.
+           - `PromotionCandidate`: you recorded or updated a draft, the two-signal gate is satisfied, and human confirmation is still required before creating `ai-wiki/review-patterns/*.md`.
+        3. Always print exactly one final status line:
+           - `AI Wiki Update Candidate: None`
+           - `AI Wiki Update Candidate: Draft`
+           - `AI Wiki Update Candidate: PromotionCandidate`
+        4. If the outcome is `Draft` or `PromotionCandidate`, also print:
+           - `AI Wiki Update Path: <path>`
 
         ## Review Draft Workflow
 

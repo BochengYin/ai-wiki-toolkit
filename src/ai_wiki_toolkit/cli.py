@@ -6,7 +6,11 @@ import typer
 
 from ai_wiki_toolkit import __version__
 from ai_wiki_toolkit.paths import RepoRootNotFoundError
-from ai_wiki_toolkit.scaffold import install_workspace, uninstall_workspace
+from ai_wiki_toolkit.scaffold import (
+    install_workspace,
+    skill_manual_merge_url,
+    uninstall_workspace,
+)
 
 app = typer.Typer(help="Initialize and maintain ai-wiki-toolkit scaffolds.")
 
@@ -42,6 +46,11 @@ def _echo_install_result(result) -> None:
     typer.echo(
         "Recommendation: configure git user.name and git user.email for stable handle resolution."
     )
+    if result.skipped_skill_files:
+        typer.echo(f"Skipped existing skill files: {len(result.skipped_skill_files)}")
+        for path in result.skipped_skill_files:
+            typer.echo(f"Skipped skill file: {path}")
+        typer.echo(f"Manual merge guide: {skill_manual_merge_url()}")
 
 
 @app.command("install")

@@ -9,9 +9,26 @@ permissions:
   contents: write
 
 jobs:
+  verify-version:
+    name: Verify release version
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Verify tag matches package metadata
+        run: PYTHONPATH=src python scripts/check_release_version.py "${{ github.ref_name }}"
+
   build:
     name: Build ${{ matrix.target }}
     runs-on: ${{ matrix.runner }}
+    needs: verify-version
     strategy:
       fail-fast: false
       matrix:

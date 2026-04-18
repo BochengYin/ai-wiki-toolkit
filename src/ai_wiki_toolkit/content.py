@@ -7,6 +7,8 @@ from textwrap import dedent
 PROMPT_BLOCK_START = "<!-- aiwiki-toolkit:start -->"
 PROMPT_BLOCK_END = "<!-- aiwiki-toolkit:end -->"
 OPENCODE_KEY = "aiwikiToolkit"
+TOOLKIT_GITHUB_URL = "https://github.com/BochengYin/ai-wiki-toolkit"
+AI_WIKI_UPDATE_SKILL_DIR = ".agents/skills/ai-wiki-update-check"
 
 
 def repo_starter_files() -> dict[str, str]:
@@ -104,6 +106,21 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             2. Read `ai-wiki/review-patterns/` before implementation or review work.
             3. Read `ai-wiki/people/<handle>/drafts/` when continuing draft work.
             4. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
+            5. If an `ai-wiki-update-check` skill is available, use it for end-of-task AI wiki checks.
+
+            ## AI Wiki Update Check
+
+            1. Run one AI wiki update check at the end of every completed task, even when you expect the result to be `None`.
+            2. Choose exactly one outcome:
+               - `None`: you checked and found no durable lesson worth recording.
+               - `Draft`: you found a durable lesson, recorded it under `ai-wiki/people/<handle>/drafts/`, and it is not yet ready for shared promotion.
+               - `PromotionCandidate`: you recorded or updated a draft, the two-signal gate is satisfied, and human confirmation is still required before creating `ai-wiki/review-patterns/*.md`.
+            3. Always print exactly one final status line:
+               - `AI Wiki Update Candidate: None`
+               - `AI Wiki Update Candidate: Draft`
+               - `AI Wiki Update Candidate: PromotionCandidate`
+            4. If the outcome is `Draft` or `PromotionCandidate`, also print:
+               - `AI Wiki Update Path: <path>`
 
             ## Review Draft Workflow
 
@@ -175,6 +192,119 @@ def managed_home_toolkit_files() -> dict[str, str]:
     }
 
 
+def repo_skill_starter_files() -> dict[str, str]:
+    return {
+        f"{AI_WIKI_UPDATE_SKILL_DIR}/SKILL.md": dedent(
+            """
+            ---
+            name: ai-wiki-update-check
+            description: Run the mandatory end-of-task AI wiki update check for ai-wiki-toolkit. Use at the end of every completed task in this repository to decide whether the result is None, Draft, or PromotionCandidate, update ai-wiki notes when needed, and emit the required final status line.
+            ---
+
+            # AI Wiki Update Check
+
+            Use this skill at the end of every completed task in this repository.
+
+            This check is mandatory even when the correct outcome is `None`.
+
+            ## Core Workflow
+
+            1. Review the task outcome, changes made, and lessons learned.
+            2. Choose exactly one outcome: `None`, `Draft`, or `PromotionCandidate`.
+            3. If the outcome is `Draft` or `PromotionCandidate`, create or update a note under `ai-wiki/people/<handle>/drafts/`.
+            4. Emit the final result using the exact output contract in [references/output-contract.md](references/output-contract.md).
+            5. Use [references/decision-rules.md](references/decision-rules.md) for the decision gate, promotion rules, and note placement rules.
+
+            ## Constraints
+
+            - Do not skip the check just because no durable lesson is expected.
+            - Do not create or update `ai-wiki/review-patterns/*.md` without human confirmation.
+            - Keep project-specific knowledge in `ai-wiki/`.
+            - Keep cross-project knowledge in `<home>/ai-wiki/system/`.
+            """
+        ).strip()
+        + "\n",
+        f"{AI_WIKI_UPDATE_SKILL_DIR}/references/decision-rules.md": dedent(
+            """
+            # Decision Rules
+
+            ## Outcome Meanings
+
+            - `None`
+              Use when you completed the check and found no durable lesson worth recording.
+
+            - `Draft`
+              Use when there is a durable lesson worth keeping, but it is still raw, task-specific, or not yet validated as a shared rule.
+
+            - `PromotionCandidate`
+              Use when a draft exists or was updated and the lesson satisfies the promotion gate, but human confirmation is still required before creating or updating `ai-wiki/review-patterns/*.md`.
+
+            ## Promotion Gate
+
+            Only choose `PromotionCandidate` when at least one of these is true:
+
+            - the same issue has been observed at least twice
+            - a reviewer judges it reusable and can express it as a stable rule
+
+            ## Writing Targets
+
+            - Put raw personal notes in `ai-wiki/people/<handle>/drafts/`.
+            - Put shared, reusable repo rules in `ai-wiki/review-patterns/` only after human confirmation.
+            - Keep project-specific lessons in `ai-wiki/`.
+            - Keep cross-project lessons in `<home>/ai-wiki/system/`.
+            """
+        ).strip()
+        + "\n",
+        f"{AI_WIKI_UPDATE_SKILL_DIR}/references/output-contract.md": dedent(
+            """
+            # Output Contract
+
+            Choose exactly one final status line:
+
+            - `AI Wiki Update Candidate: None`
+            - `AI Wiki Update Candidate: Draft`
+            - `AI Wiki Update Candidate: PromotionCandidate`
+
+            If the outcome is `Draft` or `PromotionCandidate`, also print:
+
+            - `AI Wiki Update Path: <path>`
+
+            ## Examples
+
+            No durable lesson:
+
+            ```text
+            AI Wiki Update Candidate: None
+            ```
+
+            Durable lesson, not yet ready for promotion:
+
+            ```text
+            AI Wiki Update Candidate: Draft
+            AI Wiki Update Path: ai-wiki/people/<handle>/drafts/<file>.md
+            ```
+
+            Ready to ask for promotion:
+
+            ```text
+            AI Wiki Update Candidate: PromotionCandidate
+            AI Wiki Update Path: ai-wiki/people/<handle>/drafts/<file>.md
+            ```
+            """
+        ).strip()
+        + "\n",
+        f"{AI_WIKI_UPDATE_SKILL_DIR}/agents/openai.yaml": dedent(
+            """
+            interface:
+              display_name: "AI Wiki Update Check"
+              short_description: "Run the mandatory end-of-task AI wiki check"
+              default_prompt: "Run the ai-wiki end-of-task update check for this completed task."
+            """
+        ).strip()
+        + "\n",
+    }
+
+
 def prompt_block_body() -> str:
     return dedent(
         """
@@ -191,12 +321,18 @@ def prompt_block_body() -> str:
         7. Keep cross-project reusable notes in `<home>/ai-wiki/system/`.
         8. Only suggest promotion from a draft to a shared pattern when the two-signal gate is satisfied.
         9. Agents may suggest promotion candidates, but humans confirm shared patterns.
+        10. If an `ai-wiki-update-check` skill is available, use it for the end-of-task AI wiki update check.
 
         ## End Of Task
 
-        1. If you discovered a new review or implementation lesson, record it in your own folder under `ai-wiki/people/<handle>/drafts/`.
-        2. If it meets the promotion gate, mark it as a promotion candidate and ask for human confirmation before creating `ai-wiki/review-patterns/*.md`.
-        3. If no durable pattern was found, explicitly say `AI Wiki Update Candidate: None`.
+        1. Run one AI wiki update check for every completed task, even if the result is `None`.
+        2. Choose exactly one result: `None`, `Draft`, or `PromotionCandidate`.
+        3. If the result is `Draft`, record the lesson under `ai-wiki/people/<handle>/drafts/` and print `AI Wiki Update Path: <path>`.
+        4. If the result is `PromotionCandidate`, mark or update the draft as a promotion candidate, print `AI Wiki Update Path: <path>`, and ask for human confirmation before creating `ai-wiki/review-patterns/*.md`.
+        5. Always print exactly one final status line:
+           - `AI Wiki Update Candidate: None`
+           - `AI Wiki Update Candidate: Draft`
+           - `AI Wiki Update Candidate: PromotionCandidate`
         """
     ).strip()
 
