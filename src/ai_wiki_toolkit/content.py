@@ -103,7 +103,7 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             1. Read `ai-wiki/index.md`.
             2. Read `ai-wiki/review-patterns/` before implementation or review work.
             3. Read `ai-wiki/people/<handle>/drafts/` when continuing draft work.
-            4. If repo docs are not enough, read `~/ai-wiki/system/_toolkit/system.md` and then `~/ai-wiki/system/index.md`.
+            4. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
 
             ## Review Draft Workflow
 
@@ -160,8 +160,8 @@ def managed_home_toolkit_files() -> dict[str, str]:
 
             ## Cross-Project Usage
 
-            1. Keep reusable debugging, review, and workflow guidance under `~/ai-wiki/system/`.
-            2. Keep package-managed rules under `~/ai-wiki/system/_toolkit/`.
+            1. Keep reusable debugging, review, and workflow guidance under `<home>/ai-wiki/system/`.
+            2. Keep package-managed rules under `<home>/ai-wiki/system/_toolkit/`.
             3. Keep user-owned preferences, playbooks, and templates outside `_toolkit/`.
 
             ## Review Pattern Reuse
@@ -175,9 +175,9 @@ def managed_home_toolkit_files() -> dict[str, str]:
     }
 
 
-def prompt_block_body(handle: str) -> str:
+def prompt_block_body() -> str:
     return dedent(
-        f"""
+        """
         ## AI Wiki Toolkit
 
         Before starting work:
@@ -185,16 +185,16 @@ def prompt_block_body(handle: str) -> str:
         1. Read `ai-wiki/_toolkit/system.md`.
         2. Read `ai-wiki/index.md`.
         3. Read `ai-wiki/review-patterns/` before implementation or review work.
-        4. Read `ai-wiki/people/{handle}/drafts/` when continuing your own draft notes.
-        5. If repo docs are not enough, read `~/ai-wiki/system/_toolkit/system.md` and then `~/ai-wiki/system/index.md`.
+        4. Read your own folder under `ai-wiki/people/<handle>/drafts/` when continuing draft notes.
+        5. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
         6. Keep project-specific notes in `ai-wiki/`.
-        7. Keep cross-project reusable notes in `~/ai-wiki/system/`.
+        7. Keep cross-project reusable notes in `<home>/ai-wiki/system/`.
         8. Only suggest promotion from a draft to a shared pattern when the two-signal gate is satisfied.
         9. Agents may suggest promotion candidates, but humans confirm shared patterns.
 
         ## End Of Task
 
-        1. If you discovered a new review or implementation lesson, record it in `ai-wiki/people/{handle}/drafts/`.
+        1. If you discovered a new review or implementation lesson, record it in your own folder under `ai-wiki/people/<handle>/drafts/`.
         2. If it meets the promotion gate, mark it as a promotion candidate and ask for human confirmation before creating `ai-wiki/review-patterns/*.md`.
         3. If no durable pattern was found, explicitly say `AI Wiki Update Candidate: none`.
         """

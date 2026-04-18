@@ -32,7 +32,7 @@ def test_init_updates_only_existing_prompt_files(
     for filename in expected_files:
         text = (repo / filename).read_text(encoding="utf-8")
         assert PROMPT_BLOCK_START in text
-        assert "ai-wiki/people/alice/drafts/" in text
+        assert "ai-wiki/people/<handle>/drafts/" in text
 
     for filename in {"AGENT.md", "CLAUDE.md"} - set(expected_files):
         assert not (repo / filename).exists()
@@ -83,3 +83,17 @@ def test_init_creates_agent_when_no_prompt_files_exist(
     assert result.exit_code == 0
     assert (repo_env["repo"] / "AGENT.md").exists()
     assert not (repo_env["repo"] / "CLAUDE.md").exists()
+
+
+def test_init_does_not_churn_prompt_block_across_different_handles(
+    repo_env: dict[str, Path],
+) -> None:
+    first = runner.invoke(app, ["init", "--handle", "alice"])
+    assert first.exit_code == 0
+    agent_path = repo_env["repo"] / "AGENT.md"
+    first_text = agent_path.read_text(encoding="utf-8")
+
+    second = runner.invoke(app, ["init", "--handle", "bob"])
+
+    assert second.exit_code == 0
+    assert agent_path.read_text(encoding="utf-8") == first_text

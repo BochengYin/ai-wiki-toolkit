@@ -1,0 +1,26 @@
+{
+  "name": "ai-wiki-toolkit",
+  "version": "0.1.0",
+  "description": "Thin npm wrapper for ai-wiki-toolkit release binaries.",
+  "bin": {
+    "aiwiki-toolkit": "npm/bin/aiwiki-toolkit.js"
+  },
+  "scripts": {
+    "postinstall": "node npm/install.js"
+  },
+  "files": [
+    "npm/**/*",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BochengYin/ai-wiki-toolkit.git"
+  },
+  "dependencies": {
+    "extract-zip": "^2.0.1",
+    "tar": "^7.4.3"
+  }
+}

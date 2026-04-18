@@ -4,14 +4,30 @@ from __future__ import annotations
 
 import typer
 
+from ai_wiki_toolkit import __version__
 from ai_wiki_toolkit.paths import RepoRootNotFoundError
 from ai_wiki_toolkit.scaffold import install_workspace, uninstall_workspace
 
 app = typer.Typer(help="Initialize and maintain ai-wiki-toolkit scaffolds.")
 
 
+def _version_callback(value: bool) -> None:
+    if not value:
+        return
+    typer.echo(f"ai-wiki-toolkit {__version__}")
+    raise typer.Exit()
+
+
 @app.callback()
-def main() -> None:
+def main(
+    version: bool = typer.Option(
+        False,
+        "--version",
+        callback=_version_callback,
+        is_eager=True,
+        help="Show version and exit.",
+    )
+) -> None:
     """aiwiki-toolkit command group."""
 
 
@@ -63,7 +79,7 @@ def uninstall(
     purge_user_docs: bool = typer.Option(
         False,
         "--purge-user-docs",
-        help="Also remove user-owned ai-wiki documents and directories.",
+        help="Also remove repo-local user-owned ai-wiki documents. Shared home docs are preserved.",
     ),
     yes: bool = typer.Option(
         False,
@@ -92,6 +108,8 @@ def uninstall(
     typer.echo(f"Updated prompt files: {len(result.updated_prompt_files)}")
     typer.echo(f"Deleted prompt files: {len(result.deleted_prompt_files)}")
     typer.echo(f"Removed opencode key: {'yes' if result.removed_opencode_key else 'no'}")
+    if purge_user_docs:
+        typer.echo("Shared home wiki preserved: yes")
 
 
 if __name__ == "__main__":

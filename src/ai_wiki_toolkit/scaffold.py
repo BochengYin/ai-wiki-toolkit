@@ -131,16 +131,6 @@ def _remove_file_if_exists(path: Path, result: UninstallResult) -> None:
     result.removed_files.append(path)
 
 
-def _cleanup_empty_parent_dirs(path: Path, stop_at: Path) -> None:
-    current = path
-    while current != stop_at and current.exists():
-        try:
-            current.rmdir()
-        except OSError:
-            break
-        current = current.parent
-
-
 def uninstall_workspace(
     start: Path | None = None, *, purge_user_docs: bool = False
 ) -> UninstallResult:
@@ -171,14 +161,7 @@ def uninstall_workspace(
 
     if purge_user_docs:
         _remove_tree_if_exists(paths.repo_wiki_dir, result)
-        _remove_tree_if_exists(paths.system_dir, result)
-        _cleanup_empty_parent_dirs(paths.home_toolkit_dir.parent, paths.home_dir)
-        if paths.home_dir.exists():
-            try:
-                paths.home_dir.rmdir()
-                result.removed_dirs.append(paths.home_dir)
-            except OSError:
-                pass
+        _remove_tree_if_exists(paths.home_toolkit_dir, result)
         return result
 
     _remove_tree_if_exists(paths.repo_toolkit_dir, result)

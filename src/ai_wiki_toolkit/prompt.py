@@ -18,7 +18,8 @@ _MANAGED_BLOCK_RE = re.compile(
 
 
 def render_managed_block(handle: str) -> str:
-    return f"{PROMPT_BLOCK_START}\n{prompt_block_body(handle)}\n{PROMPT_BLOCK_END}"
+    del handle
+    return f"{PROMPT_BLOCK_START}\n{prompt_block_body()}\n{PROMPT_BLOCK_END}"
 
 
 def upsert_managed_block(text: str, handle: str) -> str:

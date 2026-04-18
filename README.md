@@ -16,11 +16,13 @@ The current scope is intentionally strict about compatibility:
 - update managed instruction blocks inside `AGENT.md` and `CLAUDE.md`
 - avoid rewriting existing user-owned `ai-wiki/**/*.md` documents outside `_toolkit/`
 
-## Install
+## Install For Local Development
 
 ```bash
 pip install -e .
 ```
+
+This is the current developer install path. Public binary distribution is planned separately.
 
 ## Recommendations
 
@@ -74,11 +76,13 @@ This removes:
 
 Your user-owned `ai-wiki/**/*.md` and `~/ai-wiki/system/**/*.md` documents are preserved by default.
 
-To also remove user-owned docs, you must opt in explicitly:
+To also remove repo-local user-owned docs, you must opt in explicitly:
 
 ```bash
 aiwiki-toolkit uninstall --purge-user-docs --yes
 ```
+
+Even with `--purge-user-docs --yes`, the shared home wiki under `~/ai-wiki/system/` is preserved.
 
 ## Compatibility rules
 
@@ -93,6 +97,20 @@ aiwiki-toolkit uninstall --purge-user-docs --yes
 ```
 
 - Future `opencode.json` integration is limited to a single top-level `aiwikiToolkit` key.
+
+## Planned Distribution
+
+The intended public distribution model is:
+
+- GitHub Releases for versioned cross-platform binaries
+- Homebrew tap for macOS and Linux users
+- npm wrapper for Node users who prefer `npm install -g`
+
+The goal is to make the final end-user install independent of a local Python setup. Until that release pipeline exists, the repository uses the Python developer install shown above.
+
+The first release skeleton is documented in [docs/releasing.md](docs/releasing.md).
+The Homebrew tap plan is documented in [docs/homebrew-tap.md](docs/homebrew-tap.md).
+The npm wrapper plan is documented in [docs/npm-wrapper.md](docs/npm-wrapper.md).
 
 ## Path examples
 

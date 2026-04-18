@@ -109,15 +109,23 @@ def test_uninstall_with_purge_requires_yes(repo_env: dict[str, Path]) -> None:
     assert (repo_env["repo"] / "ai-wiki").exists()
 
 
-def test_uninstall_with_purge_and_yes_removes_repo_and_home_docs(
+def test_uninstall_with_purge_and_yes_removes_repo_docs_but_preserves_shared_home_docs(
     repo_env: dict[str, Path],
 ) -> None:
     install_result = runner.invoke(app, ["install", "--handle", "alice"])
     assert install_result.exit_code == 0
+    (repo_env["home_dir"] / "system" / "preferences.md").write_text(
+        "# Shared preferences\n", encoding="utf-8"
+    )
 
     result = runner.invoke(app, ["uninstall", "--purge-user-docs", "--yes"])
 
     assert result.exit_code == 0
     assert not (repo_env["repo"] / "ai-wiki").exists()
-    assert not (repo_env["home_dir"] / "system").exists()
+    assert (repo_env["home_dir"] / "system").exists()
+    assert not (repo_env["home_dir"] / "system" / "_toolkit").exists()
+    assert (repo_env["home_dir"] / "system" / "preferences.md").read_text(encoding="utf-8") == (
+        "# Shared preferences\n"
+    )
     assert not (repo_env["repo"] / "AGENT.md").exists()
+    assert "Shared home wiki preserved: yes" in result.output

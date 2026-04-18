@@ -1,0 +1,103 @@
+name: Release Binaries
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: linux-x64
+            binary_path: dist/aiwiki-toolkit
+          - runner: windows-2025
+            target: windows-x64
+            binary_path: dist/aiwiki-toolkit.exe
+          - runner: macos-15
+            target: macos-arm64
+            binary_path: dist/aiwiki-toolkit
+          - runner: macos-15-intel
+            target: macos-x64
+            binary_path: dist/aiwiki-toolkit
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install release dependencies
+        run: python -m pip install ".[dev,release]"
+
+      - name: Run test suite
+        run: python -m pytest
+
+      - name: Build standalone binary
+        run: >
+          python -m PyInstaller
+          --clean
+          --noconfirm
+          --onefile
+          --name aiwiki-toolkit
+          --paths src
+          --specpath build/pyinstaller
+          src/ai_wiki_toolkit/cli.py
+
+      - name: Package release archive
+        run: >
+          python scripts/build_release_archive.py
+          --binary "${{ matrix.binary_path }}"
+          --version "${{ github.ref_name }}"
+          --target "${{ matrix.target }}"
+          --output-dir release-assets
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.target }}
+          path: release-assets/*
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub Release assets
+    runs-on: ubuntu-24.04
+    needs: build
+
+    steps:
+      - name: Download release archives
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Create release if needed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1 \
+            || gh release create "${GITHUB_REF_NAME}" --verify-tag --generate-notes
+
+      - name: Render Homebrew formula
+        run: >
+          python scripts/render_homebrew_formula.py
+          --repository "${{ github.repository }}"
+          --version "${{ github.ref_name }}"
+          --asset-dir release-assets
+          --output release-assets/aiwiki-toolkit.rb
+
+      - name: Upload release archives
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${GITHUB_REF_NAME}" release-assets/* --clobber
