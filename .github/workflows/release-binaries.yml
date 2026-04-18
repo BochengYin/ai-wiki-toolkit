@@ -97,6 +97,47 @@ jobs:
           --asset-dir release-assets
           --output release-assets/aiwiki-toolkit.rb
 
+      - name: Resolve Homebrew tap repository
+        id: tap_repo
+        shell: bash
+        env:
+          HOMEBREW_TAP_REPOSITORY: ${{ vars.HOMEBREW_TAP_REPOSITORY }}
+        run: |
+          repo="${HOMEBREW_TAP_REPOSITORY:-${GITHUB_REPOSITORY_OWNER}/homebrew-tap}"
+          printf 'repo=%s\n' "$repo" >> "$GITHUB_OUTPUT"
+
+      - name: Check out Homebrew tap repository
+        if: ${{ secrets.HOMEBREW_TAP_PAT != '' }}
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.tap_repo.outputs.repo }}
+          token: ${{ secrets.HOMEBREW_TAP_PAT }}
+          path: homebrew-tap
+
+      - name: Sync Homebrew formula into tap
+        if: ${{ secrets.HOMEBREW_TAP_PAT != '' }}
+        id: sync_tap
+        run: >
+          python scripts/sync_homebrew_tap.py
+          --formula release-assets/aiwiki-toolkit.rb
+          --tap-dir homebrew-tap
+          --version "${{ github.ref_name }}"
+
+      - name: Commit and push Homebrew tap update
+        if: ${{ secrets.HOMEBREW_TAP_PAT != '' }}
+        shell: bash
+        run: |
+          cd homebrew-tap
+          if [ -z "$(git status --short -- Formula/aiwiki-toolkit.rb)" ]; then
+            echo "No Homebrew tap changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/aiwiki-toolkit.rb
+          git commit -m "Update aiwiki-toolkit to ${GITHUB_REF_NAME}"
+          git push origin HEAD
+
       - name: Upload release archives
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

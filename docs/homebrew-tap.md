@@ -52,6 +52,28 @@ After a tagged release completes:
    aiwiki-toolkit --version
    ```
 
-## Next Step
+## Optional Automatic Tap Sync
 
-Once the release assets and formula generation are stable, the next automation step is updating the tap repository automatically after each release.
+The release workflow now supports an optional automatic tap update.
+
+If you configure:
+
+- repository secret: `HOMEBREW_TAP_PAT`
+- repository variable: `HOMEBREW_TAP_REPOSITORY` (optional)
+
+then the release workflow will:
+
+1. check out the tap repository
+2. copy the generated `Formula/aiwiki-toolkit.rb`
+3. commit the change
+4. push it back to the tap repository
+
+If `HOMEBREW_TAP_REPOSITORY` is not set, the workflow defaults to:
+
+- `<repo-owner>/homebrew-tap`
+
+For example, if the main repository owner is `BochengYin`, the default tap repository is:
+
+- `BochengYin/homebrew-tap`
+
+If `HOMEBREW_TAP_PAT` is not configured, the workflow remains read-only and only uploads the generated formula as a release asset.

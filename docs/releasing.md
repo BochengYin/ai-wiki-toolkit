@@ -13,7 +13,8 @@ The repository now includes a GitHub Actions workflow at `.github/workflows/rele
 5. archives each binary into a release asset
 6. renders a Homebrew formula from the release archives
 7. creates or updates a GitHub Release for the tag
-8. uploads the built archives and generated formula as release assets
+8. optionally syncs the generated formula into a Homebrew tap repository
+9. uploads the built archives and generated formula as release assets
 
 This workflow is the base distribution layer for later package-manager integrations such as Homebrew and npm.
 
@@ -69,6 +70,7 @@ The archive contains a single executable:
 
 5. Wait for the `Release Binaries` workflow to finish.
 6. Verify that the GitHub Release for the tag contains all expected archives and `aiwiki-toolkit.rb`.
+7. If tap sync is enabled, verify that the tap repository received the updated `Formula/aiwiki-toolkit.rb`.
 
 ## Local Dry Run
 
