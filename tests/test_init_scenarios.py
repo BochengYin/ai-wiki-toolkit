@@ -67,7 +67,7 @@ def test_init_writes_expected_agent_snapshot(repo_env: dict[str, Path]) -> None:
 
         1. If you discovered a new review or implementation lesson, record it in your own folder under `ai-wiki/people/<handle>/drafts/`.
         2. If it meets the promotion gate, mark it as a promotion candidate and ask for human confirmation before creating `ai-wiki/review-patterns/*.md`.
-        3. If no durable pattern was found, explicitly say `AI Wiki Update Candidate: none`.
+        3. If no durable pattern was found, explicitly say `AI Wiki Update Candidate: None`.
         <!-- aiwiki-toolkit:end -->
         """
     )
