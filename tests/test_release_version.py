@@ -8,18 +8,18 @@ from ai_wiki_toolkit.release_version import find_version_mismatches, read_releas
 def test_read_release_versions_reads_current_project_metadata() -> None:
     versions = read_release_versions(Path.cwd())
 
-    assert versions.package_json == "0.1.2"
-    assert versions.pyproject == "0.1.2"
-    assert versions.python_package == "0.1.2"
+    assert versions.package_json == "0.1.3"
+    assert versions.pyproject == "0.1.3"
+    assert versions.python_package == "0.1.3"
 
 
 def test_find_version_mismatches_reports_expected_release_mismatch() -> None:
     versions = read_release_versions(Path.cwd())
 
-    mismatches = find_version_mismatches(versions, "0.1.3")
+    mismatches = find_version_mismatches(versions, "0.1.4")
 
     assert mismatches == [
-        "package.json version 0.1.2 != expected release version 0.1.3",
-        "pyproject.toml version 0.1.2 != expected release version 0.1.3",
-        "src/ai_wiki_toolkit/__init__.py version 0.1.2 != expected release version 0.1.3",
+        "package.json version 0.1.3 != expected release version 0.1.4",
+        "pyproject.toml version 0.1.3 != expected release version 0.1.4",
+        "src/ai_wiki_toolkit/__init__.py version 0.1.3 != expected release version 0.1.4",
     ]

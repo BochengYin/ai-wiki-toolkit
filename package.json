@@ -1,6 +1,6 @@
 {
   "name": "ai-wiki-toolkit",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Thin npm wrapper for ai-wiki-toolkit release binaries.",
   "license": "MIT",
   "homepage": "https://github.com/BochengYin/ai-wiki-toolkit#readme",
