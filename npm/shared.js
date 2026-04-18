@@ -43,7 +43,10 @@ function releaseAssetUrl(version, targetInfo) {
     targetInfo.target,
     targetInfo.archiveExtension,
   );
-  return `https://github.com/${REPOSITORY}/releases/download/${version}/${filename}`;
+  const baseUrl =
+    process.env.AIWIKI_TOOLKIT_RELEASE_BASE_URL ||
+    `https://github.com/${REPOSITORY}/releases/download`;
+  return `${baseUrl.replace(/\/+$/, "")}/${version}/${filename}`;
 }
 
 function installDirectory(targetInfo) {

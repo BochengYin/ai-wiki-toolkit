@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
 const fs = require("fs");
+const http = require("http");
 const https = require("https");
+const os = require("os");
 const path = require("path");
 const { pipeline } = require("stream/promises");
 
@@ -20,7 +22,8 @@ async function downloadFile(url, destination) {
   await fs.promises.mkdir(path.dirname(destination), { recursive: true });
 
   return new Promise((resolve, reject) => {
-    https
+    const client = new URL(url).protocol === "http:" ? http : https;
+    client
       .get(url, (response) => {
         if (
           response.statusCode &&
@@ -28,7 +31,7 @@ async function downloadFile(url, destination) {
           response.statusCode < 400 &&
           response.headers.location
         ) {
-          downloadFile(response.headers.location, destination)
+          downloadFile(new URL(response.headers.location, url).toString(), destination)
             .then(resolve)
             .catch(reject);
           return;
@@ -77,16 +80,17 @@ async function main() {
 
   const version = releaseVersion();
   const url = releaseAssetUrl(version, targetInfo);
-  const archivePath = path.join(
-    installDirectory(targetInfo),
-    `download.${targetInfo.archiveExtension}`,
-  );
+  const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "aiwiki-toolkit-"));
+  const archivePath = path.join(tempDir, `download.${targetInfo.archiveExtension}`);
 
-  await downloadFile(url, archivePath);
-  await extractArchive(archivePath, targetInfo);
-  await fs.promises.rm(archivePath, { force: true });
+  try {
+    await downloadFile(url, archivePath);
+    await extractArchive(archivePath, targetInfo);
 
-  console.log(`Installed ai-wiki-toolkit binary for ${targetInfo.target}`);
+    console.log(`Installed ai-wiki-toolkit binary for ${targetInfo.target}`);
+  } finally {
+    await fs.promises.rm(tempDir, { recursive: true, force: true });
+  }
 }
 
 main().catch((error) => {
