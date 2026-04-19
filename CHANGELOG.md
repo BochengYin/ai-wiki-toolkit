@@ -4,6 +4,8 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+## v0.1.9
+
 ### Added
 
 - Added repo starter indexes for `review-patterns/`, `trails/`, `people/<handle>/`, and `metrics/`.
