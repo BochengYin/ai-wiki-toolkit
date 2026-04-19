@@ -23,6 +23,7 @@ class PullRequestCreateResult:
 class PullRequestFinishResult:
     branch: str
     base_branch: str
+    merged: bool
 
 
 def resolve_repo_root(start: Path | None = None) -> Path:
@@ -82,6 +83,18 @@ def branch_has_upstream(repo_root: Path, branch: str) -> bool:
     return result.returncode == 0
 
 
+def pull_request_state(repo_root: Path, branch: str) -> str:
+    result = _run_command(
+        repo_root,
+        ["gh", "pr", "view", branch, "--json", "state"],
+        check=True,
+    )
+    for token in ('"state":"MERGED"', '"state":"OPEN"', '"state":"CLOSED"'):
+        if token in result.stdout:
+            return token.split('"')[3]
+    raise PullRequestFlowError(f"Could not determine pull request state for `{branch}`.")
+
+
 def create_pull_request(
     repo_root: Path,
     *,
@@ -138,15 +151,21 @@ def finish_pull_request(
             f"Current branch is already `{base_branch}`. Switch to the PR branch you want to merge."
         )
 
-    merge_command = ["gh", "pr", "merge", branch, "--rebase", "--delete-branch"]
-    if auto:
-        merge_command.append("--auto")
-    _run_command(repo_root, merge_command, check=True)
+    state = pull_request_state(repo_root, branch)
+    if state != "MERGED":
+        merge_command = ["gh", "pr", "merge", branch, "--rebase", "--delete-branch"]
+        if auto:
+            merge_command.append("--auto")
+        _run_command(repo_root, merge_command, check=True)
+        state = pull_request_state(repo_root, branch)
+
+    if state != "MERGED":
+        return PullRequestFinishResult(branch=branch, base_branch=base_branch, merged=False)
 
     _run_command(repo_root, ["git", "fetch", "origin", "--prune"], check=True)
     _run_command(repo_root, ["git", "switch", base_branch], check=True)
     _run_command(repo_root, ["git", "pull", "--ff-only", "origin", base_branch], check=True)
-    return PullRequestFinishResult(branch=branch, base_branch=base_branch)
+    return PullRequestFinishResult(branch=branch, base_branch=base_branch, merged=True)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -199,7 +218,13 @@ def main(argv: list[str] | None = None) -> int:
             base_branch=args.base,
             auto=args.auto,
         )
-        print(f"Merged `{result.branch}` and synced `{result.base_branch}`.")
+        if result.merged:
+            print(f"Merged `{result.branch}` and synced `{result.base_branch}`.")
+        else:
+            print(
+                f"Enabled auto-merge for `{result.branch}`. Wait for GitHub to merge it, "
+                f"then rerun `uv run python scripts/pr_flow.py finish` to sync `{result.base_branch}`."
+            )
         return 0
     except PullRequestFlowError as exc:
         print(str(exc), file=sys.stderr)

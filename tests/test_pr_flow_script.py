@@ -111,12 +111,71 @@ def test_finish_pull_request_rebases_deletes_branch_and_syncs_main(
             ("git", "branch", "--show-current"): subprocess.CompletedProcess(
                 command, 0, "feature/pr-flow\n", ""
             ),
+            ("gh", "pr", "view", "feature/pr-flow", "--json", "state"): subprocess.CompletedProcess(
+                command, 0, '{"state":"OPEN"}\n', ""
+            ),
             ("gh", "pr", "merge", "feature/pr-flow", "--rebase", "--delete-branch", "--auto"): subprocess.CompletedProcess(
                 command, 0, "", ""
+            ),
+            ("gh", "pr", "view", "feature/pr-flow", "--json", "state", "after"): subprocess.CompletedProcess(
+                command, 0, '{"state":"MERGED"}\n', ""
             ),
             ("git", "fetch", "origin", "--prune"): subprocess.CompletedProcess(command, 0, "", ""),
             ("git", "switch", "main"): subprocess.CompletedProcess(command, 0, "", ""),
             ("git", "pull", "--ff-only", "origin", "main"): subprocess.CompletedProcess(
+                command, 0, "", ""
+            ),
+        }
+        key = tuple(command)
+        if key == ("gh", "pr", "view", "feature/pr-flow", "--json", "state"):
+            count = sum(1 for seen in seen_commands if seen == command)
+            if count == 1:
+                return responses[key]
+            return responses[("gh", "pr", "view", "feature/pr-flow", "--json", "state", "after")]
+        if key not in responses:
+            raise AssertionError(f"Unexpected command: {command}")
+        return responses[key]
+
+    monkeypatch.setattr(module.subprocess, "run", fake_run)
+
+    result = module.finish_pull_request(repo_env["repo"], auto=True)
+
+    assert result == module.PullRequestFinishResult(
+        branch="feature/pr-flow",
+        base_branch="main",
+        merged=True,
+    )
+    assert seen_commands == [
+        ["gh", "auth", "status"],
+        ["git", "status", "--short"],
+        ["git", "branch", "--show-current"],
+        ["gh", "pr", "view", "feature/pr-flow", "--json", "state"],
+        ["gh", "pr", "merge", "feature/pr-flow", "--rebase", "--delete-branch", "--auto"],
+        ["gh", "pr", "view", "feature/pr-flow", "--json", "state"],
+        ["git", "fetch", "origin", "--prune"],
+        ["git", "switch", "main"],
+        ["git", "pull", "--ff-only", "origin", "main"],
+    ]
+
+
+def test_finish_pull_request_auto_waits_for_merge_before_syncing_main(
+    repo_env: dict[str, Path], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = load_pr_flow_module()
+    seen_commands: list[list[str]] = []
+
+    def fake_run(command: list[str], *, cwd: Path, capture_output: bool, text: bool, check: bool):
+        seen_commands.append(command)
+        responses = {
+            ("gh", "auth", "status"): subprocess.CompletedProcess(command, 0, "", ""),
+            ("git", "status", "--short"): subprocess.CompletedProcess(command, 0, "", ""),
+            ("git", "branch", "--show-current"): subprocess.CompletedProcess(
+                command, 0, "feature/pr-flow\n", ""
+            ),
+            ("gh", "pr", "view", "feature/pr-flow", "--json", "state"): subprocess.CompletedProcess(
+                command, 0, '{"state":"OPEN"}\n', ""
+            ),
+            ("gh", "pr", "merge", "feature/pr-flow", "--rebase", "--delete-branch", "--auto"): subprocess.CompletedProcess(
                 command, 0, "", ""
             ),
         }
@@ -129,15 +188,18 @@ def test_finish_pull_request_rebases_deletes_branch_and_syncs_main(
 
     result = module.finish_pull_request(repo_env["repo"], auto=True)
 
-    assert result == module.PullRequestFinishResult(branch="feature/pr-flow", base_branch="main")
+    assert result == module.PullRequestFinishResult(
+        branch="feature/pr-flow",
+        base_branch="main",
+        merged=False,
+    )
     assert seen_commands == [
         ["gh", "auth", "status"],
         ["git", "status", "--short"],
         ["git", "branch", "--show-current"],
+        ["gh", "pr", "view", "feature/pr-flow", "--json", "state"],
         ["gh", "pr", "merge", "feature/pr-flow", "--rebase", "--delete-branch", "--auto"],
-        ["git", "fetch", "origin", "--prune"],
-        ["git", "switch", "main"],
-        ["git", "pull", "--ff-only", "origin", "main"],
+        ["gh", "pr", "view", "feature/pr-flow", "--json", "state"],
     ]
 
 
