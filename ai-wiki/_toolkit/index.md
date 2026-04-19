@@ -11,4 +11,5 @@ This directory is managed by ai-wiki-toolkit. Future package versions may update
 ## Generated Outputs
 
 - `catalog.json` and `metrics/*.json` are generated outputs, not guidance docs.
-- Regenerate those outputs with `aiwiki-toolkit refresh-metrics` instead of hand-merging them.
+- The installer ignores those generated outputs in `.gitignore` so routine telemetry updates stay local.
+- Regenerate those outputs with `aiwiki-toolkit refresh-metrics` whenever you need a fresh local snapshot.

@@ -15,6 +15,7 @@ from ai_wiki_toolkit.content import (
     repo_skill_starter_files,
     system_starter_files,
 )
+from ai_wiki_toolkit.gitignore import remove_gitignore_block_file, upsert_gitignore_block_file
 from ai_wiki_toolkit.opencode import remove_opencode_config
 from ai_wiki_toolkit.paths import (
     ToolkitPaths,
@@ -37,6 +38,7 @@ class InitResult:
     resolved_handle: str
     created_dirs: list[Path] = field(default_factory=list)
     created_files: list[Path] = field(default_factory=list)
+    updated_ignore_files: list[Path] = field(default_factory=list)
     updated_prompt_files: list[Path] = field(default_factory=list)
     updated_managed_files: list[Path] = field(default_factory=list)
     skipped_skill_files: list[Path] = field(default_factory=list)
@@ -47,6 +49,8 @@ class UninstallResult:
     paths: ToolkitPaths
     removed_dirs: list[Path] = field(default_factory=list)
     removed_files: list[Path] = field(default_factory=list)
+    updated_ignore_files: list[Path] = field(default_factory=list)
+    deleted_ignore_files: list[Path] = field(default_factory=list)
     updated_prompt_files: list[Path] = field(default_factory=list)
     deleted_prompt_files: list[Path] = field(default_factory=list)
     removed_opencode_key: bool = False
@@ -160,6 +164,14 @@ def install_workspace(start: Path | None = None, handle: str | None = None) -> I
     for relative_path, content in repo_skill_starter_files().items():
         _write_skill_if_missing(paths.repo_root / relative_path, content, result)
 
+    gitignore_path = paths.repo_root / ".gitignore"
+    gitignore_existed = gitignore_path.exists()
+    if upsert_gitignore_block_file(gitignore_path):
+        if gitignore_existed:
+            result.updated_ignore_files.append(gitignore_path)
+        else:
+            result.created_files.append(gitignore_path)
+
     prompt_targets = existing_prompt_targets(paths.repo_root)
     if not prompt_targets:
         prompt_targets = [paths.repo_root / "AGENT.md"]
@@ -230,6 +242,14 @@ def uninstall_workspace(
             result.deleted_prompt_files.append(path)
         else:
             result.updated_prompt_files.append(path)
+
+    gitignore_path = paths.repo_root / ".gitignore"
+    updated_gitignore, deleted_gitignore = remove_gitignore_block_file(gitignore_path)
+    if updated_gitignore:
+        if deleted_gitignore:
+            result.deleted_ignore_files.append(gitignore_path)
+        else:
+            result.updated_ignore_files.append(gitignore_path)
 
     repo_opencode = paths.repo_root / "opencode.json"
     opencode_before_exists = repo_opencode.exists()

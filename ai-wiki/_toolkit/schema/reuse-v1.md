@@ -17,6 +17,9 @@ User-owned reuse checks live in `ai-wiki/metrics/task-checks/<handle>.jsonl`.
 
 Package-managed aggregate files are regenerated under `ai-wiki/_toolkit/metrics/`.
 
+The installer ignores the telemetry shards and generated aggregate views in `.gitignore` by default
+so routine reuse logging does not dirty git status.
+
 The toolkit can append explicit document observations via `aiwiki-toolkit record-reuse`.
 
 The toolkit can append task-level reuse checks via `aiwiki-toolkit record-reuse-check`.
@@ -88,5 +91,5 @@ The toolkit currently derives:
 - `_toolkit/metrics/document-stats.json`
 - `_toolkit/metrics/task-stats.json`
 
-If those generated views drift or conflict across branches, regenerate them with
-`aiwiki-toolkit refresh-metrics` instead of hand-merging the JSON.
+Those generated views are intended as local snapshots. Regenerate them with
+`aiwiki-toolkit refresh-metrics` whenever you need a fresh local view.

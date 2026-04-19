@@ -52,6 +52,7 @@ def _echo_install_result(result) -> None:
     typer.echo(f"Resolved handle: {result.resolved_handle}")
     typer.echo(f"Created directories: {len(result.created_dirs)}")
     typer.echo(f"Created files: {len(result.created_files)}")
+    typer.echo(f"Updated ignore files: {len(result.updated_ignore_files)}")
     typer.echo(f"Updated managed files: {len(result.updated_managed_files)}")
     typer.echo(f"Updated prompt files: {len(result.updated_prompt_files)}")
     typer.echo(
@@ -84,6 +85,17 @@ def _echo_doctor_result(result, *, suggest_index_upgrade: bool, strict: bool) ->
         step = 1
         if any(f.path.startswith("ai-wiki/_toolkit/") for f in actionable_findings):
             typer.echo(f"{step}. Run `aiwiki-toolkit install` to refresh managed files if needed.")
+            step += 1
+        if any(f.path == ".gitignore" for f in actionable_findings):
+            typer.echo(f"{step}. Run `aiwiki-toolkit install` to refresh the managed `.gitignore` block if needed.")
+            step += 1
+        tracked_telemetry = next(
+            (f for f in actionable_findings if f.code == "tracked_telemetry_in_git_index"),
+            None,
+        )
+        if tracked_telemetry and tracked_telemetry.suggested_fix:
+            typer.echo(f"{step}. Untrack legacy telemetry paths once:")
+            typer.echo(f"   {tracked_telemetry.suggested_fix}")
             step += 1
         if any(f.path.startswith("ai-wiki/") and not f.path.startswith("ai-wiki/_toolkit/") for f in actionable_findings):
             if suggest_index_upgrade:
@@ -177,6 +189,8 @@ def uninstall(
     typer.echo(f"System wiki: {result.paths.system_dir}")
     typer.echo(f"Removed directories: {len(result.removed_dirs)}")
     typer.echo(f"Removed files: {len(result.removed_files)}")
+    typer.echo(f"Updated ignore files: {len(result.updated_ignore_files)}")
+    typer.echo(f"Deleted ignore files: {len(result.deleted_ignore_files)}")
     typer.echo(f"Updated prompt files: {len(result.updated_prompt_files)}")
     typer.echo(f"Deleted prompt files: {len(result.deleted_prompt_files)}")
     typer.echo(f"Removed opencode key: {'yes' if result.removed_opencode_key else 'no'}")

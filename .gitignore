@@ -11,3 +11,11 @@ release-assets/
 *.spec
 uv.lock
 npm/vendor/
+
+# <!-- aiwiki-toolkit:start -->
+# Ignore AI wiki telemetry so normal agent use does not dirty git status.
+ai-wiki/metrics/reuse-events/
+ai-wiki/metrics/task-checks/
+ai-wiki/_toolkit/metrics/
+ai-wiki/_toolkit/catalog.json
+# <!-- aiwiki-toolkit:end -->
