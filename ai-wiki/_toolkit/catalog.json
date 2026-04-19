@@ -29,6 +29,20 @@
       "title": "Metrics Index"
     },
     {
+      "doc_id": "people/bochengyin/drafts/ai-wiki-reuse-metrics-should-exclude-managed-docs-and-shard-by-handle",
+      "kind": "draft",
+      "path": "ai-wiki/people/bochengyin/drafts/ai-wiki-reuse-metrics-should-exclude-managed-docs-and-shard-by-handle.md",
+      "source": "user_owned",
+      "title": "AI wiki reuse metrics should exclude managed docs and shard logs by handle"
+    },
+    {
+      "doc_id": "people/bochengyin/drafts/ai-wiki-usefulness-metrics-need-task-level-checks-plus-doc-events",
+      "kind": "draft",
+      "path": "ai-wiki/people/bochengyin/drafts/ai-wiki-usefulness-metrics-need-task-level-checks-plus-doc-events.md",
+      "source": "user_owned",
+      "title": "AI wiki usefulness metrics need task-level checks plus document-level events"
+    },
+    {
       "doc_id": "people/bochengyin/drafts/distribution-target-matrix-must-match-published-assets",
       "kind": "draft",
       "path": "ai-wiki/people/bochengyin/drafts/distribution-target-matrix-must-match-published-assets.md",
@@ -55,6 +69,13 @@
       "path": "ai-wiki/people/bochengyin/drafts/linux-release-binaries-need-runtime-checks-against-an-older-glibc-baseline.md",
       "source": "user_owned",
       "title": "Linux release binaries need runtime checks against an older glibc baseline"
+    },
+    {
+      "doc_id": "people/bochengyin/drafts/managed-toolkit-workflows-need-a-toc-and-scope-aware-conflict-checks",
+      "kind": "draft",
+      "path": "ai-wiki/people/bochengyin/drafts/managed-toolkit-workflows-need-a-toc-and-scope-aware-conflict-checks.md",
+      "source": "user_owned",
+      "title": "Managed toolkit workflows need a TOC and scope-aware conflict checks"
     },
     {
       "doc_id": "people/bochengyin/drafts/npm-postinstall-must-not-delete-its-own-download-archive",

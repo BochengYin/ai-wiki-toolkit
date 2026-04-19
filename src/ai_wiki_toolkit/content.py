@@ -8,7 +8,9 @@ PROMPT_BLOCK_START = "<!-- aiwiki-toolkit:start -->"
 PROMPT_BLOCK_END = "<!-- aiwiki-toolkit:end -->"
 OPENCODE_KEY = "aiwikiToolkit"
 TOOLKIT_GITHUB_URL = "https://github.com/BochengYin/ai-wiki-toolkit"
+TOOLKIT_SKILLS_DIR = ".agents/skills"
 AI_WIKI_UPDATE_SKILL_DIR = ".agents/skills/ai-wiki-update-check"
+AI_WIKI_REUSE_SKILL_DIR = ".agents/skills/ai-wiki-reuse-check"
 
 
 def repo_starter_files(handle: str) -> dict[str, str]:
@@ -21,9 +23,9 @@ def repo_starter_files(handle: str) -> dict[str, str]:
 
             ## Read Order
 
-            1. Read `_toolkit/system.md` for package-managed collaboration rules.
+            1. Read `_toolkit/index.md` for package-managed collaboration rules and baseline workflows.
             2. Read `constraints.md` for hard constraints and non-negotiables.
-            3. Read `workflows.md` for preferred ways of working in this repo.
+            3. Read `workflows.md` for repo-specific workflows that extend the managed baseline.
             4. Read `decisions.md` for durable project decisions and tradeoffs.
             5. Read `review-patterns/index.md` before individual review patterns.
             6. Read `trails/index.md` when task-specific chronology or dead ends may help.
@@ -31,11 +33,11 @@ def repo_starter_files(handle: str) -> dict[str, str]:
 
             ## Areas
 
+            - `_toolkit/index.md` maps package-managed collaboration rules, baseline workflows, and schemas.
             - `review-patterns/index.md` maps shared, reusable review rules.
             - `trails/index.md` maps task-specific chronology, dead ends, and release trails.
             - `people/<handle>/index.md` maps handle-local draft notes and working history.
-            - `metrics/` contains user-owned evidence logs such as `reuse-events.jsonl`.
-            - `_toolkit/system.md` contains package-managed collaboration protocol and note schemas.
+            - `metrics/` contains user-owned evidence logs such as `reuse-events/<handle>.jsonl` and `task-checks/<handle>.jsonl`.
             """
         ).strip()
         + "\n",
@@ -52,6 +54,8 @@ def repo_starter_files(handle: str) -> dict[str, str]:
             # Project Workflows
 
             Capture repeatable repo-specific workflows here.
+
+            See also `_toolkit/workflows.md` for package-managed baseline workflows that ship with `ai-wiki-toolkit`.
             """
         ).strip()
         + "\n",
@@ -104,13 +108,15 @@ def repo_starter_files(handle: str) -> dict[str, str]:
 
             ## Files
 
-            - `reuse-events.jsonl` is an append-only event log for knowledge reuse observations.
-            - `aiwiki-toolkit record-reuse ...` appends one explicit observation and refreshes managed aggregates.
+            - `reuse-events/<handle>.jsonl` stores per-handle document-level AI wiki reuse observations.
+            - `task-checks/<handle>.jsonl` stores per-handle task-level AI wiki reuse checks.
+            - `aiwiki-toolkit record-reuse ...` appends one document-level observation for the current handle and refreshes managed aggregates.
+            - `aiwiki-toolkit record-reuse-check ...` appends one task-level reuse check for the current handle and refreshes managed aggregates.
+            - `aiwiki-toolkit refresh-metrics` regenerates package-managed aggregate views when branches drift or merge conflicts need to be resolved.
             - Package-managed aggregate views are generated under `_toolkit/metrics/`.
             """
         ).strip()
         + "\n",
-        "metrics/reuse-events.jsonl": "",
     }
 
 
@@ -144,6 +150,25 @@ def system_starter_files() -> dict[str, str]:
 
 def managed_repo_toolkit_files() -> dict[str, str]:
     return {
+        "index.md": dedent(
+            """
+            # Toolkit Managed Index
+
+            This directory is managed by ai-wiki-toolkit. Future package versions may update it.
+
+            ## Read Order
+
+            1. Read `system.md` for package-managed collaboration rules.
+            2. Read `workflows.md` for package-managed baseline workflows.
+            3. Read `schema/reuse-v1.md` only when reuse metrics, logging, or schema questions matter.
+
+            ## Generated Outputs
+
+            - `catalog.json` and `metrics/*.json` are generated outputs, not guidance docs.
+            - Regenerate those outputs with `aiwiki-toolkit refresh-metrics` instead of hand-merging them.
+            """
+        ).strip()
+        + "\n",
         "system.md": dedent(
             """
             # Toolkit Managed System Rules
@@ -152,11 +177,23 @@ def managed_repo_toolkit_files() -> dict[str, str]:
 
             ## Start Of Task
 
-            1. Read `ai-wiki/index.md`.
-            2. Read `ai-wiki/review-patterns/index.md` before implementation or review work.
-            3. Read `ai-wiki/people/<handle>/index.md` when continuing draft work.
-            4. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
-            5. If an `ai-wiki-update-check` skill is available, use it for end-of-task AI wiki checks.
+            1. Read `ai-wiki/_toolkit/index.md`.
+            2. Read `ai-wiki/index.md`.
+            3. Read `ai-wiki/review-patterns/index.md` before implementation or review work.
+            4. Read `ai-wiki/people/<handle>/index.md` when continuing draft work.
+            5. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
+            6. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them for end-of-task AI wiki checks.
+
+            ## AI Wiki Reuse Check
+
+            1. Run one AI wiki reuse check at the end of every completed task, even when no wiki docs were used.
+            2. If any user-owned repo or system AI wiki docs were consulted, record one `aiwiki-toolkit record-reuse` event per consulted document.
+            3. If a managed `_toolkit/**` doc changed the plan or behavior, cite its path in a progress update or final note, but do not record it with `record-reuse`.
+            4. When a user-owned AI wiki doc materially changes the plan or behavior, cite its path in a progress update or final note.
+            5. Use `reuse_outcome=not_helpful` when a consulted user-owned AI wiki document did not help materially but still influenced the search path.
+            6. Record one `aiwiki-toolkit record-reuse-check` entry for the task with:
+               - `wiki_used` when one or more AI wiki document events were recorded
+               - `no_wiki_use` when no AI wiki document events were needed for the task
 
             ## AI Wiki Update Check
 
@@ -214,6 +251,30 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             """
         ).strip()
         + "\n",
+        "workflows.md": dedent(
+            """
+            # Toolkit Managed Workflows
+
+            This file is managed by ai-wiki-toolkit. Future package versions may update it.
+
+            ## AI Wiki Maintenance
+
+            1. Run one AI wiki reuse check at the end of every completed task, even when no AI wiki docs were used.
+            2. If any user-owned repo or system AI wiki docs were consulted, record one `aiwiki-toolkit record-reuse` event per consulted doc.
+            3. Do not log managed `_toolkit/**` docs with `record-reuse`; if they changed the plan or behavior, cite their paths in a progress update or the final note instead.
+            4. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
+            5. Metrics logs should shard by handle under `ai-wiki/metrics/reuse-events/<handle>.jsonl` and `ai-wiki/metrics/task-checks/<handle>.jsonl` to reduce merge conflicts in team workflows.
+            6. If generated files under `ai-wiki/_toolkit/catalog.json` or `ai-wiki/_toolkit/metrics/*.json` drift or conflict after a merge, rerun `aiwiki-toolkit refresh-metrics` instead of hand-merging them.
+            7. Run one AI wiki update check at the end of every completed task, even when the result is `None`.
+            8. Always end with exactly one status line: `AI Wiki Update Candidate: None`, `Draft`, or `PromotionCandidate`.
+            9. If the result is `Draft` or `PromotionCandidate`, also print `AI Wiki Update Path: <path>`.
+            10. Put reusable repo-specific lessons in `ai-wiki/review-patterns/`.
+            11. Put task-specific chronology and dead ends in `ai-wiki/trails/`.
+            12. Put raw personal draft notes in `ai-wiki/people/<handle>/drafts/`.
+            13. Promote only stable, reviewable rules into shared patterns.
+            """
+        ).strip()
+        + "\n",
         "schema/reuse-v1.md": dedent(
             """
             # Reuse Schema v1
@@ -229,19 +290,27 @@ def managed_repo_toolkit_files() -> dict[str, str]:
 
             ## Source Of Truth
 
-            User-owned reuse observations live in `ai-wiki/metrics/reuse-events.jsonl`.
+            User-owned reuse observations live in `ai-wiki/metrics/reuse-events/<handle>.jsonl`.
+
+            User-owned reuse checks live in `ai-wiki/metrics/task-checks/<handle>.jsonl`.
 
             Package-managed aggregate files are regenerated under `ai-wiki/_toolkit/metrics/`.
 
-            The toolkit can append explicit observations via `aiwiki-toolkit record-reuse`.
+            The toolkit can append explicit document observations via `aiwiki-toolkit record-reuse`.
 
-            ## Event Fields
+            The toolkit can append task-level reuse checks via `aiwiki-toolkit record-reuse-check`.
+
+            Legacy flat files such as `ai-wiki/metrics/reuse-events.jsonl` and `ai-wiki/metrics/task-checks.jsonl`
+            are still read for compatibility, but new writes should use the per-handle shard paths.
+
+            ## Reuse Event Fields
 
             Each JSONL event may include:
 
             - `schema_version`
             - `event_id`
             - `observed_at`
+            - `author_handle`
             - `task_id`
             - `doc_id`
             - `doc_kind`
@@ -253,6 +322,20 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             - `model`
             - `notes`
             - `estimated_savings`
+
+            ## Task Check Fields
+
+            Each task check entry may include:
+
+            - `schema_version`
+            - `check_id`
+            - `checked_at`
+            - `author_handle`
+            - `task_id`
+            - `check_outcome`
+            - `agent_name`
+            - `model`
+            - `notes`
 
             ## Retrieval Mode
 
@@ -270,6 +353,12 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             - `partial`: the wiki helped, but did not fully resolve the task
             - `not_helpful`: the wiki was consulted, but did not help materially
 
+            ## Managed Docs
+
+            Managed control-plane docs under `_toolkit/**` must not be recorded with `aiwiki-toolkit record-reuse`.
+
+            If they materially influence task behavior, cite their path in user-facing progress notes instead.
+
             ## Aggregate Outputs
 
             The toolkit currently derives:
@@ -277,6 +366,9 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             - `_toolkit/catalog.json`
             - `_toolkit/metrics/document-stats.json`
             - `_toolkit/metrics/task-stats.json`
+
+            If those generated views drift or conflict across branches, regenerate them with
+            `aiwiki-toolkit refresh-metrics` instead of hand-merging the JSON.
             """
         ).strip()
         + "\n",
@@ -418,6 +510,101 @@ def repo_skill_starter_files() -> dict[str, str]:
             """
         ).strip()
         + "\n",
+        f"{AI_WIKI_REUSE_SKILL_DIR}/SKILL.md": dedent(
+            """
+            ---
+            name: ai-wiki-reuse-check
+            description: Run the mandatory end-of-task AI wiki reuse check for ai-wiki-toolkit. Use it to record whether AI wiki docs were consulted during the task, append one reuse event per consulted doc, append one task-level reuse check, and report the outcome.
+            ---
+
+            # AI Wiki Reuse Check
+
+            Use this skill at the end of every completed task in this repository.
+
+            This check is mandatory even when the correct outcome is `no_wiki_use`.
+
+            ## Core Workflow
+
+            1. Review whether any repo-local or cross-project AI wiki docs were consulted during the task.
+            2. If one or more user-owned AI wiki docs were consulted, append one `aiwiki-toolkit record-reuse` event per consulted doc.
+            3. If a managed `_toolkit/**` doc changed the plan or behavior, cite its path in a progress update or final note, but do not log it with `record-reuse`.
+            4. When a user-owned AI wiki doc materially changes the plan or behavior, cite its path in a progress update or final note.
+            5. Use `reuse_outcome=not_helpful` for consulted user-owned docs that did not help materially but still affected the task flow.
+            6. Append one `aiwiki-toolkit record-reuse-check` entry for the task using:
+               - `wiki_used` when one or more doc events were recorded
+               - `no_wiki_use` when no AI wiki doc events were recorded
+            7. Emit the final result using [references/output-contract.md](references/output-contract.md).
+
+            ## Constraints
+
+            - Do not skip the check just because the task was small or the result seems obvious.
+            - Record one task-level reuse check for every completed task.
+            - If multiple user-owned AI wiki docs were consulted, record them as separate `record-reuse` events.
+            - Do not record managed `_toolkit/**` docs with `record-reuse`.
+            - If an AI wiki doc changed the task plan or behavior, name the path explicitly in a user-facing update.
+            """
+        ).strip()
+        + "\n",
+        f"{AI_WIKI_REUSE_SKILL_DIR}/references/decision-rules.md": dedent(
+            """
+            # Decision Rules
+
+            ## Outcome Meanings
+
+            - `wiki_used`
+              Use when one or more AI wiki document reuse events were recorded for the task.
+
+            - `no_wiki_use`
+              Use when the task completed without recording any AI wiki document reuse events.
+
+            ## Recording Rules
+
+            - Record one `aiwiki-toolkit record-reuse` event per consulted user-owned AI wiki document.
+            - Do not record managed `_toolkit/**` docs with `record-reuse`; cite those paths in progress updates or final notes instead.
+            - Use `reuse_outcome=not_helpful` when a consulted user-owned doc did not help materially but still influenced the search path.
+            - Record the task-level `aiwiki-toolkit record-reuse-check` entry after all document-level reuse events for that task are appended.
+            """
+        ).strip()
+        + "\n",
+        f"{AI_WIKI_REUSE_SKILL_DIR}/references/output-contract.md": dedent(
+            """
+            # Output Contract
+
+            Choose exactly one reuse status line:
+
+            - `AI Wiki Reuse Check: wiki_used`
+            - `AI Wiki Reuse Check: no_wiki_use`
+
+            If the result is `wiki_used`, also print:
+
+            - `AI Wiki Reuse Docs: <comma-separated doc ids>`
+
+            ## Examples
+
+            No AI wiki docs were used:
+
+            ```text
+            AI Wiki Reuse Check: no_wiki_use
+            ```
+
+            AI wiki docs were used:
+
+            ```text
+            AI Wiki Reuse Check: wiki_used
+            AI Wiki Reuse Docs: workflows, review-patterns/shared-prompt-files-must-be-user-agnostic
+            ```
+            """
+        ).strip()
+        + "\n",
+        f"{AI_WIKI_REUSE_SKILL_DIR}/agents/openai.yaml": dedent(
+            """
+            interface:
+              display_name: "AI Wiki Reuse Check"
+              short_description: "Record end-of-task AI wiki reuse"
+              default_prompt: "Run the ai-wiki end-of-task reuse check for this completed task."
+            """
+        ).strip()
+        + "\n",
     }
 
 
@@ -428,7 +615,7 @@ def prompt_block_body() -> str:
 
         Before starting work:
 
-        1. Read `ai-wiki/_toolkit/system.md`.
+        1. Read `ai-wiki/_toolkit/index.md`.
         2. Read `ai-wiki/index.md`.
         3. Read `ai-wiki/review-patterns/index.md` before implementation or review work.
         4. Read your own folder index under `ai-wiki/people/<handle>/index.md` when continuing draft notes.
@@ -437,15 +624,20 @@ def prompt_block_body() -> str:
         7. Keep cross-project reusable notes in `<home>/ai-wiki/system/`.
         8. Only suggest promotion from a draft to a shared pattern when the two-signal gate is satisfied.
         9. Agents may suggest promotion candidates, but humans confirm shared patterns.
-        10. If an `ai-wiki-update-check` skill is available, use it for the end-of-task AI wiki update check.
+        10. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them for the end-of-task AI wiki checks.
 
         ## End Of Task
 
-        1. Run one AI wiki update check for every completed task, even if the result is `None`.
-        2. Choose exactly one result: `None`, `Draft`, or `PromotionCandidate`.
-        3. If the result is `Draft`, record the lesson under `ai-wiki/people/<handle>/drafts/` and print `AI Wiki Update Path: <path>`.
-        4. If the result is `PromotionCandidate`, mark or update the draft as a promotion candidate, print `AI Wiki Update Path: <path>`, and ask for human confirmation before creating `ai-wiki/review-patterns/*.md`.
-        5. Always print exactly one final status line:
+        1. Run one AI wiki reuse check for every completed task, even if no AI wiki docs were used.
+        2. If any user-owned AI wiki docs were consulted, record one `aiwiki-toolkit record-reuse` event per consulted doc.
+        3. If a managed `_toolkit/**` doc materially changed the plan or behavior, cite its path in a progress update or final note, but do not log it with `record-reuse`.
+        4. If a user-owned AI wiki doc materially changed the plan or behavior, cite its path in a progress update or final note.
+        5. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
+        6. Run one AI wiki update check for every completed task, even if the result is `None`.
+        7. Choose exactly one result: `None`, `Draft`, or `PromotionCandidate`.
+        8. If the result is `Draft`, record the lesson under `ai-wiki/people/<handle>/drafts/` and print `AI Wiki Update Path: <path>`.
+        9. If the result is `PromotionCandidate`, mark or update the draft as a promotion candidate, print `AI Wiki Update Path: <path>`, and ask for human confirmation before creating `ai-wiki/review-patterns/*.md`.
+        10. Always print exactly one final status line:
            - `AI Wiki Update Candidate: None`
            - `AI Wiki Update Candidate: Draft`
            - `AI Wiki Update Candidate: PromotionCandidate`

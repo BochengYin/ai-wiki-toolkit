@@ -10,11 +10,14 @@ from ai_wiki_toolkit.paths import RepoRootNotFoundError
 from ai_wiki_toolkit.reuse_events import (
     EVIDENCE_MODES,
     RETRIEVAL_MODES,
+    REUSE_CHECK_OUTCOMES,
     REUSE_OUTCOMES,
     RepoWikiNotInitializedError,
+    record_reuse_check,
     record_reuse_event,
 )
 from ai_wiki_toolkit.scaffold import (
+    refresh_managed_metrics,
     install_workspace,
     skill_manual_merge_url,
     uninstall_workspace,
@@ -85,11 +88,11 @@ def _echo_doctor_result(result, *, suggest_index_upgrade: bool, strict: bool) ->
         if any(f.path.startswith("ai-wiki/") and not f.path.startswith("ai-wiki/_toolkit/") for f in actionable_findings):
             if suggest_index_upgrade:
                 typer.echo(
-                    f"{step}. Review the suggested index updates below and copy or merge them into the listed paths."
+                    f"{step}. Review the suggested starter updates below and copy or merge them into the listed paths."
                 )
             else:
                 typer.echo(
-                    f"{step}. Re-run with `aiwiki-toolkit doctor --suggest-index-upgrade` to print the latest starter content for the affected index files."
+                    f"{step}. Re-run with `aiwiki-toolkit doctor --suggest-index-upgrade` to print the latest starter content for the affected repo docs."
                 )
             step += 1
         if any(f.path in {"AGENT.md", "AGENTS.md", "CLAUDE.md"} for f in actionable_findings):
@@ -97,7 +100,7 @@ def _echo_doctor_result(result, *, suggest_index_upgrade: bool, strict: bool) ->
 
     if suggest_index_upgrade and result.suggestions:
         typer.echo("")
-        typer.echo("Suggested index updates:")
+        typer.echo("Suggested starter updates:")
         typer.echo("")
         for suggestion in result.suggestions:
             typer.echo(f"Path: {suggestion.path}")
@@ -181,6 +184,24 @@ def uninstall(
         typer.echo("Shared home wiki preserved: yes")
 
 
+@app.command("refresh-metrics")
+def refresh_metrics() -> None:
+    """Regenerate managed repo catalog and metrics from the current user-owned AI wiki state."""
+    try:
+        result = refresh_managed_metrics()
+    except RepoRootNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except RepoWikiNotInitializedError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+
+    typer.echo(f"Repo wiki: {result.paths.repo_wiki_dir}")
+    typer.echo(f"Refreshed files: {len(result.refreshed_files)}")
+    for path in result.refreshed_files:
+        typer.echo(f"Refreshed file: {path}")
+
+
 @app.command("record-reuse")
 def record_reuse(
     doc_id: str = typer.Option(
@@ -250,6 +271,11 @@ def record_reuse(
         "--observed-at",
         help="Optional explicit timestamp. Defaults to the current local time in ISO-8601 format.",
     ),
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional override for the handle shard used under ai-wiki/metrics/.",
+    ),
 ) -> None:
     """Append one reuse observation and refresh managed metric aggregates."""
     try:
@@ -267,6 +293,7 @@ def record_reuse(
             saved_tokens=saved_tokens,
             saved_seconds=saved_seconds,
             observed_at=observed_at,
+            handle=handle,
         )
     except RepoRootNotFoundError as exc:
         typer.echo(str(exc), err=True)
@@ -280,7 +307,75 @@ def record_reuse(
 
     typer.echo(f"Recorded reuse event: {result.event_id}")
     typer.echo(f"Observed at: {result.observed_at}")
+    typer.echo(f"Author handle: {result.author_handle}")
     typer.echo(f"Event log: {result.event_log_path}")
+    typer.echo(f"Document stats: {result.document_stats_path}")
+    typer.echo(f"Task stats: {result.task_stats_path}")
+
+
+@app.command("record-reuse-check")
+def record_reuse_check_command(
+    task_id: str = typer.Option(
+        ...,
+        "--task-id",
+        help="Stable task identifier for the completed task that was checked for AI wiki reuse.",
+    ),
+    check_outcome: str = typer.Option(
+        ...,
+        "--check-outcome",
+        help=f"Whether the task used AI wiki docs. Choices: {', '.join(REUSE_CHECK_OUTCOMES)}.",
+    ),
+    agent_name: str | None = typer.Option(
+        None,
+        "--agent-name",
+        help="Optional agent identifier such as codex or claude-code.",
+    ),
+    model: str | None = typer.Option(
+        None,
+        "--model",
+        help="Optional model name. Defaults to AIWIKI_TOOLKIT_MODEL or detected host model env vars.",
+    ),
+    notes: str | None = typer.Option(
+        None,
+        "--notes",
+        help="Optional free-form note describing the reuse check outcome.",
+    ),
+    checked_at: str | None = typer.Option(
+        None,
+        "--checked-at",
+        help="Optional explicit timestamp. Defaults to the current local time in ISO-8601 format.",
+    ),
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional override for the handle shard used under ai-wiki/metrics/.",
+    ),
+) -> None:
+    """Append one task-level reuse check and refresh managed metric aggregates."""
+    try:
+        result = record_reuse_check(
+            task_id=task_id,
+            check_outcome=check_outcome,
+            agent_name=agent_name,
+            model=model,
+            notes=notes,
+            checked_at=checked_at,
+            handle=handle,
+        )
+    except RepoRootNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except RepoWikiNotInitializedError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+
+    typer.echo(f"Recorded reuse check: {result.check_id}")
+    typer.echo(f"Checked at: {result.checked_at}")
+    typer.echo(f"Author handle: {result.author_handle}")
+    typer.echo(f"Check log: {result.check_log_path}")
     typer.echo(f"Document stats: {result.document_stats_path}")
     typer.echo(f"Task stats: {result.task_stats_path}")
 
@@ -303,7 +398,7 @@ def doctor(
         help="Exit with code 1 if warnings or errors are found.",
     ),
 ) -> None:
-    """Diagnose AI wiki index drift and optionally print upgrade starters."""
+    """Diagnose AI wiki navigation and rule drift and optionally print starter updates."""
     try:
         result = run_doctor(handle=handle)
     except RepoRootNotFoundError as exc:

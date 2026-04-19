@@ -1,5 +1,38 @@
 {
-  "documents": {},
+  "documents": {
+    "constraints": {
+      "effective_reuse_count": 2,
+      "last_effective_at": "2026-04-19T22:08:04+10:00",
+      "last_observed_at": "2026-04-19T22:08:04+10:00",
+      "lookup_reuse_count": 0,
+      "preloaded_reuse_count": 2,
+      "total_events": 2
+    },
+    "decisions": {
+      "effective_reuse_count": 1,
+      "last_effective_at": "2026-04-19T22:08:04+10:00",
+      "last_observed_at": "2026-04-19T22:08:04+10:00",
+      "lookup_reuse_count": 0,
+      "preloaded_reuse_count": 1,
+      "total_events": 1
+    },
+    "index": {
+      "effective_reuse_count": 1,
+      "last_effective_at": "2026-04-19T22:56:32+10:00",
+      "last_observed_at": "2026-04-19T22:56:32+10:00",
+      "lookup_reuse_count": 0,
+      "preloaded_reuse_count": 1,
+      "total_events": 1
+    },
+    "workflows": {
+      "effective_reuse_count": 5,
+      "last_effective_at": "2026-04-19T22:56:32+10:00",
+      "last_observed_at": "2026-04-19T22:56:32+10:00",
+      "lookup_reuse_count": 0,
+      "preloaded_reuse_count": 5,
+      "total_events": 5
+    }
+  },
   "schema_version": "reuse-v1",
   "skipped_event_lines": 0
 }
