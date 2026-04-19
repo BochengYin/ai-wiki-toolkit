@@ -27,15 +27,30 @@ jobs:
     if: ${{ (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && vars.NPM_PUBLISH_ENABLED == 'true') || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-24.04
     env:
-      RELEASE_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.event.workflow_run.head_sha }}
-      EXPECTED_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || '' }}
       NPM_PUBLISH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
 
     steps:
+      - name: Normalize requested release tag
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        id: requested_tag
+        shell: bash
+        run: |
+          raw='${{ inputs.release_tag }}'
+          tag="$(printf '%s' "$raw" | tr -d '[:space:]')"
+          if [ -z "$tag" ]; then
+            echo "release_tag input must not be empty." >&2
+            exit 1
+          fi
+          case "$tag" in
+            v*) ;;
+            *) tag="v$tag" ;;
+          esac
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
       - name: Check out source at released commit
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.RELEASE_REF }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && steps.requested_tag.outputs.tag || github.event.workflow_run.head_sha }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -57,8 +72,9 @@ jobs:
         run: |
           tag="v$(node -p "require('./package.json').version")"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
-          if [ -n "$EXPECTED_TAG" ] && [ "$EXPECTED_TAG" != "$tag" ]; then
-            echo "Expected tag $EXPECTED_TAG but checked out package metadata resolves to $tag." >&2
+          expected="${{ github.event_name == 'workflow_dispatch' && steps.requested_tag.outputs.tag || '' }}"
+          if [ -n "$expected" ] && [ "$expected" != "$tag" ]; then
+            echo "Expected tag $expected but checked out package metadata resolves to $tag." >&2
             exit 1
           fi
 
