@@ -4,6 +4,18 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+## v0.1.10
+
+### Added
+
+- Added managed `.gitignore` telemetry ignores plus `doctor` guidance for untracking legacy AI wiki metrics files.
+- Added a repo-local `scripts/pr_flow.py` helper for creating and finishing pull requests in this repository.
+
+### Changed
+
+- Updated repo-local workflow guidance to keep contributor-only PR flow automation out of the distributed package layer.
+- Clarified that commit and push steps in this repository must run sequentially, with remote state verified after push.
+
 ## v0.1.9
 
 ### Added
