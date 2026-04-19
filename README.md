@@ -187,6 +187,27 @@ npm install -g ai-wiki-toolkit@latest
 
 `aiwiki-toolkit` does not implement a self-update command. The package manager remains the source of truth for install and upgrade state.
 
+## Customizing Your AI Wiki
+
+`ai-wiki-toolkit` ships a starter structure, not a locked schema.
+
+- Files under `ai-wiki/_toolkit/**` and `~/ai-wiki/system/_toolkit/**` are package-managed.
+- Files such as `ai-wiki/index.md`, `ai-wiki/workflows.md`, and other docs you add under `ai-wiki/` are user-owned.
+- Agents should extend user-owned workflow docs instead of editing `_toolkit/**`.
+
+After upgrading the package, refresh the managed layer and then check whether your user-owned indexes are still aligned with the current recommended structure:
+
+```bash
+aiwiki-toolkit install
+aiwiki-toolkit doctor --strict
+```
+
+If `doctor` reports outdated or missing indexes, print the latest suggested starter content with:
+
+```bash
+aiwiki-toolkit doctor --suggest-index-upgrade
+```
+
 ## Usage
 
 Run inside a git repository:
