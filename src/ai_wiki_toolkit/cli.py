@@ -6,6 +6,13 @@ import typer
 
 from ai_wiki_toolkit import __version__
 from ai_wiki_toolkit.paths import RepoRootNotFoundError
+from ai_wiki_toolkit.reuse_events import (
+    EVIDENCE_MODES,
+    RETRIEVAL_MODES,
+    REUSE_OUTCOMES,
+    RepoWikiNotInitializedError,
+    record_reuse_event,
+)
 from ai_wiki_toolkit.scaffold import (
     install_workspace,
     skill_manual_merge_url,
@@ -119,6 +126,110 @@ def uninstall(
     typer.echo(f"Removed opencode key: {'yes' if result.removed_opencode_key else 'no'}")
     if purge_user_docs:
         typer.echo("Shared home wiki preserved: yes")
+
+
+@app.command("record-reuse")
+def record_reuse(
+    doc_id: str = typer.Option(
+        ...,
+        "--doc-id",
+        help="Document identifier, usually the ai-wiki path without the .md suffix.",
+    ),
+    task_id: str = typer.Option(
+        ...,
+        "--task-id",
+        help="Stable task identifier for grouping reuse observations.",
+    ),
+    retrieval_mode: str = typer.Option(
+        ...,
+        "--retrieval-mode",
+        help=f"How the document was reached. Choices: {', '.join(RETRIEVAL_MODES)}.",
+    ),
+    evidence_mode: str = typer.Option(
+        ...,
+        "--evidence-mode",
+        help=f"How strongly the reuse was observed. Choices: {', '.join(EVIDENCE_MODES)}.",
+    ),
+    reuse_outcome: str = typer.Option(
+        ...,
+        "--reuse-outcome",
+        help=f"How useful the reuse was. Choices: {', '.join(REUSE_OUTCOMES)}.",
+    ),
+    doc_kind: str | None = typer.Option(
+        None,
+        "--doc-kind",
+        help="Optional override for the document kind. Defaults to an inferred value from --doc-id.",
+    ),
+    reuse_effects: list[str] | None = typer.Option(
+        None,
+        "--reuse-effect",
+        help="Repeatable effect label such as avoided_search, avoided_retry, or faster_resolution.",
+    ),
+    agent_name: str | None = typer.Option(
+        None,
+        "--agent-name",
+        help="Optional agent identifier such as codex or claude-code.",
+    ),
+    model: str | None = typer.Option(
+        None,
+        "--model",
+        help="Optional model name. Defaults to AIWIKI_TOOLKIT_MODEL or detected host model env vars.",
+    ),
+    notes: str | None = typer.Option(
+        None,
+        "--notes",
+        help="Optional free-form note describing the reuse observation.",
+    ),
+    saved_tokens: int | None = typer.Option(
+        None,
+        "--saved-tokens",
+        min=0,
+        help="Optional estimated token savings for this observation.",
+    ),
+    saved_seconds: int | None = typer.Option(
+        None,
+        "--saved-seconds",
+        min=0,
+        help="Optional estimated seconds saved for this observation.",
+    ),
+    observed_at: str | None = typer.Option(
+        None,
+        "--observed-at",
+        help="Optional explicit timestamp. Defaults to the current local time in ISO-8601 format.",
+    ),
+) -> None:
+    """Append one reuse observation and refresh managed metric aggregates."""
+    try:
+        result = record_reuse_event(
+            doc_id=doc_id,
+            task_id=task_id,
+            retrieval_mode=retrieval_mode,
+            evidence_mode=evidence_mode,
+            reuse_outcome=reuse_outcome,
+            doc_kind=doc_kind,
+            reuse_effects=reuse_effects or [],
+            agent_name=agent_name,
+            model=model,
+            notes=notes,
+            saved_tokens=saved_tokens,
+            saved_seconds=saved_seconds,
+            observed_at=observed_at,
+        )
+    except RepoRootNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except RepoWikiNotInitializedError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+
+    typer.echo(f"Recorded reuse event: {result.event_id}")
+    typer.echo(f"Observed at: {result.observed_at}")
+    typer.echo(f"Event log: {result.event_log_path}")
+    typer.echo(f"Document stats: {result.document_stats_path}")
+    typer.echo(f"Task stats: {result.task_stats_path}")
 
 
 if __name__ == "__main__":

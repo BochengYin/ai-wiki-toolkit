@@ -25,8 +25,8 @@ Before starting work:
 
 1. Read `ai-wiki/_toolkit/system.md`.
 2. Read `ai-wiki/index.md`.
-3. Read `ai-wiki/review-patterns/` before implementation or review work.
-4. Read your own folder under `ai-wiki/people/<handle>/drafts/` when continuing draft notes.
+3. Read `ai-wiki/review-patterns/index.md` before implementation or review work.
+4. Read your own folder index under `ai-wiki/people/<handle>/index.md` when continuing draft notes.
 5. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
 6. Keep project-specific notes in `ai-wiki/`.
 7. Keep cross-project reusable notes in `<home>/ai-wiki/system/`.

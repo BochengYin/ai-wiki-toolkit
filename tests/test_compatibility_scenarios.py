@@ -54,7 +54,7 @@ def test_upgrade_scenario_only_changes_managed_toolkit_and_prompt(
     assert user_constraints.read_text(encoding="utf-8") == "# User-owned constraints\n"
     assert repo_toolkit.read_text(encoding="utf-8").startswith("# Toolkit Managed System Rules")
     assert home_toolkit.read_text(encoding="utf-8").startswith("# Toolkit Managed Cross-Project Rules")
-    assert "ai-wiki/people/<handle>/drafts/" in agent.read_text(encoding="utf-8")
+    assert "ai-wiki/people/<handle>/index.md" in agent.read_text(encoding="utf-8")
 
 
 def test_init_leaves_existing_home_user_docs_untouched(repo_env: dict[str, Path]) -> None:

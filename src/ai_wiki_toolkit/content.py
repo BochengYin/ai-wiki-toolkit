@@ -11,7 +11,7 @@ TOOLKIT_GITHUB_URL = "https://github.com/BochengYin/ai-wiki-toolkit"
 AI_WIKI_UPDATE_SKILL_DIR = ".agents/skills/ai-wiki-update-check"
 
 
-def repo_starter_files() -> dict[str, str]:
+def repo_starter_files(handle: str) -> dict[str, str]:
     return {
         "index.md": dedent(
             """
@@ -25,14 +25,16 @@ def repo_starter_files() -> dict[str, str]:
             2. Read `constraints.md` for hard constraints and non-negotiables.
             3. Read `workflows.md` for preferred ways of working in this repo.
             4. Read `decisions.md` for durable project decisions and tradeoffs.
-            5. Read `review-patterns/` before implementation and review tasks.
-            6. Read files in `trails/` only when they match the current task.
-            7. Read `people/<handle>/drafts/` when continuing or recording personal draft notes.
+            5. Read `review-patterns/index.md` before individual review patterns.
+            6. Read `trails/index.md` when task-specific chronology or dead ends may help.
+            7. Read `people/<handle>/index.md` when continuing or recording personal draft notes.
 
             ## Areas
 
-            - `review-patterns/` contains shared, reusable review rules.
-            - `people/<handle>/drafts/` contains raw personal notes that may later be promoted.
+            - `review-patterns/index.md` maps shared, reusable review rules.
+            - `trails/index.md` maps task-specific chronology, dead ends, and release trails.
+            - `people/<handle>/index.md` maps handle-local draft notes and working history.
+            - `metrics/` contains user-owned evidence logs such as `reuse-events.jsonl`.
             - `_toolkit/system.md` contains package-managed collaboration protocol and note schemas.
             """
         ).strip()
@@ -61,6 +63,54 @@ def repo_starter_files() -> dict[str, str]:
             """
         ).strip()
         + "\n",
+        "review-patterns/index.md": dedent(
+            """
+            # Review Patterns Index
+
+            Use this file to map reusable repo-specific review rules.
+
+            Keep each promoted rule as its own file under `review-patterns/`, then update this index with a short description and when to read it.
+            """
+        ).strip()
+        + "\n",
+        "trails/index.md": dedent(
+            """
+            # Trails Index
+
+            Use this file to map task-specific chronology, release investigations, and dead ends.
+
+            Trail files are useful when an agent needs previous debugging context, but they should not replace stable rules in `review-patterns/`.
+            """
+        ).strip()
+        + "\n",
+        f"people/{handle}/index.md": dedent(
+            """
+            # Personal Draft Index
+
+            This folder contains handle-local draft notes and working memory.
+
+            ## Areas
+
+            - `drafts/` contains raw notes that may later be promoted into shared review patterns.
+            - Add short links here when draft volume grows and navigation becomes harder.
+            """
+        ).strip()
+        + "\n",
+        "metrics/index.md": dedent(
+            """
+            # Metrics Index
+
+            This folder is user-owned evidence space for measuring whether the AI wiki is helping in real work.
+
+            ## Files
+
+            - `reuse-events.jsonl` is an append-only event log for knowledge reuse observations.
+            - `aiwiki-toolkit record-reuse ...` appends one explicit observation and refreshes managed aggregates.
+            - Package-managed aggregate views are generated under `_toolkit/metrics/`.
+            """
+        ).strip()
+        + "\n",
+        "metrics/reuse-events.jsonl": "",
     }
 
 
@@ -103,8 +153,8 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             ## Start Of Task
 
             1. Read `ai-wiki/index.md`.
-            2. Read `ai-wiki/review-patterns/` before implementation or review work.
-            3. Read `ai-wiki/people/<handle>/drafts/` when continuing draft work.
+            2. Read `ai-wiki/review-patterns/index.md` before implementation or review work.
+            3. Read `ai-wiki/people/<handle>/index.md` when continuing draft work.
             4. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
             5. If an `ai-wiki-update-check` skill is available, use it for end-of-task AI wiki checks.
 
@@ -163,7 +213,73 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             - `derived_from`
             """
         ).strip()
-        + "\n"
+        + "\n",
+        "schema/reuse-v1.md": dedent(
+            """
+            # Reuse Schema v1
+
+            This document describes the first machine-readable schema for measuring whether AI wiki knowledge was reused during real work.
+
+            ## Goals
+
+            - keep user-owned Markdown knowledge stable
+            - add machine-readable evidence without rewriting user docs
+            - distinguish preloaded knowledge reuse from lookup-based reuse
+            - support lightweight efficiency estimates without pretending token measurements are exact
+
+            ## Source Of Truth
+
+            User-owned reuse observations live in `ai-wiki/metrics/reuse-events.jsonl`.
+
+            Package-managed aggregate files are regenerated under `ai-wiki/_toolkit/metrics/`.
+
+            The toolkit can append explicit observations via `aiwiki-toolkit record-reuse`.
+
+            ## Event Fields
+
+            Each JSONL event may include:
+
+            - `schema_version`
+            - `event_id`
+            - `observed_at`
+            - `task_id`
+            - `doc_id`
+            - `doc_kind`
+            - `retrieval_mode`
+            - `evidence_mode`
+            - `reuse_outcome`
+            - `reuse_effects`
+            - `agent_name`
+            - `model`
+            - `notes`
+            - `estimated_savings`
+
+            ## Retrieval Mode
+
+            - `preloaded`: the document was already loaded in the normal read path
+            - `lookup`: the document was consulted after extra searching or backtracking
+
+            ## Evidence Mode
+
+            - `explicit`: the run clearly stated that the document was used
+            - `inferred`: the reuse is inferred from behavior or chronology rather than an explicit statement
+
+            ## Reuse Outcome
+
+            - `resolved`: the wiki materially helped resolve the task
+            - `partial`: the wiki helped, but did not fully resolve the task
+            - `not_helpful`: the wiki was consulted, but did not help materially
+
+            ## Aggregate Outputs
+
+            The toolkit currently derives:
+
+            - `_toolkit/catalog.json`
+            - `_toolkit/metrics/document-stats.json`
+            - `_toolkit/metrics/task-stats.json`
+            """
+        ).strip()
+        + "\n",
     }
 
 
@@ -314,8 +430,8 @@ def prompt_block_body() -> str:
 
         1. Read `ai-wiki/_toolkit/system.md`.
         2. Read `ai-wiki/index.md`.
-        3. Read `ai-wiki/review-patterns/` before implementation or review work.
-        4. Read your own folder under `ai-wiki/people/<handle>/drafts/` when continuing draft notes.
+        3. Read `ai-wiki/review-patterns/index.md` before implementation or review work.
+        4. Read your own folder index under `ai-wiki/people/<handle>/index.md` when continuing draft notes.
         5. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
         6. Keep project-specific notes in `ai-wiki/`.
         7. Keep cross-project reusable notes in `<home>/ai-wiki/system/`.

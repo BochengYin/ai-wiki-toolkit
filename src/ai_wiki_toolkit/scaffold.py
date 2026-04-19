@@ -23,6 +23,11 @@ from ai_wiki_toolkit.paths import (
     resolve_user_handle,
 )
 from ai_wiki_toolkit.prompt import remove_managed_block_file, upsert_managed_block_file
+from ai_wiki_toolkit.wiki_schema import (
+    render_document_stats,
+    render_repo_catalog,
+    render_task_stats,
+)
 
 
 @dataclass
@@ -103,7 +108,7 @@ def install_workspace(start: Path | None = None, handle: str | None = None) -> I
     ):
         _ensure_dir(directory, result)
 
-    for relative_path, content in repo_starter_files().items():
+    for relative_path, content in repo_starter_files(resolved_handle).items():
         _write_if_missing(paths.repo_wiki_dir / relative_path, content, result)
 
     for relative_path, content in system_starter_files().items():
@@ -111,6 +116,18 @@ def install_workspace(start: Path | None = None, handle: str | None = None) -> I
 
     for relative_path, content in managed_repo_toolkit_files().items():
         _write_managed(paths.repo_toolkit_dir / relative_path, content, result)
+
+    _write_managed(paths.repo_toolkit_dir / "catalog.json", render_repo_catalog(paths.repo_wiki_dir), result)
+    _write_managed(
+        paths.repo_toolkit_dir / "metrics" / "document-stats.json",
+        render_document_stats(paths.repo_wiki_dir),
+        result,
+    )
+    _write_managed(
+        paths.repo_toolkit_dir / "metrics" / "task-stats.json",
+        render_task_stats(paths.repo_wiki_dir),
+        result,
+    )
 
     for relative_path, content in managed_home_toolkit_files().items():
         _write_managed(paths.home_toolkit_dir / relative_path, content, result)
