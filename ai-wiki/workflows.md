@@ -19,6 +19,7 @@ See also `_toolkit/workflows.md` for package-managed baseline workflows that shi
 3. Push that topic branch and open a pull request instead of pushing to `main`.
 4. Treat GitHub branch protection and CI as the source of truth for whether the branch is ready to merge.
 5. After the pull request is merged, switch back to `main` locally and sync it before starting the next task.
+6. In this repository, prefer the repo-local helper `uv run python scripts/pr_flow.py` for the PR create and finish steps.
 
 Recommended local sequence:
 
@@ -28,11 +29,16 @@ git pull --ff-only
 git switch -c your-branch-name
 ```
 
+Create the pull request with the repo-local helper:
+
+```bash
+uv run python scripts/pr_flow.py create
+```
+
 After merge:
 
 ```bash
-git switch main
-git pull --ff-only
+uv run python scripts/pr_flow.py finish
 ```
 
 ## Release Preparation
