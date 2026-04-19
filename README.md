@@ -269,6 +269,8 @@ The public distribution model is:
 
 The goal is to make end-user installation independent of a local Python setup, while keeping `pip install -e .` as the simplest contributor workflow inside this repository.
 
+Release history is tracked in [CHANGELOG.md](CHANGELOG.md).
+
 The first release skeleton is documented in [docs/releasing.md](docs/releasing.md).
 The Homebrew tap plan is documented in [docs/homebrew-tap.md](docs/homebrew-tap.md).
 The npm distribution plan is documented in [docs/npm-wrapper.md](docs/npm-wrapper.md).
