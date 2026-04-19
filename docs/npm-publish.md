@@ -20,7 +20,12 @@ The npm publish flow uses a meta package plus platform-specific binary packages.
 
 ## Trigger
 
-The npm workflow uses the `workflow_run` event and runs only after:
+The npm workflow has two entrypoints:
+
+- automatic `workflow_run` after `Release Binaries`
+- manual `workflow_dispatch` for bootstrap or recovery publishes
+
+The automatic path runs only after:
 
 - the `Release Binaries` workflow completes
 - the conclusion is `success`
@@ -52,7 +57,13 @@ Set this repository variable:
 
 - `NPM_PUBLISH_ENABLED=true`
 
-No npm token secret is required when trusted publishing is configured correctly.
+For the normal steady-state path, no npm token secret is required when trusted publishing is configured correctly.
+
+For first-time package-name bootstraps or recovery publishes, you can also set:
+
+- `NPM_PUBLISH_TOKEN`
+
+When that secret is present, the workflow falls back to token-based `npm publish` instead of relying on trusted publishing.
 
 ## Workflow Behavior
 
@@ -60,11 +71,15 @@ The workflow:
 
 1. checks out the exact commit released by `Release Binaries`
 2. sets up Python 3.11 and Node.js 24
-3. downloads the matching GitHub Release archives
-4. stages the platform npm packages from those archives
-5. publishes the platform npm packages
-6. runs `npm pack --dry-run --ignore-scripts` for the meta package
-7. runs `npm publish --provenance --ignore-scripts` for the meta package
+3. resolves the release tag from package metadata
+4. selects npm publish auth mode:
+   - trusted publishing when no token secret is present
+   - token-based publish when `NPM_PUBLISH_TOKEN` is present
+5. downloads the matching GitHub Release archives
+6. stages the platform npm packages from those archives
+7. publishes the platform npm packages
+8. runs `npm pack --dry-run --ignore-scripts` for the meta package
+9. publishes the meta package when requested
 
 Before enabling `NPM_PUBLISH_ENABLED`, make sure the npm platform target map only advertises targets that the `Release Binaries` workflow actually publishes.
 
@@ -78,6 +93,10 @@ The platform package versions are generated from that same root version and must
 
 ## Optional Token-Based Fallback
 
-This repository currently documents and implements the trusted publishing path first.
+This repository keeps trusted publishing as the default path, but now also includes a token-based fallback for bootstrap publishes.
 
-If you later decide to publish with a traditional npm token instead, you can add a token-based variant, but the recommended approach is to keep trusted publishing and avoid long-lived publish secrets.
+Recommended use:
+
+1. Use trusted publishing for the steady-state release train.
+2. Use `workflow_dispatch` plus `NPM_PUBLISH_TOKEN` when you introduce brand-new package names and need a bootstrap publish path.
+3. After the bootstrap publish succeeds, return to the default trusted-publishing path when possible.

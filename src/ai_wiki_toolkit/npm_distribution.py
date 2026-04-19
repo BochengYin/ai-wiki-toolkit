@@ -77,14 +77,20 @@ def render_platform_package_json(package: PlatformPackage, version: str) -> str:
 
 
 def render_platform_package_readme(package: PlatformPackage, version: str) -> str:
+    root_readme = (REPOSITORY_ROOT / "README.md").read_text(encoding="utf-8").strip()
     return "\n".join(
         [
             f"# {package.package_name}",
             "",
             f"This package contains the `{package.binary_name}` executable for `{package.node_target}`.",
-            "",
-            f"It is published as an internal platform package for `{ROOT_PACKAGE_NAME}` `{version}`.",
+            f"It is published as the platform-specific binary package for `{ROOT_PACKAGE_NAME}` `{version}`.",
             f"Most users should install `{ROOT_PACKAGE_NAME}` instead of using this package directly.",
+            "",
+            "---",
+            "",
+            "Below is the current root project README:",
+            "",
+            root_readme,
             "",
         ]
     )

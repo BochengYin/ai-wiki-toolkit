@@ -121,9 +121,11 @@ def test_stage_platform_packages_creates_publishable_directories(tmp_path: Path)
     )
 
     assert len(staged) == len(load_platform_packages())
+    root_readme = (ROOT / "README.md").read_text(encoding="utf-8").strip()
     for package_dir in staged:
         package_json = json.loads((package_dir / "package.json").read_text(encoding="utf-8"))
         assert package_json["version"] == __version__
-        assert (package_dir / "README.md").exists()
+        platform_readme = (package_dir / "README.md").read_text(encoding="utf-8")
+        assert root_readme in platform_readme
         assert (package_dir / "LICENSE").exists()
         assert (package_dir / "bin" / "aiwiki-toolkit").exists()

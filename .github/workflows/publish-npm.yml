@@ -6,6 +6,17 @@ on:
       - Release Binaries
     types:
       - completed
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Release tag to publish from, for example v0.1.7
+        required: true
+        type: string
+      publish_meta_package:
+        description: Also publish the ai-wiki-toolkit meta package
+        required: false
+        default: true
+        type: boolean
 
 permissions:
   contents: read
@@ -13,14 +24,18 @@ permissions:
 
 jobs:
   publish:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && vars.NPM_PUBLISH_ENABLED == 'true' }}
+    if: ${{ (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && vars.NPM_PUBLISH_ENABLED == 'true') || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-24.04
+    env:
+      RELEASE_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.event.workflow_run.head_sha }}
+      EXPECTED_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || '' }}
+      NPM_PUBLISH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
 
     steps:
       - name: Check out source at released commit
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ env.RELEASE_REF }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -36,11 +51,34 @@ jobs:
       - name: Show package version
         run: node -p "require('./package.json').version"
 
+      - name: Resolve release tag
+        id: release
+        shell: bash
+        run: |
+          tag="v$(node -p "require('./package.json').version")"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if [ -n "$EXPECTED_TAG" ] && [ "$EXPECTED_TAG" != "$tag" ]; then
+            echo "Expected tag $EXPECTED_TAG but checked out package metadata resolves to $tag." >&2
+            exit 1
+          fi
+
+      - name: Select npm publish auth mode
+        id: npm_auth
+        shell: bash
+        run: |
+          if [ -n "$NPM_PUBLISH_TOKEN" ]; then
+            echo "mode=token" >> "$GITHUB_OUTPUT"
+            echo "Using token-based npm publish mode."
+          else
+            echo "mode=trusted" >> "$GITHUB_OUTPUT"
+            echo "Using trusted publishing mode."
+          fi
+
       - name: Download release archives
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          version="v$(node -p "require('./package.json').version")"
+          version="${{ steps.release.outputs.tag }}"
           gh release download "$version" --pattern "ai-wiki-toolkit-${version}-*.tar.gz" --dir release-assets
 
       - name: Stage platform npm packages
@@ -61,13 +99,29 @@ jobs:
 
       - name: Publish platform npm packages
         shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
         run: |
+          args=()
+          if [ "${{ steps.npm_auth.outputs.mode }}" = "trusted" ]; then
+            args+=(--provenance)
+          fi
           for dir in build/npm-platform-packages/*; do
-            npm publish "$dir" --provenance
+            npm publish "$dir" "${args[@]}"
           done
 
       - name: Show package contents
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.publish_meta_package }}
         run: npm pack --dry-run --ignore-scripts
 
       - name: Publish to npm
-        run: npm publish --provenance --ignore-scripts
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.publish_meta_package }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+        shell: bash
+        run: |
+          args=(--ignore-scripts)
+          if [ "${{ steps.npm_auth.outputs.mode }}" = "trusted" ]; then
+            args+=(--provenance)
+          fi
+          npm publish "${args[@]}"
