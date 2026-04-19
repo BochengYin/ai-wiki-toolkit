@@ -20,6 +20,7 @@ See also `_toolkit/workflows.md` for package-managed baseline workflows that shi
 4. Treat GitHub branch protection and CI as the source of truth for whether the branch is ready to merge.
 5. After the pull request is merged, switch back to `main` locally and sync it before starting the next task.
 6. In this repository, prefer the repo-local helper `uv run python scripts/pr_flow.py` for the PR create and finish steps.
+7. Do not run `git commit` and `git push` in parallel. Push only after the commit succeeds, then verify the remote branch state with `git fetch`, `git ls-remote`, or an equivalent check before reporting what is on the remote.
 
 Recommended local sequence:
 
