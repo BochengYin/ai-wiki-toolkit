@@ -247,6 +247,20 @@ aiwiki-toolkit record-reuse \
 
 This appends to the user-owned `ai-wiki/metrics/reuse-events.jsonl` log and refreshes the package-managed aggregate views under `ai-wiki/_toolkit/metrics/`.
 
+To diagnose outdated or missing AI wiki indexes and print copy-paste upgrade starters:
+
+```bash
+aiwiki-toolkit doctor --suggest-index-upgrade
+```
+
+This command does not rewrite user-owned index files. It prints which paths need attention and the latest starter content for those files so you can merge or copy it into:
+
+- `ai-wiki/index.md`
+- `ai-wiki/review-patterns/index.md`
+- `ai-wiki/trails/index.md`
+- `ai-wiki/people/<handle>/index.md`
+- `ai-wiki/metrics/index.md`
+
 To remove the managed layer while keeping your user-owned wiki documents:
 
 ```bash
@@ -277,6 +291,7 @@ Even with `--purge-user-docs --yes`, the shared home wiki under `~/ai-wiki/syste
 - Starter indexes such as `ai-wiki/index.md`, `review-patterns/index.md`, `trails/index.md`, `people/<handle>/index.md`, and `metrics/index.md` become user-owned once created and are not rewritten by future package updates.
 - `ai-wiki/_toolkit/**` and `~/ai-wiki/system/_toolkit/**` are package-managed and may be refreshed by future versions.
 - `ai-wiki/metrics/reuse-events.jsonl` is user-owned evidence data. Package-managed aggregate views are regenerated under `ai-wiki/_toolkit/metrics/`.
+- `aiwiki-toolkit doctor --suggest-index-upgrade` prints suggested replacements for outdated or missing index files, but it does not overwrite them automatically.
 - `.agents/skills/ai-wiki-update-check/**` is installed as starter scaffolding only. Existing files at those paths are skipped instead of overwritten.
 - Prompt files are updated only inside the managed block marked by:
 

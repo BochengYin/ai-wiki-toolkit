@@ -1,189 +1,156 @@
 # `aiwiki-toolkit doctor` Proposal
 
-This document proposes a future `aiwiki-toolkit doctor` command for diagnosing repo AI wiki health without rewriting user-owned docs.
+This document proposes a future `aiwiki-toolkit doctor` command for diagnosing AI wiki structure drift, with v1 focused mainly on outdated or missing index files.
 
-## Why A Doctor Command
+## Why Narrow The Scope
 
-`ai-wiki-toolkit` now has a stronger schema story:
+`ai-wiki-toolkit` now has a clearer navigation shape:
 
-- repo-visible folder indexes such as `review-patterns/index.md`
-- machine-readable catalog data under `ai-wiki/_toolkit/catalog.json`
-- managed metric aggregates under `ai-wiki/_toolkit/metrics/`
-- explicit reuse logging through `aiwiki-toolkit record-reuse`
+- `ai-wiki/index.md`
+- `ai-wiki/review-patterns/index.md`
+- `ai-wiki/trails/index.md`
+- `ai-wiki/people/<handle>/index.md`
+- `ai-wiki/metrics/index.md`
 
-The installer intentionally does **not** rewrite existing user-owned files under `ai-wiki/**/*.md`.
+The package intentionally does **not** rewrite user-owned files under `ai-wiki/**/*.md` after they have been created.
 
-That compatibility rule is important, but it also means older repositories can drift into a state where:
+That compatibility rule is correct, but it creates a practical problem:
 
-- `ai-wiki/index.md` still points at raw folders instead of child indexes
-- expected child indexes are missing
-- `metrics/reuse-events.jsonl` has not been scaffolded yet
-- prompt files still reference an older navigation shape
-- the repo is valid, but no longer aligned with the latest recommended structure
+- older repos may still have a legacy `ai-wiki/index.md`
+- child indexes may be missing
+- prompt files may already point at the newer index-based read path
+- the repo is still valid, but the navigation model is out of date
 
-A `doctor` command would help surface that gap without crossing the boundary into automatic user-doc mutation.
+The simplest high-value `doctor` pass is therefore:
 
-## Goals
+1. detect index drift
+2. explain it clearly
+3. suggest a safe upgrade path
 
-- detect common AI wiki structure drift
-- explain what is missing, stale, or inconsistent
-- suggest safe next actions
-- avoid silently editing user-owned docs
-- reuse the same compatibility guarantees as `install`
+## V1 Goal
 
-## Non-Goals
+Focus `doctor` on one narrow question:
 
-- automatically rewrite `ai-wiki/index.md` or other user-owned Markdown
-- merge conflicting user content
-- infer semantic correctness of arbitrary custom wiki structures
-- replace `install`
+> Is this repo still using the current recommended AI wiki index structure?
 
-## Command Shape
+This keeps the first implementation small and directly addresses the most likely upgrade gap.
 
-Proposed entrypoint:
+## V1 Non-Goals
+
+- rewriting user-owned indexes automatically
+- merging custom prose into an upgraded index
+- diagnosing every possible AI wiki health issue
+- replacing `install`
+
+## Proposed Command Shape
+
+Base command:
 
 ```bash
 aiwiki-toolkit doctor
 ```
 
-Possible future flags:
+Likely flags:
 
 ```bash
 aiwiki-toolkit doctor --format text
 aiwiki-toolkit doctor --format json
 aiwiki-toolkit doctor --strict
-aiwiki-toolkit doctor --write-report ai-wiki/_toolkit/doctor-report.json
+aiwiki-toolkit doctor --suggest-index-upgrade
 ```
 
-Recommended v1 scope:
+Recommended v1 behavior:
 
-- `--format text` default human-readable output
-- `--format json` for machine consumption
-- non-zero exit only for `--strict` when actionable warnings exist
+- default output is human-readable text
+- JSON output is optional
+- `--strict` exits non-zero on actionable warnings
+- `--suggest-index-upgrade` prints upgrade guidance without writing user-owned files
 
-## Core Checks
+## Core V1 Checks
 
 ### 1. Repo Initialization
 
-Check that the current directory resolves to a git repo and that `ai-wiki/` exists.
+Check:
+
+- does the current directory resolve to a git repo
+- does `ai-wiki/` exist
+- does `ai-wiki/index.md` exist
 
 Example findings:
 
 - `ERROR`: no git repository root found
 - `ERROR`: `ai-wiki/` missing
-- `WARN`: `ai-wiki/_toolkit/system.md` missing
+- `WARN`: `ai-wiki/index.md` missing
 
-### 2. Top-Level Navigation Shape
+### 2. Top-Level Index Shape
 
-Check whether the repo-local index points to the current recommended navigation model.
+Check whether `ai-wiki/index.md` reflects the current navigation model.
 
-Suggested checks:
+Suggested signals:
 
-- does `ai-wiki/index.md` exist
-- does it mention `review-patterns/index.md`
-- does it mention `trails/index.md`
-- does it mention `people/<handle>/index.md`
-- does it mention `metrics/`
-
-This should remain advisory only.
+- mentions `review-patterns/index.md`
+- mentions `trails/index.md`
+- mentions `people/<handle>/index.md`
+- mentions `metrics/`
 
 Example finding:
 
-- `WARN`: `ai-wiki/index.md` exists but does not mention child indexes; repo likely predates the current index-based navigation shape
+- `WARN`: `ai-wiki/index.md` exists but still points at raw folders instead of child indexes
 
 ### 3. Child Index Presence
 
-Check for expected child indexes:
+Check for:
 
 - `ai-wiki/review-patterns/index.md`
 - `ai-wiki/trails/index.md`
 - `ai-wiki/metrics/index.md`
 - `ai-wiki/people/<handle>/index.md` for the resolved handle
 
-Important distinction:
-
-- if the directory exists but the index is missing, suggest creation
-- if the directory and index both exist, do not inspect or rewrite user content
-
 Example findings:
 
-- `WARN`: `ai-wiki/review-patterns/` exists but `review-patterns/index.md` is missing
-- `INFO`: `ai-wiki/people/alice/index.md` is missing; create one if you want handle-local draft navigation
+- `WARN`: `ai-wiki/review-patterns/index.md` missing
+- `INFO`: `ai-wiki/people/alice/index.md` missing for the current handle
 
-### 4. Managed Layer Freshness
+### 4. Prompt Block Alignment
 
-Check whether managed files expected from the current package exist:
-
-- `ai-wiki/_toolkit/system.md`
-- `ai-wiki/_toolkit/catalog.json`
-- `ai-wiki/_toolkit/schema/reuse-v1.md`
-- `ai-wiki/_toolkit/metrics/document-stats.json`
-- `ai-wiki/_toolkit/metrics/task-stats.json`
-
-These are package-managed, so the recommended fix can safely be:
-
-```bash
-aiwiki-toolkit install
-```
-
-Example finding:
-
-- `WARN`: `ai-wiki/_toolkit/catalog.json` missing; rerun `aiwiki-toolkit install` to refresh managed files
-
-### 5. Reuse Logging Readiness
-
-Check whether the evidence path is usable:
-
-- `ai-wiki/metrics/reuse-events.jsonl`
-- package-managed `_toolkit/metrics/*.json`
-
-Example findings:
-
-- `INFO`: `ai-wiki/metrics/reuse-events.jsonl` missing; create it or rerun `install` if the repo has not been initialized with the latest scaffold
-- `INFO`: no reuse events recorded yet
-
-### 6. Prompt Block Alignment
-
-Check prompt files in the repo root:
+Check root prompt files:
 
 - `AGENT.md`
 - `AGENTS.md`
 - `CLAUDE.md`
 
-Suggested validations:
+Suggested checks:
 
-- prompt file contains managed block markers
+- managed block exists
 - managed block references `review-patterns/index.md`
 - managed block references `people/<handle>/index.md`
 
-This remains safe because the command only diagnoses.
+This is useful because a repo can end up in a partially upgraded state where prompt wiring expects indexes but the indexes themselves are missing.
 
-Example finding:
+### 5. Managed Refresh Availability
 
-- `WARN`: managed prompt block references older draft-folder navigation instead of person index navigation
+Check whether `_toolkit/**` exists and is fresh enough to support the newer structure:
 
-### 7. Catalog Coverage
+- `ai-wiki/_toolkit/system.md`
+- `ai-wiki/_toolkit/catalog.json`
+- `ai-wiki/_toolkit/schema/reuse-v1.md`
 
-Compare user-owned Markdown files under `ai-wiki/` with entries in `_toolkit/catalog.json`.
+These are package-managed and can safely be refreshed by rerunning:
 
-Useful checks:
-
-- missing catalog file
-- catalog exists but omits a current user-owned document
-- catalog includes a path that no longer exists
-
-This helps catch stale managed outputs.
+```bash
+aiwiki-toolkit install
+```
 
 ## Output Model
 
 Recommended severity levels:
 
-- `ERROR`: repo cannot safely use toolkit features in the current state
-- `WARN`: repo works, but is drifting from the recommended structure
-- `INFO`: advisory note or optional improvement
-- `OK`: explicit positive confirmation
+- `ERROR`: repo cannot safely use the toolkit in its current state
+- `WARN`: repo works, but index navigation is not aligned with the recommended structure
+- `INFO`: optional improvement
+- `OK`: explicit confirmation
 
-Text output should stay concise. Example:
+Example text output:
 
 ```text
 Repo: /path/to/repo
@@ -191,90 +158,133 @@ Handle: alice
 
 OK   ai-wiki/ exists
 OK   ai-wiki/_toolkit/system.md exists
-WARN ai-wiki/index.md does not mention review-patterns/index.md
+WARN ai-wiki/index.md still uses legacy folder navigation
 WARN ai-wiki/review-patterns/index.md is missing
-INFO no reuse events recorded yet
+INFO ai-wiki/people/alice/index.md is missing
 
 Suggested next steps:
 1. Run `aiwiki-toolkit install` to refresh managed files.
-2. Add `ai-wiki/review-patterns/index.md` if you want index-based navigation.
-3. Update `ai-wiki/index.md` manually to reference child indexes.
+2. Add missing child indexes manually.
+3. Update `ai-wiki/index.md` manually or use `doctor --suggest-index-upgrade`.
 ```
 
-JSON output should include structured findings with machine-readable codes, for example:
+## Suggested Upgrade Strategy
 
-```json
-{
-  "repo_root": "/path/to/repo",
-  "resolved_handle": "alice",
-  "findings": [
-    {
-      "severity": "warn",
-      "code": "missing_review_patterns_index",
-      "path": "ai-wiki/review-patterns/index.md",
-      "message": "Directory exists but child index is missing.",
-      "suggested_fix": "Create the index manually or let install create it if it is absent."
-    }
-  ]
-}
-```
+V1 should separate fixes into two buckets.
 
-## Suggested Fix Strategy
+### Safe Automatic Follow-Up
 
-The command should separate suggestions into two classes.
+These are package-managed and can be refreshed safely:
 
-### Safe Automated Follow-Up
+- `_toolkit/system.md`
+- `_toolkit/catalog.json`
+- `_toolkit/schema/reuse-v1.md`
 
-These can be fixed by rerunning `install`:
-
-- missing managed `_toolkit/**` files
-- stale prompt managed blocks
-- missing package-managed metric aggregates
-
-### Manual User-Owned Follow-Up
-
-These should never be auto-written by `doctor` in v1:
-
-- updating `ai-wiki/index.md`
-- creating or editing a custom `review-patterns/index.md`
-- creating or editing `trails/index.md`
-- changing `people/<handle>/index.md` content
-
-The command may suggest patches later, but v1 should stop at diagnosis.
-
-## Optional Future Extensions
-
-### `doctor --suggest-index-upgrade`
-
-This could print a recommended patch for:
-
-- `ai-wiki/index.md`
-- missing child indexes
-
-Still do not write automatically; only emit a suggestion.
-
-### `doctor --fix-managed`
-
-This could be a convenience alias for rerunning the managed refresh path, equivalent to:
+Recommended action:
 
 ```bash
 aiwiki-toolkit install
 ```
 
-It should remain limited to package-managed outputs.
+### Manual User-Owned Follow-Up
 
-### `doctor --strict`
+These should remain manual in v1:
 
-Useful in CI or repo policy checks:
+- `ai-wiki/index.md`
+- `ai-wiki/review-patterns/index.md`
+- `ai-wiki/trails/index.md`
+- `ai-wiki/people/<handle>/index.md`
+- `ai-wiki/metrics/index.md`
 
-- exit `1` on `ERROR`
-- optionally exit `1` on `WARN`
+The repo owner may have custom content in those files, so `doctor` should not overwrite them silently.
 
-## Recommended v1 Implementation Order
+## `--suggest-index-upgrade`
 
-1. Add a pure diagnostic `doctor` command with text output.
-2. Add finding codes and JSON output.
-3. Add prompt-block and catalog coverage checks.
-4. Consider suggestion-mode for manual index migration.
+This is the most useful next step after bare diagnosis.
 
-This order keeps compatibility intact while still giving older repos a clear path toward the newer schema.
+Instead of writing user-owned files directly, the command should print:
+
+- which indexes are missing
+- which links in `ai-wiki/index.md` look outdated
+- the latest recommended starter text or patch for each missing/outdated index
+
+Possible output shape:
+
+```text
+Suggested index upgrades:
+
+- ai-wiki/index.md
+  Replace legacy folder references with:
+  - review-patterns/index.md
+  - trails/index.md
+  - people/<handle>/index.md
+  - metrics/
+
+- ai-wiki/review-patterns/index.md
+  File is missing. Suggested starter content:
+  ...
+```
+
+This gives the user or an agent enough structure to apply a patch consciously.
+
+## Agent-Assisted Upgrade Flow
+
+If the user wants help upgrading indexes, the cleanest workflow is:
+
+1. run `aiwiki-toolkit doctor`
+2. see the warnings
+3. run `aiwiki-toolkit doctor --suggest-index-upgrade`
+4. let the agent apply the suggested patch in the target repo
+
+This keeps the decision visible and avoids hidden mutation of user-owned docs.
+
+## Should The Agent Fetch A Webpage?
+
+Not by default.
+
+Fetching a rendered GitHub webpage is the wrong source for index upgrades because:
+
+- HTML is presentation-layer output, not source content
+- headings, code fences, and list structure can be distorted
+- links may be rewritten into absolute UI URLs
+- extracting clean Markdown from the page is brittle
+
+## Better Source Priority
+
+If an agent needs the latest recommended index content, use this order:
+
+1. local installed toolkit template content
+2. raw source content from the upstream repository
+3. rendered web pages only as a fallback of last resort
+
+For `ai-wiki-toolkit`, the most stable source is the package's own template content in `src/ai_wiki_toolkit/content.py`.
+
+If the target repo is on an older installed version and the user explicitly wants the newest upstream recommendation, the agent can fetch the raw source file from GitHub and extract the relevant starter content.
+
+It should still propose a patch, not silently overwrite the repo's user-owned index.
+
+## Future Extension: Prompt Emission Instead Of Direct Patches
+
+If you want a lighter-weight v1.5, `doctor --suggest-index-upgrade` could emit a ready-to-use agent prompt like:
+
+```text
+Your repo AI wiki index is using a legacy structure.
+Compare the current `ai-wiki/index.md` with the recommended index starter below.
+Preserve repo-specific notes, but update the navigation to reference:
+- review-patterns/index.md
+- trails/index.md
+- people/<handle>/index.md
+- metrics/
+Also create any missing child indexes using the suggested starter content.
+```
+
+That is safer than automatic writing and easier to implement than a structural Markdown merge engine.
+
+## Recommended Implementation Order
+
+1. Add `doctor` with text warnings for index drift and missing child indexes.
+2. Add `--suggest-index-upgrade` that prints suggested starter content or a patch.
+3. Add JSON output and machine-readable finding codes.
+4. Later, consider broader health checks beyond indexes.
+
+This keeps the first `doctor` implementation tightly aligned with the real migration problem: older repos that still have non-latest index files.

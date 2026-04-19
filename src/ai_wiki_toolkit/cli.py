@@ -5,6 +5,7 @@ from __future__ import annotations
 import typer
 
 from ai_wiki_toolkit import __version__
+from ai_wiki_toolkit.doctor import run_doctor
 from ai_wiki_toolkit.paths import RepoRootNotFoundError
 from ai_wiki_toolkit.reuse_events import (
     EVIDENCE_MODES,
@@ -58,6 +59,58 @@ def _echo_install_result(result) -> None:
         for path in result.skipped_skill_files:
             typer.echo(f"Skipped skill file: {path}")
         typer.echo(f"Manual merge guide: {skill_manual_merge_url()}")
+
+
+def _echo_doctor_result(result, *, suggest_index_upgrade: bool, strict: bool) -> None:
+    typer.echo(f"Repo: {result.paths.repo_root}")
+    typer.echo(f"Handle: {result.resolved_handle}")
+    typer.echo("")
+
+    severity_rank = {"ERROR": 0, "WARN": 1, "INFO": 2, "OK": 3}
+    findings = sorted(
+        result.findings,
+        key=lambda finding: (severity_rank.get(finding.severity, 99), finding.path, finding.code),
+    )
+    for finding in findings:
+        typer.echo(f"{finding.severity:<5} {finding.path} {finding.message}")
+
+    actionable_findings = [f for f in findings if f.severity in {"ERROR", "WARN"}]
+    if actionable_findings:
+        typer.echo("")
+        typer.echo("Suggested next steps:")
+        step = 1
+        if any(f.path.startswith("ai-wiki/_toolkit/") for f in actionable_findings):
+            typer.echo(f"{step}. Run `aiwiki-toolkit install` to refresh managed files if needed.")
+            step += 1
+        if any(f.path.startswith("ai-wiki/") and not f.path.startswith("ai-wiki/_toolkit/") for f in actionable_findings):
+            if suggest_index_upgrade:
+                typer.echo(
+                    f"{step}. Review the suggested index updates below and copy or merge them into the listed paths."
+                )
+            else:
+                typer.echo(
+                    f"{step}. Re-run with `aiwiki-toolkit doctor --suggest-index-upgrade` to print the latest starter content for the affected index files."
+                )
+            step += 1
+        if any(f.path in {"AGENT.md", "AGENTS.md", "CLAUDE.md"} for f in actionable_findings):
+            typer.echo(f"{step}. Re-run `aiwiki-toolkit install` if you need the managed prompt block refreshed.")
+
+    if suggest_index_upgrade and result.suggestions:
+        typer.echo("")
+        typer.echo("Suggested index updates:")
+        typer.echo("")
+        for suggestion in result.suggestions:
+            typer.echo(f"Path: {suggestion.path}")
+            typer.echo(f"Why: {suggestion.reason}")
+            typer.echo(f"How: {suggestion.replace_hint}")
+            typer.echo("Starter content:")
+            typer.echo("```md")
+            typer.echo(suggestion.content.rstrip("\n"))
+            typer.echo("```")
+            typer.echo("")
+
+    if strict and actionable_findings:
+        raise typer.Exit(code=1)
 
 
 @app.command("install")
@@ -230,6 +283,34 @@ def record_reuse(
     typer.echo(f"Event log: {result.event_log_path}")
     typer.echo(f"Document stats: {result.document_stats_path}")
     typer.echo(f"Task stats: {result.task_stats_path}")
+
+
+@app.command("doctor")
+def doctor(
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Override the user handle used for person index checks.",
+    ),
+    suggest_index_upgrade: bool = typer.Option(
+        False,
+        "--suggest-index-upgrade",
+        help="Print the latest starter content for any missing or outdated repo index files.",
+    ),
+    strict: bool = typer.Option(
+        False,
+        "--strict",
+        help="Exit with code 1 if warnings or errors are found.",
+    ),
+) -> None:
+    """Diagnose AI wiki index drift and optionally print upgrade starters."""
+    try:
+        result = run_doctor(handle=handle)
+    except RepoRootNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+
+    _echo_doctor_result(result, suggest_index_upgrade=suggest_index_upgrade, strict=strict)
 
 
 if __name__ == "__main__":

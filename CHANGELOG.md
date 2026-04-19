@@ -9,6 +9,7 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 - Added repo starter indexes for `review-patterns/`, `trails/`, `people/<handle>/`, and `metrics/`.
 - Added a machine-readable AI wiki catalog and first reuse schema scaffold under `ai-wiki/_toolkit/`.
 - Added `aiwiki-toolkit record-reuse` for appending reuse events and refreshing managed metric aggregates.
+- Added `aiwiki-toolkit doctor --suggest-index-upgrade` for diagnosing non-latest AI wiki indexes and printing copy-paste starter content for the affected paths.
 
 ### Changed
 
