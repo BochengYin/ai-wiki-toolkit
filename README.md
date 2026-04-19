@@ -1,6 +1,14 @@
 # ai-wiki-toolkit
 
-`ai-wiki-toolkit` is a local-first scaffold for repo and home AI wiki files.
+**Agents keep repeating the same trial-and-error loops — across tasks, across developers, and across agents.**
+
+What they need is not more prompts.  
+They need a **memory harness**.
+
+`ai-wiki-toolkit` is a **repository-native agent memory harness** for coding workflows.
+
+It provides a persistent, structured memory layer inside the repo,  
+along with a workflow that lets agents continuously write back what they learn.
 
 It is inspired by Andrej Karpathy's LLM Wiki idea: a persistent Markdown knowledge base that an agent can keep organized over time instead of rediscovering from scratch on every task.
 
