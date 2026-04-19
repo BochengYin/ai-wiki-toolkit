@@ -237,6 +237,7 @@ aiwiki-toolkit init
 - create starter indexes such as `ai-wiki/review-patterns/index.md`, `ai-wiki/trails/index.md`, and `ai-wiki/people/<handle>/index.md`
 - create `ai-wiki/review-patterns/`, `ai-wiki/people/<handle>/drafts/`, `ai-wiki/metrics/`, and repo/home `_toolkit/`
 - generate package-managed `_toolkit/index.md`, `_toolkit/workflows.md`, `_toolkit/catalog.json`, `_toolkit/schema/reuse-v1.md`, and `_toolkit/metrics/*.json`
+- upsert a managed `.gitignore` block that ignores AI wiki telemetry and generated aggregate snapshots so routine agent use does not dirty `git status`
 - create `.agents/skills/ai-wiki-reuse-check/` and `.agents/skills/ai-wiki-update-check/` if the repo-local skills do not already exist
 - update `AGENT.md`, `AGENTS.md`, and/or `CLAUDE.md` with a managed instruction block that reads `ai-wiki/_toolkit/index.md`
 
@@ -268,7 +269,7 @@ aiwiki-toolkit record-reuse \
   --saved-seconds 45
 ```
 
-This appends to the user-owned `ai-wiki/metrics/reuse-events/<handle>.jsonl` shard and refreshes the package-managed aggregate views under `ai-wiki/_toolkit/metrics/`.
+This appends to the user-owned `ai-wiki/metrics/reuse-events/<handle>.jsonl` shard and refreshes the package-managed aggregate views under `ai-wiki/_toolkit/metrics/`. The installer ignores both the shard and the generated aggregate views by default so these telemetry updates stay local.
 
 Only record user-owned AI wiki knowledge docs with `record-reuse`.
 
@@ -282,16 +283,16 @@ aiwiki-toolkit record-reuse-check \
   --check-outcome wiki_used
 ```
 
-This appends to the user-owned `ai-wiki/metrics/task-checks/<handle>.jsonl` shard and refreshes the package-managed aggregate views under `ai-wiki/_toolkit/metrics/`.
+This appends to the user-owned `ai-wiki/metrics/task-checks/<handle>.jsonl` shard and refreshes the package-managed aggregate views under `ai-wiki/_toolkit/metrics/`. The installer ignores both the shard and the generated aggregate views by default so these telemetry updates stay local.
 
 Both metrics logs are sharded by handle under:
 
 - `ai-wiki/metrics/reuse-events/<handle>.jsonl`
 - `ai-wiki/metrics/task-checks/<handle>.jsonl`
 
-This reduces merge conflicts when multiple people or agents append evidence in parallel.
+These logs are intended as local telemetry by default, not merge-heavy source files.
 
-If package-managed aggregate views such as `ai-wiki/_toolkit/catalog.json` or `ai-wiki/_toolkit/metrics/*.json` drift or conflict after a rebase or merge, regenerate them instead of hand-merging:
+If you need a fresh local telemetry snapshot, regenerate package-managed aggregate views such as `ai-wiki/_toolkit/catalog.json` or `ai-wiki/_toolkit/metrics/*.json` with:
 
 ```bash
 aiwiki-toolkit refresh-metrics
@@ -312,6 +313,8 @@ This command does not rewrite user-owned repo docs. It prints which paths need a
 - `ai-wiki/people/<handle>/index.md`
 - `ai-wiki/metrics/index.md`
 
+It also checks whether the managed `.gitignore` block is present and whether telemetry paths are still tracked in the git index from older versions. If those paths are still tracked, `doctor` prints a one-time `git rm --cached` command to untrack them.
+
 To remove the managed layer while keeping your user-owned wiki documents:
 
 ```bash
@@ -321,6 +324,7 @@ aiwiki-toolkit uninstall
 This removes:
 
 - managed prompt blocks from `AGENT.md` / `AGENTS.md` / `CLAUDE.md`
+- the managed `.gitignore` block for AI wiki telemetry
 - `ai-wiki/_toolkit/**`
 - `~/ai-wiki/system/_toolkit/**`
 - the `aiwikiToolkit` key from `opencode.json`
@@ -342,7 +346,7 @@ Even with `--purge-user-docs --yes`, the shared home wiki under `~/ai-wiki/syste
 - Starter indexes such as `ai-wiki/index.md`, `review-patterns/index.md`, `trails/index.md`, `people/<handle>/index.md`, and `metrics/index.md` become user-owned once created and are not rewritten by future package updates.
 - `ai-wiki/_toolkit/**` and `~/ai-wiki/system/_toolkit/**` are package-managed and may be refreshed by future versions.
 - `ai-wiki/workflows.md` remains user-owned; package-managed workflow updates land in `ai-wiki/_toolkit/workflows.md` instead of rewriting the repo-owned file.
-- `ai-wiki/metrics/reuse-events/<handle>.jsonl` and `ai-wiki/metrics/task-checks/<handle>.jsonl` are user-owned evidence data. Package-managed aggregate views are regenerated under `ai-wiki/_toolkit/metrics/`.
+- `ai-wiki/metrics/reuse-events/<handle>.jsonl` and `ai-wiki/metrics/task-checks/<handle>.jsonl` are user-owned evidence data. Package-managed aggregate views are regenerated under `ai-wiki/_toolkit/metrics/`, and the installer ignores all of those telemetry paths by default in `.gitignore`.
 - Legacy flat files such as `ai-wiki/metrics/reuse-events.jsonl` and `ai-wiki/metrics/task-checks.jsonl` are still read for compatibility, but new writes should use the handle-sharded layout.
 - `aiwiki-toolkit doctor --suggest-index-upgrade` prints suggested replacements for outdated repo starter docs, but it does not overwrite them automatically.
 - `.agents/skills/ai-wiki-reuse-check/**` and `.agents/skills/ai-wiki-update-check/**` are installed as starter scaffolding only. Existing files at those paths are skipped instead of overwritten.
@@ -351,6 +355,13 @@ Even with `--purge-user-docs --yes`, the shared home wiki under `~/ai-wiki/syste
 ```md
 <!-- aiwiki-toolkit:start -->
 <!-- aiwiki-toolkit:end -->
+```
+
+- `.gitignore` is updated only inside the managed block marked by:
+
+```gitignore
+# <!-- aiwiki-toolkit:start -->
+# <!-- aiwiki-toolkit:end -->
 ```
 
 - Future `opencode.json` integration is limited to a single top-level `aiwikiToolkit` key.

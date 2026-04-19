@@ -62,6 +62,59 @@ def test_install_refreshes_managed_workflow_docs_without_overwriting_user_workfl
     assert user_workflows.read_text(encoding="utf-8") == user_custom
 
 
+def test_install_upserts_gitignore_block_without_overwriting_user_entries(
+    repo_env: dict[str, Path],
+) -> None:
+    repo = repo_env["repo"]
+    gitignore = repo / ".gitignore"
+    gitignore.write_text(".venv/\nnode_modules/\n", encoding="utf-8")
+
+    result = runner.invoke(app, ["install", "--handle", "alice"])
+
+    assert result.exit_code == 0
+    assert gitignore.read_text(encoding="utf-8") == (
+        ".venv/\n"
+        "node_modules/\n"
+        "\n"
+        "# <!-- aiwiki-toolkit:start -->\n"
+        "# Ignore AI wiki telemetry so normal agent use does not dirty git status.\n"
+        "ai-wiki/metrics/reuse-events/\n"
+        "ai-wiki/metrics/task-checks/\n"
+        "ai-wiki/_toolkit/metrics/\n"
+        "ai-wiki/_toolkit/catalog.json\n"
+        "# <!-- aiwiki-toolkit:end -->\n"
+    )
+    assert "Updated ignore files: 1" in result.output
+
+
+def test_install_refreshes_stale_gitignore_block_in_place(repo_env: dict[str, Path]) -> None:
+    repo = repo_env["repo"]
+    gitignore = repo / ".gitignore"
+    gitignore.write_text(
+        ".venv/\n\n"
+        "# <!-- aiwiki-toolkit:start -->\n"
+        "# stale ignore block\n"
+        "# <!-- aiwiki-toolkit:end -->\n",
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["install", "--handle", "alice"])
+
+    assert result.exit_code == 0
+    assert gitignore.read_text(encoding="utf-8") == (
+        ".venv/\n"
+        "\n"
+        "# <!-- aiwiki-toolkit:start -->\n"
+        "# Ignore AI wiki telemetry so normal agent use does not dirty git status.\n"
+        "ai-wiki/metrics/reuse-events/\n"
+        "ai-wiki/metrics/task-checks/\n"
+        "ai-wiki/_toolkit/metrics/\n"
+        "ai-wiki/_toolkit/catalog.json\n"
+        "# <!-- aiwiki-toolkit:end -->\n"
+    )
+    assert "Updated ignore files: 1" in result.output
+
+
 def test_uninstall_default_removes_managed_layer_but_preserves_user_docs(
     repo_env: dict[str, Path],
 ) -> None:
@@ -95,6 +148,7 @@ def test_uninstall_default_removes_managed_layer_but_preserves_user_docs(
     assert (
         repo / ".agents" / "skills" / "ai-wiki-update-check" / "SKILL.md"
     ).exists()
+    assert not (repo / ".gitignore").exists()
     assert (repo / "ai-wiki" / "constraints.md").read_text(encoding="utf-8") == "# User constraints\n"
     assert (repo / "ai-wiki" / "review-patterns" / "boundary.md").exists()
     assert (repo / "ai-wiki" / "people" / "alice" / "drafts" / "draft.md").exists()
@@ -103,6 +157,24 @@ def test_uninstall_default_removes_managed_layer_but_preserves_user_docs(
     opencode_written = json.loads((repo / "opencode.json").read_text(encoding="utf-8"))
     assert opencode_written == {"otherTool": {"enabled": True}}
     assert "Removed opencode key: yes" in uninstall_result.output
+
+
+def test_uninstall_removes_gitignore_block_but_preserves_user_entries(
+    repo_env: dict[str, Path],
+) -> None:
+    repo = repo_env["repo"]
+    gitignore = repo / ".gitignore"
+    gitignore.write_text(".venv/\n", encoding="utf-8")
+    install_result = runner.invoke(app, ["install", "--handle", "alice"])
+    assert install_result.exit_code == 0
+
+    uninstall_result = runner.invoke(app, ["uninstall"])
+
+    assert uninstall_result.exit_code == 0
+    assert gitignore.exists()
+    assert gitignore.read_text(encoding="utf-8") == ".venv/\n"
+    assert "Updated ignore files: 1" in uninstall_result.output
+    assert "Deleted ignore files: 0" in uninstall_result.output
 
 
 def test_uninstall_preserves_prompt_file_content_outside_managed_block(

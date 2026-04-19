@@ -33,6 +33,7 @@ def test_init_empty_repo_creates_expected_tree(repo_env: dict[str, Path]) -> Non
         ".agents/skills/ai-wiki-update-check/references/output-contract.md",
         ".git/",
         ".git/config",
+        ".gitignore",
         "AGENT.md",
         "ai-wiki/",
         "ai-wiki/_toolkit/",
@@ -155,6 +156,23 @@ def test_init_writes_expected_repo_index_snapshot(repo_env: dict[str, Path]) -> 
     )
 
 
+def test_init_writes_expected_gitignore_snapshot(repo_env: dict[str, Path]) -> None:
+    result = runner.invoke(app, ["init", "--handle", "alice"])
+
+    assert result.exit_code == 0
+    assert (repo_env["repo"] / ".gitignore").read_text(encoding="utf-8") == strip_margin(
+        """
+        # <!-- aiwiki-toolkit:start -->
+        # Ignore AI wiki telemetry so normal agent use does not dirty git status.
+        ai-wiki/metrics/reuse-events/
+        ai-wiki/metrics/task-checks/
+        ai-wiki/_toolkit/metrics/
+        ai-wiki/_toolkit/catalog.json
+        # <!-- aiwiki-toolkit:end -->
+        """
+    )
+
+
 def test_init_writes_expected_toolkit_managed_files(repo_env: dict[str, Path]) -> None:
     result = runner.invoke(app, ["init", "--handle", "alice"])
 
@@ -176,7 +194,8 @@ def test_init_writes_expected_toolkit_managed_files(repo_env: dict[str, Path]) -
         ## Generated Outputs
 
         - `catalog.json` and `metrics/*.json` are generated outputs, not guidance docs.
-        - Regenerate those outputs with `aiwiki-toolkit refresh-metrics` instead of hand-merging them.
+        - The installer ignores those generated outputs in `.gitignore` so routine telemetry updates stay local.
+        - Regenerate those outputs with `aiwiki-toolkit refresh-metrics` whenever you need a fresh local snapshot.
         """
     )
     assert (
@@ -276,8 +295,8 @@ def test_init_writes_expected_toolkit_managed_files(repo_env: dict[str, Path]) -
         2. If any user-owned repo or system AI wiki docs were consulted, record one `aiwiki-toolkit record-reuse` event per consulted doc.
         3. Do not log managed `_toolkit/**` docs with `record-reuse`; if they changed the plan or behavior, cite their paths in a progress update or the final note instead.
         4. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
-        5. Metrics logs should shard by handle under `ai-wiki/metrics/reuse-events/<handle>.jsonl` and `ai-wiki/metrics/task-checks/<handle>.jsonl` to reduce merge conflicts in team workflows.
-        6. If generated files under `ai-wiki/_toolkit/catalog.json` or `ai-wiki/_toolkit/metrics/*.json` drift or conflict after a merge, rerun `aiwiki-toolkit refresh-metrics` instead of hand-merging them.
+        5. The installer manages a `.gitignore` block that ignores `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/metrics/`, and `ai-wiki/_toolkit/catalog.json` so telemetry stays local by default.
+        6. If those telemetry paths were tracked before you upgraded, run `aiwiki-toolkit doctor` and follow the suggested `git rm --cached` fix once to untrack them.
         7. Run one AI wiki update check at the end of every completed task, even when the result is `None`.
         8. Always end with exactly one status line: `AI Wiki Update Candidate: None`, `Draft`, or `PromotionCandidate`.
         9. If the result is `Draft` or `PromotionCandidate`, also print `AI Wiki Update Path: <path>`.

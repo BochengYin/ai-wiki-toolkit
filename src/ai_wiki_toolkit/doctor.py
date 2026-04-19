@@ -6,9 +6,14 @@ from dataclasses import dataclass, field
 from itertools import combinations
 from pathlib import Path
 import re
+import subprocess
 
 from ai_wiki_toolkit.content import PROMPT_BLOCK_END, PROMPT_BLOCK_START, repo_starter_files
 from ai_wiki_toolkit.frontmatter import parse_frontmatter
+from ai_wiki_toolkit.gitignore import (
+    gitignore_has_current_telemetry_block,
+    telemetry_untrack_command,
+)
 from ai_wiki_toolkit.paths import ToolkitPaths, build_paths, existing_prompt_targets, resolve_user_handle
 
 _NORMALIZE_TOKEN_RE = re.compile(r"[^a-z0-9]+")
@@ -577,6 +582,96 @@ def _check_required_managed_doc(
     )
 
 
+def _check_gitignore(result: DoctorResult) -> None:
+    gitignore_path = result.paths.repo_root / ".gitignore"
+    if not gitignore_path.exists():
+        _add_finding(
+            result,
+            severity="WARN",
+            code="missing_gitignore_telemetry_block",
+            path=".gitignore",
+            message="`.gitignore` is missing the `aiwiki-toolkit` managed telemetry ignore block.",
+            suggested_fix="Run `aiwiki-toolkit install` to add the managed `.gitignore` block.",
+        )
+        return
+
+    text = gitignore_path.read_text(encoding="utf-8")
+    if gitignore_has_current_telemetry_block(text):
+        _add_finding(
+            result,
+            severity="OK",
+            code="gitignore_telemetry_block_current",
+            path=".gitignore",
+            message="`.gitignore` already contains the current managed telemetry ignore block.",
+        )
+        return
+
+    _add_finding(
+        result,
+        severity="WARN",
+        code="legacy_gitignore_telemetry_block",
+        path=".gitignore",
+        message="`.gitignore` is missing current `aiwiki-toolkit` telemetry ignore entries.",
+        suggested_fix="Run `aiwiki-toolkit install` to refresh the managed `.gitignore` block.",
+    )
+
+
+def _tracked_telemetry_paths(repo_root: Path) -> list[str] | None:
+    try:
+        result = subprocess.run(
+            [
+                "git",
+                "ls-files",
+                "--",
+                "ai-wiki/metrics/reuse-events",
+                "ai-wiki/metrics/task-checks",
+                "ai-wiki/_toolkit/metrics",
+                "ai-wiki/_toolkit/catalog.json",
+            ],
+            cwd=repo_root,
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+    except OSError:
+        return None
+
+    if result.returncode != 0:
+        return None
+
+    return sorted({line.strip() for line in result.stdout.splitlines() if line.strip()})
+
+
+def _check_tracked_telemetry(result: DoctorResult) -> None:
+    tracked = _tracked_telemetry_paths(result.paths.repo_root)
+    if tracked is None:
+        return
+    if not tracked:
+        _add_finding(
+            result,
+            severity="OK",
+            code="telemetry_not_tracked",
+            path=".gitignore",
+            message="AI wiki telemetry paths are not currently tracked by git.",
+        )
+        return
+
+    sample = ", ".join(tracked[:3])
+    if len(tracked) > 3:
+        sample += f", and {len(tracked) - 3} more"
+    _add_finding(
+        result,
+        severity="WARN",
+        code="tracked_telemetry_in_git_index",
+        path=".gitignore",
+        message=(
+            "Git still tracks AI wiki telemetry paths despite the ignore rules. "
+            f"Tracked entries include: {sample}."
+        ),
+        suggested_fix=f"Run `{telemetry_untrack_command()}` once to untrack the telemetry paths.",
+    )
+
+
 def _check_prompt_targets(result: DoctorResult) -> None:
     prompt_targets = existing_prompt_targets(result.paths.repo_root)
     if not prompt_targets:
@@ -664,6 +759,8 @@ def run_doctor(start: Path | None = None, handle: str | None = None) -> DoctorRe
     _check_required_managed_doc(result, relative_path="index.md", description="toolkit index")
     _check_required_managed_doc(result, relative_path="system.md", description="system rules")
     _check_required_managed_doc(result, relative_path="workflows.md", description="baseline workflows")
+    _check_gitignore(result)
+    _check_tracked_telemetry(result)
     _check_repo_index(result, starters)
     _check_repo_workflows(result, starters)
     _check_child_index(

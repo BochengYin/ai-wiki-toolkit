@@ -6,11 +6,31 @@ from textwrap import dedent
 
 PROMPT_BLOCK_START = "<!-- aiwiki-toolkit:start -->"
 PROMPT_BLOCK_END = "<!-- aiwiki-toolkit:end -->"
+GITIGNORE_BLOCK_START = "# <!-- aiwiki-toolkit:start -->"
+GITIGNORE_BLOCK_END = "# <!-- aiwiki-toolkit:end -->"
 OPENCODE_KEY = "aiwikiToolkit"
 TOOLKIT_GITHUB_URL = "https://github.com/BochengYin/ai-wiki-toolkit"
 TOOLKIT_SKILLS_DIR = ".agents/skills"
 AI_WIKI_UPDATE_SKILL_DIR = ".agents/skills/ai-wiki-update-check"
 AI_WIKI_REUSE_SKILL_DIR = ".agents/skills/ai-wiki-reuse-check"
+TELEMETRY_IGNORE_PATHS = (
+    "ai-wiki/metrics/reuse-events/",
+    "ai-wiki/metrics/task-checks/",
+    "ai-wiki/_toolkit/metrics/",
+    "ai-wiki/_toolkit/catalog.json",
+)
+
+
+def gitignore_block_body() -> str:
+    return dedent(
+        """
+        # Ignore AI wiki telemetry so normal agent use does not dirty git status.
+        ai-wiki/metrics/reuse-events/
+        ai-wiki/metrics/task-checks/
+        ai-wiki/_toolkit/metrics/
+        ai-wiki/_toolkit/catalog.json
+        """
+    ).strip()
 
 
 def repo_starter_files(handle: str) -> dict[str, str]:
@@ -112,8 +132,8 @@ def repo_starter_files(handle: str) -> dict[str, str]:
             - `task-checks/<handle>.jsonl` stores per-handle task-level AI wiki reuse checks.
             - `aiwiki-toolkit record-reuse ...` appends one document-level observation for the current handle and refreshes managed aggregates.
             - `aiwiki-toolkit record-reuse-check ...` appends one task-level reuse check for the current handle and refreshes managed aggregates.
-            - `aiwiki-toolkit refresh-metrics` regenerates package-managed aggregate views when branches drift or merge conflicts need to be resolved.
-            - Package-managed aggregate views are generated under `_toolkit/metrics/`.
+            - The installer manages a `.gitignore` block so these telemetry logs and the generated `_toolkit/catalog.json` and `_toolkit/metrics/*.json` files stay local by default.
+            - `aiwiki-toolkit refresh-metrics` regenerates package-managed aggregate views if you need a fresh local snapshot.
             """
         ).strip()
         + "\n",
@@ -165,7 +185,8 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             ## Generated Outputs
 
             - `catalog.json` and `metrics/*.json` are generated outputs, not guidance docs.
-            - Regenerate those outputs with `aiwiki-toolkit refresh-metrics` instead of hand-merging them.
+            - The installer ignores those generated outputs in `.gitignore` so routine telemetry updates stay local.
+            - Regenerate those outputs with `aiwiki-toolkit refresh-metrics` whenever you need a fresh local snapshot.
             """
         ).strip()
         + "\n",
@@ -263,8 +284,8 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             2. If any user-owned repo or system AI wiki docs were consulted, record one `aiwiki-toolkit record-reuse` event per consulted doc.
             3. Do not log managed `_toolkit/**` docs with `record-reuse`; if they changed the plan or behavior, cite their paths in a progress update or the final note instead.
             4. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
-            5. Metrics logs should shard by handle under `ai-wiki/metrics/reuse-events/<handle>.jsonl` and `ai-wiki/metrics/task-checks/<handle>.jsonl` to reduce merge conflicts in team workflows.
-            6. If generated files under `ai-wiki/_toolkit/catalog.json` or `ai-wiki/_toolkit/metrics/*.json` drift or conflict after a merge, rerun `aiwiki-toolkit refresh-metrics` instead of hand-merging them.
+            5. The installer manages a `.gitignore` block that ignores `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/metrics/`, and `ai-wiki/_toolkit/catalog.json` so telemetry stays local by default.
+            6. If those telemetry paths were tracked before you upgraded, run `aiwiki-toolkit doctor` and follow the suggested `git rm --cached` fix once to untrack them.
             7. Run one AI wiki update check at the end of every completed task, even when the result is `None`.
             8. Always end with exactly one status line: `AI Wiki Update Candidate: None`, `Draft`, or `PromotionCandidate`.
             9. If the result is `Draft` or `PromotionCandidate`, also print `AI Wiki Update Path: <path>`.
@@ -295,6 +316,9 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             User-owned reuse checks live in `ai-wiki/metrics/task-checks/<handle>.jsonl`.
 
             Package-managed aggregate files are regenerated under `ai-wiki/_toolkit/metrics/`.
+
+            The installer ignores the telemetry shards and generated aggregate views in `.gitignore` by default
+            so routine reuse logging does not dirty git status.
 
             The toolkit can append explicit document observations via `aiwiki-toolkit record-reuse`.
 
@@ -367,8 +391,8 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             - `_toolkit/metrics/document-stats.json`
             - `_toolkit/metrics/task-stats.json`
 
-            If those generated views drift or conflict across branches, regenerate them with
-            `aiwiki-toolkit refresh-metrics` instead of hand-merging the JSON.
+            Those generated views are intended as local snapshots. Regenerate them with
+            `aiwiki-toolkit refresh-metrics` whenever you need a fresh local view.
             """
         ).strip()
         + "\n",
