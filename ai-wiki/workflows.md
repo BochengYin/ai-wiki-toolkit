@@ -10,6 +10,29 @@ These are repeatable repo-specific workflows worth following when changing scaff
 4. Confirm that managed prompt content lands only inside the `aiwiki-toolkit` managed block and does not churn on user-specific values.
 5. If the change exposed a reusable lesson, write a trail or shared review pattern before moving on.
 
+## Branch And Merge Flow
+
+1. Do not develop directly on `main`.
+2. Before editing or committing, create or switch to a topic branch such as `feat/...`, `fix/...`, or `docs/...`.
+3. Push that topic branch and open a pull request instead of pushing to `main`.
+4. Treat GitHub branch protection and CI as the source of truth for whether the branch is ready to merge.
+5. After the pull request is merged, switch back to `main` locally and sync it before starting the next task.
+
+Recommended local sequence:
+
+```bash
+git switch main
+git pull --ff-only
+git switch -c your-branch-name
+```
+
+After merge:
+
+```bash
+git switch main
+git pull --ff-only
+```
+
 ## Release Preparation
 
 1. Merge workflow fixes to `main` before tagging a release.

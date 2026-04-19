@@ -20,6 +20,8 @@ Please do not work directly on `main`.
 Use a topic branch for your change:
 
 ```bash
+git switch main
+git pull --ff-only
 git switch -c your-branch-name
 ```
 
@@ -31,6 +33,13 @@ The intended merge path for this repository is:
 - CI passes on the pull request
 - the pull request is reviewed
 - `main` is updated only by merging the reviewed PR
+
+After the PR is merged, switch back to `main` locally and sync before starting the next task:
+
+```bash
+git switch main
+git pull --ff-only
+```
 
 `CODEOWNERS` is configured so `@BochengYin` is the default code owner. If branch protection is enabled in GitHub settings, that review can be required before merge.
 
