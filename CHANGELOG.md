@@ -4,13 +4,17 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+## v0.1.8
+
 ### Added
 
 - Added a manual bootstrap publish path for npm package recovery and first-time platform package publishes.
 - Added token-based npm publish fallback support for bootstrap and recovery workflows.
+- Added a Linux runtime compatibility check that runs release binaries against older and current glibc container baselines before publish.
 
 ### Changed
 
+- Changed the Linux release build lane to build inside a `python:3.11-bookworm` container instead of the host runner so the binary targets an older glibc baseline.
 - Normalized manually entered npm release tags in the publish workflow so `0.1.7` and `v0.1.7` resolve consistently.
 
 ## v0.1.7

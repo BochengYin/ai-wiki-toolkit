@@ -10,11 +10,13 @@ The repository now includes a GitHub Actions workflow at `.github/workflows/rele
 2. installs the project with the `release` dependency group
 3. runs the test suite
 4. builds standalone binaries with PyInstaller
+   - the Linux target is built inside a `python:3.11-bookworm` container so the shipped binary tracks an older glibc baseline
 5. archives each binary into a release asset
-6. renders a Homebrew formula from the release archives
-7. creates or updates a GitHub Release for the tag
-8. optionally syncs the generated formula into a Homebrew tap repository
-9. uploads the built archives and generated formula as release assets
+6. verifies the Linux release archive by running `aiwiki-toolkit --version` in both older and current glibc container baselines
+7. renders a Homebrew formula from the release archives
+8. creates or updates a GitHub Release for the tag
+9. optionally syncs the generated formula into a Homebrew tap repository
+10. uploads the built archives and generated formula as release assets
 
 This workflow is the base distribution layer for later package-manager integrations such as Homebrew and npm platform packages.
 
@@ -69,19 +71,21 @@ The archive contains a single executable:
    ```
 
 5. Wait for the `Release Binaries` workflow to finish.
-6. Verify that the GitHub Release for the tag contains all expected archives and `aiwiki-toolkit.rb`.
-7. Wait for the npm publish workflow to stage and publish the platform packages plus the meta package.
-8. If tap sync is enabled, verify that the tap repository received the updated `Formula/aiwiki-toolkit.rb`.
+6. Confirm that the Linux runtime check passed in both the older and current glibc lanes.
+7. Verify that the GitHub Release for the tag contains all expected archives and `aiwiki-toolkit.rb`.
+8. Wait for the npm publish workflow to stage and publish the platform packages plus the meta package.
+9. If tap sync is enabled, verify that the tap repository received the updated `Formula/aiwiki-toolkit.rb`.
 
 ## Local Dry Run
 
-You can test the binary build locally before cutting a release:
+You can test the Linux binary build locally before cutting a release:
 
 ```bash
-python -m pip install ".[release]"
-python -m PyInstaller --clean --noconfirm --onefile --name aiwiki-toolkit --paths src --specpath build/pyinstaller src/ai_wiki_toolkit/cli.py
-python scripts/build_release_archive.py --binary dist/aiwiki-toolkit --version v0.1.0 --target linux-x64 --output-dir release-assets
+PYTHONPATH=src python scripts/build_linux_release_in_container.py --version v0.1.0
+PYTHONPATH=src python scripts/check_linux_runtime_matrix.py --asset release-assets/ai-wiki-toolkit-v0.1.0-linux-x64.tar.gz
 ```
+
+This path expects Docker locally. The build itself happens inside `python:3.11-bookworm`, so the host Python environment does not need the release extras installed.
 
 Windows local dry runs can still be performed manually with `--binary dist/aiwiki-toolkit.exe --target windows-x64`, but that target is not part of the automated public release matrix yet.
 
