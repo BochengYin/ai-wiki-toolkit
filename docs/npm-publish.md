@@ -4,12 +4,15 @@ This repository now includes an npm publishing workflow at `.github/workflows/pu
 
 ## Publishing Model
 
-The npm package is a thin wrapper around the GitHub Release binaries. The intended publish order is:
+The npm publish flow uses a meta package plus platform-specific binary packages. The intended publish order is:
 
 1. `Release Binaries` runs for a version tag such as `v0.1.0`
 2. GitHub Release assets are uploaded
 3. `Publish npm Package` runs after the release workflow completes successfully
-4. npm users can install the wrapper with:
+4. the workflow stages one npm platform package per release target
+5. the workflow publishes those platform packages first
+6. the workflow publishes the `ai-wiki-toolkit` meta package last
+7. npm users can install with:
 
    ```bash
    npm install -g ai-wiki-toolkit
@@ -56,17 +59,22 @@ No npm token secret is required when trusted publishing is configured correctly.
 The workflow:
 
 1. checks out the exact commit released by `Release Binaries`
-2. sets up Node.js 24
-3. runs `npm pack --dry-run --ignore-scripts`
-4. runs `npm publish --provenance --ignore-scripts`
+2. sets up Python 3.11 and Node.js 24
+3. downloads the matching GitHub Release archives
+4. stages the platform npm packages from those archives
+5. publishes the platform npm packages
+6. runs `npm pack --dry-run --ignore-scripts` for the meta package
+7. runs `npm publish --provenance --ignore-scripts` for the meta package
 
-Before enabling `NPM_PUBLISH_ENABLED`, make sure the npm wrapper only advertises targets that the `Release Binaries` workflow actually publishes.
+Before enabling `NPM_PUBLISH_ENABLED`, make sure the npm platform target map only advertises targets that the `Release Binaries` workflow actually publishes.
 
-The package is published from `package.json` in this repository, so its version must stay in sync with:
+The meta package is published from `package.json` in this repository, so its version must stay in sync with:
 
 - `package.json`
 - `pyproject.toml`
 - `src/ai_wiki_toolkit/__init__.py`
+
+The platform package versions are generated from that same root version and must be published before the meta package for the same release.
 
 ## Optional Token-Based Fallback
 

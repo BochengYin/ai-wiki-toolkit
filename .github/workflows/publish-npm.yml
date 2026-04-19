@@ -22,6 +22,11 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -30,6 +35,36 @@ jobs:
 
       - name: Show package version
         run: node -p "require('./package.json').version"
+
+      - name: Download release archives
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version="v$(node -p "require('./package.json').version")"
+          gh release download "$version" --pattern "ai-wiki-toolkit-${version}-*.tar.gz" --dir release-assets
+
+      - name: Stage platform npm packages
+        run: >
+          PYTHONPATH=src python scripts/stage_npm_platform_packages.py
+          --version "$(node -p "require('./package.json').version")"
+          --asset-dir release-assets
+          --output-dir build/npm-platform-packages
+
+      - name: Show platform package contents
+        shell: bash
+        run: |
+          for dir in build/npm-platform-packages/*; do
+            echo "::group::$(basename "$dir")"
+            (cd "$dir" && npm pack --dry-run)
+            echo "::endgroup::"
+          done
+
+      - name: Publish platform npm packages
+        shell: bash
+        run: |
+          for dir in build/npm-platform-packages/*; do
+            npm publish "$dir" --provenance
+          done
 
       - name: Show package contents
         run: npm pack --dry-run --ignore-scripts

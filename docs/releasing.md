@@ -16,7 +16,7 @@ The repository now includes a GitHub Actions workflow at `.github/workflows/rele
 8. optionally syncs the generated formula into a Homebrew tap repository
 9. uploads the built archives and generated formula as release assets
 
-This workflow is the base distribution layer for later package-manager integrations such as Homebrew and npm.
+This workflow is the base distribution layer for later package-manager integrations such as Homebrew and npm platform packages.
 
 ## Supported Release Targets
 
@@ -70,7 +70,8 @@ The archive contains a single executable:
 
 5. Wait for the `Release Binaries` workflow to finish.
 6. Verify that the GitHub Release for the tag contains all expected archives and `aiwiki-toolkit.rb`.
-7. If tap sync is enabled, verify that the tap repository received the updated `Formula/aiwiki-toolkit.rb`.
+7. Wait for the npm publish workflow to stage and publish the platform packages plus the meta package.
+8. If tap sync is enabled, verify that the tap repository received the updated `Formula/aiwiki-toolkit.rb`.
 
 ## Local Dry Run
 
@@ -90,9 +91,9 @@ The intended order of distribution work is:
 
 1. GitHub Releases
 2. Homebrew tap
-3. npm wrapper
+3. npm meta package plus platform packages
 
-The generated Homebrew formula should consume the versioned GitHub Release assets instead of rebuilding the project independently. The npm wrapper should follow the same rule.
+The generated Homebrew formula should consume the versioned GitHub Release assets instead of rebuilding the project independently. The npm platform packages should follow the same rule.
 
 See also:
 

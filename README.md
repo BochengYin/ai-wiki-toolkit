@@ -70,6 +70,8 @@ For end users on macOS and Linux, the simplest install paths are Homebrew and np
 
 ### Homebrew
 
+1. Install the command:
+
 ```bash
 brew tap BochengYin/tap
 brew install aiwiki-toolkit
@@ -81,21 +83,48 @@ Or in one command:
 brew install BochengYin/tap/aiwiki-toolkit
 ```
 
+2. Enter the target git repository and initialize the wiki scaffolding:
+
+```bash
+cd /path/to/your/repo
+aiwiki-toolkit install
+```
+
 ### npm
+
+1. Install the command:
 
 ```bash
 npm install -g ai-wiki-toolkit
 ```
 
-The Homebrew formula and npm wrapper both consume the same versioned GitHub Release assets.
+The Homebrew formula and npm distribution both consume the same versioned GitHub Release assets.
+
+The npm package is a thin meta package that installs the matching platform-specific binary package for the current machine. It does not fetch release assets during `postinstall`.
+
+2. Enter the target git repository and initialize the wiki scaffolding:
+
+```bash
+cd /path/to/your/repo
+aiwiki-toolkit install
+```
 
 ### Local development
+
+1. Install the command from this repository checkout:
 
 ```bash
 pip install -e .
 ```
 
 This remains the simplest contributor workflow inside the repository.
+
+2. Enter the target git repository and initialize the wiki scaffolding:
+
+```bash
+cd /path/to/your/repo
+aiwiki-toolkit install
+```
 
 ## Recommendations
 
@@ -107,12 +136,40 @@ Recommended before running `install`:
 
 Claude Code / Codex init is not required. If no supported prompt file exists, `ai-wiki-toolkit` creates `AGENT.md` automatically.
 
+## Update
+
+For npm installs, use npm itself to update both the meta package and the matching platform binary:
+
+```bash
+npm update -g ai-wiki-toolkit
+```
+
+Or install the latest version explicitly:
+
+```bash
+npm install -g ai-wiki-toolkit@latest
+```
+
+`aiwiki-toolkit` does not implement a self-update command. The package manager remains the source of truth for install and upgrade state.
+
 ## Usage
 
 Run inside a git repository:
 
 ```bash
+aiwiki-toolkit install
+```
+
+Override the detected handle only when you need to:
+
+```bash
 aiwiki-toolkit install --handle your-handle
+```
+
+Or use the backward-compatible alias:
+
+```bash
+aiwiki-toolkit init
 ```
 
 `install` will:
@@ -135,7 +192,7 @@ The tool works best when `git user.name` and `git user.email` are configured fir
 
 If repo-local skill files already exist at `.agents/skills/ai-wiki-update-check/`, the installer does not overwrite them. It skips those files and prints a manual merge URL back to this repository so you can compare and resolve changes yourself.
 
-`init` remains as a backward-compatible alias for `install`.
+`init` remains as a backward-compatible alias for `install`. The actual scaffold creation does not happen at package install time; it happens when you run `aiwiki-toolkit install` or `aiwiki-toolkit init` inside a git repository.
 
 To remove the managed layer while keeping your user-owned wiki documents:
 
@@ -181,13 +238,13 @@ The public distribution model is:
 
 - GitHub Releases are the source of truth for versioned release binaries
 - Homebrew tap `BochengYin/tap` consumes those release assets for macOS and Linux users
-- npm package `ai-wiki-toolkit` consumes those same release assets for macOS and Linux users who prefer `npm install -g`
+- npm package `ai-wiki-toolkit` is a meta package that depends on platform-specific npm binary packages for macOS and Linux users who prefer `npm install -g`
 
 The goal is to make end-user installation independent of a local Python setup, while keeping `pip install -e .` as the simplest contributor workflow inside this repository.
 
 The first release skeleton is documented in [docs/releasing.md](docs/releasing.md).
 The Homebrew tap plan is documented in [docs/homebrew-tap.md](docs/homebrew-tap.md).
-The npm wrapper plan is documented in [docs/npm-wrapper.md](docs/npm-wrapper.md).
+The npm distribution plan is documented in [docs/npm-wrapper.md](docs/npm-wrapper.md).
 The npm publishing plan is documented in [docs/npm-publish.md](docs/npm-publish.md).
 
 ## Path examples

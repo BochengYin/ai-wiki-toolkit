@@ -5,6 +5,9 @@ from pathlib import Path
 import re
 import tomllib
 
+from ai_wiki_toolkit import __version__
+from ai_wiki_toolkit.npm_distribution import expected_optional_dependencies, load_platform_packages
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -16,8 +19,7 @@ def _release_workflow_targets() -> set[str]:
 
 
 def _npm_wrapper_targets() -> set[str]:
-    shared = (ROOT / "npm" / "shared.js").read_text(encoding="utf-8")
-    return set(re.findall(r'target: "([a-z0-9-]+)"', shared))
+    return {package.release_target for package in load_platform_packages()}
 
 
 def test_npm_wrapper_targets_are_subset_of_release_workflow_targets() -> None:
@@ -36,6 +38,7 @@ def test_public_package_metadata_includes_license_and_repository_links() -> None
     assert package_json["homepage"] == "https://github.com/BochengYin/ai-wiki-toolkit#readme"
     assert package_json["bugs"]["url"] == "https://github.com/BochengYin/ai-wiki-toolkit/issues"
     assert package_json["os"] == ["darwin", "linux"]
+    assert package_json["optionalDependencies"] == expected_optional_dependencies(__version__)
 
     assert pyproject["project"]["license"] == "MIT"
     assert pyproject["project"]["urls"] == {

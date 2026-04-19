@@ -1,0 +1,23 @@
+{
+  "darwin-arm64": {
+    "package_name": "ai-wiki-toolkit-darwin-arm64",
+    "release_target": "macos-arm64",
+    "os": ["darwin"],
+    "cpu": ["arm64"],
+    "binary_name": "aiwiki-toolkit"
+  },
+  "darwin-x64": {
+    "package_name": "ai-wiki-toolkit-darwin-x64",
+    "release_target": "macos-x64",
+    "os": ["darwin"],
+    "cpu": ["x64"],
+    "binary_name": "aiwiki-toolkit"
+  },
+  "linux-x64": {
+    "package_name": "ai-wiki-toolkit-linux-x64",
+    "release_target": "linux-x64",
+    "os": ["linux"],
+    "cpu": ["x64"],
+    "binary_name": "aiwiki-toolkit"
+  }
+}

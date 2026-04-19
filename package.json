@@ -1,7 +1,7 @@
 {
   "name": "ai-wiki-toolkit",
   "version": "0.1.6",
-  "description": "Thin npm wrapper for ai-wiki-toolkit release binaries.",
+  "description": "Meta npm package for ai-wiki-toolkit platform binaries.",
   "license": "MIT",
   "homepage": "https://github.com/BochengYin/ai-wiki-toolkit#readme",
   "bugs": {
@@ -10,11 +10,10 @@
   "bin": {
     "aiwiki-toolkit": "npm/bin/aiwiki-toolkit.js"
   },
-  "scripts": {
-    "postinstall": "node npm/install.js"
-  },
   "files": [
-    "npm/**/*",
+    "npm/bin/aiwiki-toolkit.js",
+    "npm/shared.js",
+    "npm/platform-targets.json",
     "LICENSE",
     "README.md"
   ],
@@ -29,8 +28,9 @@
     "type": "git",
     "url": "git+https://github.com/BochengYin/ai-wiki-toolkit.git"
   },
-  "dependencies": {
-    "extract-zip": "^2.0.1",
-    "tar": "^7.4.3"
+  "optionalDependencies": {
+    "ai-wiki-toolkit-darwin-arm64": "0.1.6",
+    "ai-wiki-toolkit-darwin-x64": "0.1.6",
+    "ai-wiki-toolkit-linux-x64": "0.1.6"
   }
 }

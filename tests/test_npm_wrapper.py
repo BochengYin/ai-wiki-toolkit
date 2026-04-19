@@ -1,18 +1,20 @@
 from __future__ import annotations
 
-import functools
-import http.server
 import json
-import os
-import platform
 from pathlib import Path
 import shutil
-import socketserver
 import subprocess
-import threading
+import tarfile
 
 import pytest
 from ai_wiki_toolkit import __version__
+from ai_wiki_toolkit.npm_distribution import (
+    expected_optional_dependencies,
+    load_platform_packages,
+    render_platform_package_json,
+    stage_platform_packages,
+)
+from ai_wiki_toolkit.release_artifacts import release_archive_name
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -23,113 +25,105 @@ def test_package_json_version_matches_python_package() -> None:
     assert package_json["version"] == __version__
 
 
-def test_package_json_exposes_cli_bin_and_postinstall() -> None:
+def test_package_json_exposes_cli_bin_and_optional_platform_dependencies() -> None:
     package_json = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
 
     assert package_json["bin"]["aiwiki-toolkit"] == "npm/bin/aiwiki-toolkit.js"
-    assert package_json["scripts"]["postinstall"] == "node npm/install.js"
+    assert package_json["optionalDependencies"] == expected_optional_dependencies(__version__)
+    assert "scripts" not in package_json or "postinstall" not in package_json["scripts"]
 
 
 def test_npm_wrapper_files_exist() -> None:
-    assert (ROOT / "npm" / "install.js").exists()
     assert (ROOT / "npm" / "bin" / "aiwiki-toolkit.js").exists()
     assert (ROOT / "npm" / "shared.js").exists()
+    assert (ROOT / "npm" / "platform-targets.json").exists()
 
 
 def _current_npm_target() -> str | None:
-    system = platform.system().lower()
-    machine = platform.machine().lower()
+    node = shutil.which("node")
+    if node is None:
+        return None
 
-    if system == "darwin" and machine in {"arm64", "aarch64"}:
-        return "macos-arm64"
-    if system == "darwin" and machine in {"x86_64", "amd64"}:
-        return "macos-x64"
-    if system == "linux" and machine in {"x86_64", "amd64"}:
-        return "linux-x64"
-    return None
+    result = subprocess.run(
+        [
+            node,
+            "-e",
+            "const { currentTarget } = require('./npm/shared');"
+            "const target = currentTarget();"
+            "process.stdout.write(target ? `${process.platform}-${process.arch}` : '');",
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return None
+    return result.stdout.strip() or None
 
 
-class QuietHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
-    def log_message(self, format: str, *args: object) -> None:
-        return
-
-
-def test_npm_install_downloads_archive_outside_install_directory(tmp_path: Path) -> None:
+def test_npm_bin_invokes_installed_platform_binary(tmp_path: Path) -> None:
     node = shutil.which("node")
     if node is None:
         pytest.skip("node is not available")
 
-    target = _current_npm_target()
-    if target is None:
-        pytest.skip("current platform is not supported by the npm wrapper")
+    node_target = _current_npm_target()
+    if node_target is None:
+        pytest.skip("current platform is not supported by the npm meta package")
 
-    version = f"v{__version__}" if not __version__.startswith("v") else __version__
-    asset_name = f"ai-wiki-toolkit-{version}-{target}.tar.gz"
-
-    release_dir = tmp_path / "releases" / version
-    release_dir.mkdir(parents=True)
-    binary_contents = "#!/bin/sh\necho installed-from-test\n"
-    (release_dir / asset_name).write_text(binary_contents, encoding="utf-8")
+    package = next(
+        package for package in load_platform_packages() if package.node_target == node_target
+    )
 
     package_dir = tmp_path / "package"
     package_dir.mkdir()
-    shutil.copy2(ROOT / "package.json", package_dir / "package.json")
     shutil.copytree(ROOT / "npm", package_dir / "npm")
 
-    tar_module = package_dir / "node_modules" / "tar"
-    tar_module.mkdir(parents=True)
-    (tar_module / "index.js").write_text(
-        """
-const fs = require("fs");
-const path = require("path");
-
-module.exports = {
-  x: async ({ file, cwd }) => {
-    const contents = fs.readFileSync(file, "utf8");
-    fs.mkdirSync(cwd, { recursive: true });
-    fs.writeFileSync(path.join(cwd, "aiwiki-toolkit"), contents);
-  },
-};
-""".strip()
-        + "\n",
+    platform_package_dir = package_dir / "node_modules" / package.package_name
+    (platform_package_dir / "bin").mkdir(parents=True)
+    (platform_package_dir / "package.json").write_text(
+        render_platform_package_json(package, __version__),
         encoding="utf-8",
     )
+    binary_path = platform_package_dir / "bin" / package.binary_name
+    binary_path.write_text("#!/bin/sh\necho installed-from-platform-package\n", encoding="utf-8")
+    binary_path.chmod(0o755)
 
-    extract_zip_module = package_dir / "node_modules" / "extract-zip"
-    extract_zip_module.mkdir(parents=True)
-    (extract_zip_module / "index.js").write_text(
-        """
-module.exports = async () => {
-  throw new Error("zip extraction should not run in this test");
-};
-""".strip()
-        + "\n",
-        encoding="utf-8",
+    result = subprocess.run(
+        [node, "npm/bin/aiwiki-toolkit.js"],
+        cwd=package_dir,
+        capture_output=True,
+        text=True,
+        check=False,
     )
-
-    handler = functools.partial(QuietHTTPRequestHandler, directory=str(tmp_path / "releases"))
-    with socketserver.TCPServer(("127.0.0.1", 0), handler) as server:
-        thread = threading.Thread(target=server.serve_forever, daemon=True)
-        thread.start()
-        try:
-            env = os.environ.copy()
-            env["AIWIKI_TOOLKIT_RELEASE_BASE_URL"] = (
-                f"http://127.0.0.1:{server.server_address[1]}"
-            )
-            result = subprocess.run(
-                [node, "npm/install.js"],
-                cwd=package_dir,
-                env=env,
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-        finally:
-            server.shutdown()
-            thread.join()
 
     assert result.returncode == 0, result.stderr
-    assert f"Installed ai-wiki-toolkit binary for {target}" in result.stdout
-    assert (package_dir / "npm" / "vendor" / target / "aiwiki-toolkit").read_text(
-        encoding="utf-8"
-    ) == binary_contents
+    assert result.stdout.strip() == "installed-from-platform-package"
+
+
+def test_stage_platform_packages_creates_publishable_directories(tmp_path: Path) -> None:
+    asset_dir = tmp_path / "release-assets"
+    asset_dir.mkdir()
+    output_dir = tmp_path / "build" / "npm-platforms"
+
+    for package in load_platform_packages():
+        archive_path = asset_dir / release_archive_name(__version__, package.release_target)
+        payload = tmp_path / f"{package.release_target}-{package.binary_name}"
+        payload.write_text("binary payload\n", encoding="utf-8")
+        with tarfile.open(archive_path, "w:gz") as archive:
+            archive.add(payload, arcname=package.binary_name)
+
+    staged = stage_platform_packages(
+        version=__version__,
+        asset_dir=asset_dir,
+        output_root=output_dir,
+        repository_root=ROOT,
+    )
+
+    assert len(staged) == len(load_platform_packages())
+    for package_dir in staged:
+        package_json = json.loads((package_dir / "package.json").read_text(encoding="utf-8"))
+        assert package_json["version"] == __version__
+        assert (package_dir / "README.md").exists()
+        assert (package_dir / "LICENSE").exists()
+        assert (package_dir / "bin" / "aiwiki-toolkit").exists()

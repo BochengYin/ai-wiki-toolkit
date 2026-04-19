@@ -9,15 +9,30 @@ function main() {
   const targetInfo = currentTarget();
   if (!targetInfo) {
     console.error(
-      `Unsupported platform for ai-wiki-toolkit npm wrapper: ${process.platform}-${process.arch}`,
+      `Unsupported platform for ai-wiki-toolkit npm package: ${process.platform}-${process.arch}`,
     );
     process.exit(1);
   }
 
-  const binaryPath = installedBinaryPath(targetInfo);
+  let binaryPath;
+  try {
+    binaryPath = installedBinaryPath(targetInfo);
+  } catch (error) {
+    console.error(
+      [
+        `The platform package ${targetInfo.package_name} is not installed.`,
+        "Reinstall ai-wiki-toolkit with npm so the matching optional dependency is available.",
+      ].join(" "),
+    );
+    process.exit(1);
+  }
+
   if (!fs.existsSync(binaryPath)) {
     console.error(
-      "ai-wiki-toolkit binary is not installed. Reinstall the npm package to download the release asset.",
+      [
+        `Expected ai-wiki-toolkit binary at ${binaryPath}, but it was not found.`,
+        "Reinstall ai-wiki-toolkit with npm to restore the matching platform package.",
+      ].join(" "),
     );
     process.exit(1);
   }
