@@ -46,6 +46,33 @@ It creates two isolated namespaces:
 
 It also adds a managed instruction block to your agent prompt file so the agent knows where to read from and where to write back durable notes.
 
+## How It Fits Coding Agents
+
+`ai-wiki-toolkit` is not meant to be a standalone end-user app by itself.
+
+It is a scaffold layer for coding-agent workflows. The point is to give tools like Claude Code, Codex, and similar repo agents a stable place to read project memory from and a stable place to write durable lessons back to.
+
+In practice, the toolkit becomes useful when an agent is already working inside a git repository and needs shared instructions plus persistent repo memory.
+
+That is why the installer manages both wiki files and prompt wiring together:
+
+- `ai-wiki/` and `~/ai-wiki/system/` hold the durable Markdown memory
+- `AGENT.md`, `AGENTS.md`, or `CLAUDE.md` tell the agent to read that memory and follow the workflow
+- `.agents/skills/ai-wiki-update-check/` provides a repeatable end-of-task check for Codex-style agent runs
+
+## Prompt File Integration
+
+Many coding-agent setups already create one of these repo-shared prompt files:
+
+- `CLAUDE.md` for Claude Code style workflows
+- `AGENTS.md` or `AGENT.md` for Codex or other agent bootstraps
+
+`ai-wiki-toolkit` does not expect you to choose all of them manually.
+
+When you run `aiwiki-toolkit install`, it looks for supported prompt files in the repository root and updates whichever ones already exist. It only manages the `aiwiki-toolkit` block inside those files, so your surrounding user-written instructions stay in place.
+
+If none of those files exist yet, the toolkit creates `AGENT.md` as a generic default so the repo still has one stable prompt entrypoint.
+
 ## Why The Files Look Like This
 
 The AI wiki structure is deliberately inspired by how `SKILL.md` files work well: keep a small stable entrypoint, then fan out into focused references.
@@ -132,7 +159,7 @@ Recommended before running `install`:
 
 - initialize the repository with git
 - configure `git user.name` and `git user.email` so the toolkit can derive a stable handle
-- if you already ran Claude Code, Codex, or another agent bootstrap and already have `AGENT.md`, `AGENTS.md`, or `CLAUDE.md`, the toolkit will update that file in place
+- if you already ran Claude Code, Codex, or another agent bootstrap and already have `AGENT.md`, `AGENTS.md`, or `CLAUDE.md`, the toolkit will update the managed `aiwiki-toolkit` block in that file instead of replacing the whole file
 
 Claude Code / Codex init is not required. If no supported prompt file exists, `ai-wiki-toolkit` creates `AGENT.md` automatically.
 
