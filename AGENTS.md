@@ -23,7 +23,7 @@ Recent commits use short, imperative, sentence-case subjects such as `Fix releas
 
 Before starting work:
 
-1. Read `ai-wiki/_toolkit/system.md`.
+1. Read `ai-wiki/_toolkit/index.md`.
 2. Read `ai-wiki/index.md`.
 3. Read `ai-wiki/review-patterns/index.md` before implementation or review work.
 4. Read your own folder index under `ai-wiki/people/<handle>/index.md` when continuing draft notes.
@@ -32,15 +32,20 @@ Before starting work:
 7. Keep cross-project reusable notes in `<home>/ai-wiki/system/`.
 8. Only suggest promotion from a draft to a shared pattern when the two-signal gate is satisfied.
 9. Agents may suggest promotion candidates, but humans confirm shared patterns.
-10. If an `ai-wiki-update-check` skill is available, use it for the end-of-task AI wiki update check.
+10. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them for the end-of-task AI wiki checks.
 
 ## End Of Task
 
-1. Run one AI wiki update check for every completed task, even if the result is `None`.
-2. Choose exactly one result: `None`, `Draft`, or `PromotionCandidate`.
-3. If the result is `Draft`, record the lesson under `ai-wiki/people/<handle>/drafts/` and print `AI Wiki Update Path: <path>`.
-4. If the result is `PromotionCandidate`, mark or update the draft as a promotion candidate, print `AI Wiki Update Path: <path>`, and ask for human confirmation before creating `ai-wiki/review-patterns/*.md`.
-5. Always print exactly one final status line:
+1. Run one AI wiki reuse check for every completed task, even if no AI wiki docs were used.
+2. If any user-owned AI wiki docs were consulted, record one `aiwiki-toolkit record-reuse` event per consulted doc.
+3. If a managed `_toolkit/**` doc materially changed the plan or behavior, cite its path in a progress update or final note, but do not log it with `record-reuse`.
+4. If a user-owned AI wiki doc materially changed the plan or behavior, cite its path in a progress update or final note.
+5. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
+6. Run one AI wiki update check for every completed task, even if the result is `None`.
+7. Choose exactly one result: `None`, `Draft`, or `PromotionCandidate`.
+8. If the result is `Draft`, record the lesson under `ai-wiki/people/<handle>/drafts/` and print `AI Wiki Update Path: <path>`.
+9. If the result is `PromotionCandidate`, mark or update the draft as a promotion candidate, print `AI Wiki Update Path: <path>`, and ask for human confirmation before creating `ai-wiki/review-patterns/*.md`.
+10. Always print exactly one final status line:
    - `AI Wiki Update Candidate: None`
    - `AI Wiki Update Candidate: Draft`
    - `AI Wiki Update Candidate: PromotionCandidate`

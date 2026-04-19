@@ -9,7 +9,12 @@ from pathlib import Path
 from typing import Sequence
 from uuid import uuid4
 
-from ai_wiki_toolkit.paths import RepoRootNotFoundError, build_paths, resolve_model_name
+from ai_wiki_toolkit.paths import (
+    RepoRootNotFoundError,
+    build_paths,
+    resolve_model_name,
+    resolve_user_handle,
+)
 from ai_wiki_toolkit.wiki_schema import (
     REUSE_SCHEMA_VERSION,
     infer_doc_kind,
@@ -20,6 +25,7 @@ from ai_wiki_toolkit.wiki_schema import (
 RETRIEVAL_MODES = ("preloaded", "lookup")
 EVIDENCE_MODES = ("explicit", "inferred")
 REUSE_OUTCOMES = ("resolved", "partial", "not_helpful")
+REUSE_CHECK_OUTCOMES = ("wiki_used", "no_wiki_use")
 
 
 class RepoWikiNotInitializedError(RuntimeError):
@@ -30,7 +36,18 @@ class RepoWikiNotInitializedError(RuntimeError):
 class RecordReuseResult:
     event_id: str
     observed_at: str
+    author_handle: str
     event_log_path: Path
+    document_stats_path: Path
+    task_stats_path: Path
+
+
+@dataclass(frozen=True)
+class RecordReuseCheckResult:
+    check_id: str
+    checked_at: str
+    author_handle: str
+    check_log_path: Path
     document_stats_path: Path
     task_stats_path: Path
 
@@ -57,6 +74,14 @@ def _append_jsonl(path: Path, payload: dict[str, object]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(payload, sort_keys=True) + "\n")
+
+
+def _validate_reuse_doc_id(normalized_doc_id: str) -> None:
+    if normalized_doc_id.startswith("_toolkit/"):
+        raise ValueError(
+            "Managed `_toolkit/**` docs are control-plane instructions and must not be recorded "
+            "with `record-reuse`. Cite the path in your user-facing note instead."
+        )
 
 
 def _refresh_metrics(repo_wiki_dir: Path) -> tuple[Path, Path]:
@@ -87,6 +112,7 @@ def record_reuse_event(
     saved_tokens: int | None = None,
     saved_seconds: int | None = None,
     observed_at: str | None = None,
+    handle: str | None = None,
     start: Path | None = None,
 ) -> RecordReuseResult:
     paths = build_paths(start)
@@ -101,12 +127,14 @@ def record_reuse_event(
         raise ValueError("doc_id must not be empty.")
     if not normalized_task_id:
         raise ValueError("task_id must not be empty.")
+    _validate_reuse_doc_id(normalized_doc_id)
 
     normalized_retrieval = _normalize_choice(retrieval_mode, RETRIEVAL_MODES, "retrieval mode")
     normalized_evidence = _normalize_choice(evidence_mode, EVIDENCE_MODES, "evidence mode")
     normalized_outcome = _normalize_choice(reuse_outcome, REUSE_OUTCOMES, "reuse outcome")
 
     resolved_doc_kind = (doc_kind or _infer_doc_kind(normalized_doc_id)).strip()
+    resolved_handle = resolve_user_handle(paths.repo_root, explicit_handle=handle)
     resolved_model = resolve_model_name(explicit_model=model)
     resolved_observed_at = _event_timestamp(observed_at)
     event_id = f"evt_{uuid4().hex[:12]}"
@@ -115,6 +143,7 @@ def record_reuse_event(
         "schema_version": REUSE_SCHEMA_VERSION,
         "event_id": event_id,
         "observed_at": resolved_observed_at,
+        "author_handle": resolved_handle,
         "task_id": normalized_task_id,
         "doc_id": normalized_doc_id,
         "doc_kind": resolved_doc_kind,
@@ -140,14 +169,74 @@ def record_reuse_event(
             estimated_savings["saved_seconds"] = saved_seconds
         payload["estimated_savings"] = estimated_savings
 
-    event_log_path = paths.repo_wiki_dir / "metrics" / "reuse-events.jsonl"
+    event_log_path = paths.repo_wiki_dir / "metrics" / "reuse-events" / f"{resolved_handle}.jsonl"
     _append_jsonl(event_log_path, payload)
     document_stats_path, task_stats_path = _refresh_metrics(paths.repo_wiki_dir)
 
     return RecordReuseResult(
         event_id=event_id,
         observed_at=resolved_observed_at,
+        author_handle=resolved_handle,
         event_log_path=event_log_path,
+        document_stats_path=document_stats_path,
+        task_stats_path=task_stats_path,
+    )
+
+
+def record_reuse_check(
+    *,
+    task_id: str,
+    check_outcome: str,
+    agent_name: str | None = None,
+    model: str | None = None,
+    notes: str | None = None,
+    checked_at: str | None = None,
+    handle: str | None = None,
+    start: Path | None = None,
+) -> RecordReuseCheckResult:
+    paths = build_paths(start)
+    if not paths.repo_wiki_dir.exists():
+        raise RepoWikiNotInitializedError(
+            "Repo AI wiki is not initialized. Run `aiwiki-toolkit install` first."
+        )
+
+    normalized_task_id = task_id.strip()
+    if not normalized_task_id:
+        raise ValueError("task_id must not be empty.")
+
+    normalized_check_outcome = _normalize_choice(
+        check_outcome, REUSE_CHECK_OUTCOMES, "reuse check outcome"
+    )
+    resolved_handle = resolve_user_handle(paths.repo_root, explicit_handle=handle)
+    resolved_model = resolve_model_name(explicit_model=model)
+    resolved_checked_at = _event_timestamp(checked_at)
+    check_id = f"chk_{uuid4().hex[:12]}"
+
+    payload: dict[str, object] = {
+        "schema_version": REUSE_SCHEMA_VERSION,
+        "check_id": check_id,
+        "checked_at": resolved_checked_at,
+        "author_handle": resolved_handle,
+        "task_id": normalized_task_id,
+        "check_outcome": normalized_check_outcome,
+    }
+
+    if agent_name and agent_name.strip():
+        payload["agent_name"] = agent_name.strip()
+    if resolved_model:
+        payload["model"] = resolved_model
+    if notes and notes.strip():
+        payload["notes"] = notes.strip()
+
+    check_log_path = paths.repo_wiki_dir / "metrics" / "task-checks" / f"{resolved_handle}.jsonl"
+    _append_jsonl(check_log_path, payload)
+    document_stats_path, task_stats_path = _refresh_metrics(paths.repo_wiki_dir)
+
+    return RecordReuseCheckResult(
+        check_id=check_id,
+        checked_at=resolved_checked_at,
+        author_handle=resolved_handle,
+        check_log_path=check_log_path,
         document_stats_path=document_stats_path,
         task_stats_path=task_stats_path,
     )

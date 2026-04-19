@@ -2,6 +2,8 @@
 
 These are repeatable repo-specific workflows worth following when changing scaffold behavior or cutting releases.
 
+See also `_toolkit/workflows.md` for package-managed baseline workflows that ship with `ai-wiki-toolkit`.
+
 ## Scaffold And Prompt Changes
 
 1. Update or add state-transition tests in the same change.
@@ -50,13 +52,3 @@ git pull --ff-only
 2. If only `windows-x64` fails during tests, first suspect newline or path assumptions.
 3. If a workflow fails immediately with zero useful jobs, first suspect GitHub Actions parsing or expression issues.
 4. After fixing a release workflow issue, re-tag only after the fix is on `main`.
-
-## AI Wiki Maintenance
-
-1. Run one AI wiki update check at the end of every completed task, even when the result is `None`.
-2. Always end with exactly one status line: `AI Wiki Update Candidate: None`, `Draft`, or `PromotionCandidate`.
-3. If the result is `Draft` or `PromotionCandidate`, also print `AI Wiki Update Path: <path>`.
-4. Put reusable repo-specific lessons in `ai-wiki/review-patterns/`.
-5. Put task-specific chronology and dead ends in `ai-wiki/trails/`.
-6. Put raw personal draft notes in `ai-wiki/people/<handle>/drafts/`.
-7. Promote only stable, reviewable rules into shared patterns.

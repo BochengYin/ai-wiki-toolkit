@@ -73,7 +73,7 @@ def test_init_appends_managed_block_when_prompt_file_has_no_managed_section(
     text = claude.read_text(encoding="utf-8")
     assert text.startswith("# Existing Claude prompt\n\n")
     assert PROMPT_BLOCK_START in text
-    assert "ai-wiki/_toolkit/system.md" in text
+    assert "ai-wiki/_toolkit/index.md" in text
 
 
 def test_init_creates_agent_when_no_prompt_files_exist(

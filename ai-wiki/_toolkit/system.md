@@ -4,11 +4,23 @@ This file is managed by ai-wiki-toolkit. Future package versions may update it.
 
 ## Start Of Task
 
-1. Read `ai-wiki/index.md`.
-2. Read `ai-wiki/review-patterns/index.md` before implementation or review work.
-3. Read `ai-wiki/people/<handle>/index.md` when continuing draft work.
-4. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
-5. If an `ai-wiki-update-check` skill is available, use it for end-of-task AI wiki checks.
+1. Read `ai-wiki/_toolkit/index.md`.
+2. Read `ai-wiki/index.md`.
+3. Read `ai-wiki/review-patterns/index.md` before implementation or review work.
+4. Read `ai-wiki/people/<handle>/index.md` when continuing draft work.
+5. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
+6. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them for end-of-task AI wiki checks.
+
+## AI Wiki Reuse Check
+
+1. Run one AI wiki reuse check at the end of every completed task, even when no wiki docs were used.
+2. If any user-owned repo or system AI wiki docs were consulted, record one `aiwiki-toolkit record-reuse` event per consulted document.
+3. If a managed `_toolkit/**` doc changed the plan or behavior, cite its path in a progress update or final note, but do not record it with `record-reuse`.
+4. When a user-owned AI wiki doc materially changes the plan or behavior, cite its path in a progress update or final note.
+5. Use `reuse_outcome=not_helpful` when a consulted user-owned AI wiki document did not help materially but still influenced the search path.
+6. Record one `aiwiki-toolkit record-reuse-check` entry for the task with:
+   - `wiki_used` when one or more AI wiki document events were recorded
+   - `no_wiki_use` when no AI wiki document events were needed for the task
 
 ## AI Wiki Update Check
 

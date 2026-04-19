@@ -26,3 +26,9 @@ These are repo-specific constraints that should be treated as hard boundaries.
 
 1. Filesystem behavior changes require before/after state-transition tests.
 2. Release-facing tests must avoid platform-specific assumptions about newlines, path separators, or shell behavior.
+
+## Team Collaboration
+
+1. New AI wiki features must remain compatible with normal multi-user git collaboration.
+2. Do not introduce default workflows that routinely force merge conflicts in user-owned repo files during ordinary feature work.
+3. Prefer per-handle append-only evidence logs and regenerated managed artifacts over shared mutable files when storing agent activity or derived metrics.

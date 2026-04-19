@@ -80,12 +80,13 @@ def test_build_repo_catalog_prefers_frontmatter_title(tmp_path: Path) -> None:
 
 def test_build_document_stats_aggregates_reuse_events(tmp_path: Path) -> None:
     repo_wiki = tmp_path / "ai-wiki"
-    (repo_wiki / "metrics").mkdir(parents=True)
-    (repo_wiki / "metrics" / "reuse-events.jsonl").write_text(
+    (repo_wiki / "metrics" / "reuse-events").mkdir(parents=True)
+    (repo_wiki / "metrics" / "reuse-events" / "alice.jsonl").write_text(
         "\n".join(
             [
                 json.dumps(
                     {
+                        "author_handle": "alice",
                         "doc_id": "review-patterns/prompt-file-rule",
                         "observed_at": "2026-04-20T10:00:00+10:00",
                         "retrieval_mode": "preloaded",
@@ -94,10 +95,20 @@ def test_build_document_stats_aggregates_reuse_events(tmp_path: Path) -> None:
                 ),
                 json.dumps(
                     {
+                        "author_handle": "alice",
                         "doc_id": "review-patterns/prompt-file-rule",
                         "observed_at": "2026-04-20T11:00:00+10:00",
                         "retrieval_mode": "lookup",
                         "reuse_outcome": "partial",
+                    }
+                ),
+                json.dumps(
+                    {
+                        "author_handle": "alice",
+                        "doc_id": "_toolkit/system",
+                        "observed_at": "2026-04-20T12:00:00+10:00",
+                        "retrieval_mode": "preloaded",
+                        "reuse_outcome": "resolved",
                     }
                 ),
                 "not-json",
@@ -127,12 +138,13 @@ def test_build_document_stats_aggregates_reuse_events(tmp_path: Path) -> None:
 
 def test_build_task_stats_sums_estimated_savings(tmp_path: Path) -> None:
     repo_wiki = tmp_path / "ai-wiki"
-    (repo_wiki / "metrics").mkdir(parents=True)
-    (repo_wiki / "metrics" / "reuse-events.jsonl").write_text(
+    (repo_wiki / "metrics" / "reuse-events").mkdir(parents=True)
+    (repo_wiki / "metrics" / "reuse-events" / "alice.jsonl").write_text(
         "\n".join(
             [
                 json.dumps(
                     {
+                        "author_handle": "alice",
                         "task_id": "task-1",
                         "doc_id": "review-patterns/prompt-file-rule",
                         "retrieval_mode": "preloaded",
@@ -142,6 +154,7 @@ def test_build_task_stats_sums_estimated_savings(tmp_path: Path) -> None:
                 ),
                 json.dumps(
                     {
+                        "author_handle": "alice",
                         "task_id": "task-1",
                         "doc_id": "trails/release-debugging",
                         "retrieval_mode": "lookup",
@@ -154,21 +167,129 @@ def test_build_task_stats_sums_estimated_savings(tmp_path: Path) -> None:
         + "\n",
         encoding="utf-8",
     )
+    (repo_wiki / "metrics" / "task-checks").mkdir(parents=True)
+    (repo_wiki / "metrics" / "task-checks" / "alice.jsonl").write_text(
+        json.dumps(
+            {
+                "author_handle": "alice",
+                "task_id": "task-1",
+                "checked_at": "2026-04-20T12:00:00+10:00",
+                "check_outcome": "wiki_used",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
 
     stats = build_task_stats(repo_wiki)
 
     assert stats == {
         "schema_version": "reuse-v1",
+        "skipped_check_lines": 0,
         "skipped_event_lines": 0,
+        "summary": {
+            "checked_tasks": 1,
+            "tasks_with_events_but_no_check": 0,
+            "tasks_with_wiki_use": 1,
+            "tasks_without_wiki_use": 0,
+        },
         "tasks": {
             "task-1": {
+                "check_count": 1,
                 "effective_reuse_count": 1,
                 "estimated_seconds_saved": 40,
                 "estimated_token_savings": 1500,
+                "last_check_outcome": "wiki_used",
+                "last_checked_at": "2026-04-20T12:00:00+10:00",
                 "lookup_reuse_count": 1,
                 "preloaded_reuse_count": 1,
+                "reuse_checked": True,
                 "reused_docs": 2,
                 "total_events": 2,
             }
         },
     }
+
+
+def test_build_task_stats_includes_checked_tasks_with_no_reuse(tmp_path: Path) -> None:
+    repo_wiki = tmp_path / "ai-wiki"
+    (repo_wiki / "metrics" / "task-checks").mkdir(parents=True)
+    (repo_wiki / "metrics" / "task-checks" / "alice.jsonl").write_text(
+        json.dumps(
+            {
+                "author_handle": "alice",
+                "task_id": "task-2",
+                "checked_at": "2026-04-20T13:00:00+10:00",
+                "check_outcome": "no_wiki_use",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    stats = build_task_stats(repo_wiki)
+
+    assert stats == {
+        "schema_version": "reuse-v1",
+        "skipped_check_lines": 0,
+        "skipped_event_lines": 0,
+        "summary": {
+            "checked_tasks": 1,
+            "tasks_with_events_but_no_check": 0,
+            "tasks_with_wiki_use": 0,
+            "tasks_without_wiki_use": 1,
+        },
+        "tasks": {
+            "task-2": {
+                "check_count": 1,
+                "effective_reuse_count": 0,
+                "estimated_seconds_saved": 0,
+                "estimated_token_savings": 0,
+                "last_check_outcome": "no_wiki_use",
+                "last_checked_at": "2026-04-20T13:00:00+10:00",
+                "lookup_reuse_count": 0,
+                "preloaded_reuse_count": 0,
+                "reuse_checked": True,
+                "reused_docs": 0,
+                "total_events": 0,
+            }
+        },
+    }
+
+
+def test_build_task_stats_reads_legacy_flat_logs_for_compatibility(tmp_path: Path) -> None:
+    repo_wiki = tmp_path / "ai-wiki"
+    (repo_wiki / "metrics").mkdir(parents=True)
+    (repo_wiki / "metrics" / "reuse-events.jsonl").write_text(
+        json.dumps(
+            {
+                "task_id": "task-legacy",
+                "doc_id": "workflows",
+                "retrieval_mode": "preloaded",
+                "reuse_outcome": "resolved",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (repo_wiki / "metrics" / "task-checks.jsonl").write_text(
+        json.dumps(
+            {
+                "task_id": "task-legacy",
+                "checked_at": "2026-04-20T14:00:00+10:00",
+                "check_outcome": "wiki_used",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    stats = build_task_stats(repo_wiki)
+
+    assert stats["summary"] == {
+        "checked_tasks": 1,
+        "tasks_with_events_but_no_check": 0,
+        "tasks_with_wiki_use": 1,
+        "tasks_without_wiki_use": 0,
+    }
+    assert stats["tasks"]["task-legacy"]["reused_docs"] == 1

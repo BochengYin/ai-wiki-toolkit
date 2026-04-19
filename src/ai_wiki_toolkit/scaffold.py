@@ -7,8 +7,8 @@ from pathlib import Path
 import shutil
 
 from ai_wiki_toolkit.content import (
-    AI_WIKI_UPDATE_SKILL_DIR,
     TOOLKIT_GITHUB_URL,
+    TOOLKIT_SKILLS_DIR,
     managed_home_toolkit_files,
     managed_repo_toolkit_files,
     repo_starter_files,
@@ -23,6 +23,7 @@ from ai_wiki_toolkit.paths import (
     resolve_user_handle,
 )
 from ai_wiki_toolkit.prompt import remove_managed_block_file, upsert_managed_block_file
+from ai_wiki_toolkit.reuse_events import RepoWikiNotInitializedError
 from ai_wiki_toolkit.wiki_schema import (
     render_document_stats,
     render_repo_catalog,
@@ -49,6 +50,12 @@ class UninstallResult:
     updated_prompt_files: list[Path] = field(default_factory=list)
     deleted_prompt_files: list[Path] = field(default_factory=list)
     removed_opencode_key: bool = False
+
+
+@dataclass
+class RefreshMetricsResult:
+    paths: ToolkitPaths
+    refreshed_files: list[Path] = field(default_factory=list)
 
 
 def _ensure_dir(path: Path, result: InitResult) -> None:
@@ -90,6 +97,21 @@ def _write_managed(path: Path, content: str, result: InitResult) -> None:
     result.updated_managed_files.append(path)
 
 
+def _write_refreshed_managed(path: Path, content: str, refreshed_files: list[Path]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not path.exists():
+        path.write_text(content, encoding="utf-8")
+        refreshed_files.append(path)
+        return
+
+    current = path.read_text(encoding="utf-8")
+    if current == content:
+        return
+
+    path.write_text(content, encoding="utf-8")
+    refreshed_files.append(path)
+
+
 def install_workspace(start: Path | None = None, handle: str | None = None) -> InitResult:
     paths = build_paths(start)
     resolved_handle = resolve_user_handle(paths.repo_root, explicit_handle=handle)
@@ -97,6 +119,9 @@ def install_workspace(start: Path | None = None, handle: str | None = None) -> I
 
     for directory in (
         paths.repo_wiki_dir,
+        paths.repo_wiki_dir / "metrics",
+        paths.repo_wiki_dir / "metrics" / "reuse-events",
+        paths.repo_wiki_dir / "metrics" / "task-checks",
         paths.repo_wiki_dir / "trails",
         paths.review_patterns_dir,
         paths.people_dir / resolved_handle / "drafts",
@@ -148,6 +173,32 @@ def install_workspace(start: Path | None = None, handle: str | None = None) -> I
 
 def init_workspace(start: Path | None = None, handle: str | None = None) -> InitResult:
     return install_workspace(start=start, handle=handle)
+
+
+def refresh_managed_metrics(start: Path | None = None) -> RefreshMetricsResult:
+    paths = build_paths(start)
+    if not paths.repo_wiki_dir.exists():
+        raise RepoWikiNotInitializedError(
+            "Repo AI wiki is not initialized. Run `aiwiki-toolkit install` first."
+        )
+
+    result = RefreshMetricsResult(paths=paths)
+    _write_refreshed_managed(
+        paths.repo_toolkit_dir / "catalog.json",
+        render_repo_catalog(paths.repo_wiki_dir),
+        result.refreshed_files,
+    )
+    _write_refreshed_managed(
+        paths.repo_toolkit_dir / "metrics" / "document-stats.json",
+        render_document_stats(paths.repo_wiki_dir),
+        result.refreshed_files,
+    )
+    _write_refreshed_managed(
+        paths.repo_toolkit_dir / "metrics" / "task-stats.json",
+        render_task_stats(paths.repo_wiki_dir),
+        result.refreshed_files,
+    )
+    return result
 
 
 def _remove_tree_if_exists(path: Path, result: UninstallResult) -> None:
@@ -203,4 +254,4 @@ def uninstall_workspace(
 
 
 def skill_manual_merge_url() -> str:
-    return f"{TOOLKIT_GITHUB_URL}/tree/main/{AI_WIKI_UPDATE_SKILL_DIR}"
+    return f"{TOOLKIT_GITHUB_URL}/tree/main/{TOOLKIT_SKILLS_DIR}"

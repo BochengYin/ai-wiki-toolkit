@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Wiki Reuse Check"
+  short_description: "Record end-of-task AI wiki reuse"
+  default_prompt: "Run the ai-wiki end-of-task reuse check for this completed task."
