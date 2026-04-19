@@ -5,8 +5,8 @@ This file is managed by ai-wiki-toolkit. Future package versions may update it.
 ## Start Of Task
 
 1. Read `ai-wiki/index.md`.
-2. Read `ai-wiki/review-patterns/` before implementation or review work.
-3. Read `ai-wiki/people/<handle>/drafts/` when continuing draft work.
+2. Read `ai-wiki/review-patterns/index.md` before implementation or review work.
+3. Read `ai-wiki/people/<handle>/index.md` when continuing draft work.
 4. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
 5. If an `ai-wiki-update-check` skill is available, use it for end-of-task AI wiki checks.
 

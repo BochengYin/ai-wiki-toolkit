@@ -29,15 +29,27 @@ def test_init_empty_repo_creates_expected_tree(repo_env: dict[str, Path]) -> Non
         "AGENT.md",
         "ai-wiki/",
         "ai-wiki/_toolkit/",
+        "ai-wiki/_toolkit/catalog.json",
+        "ai-wiki/_toolkit/metrics/",
+        "ai-wiki/_toolkit/metrics/document-stats.json",
+        "ai-wiki/_toolkit/metrics/task-stats.json",
+        "ai-wiki/_toolkit/schema/",
+        "ai-wiki/_toolkit/schema/reuse-v1.md",
         "ai-wiki/_toolkit/system.md",
         "ai-wiki/constraints.md",
         "ai-wiki/decisions.md",
         "ai-wiki/index.md",
+        "ai-wiki/metrics/",
+        "ai-wiki/metrics/index.md",
+        "ai-wiki/metrics/reuse-events.jsonl",
         "ai-wiki/people/",
         "ai-wiki/people/by/",
         "ai-wiki/people/by/drafts/",
+        "ai-wiki/people/by/index.md",
         "ai-wiki/review-patterns/",
+        "ai-wiki/review-patterns/index.md",
         "ai-wiki/trails/",
+        "ai-wiki/trails/index.md",
         "ai-wiki/workflows.md",
     ]
     assert snapshot_tree(repo_env["home_dir"]) == [
@@ -64,8 +76,8 @@ def test_init_writes_expected_agent_snapshot(repo_env: dict[str, Path]) -> None:
 
         1. Read `ai-wiki/_toolkit/system.md`.
         2. Read `ai-wiki/index.md`.
-        3. Read `ai-wiki/review-patterns/` before implementation or review work.
-        4. Read your own folder under `ai-wiki/people/<handle>/drafts/` when continuing draft notes.
+        3. Read `ai-wiki/review-patterns/index.md` before implementation or review work.
+        4. Read your own folder index under `ai-wiki/people/<handle>/index.md` when continuing draft notes.
         5. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
         6. Keep project-specific notes in `ai-wiki/`.
         7. Keep cross-project reusable notes in `<home>/ai-wiki/system/`.
@@ -104,14 +116,16 @@ def test_init_writes_expected_repo_index_snapshot(repo_env: dict[str, Path]) -> 
         2. Read `constraints.md` for hard constraints and non-negotiables.
         3. Read `workflows.md` for preferred ways of working in this repo.
         4. Read `decisions.md` for durable project decisions and tradeoffs.
-        5. Read `review-patterns/` before implementation and review tasks.
-        6. Read files in `trails/` only when they match the current task.
-        7. Read `people/<handle>/drafts/` when continuing or recording personal draft notes.
+        5. Read `review-patterns/index.md` before individual review patterns.
+        6. Read `trails/index.md` when task-specific chronology or dead ends may help.
+        7. Read `people/<handle>/index.md` when continuing or recording personal draft notes.
 
         ## Areas
 
-        - `review-patterns/` contains shared, reusable review rules.
-        - `people/<handle>/drafts/` contains raw personal notes that may later be promoted.
+        - `review-patterns/index.md` maps shared, reusable review rules.
+        - `trails/index.md` maps task-specific chronology, dead ends, and release trails.
+        - `people/<handle>/index.md` maps handle-local draft notes and working history.
+        - `metrics/` contains user-owned evidence logs such as `reuse-events.jsonl`.
         - `_toolkit/system.md` contains package-managed collaboration protocol and note schemas.
         """
     )
@@ -132,8 +146,8 @@ def test_init_writes_expected_toolkit_managed_files(repo_env: dict[str, Path]) -
         ## Start Of Task
 
         1. Read `ai-wiki/index.md`.
-        2. Read `ai-wiki/review-patterns/` before implementation or review work.
-        3. Read `ai-wiki/people/<handle>/drafts/` when continuing draft work.
+        2. Read `ai-wiki/review-patterns/index.md` before implementation or review work.
+        3. Read `ai-wiki/people/<handle>/index.md` when continuing draft work.
         4. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
         5. If an `ai-wiki-update-check` skill is available, use it for end-of-task AI wiki checks.
 
@@ -257,6 +271,48 @@ def test_init_does_not_overwrite_existing_user_docs(repo_env: dict[str, Path]) -
     assert result.exit_code == 0
     assert (repo_wiki / "index.md").read_text(encoding="utf-8") == "# Custom index\n"
     assert (repo_wiki / "constraints.md").read_text(encoding="utf-8") == "# Custom constraints\n"
+
+
+def test_init_does_not_overwrite_existing_user_owned_indexes(repo_env: dict[str, Path]) -> None:
+    repo_wiki = repo_env["repo"] / "ai-wiki"
+    (repo_wiki / "review-patterns").mkdir(parents=True)
+    (repo_wiki / "metrics").mkdir(parents=True)
+    (repo_wiki / "people" / "alice").mkdir(parents=True)
+    (repo_wiki / "review-patterns" / "index.md").write_text("# Custom review index\n", encoding="utf-8")
+    (repo_wiki / "metrics" / "index.md").write_text("# Custom metrics index\n", encoding="utf-8")
+    (repo_wiki / "people" / "alice" / "index.md").write_text("# Custom person index\n", encoding="utf-8")
+
+    result = runner.invoke(app, ["init", "--handle", "alice"])
+
+    assert result.exit_code == 0
+    assert (repo_wiki / "review-patterns" / "index.md").read_text(encoding="utf-8") == (
+        "# Custom review index\n"
+    )
+    assert (repo_wiki / "metrics" / "index.md").read_text(encoding="utf-8") == (
+        "# Custom metrics index\n"
+    )
+    assert (repo_wiki / "people" / "alice" / "index.md").read_text(encoding="utf-8") == (
+        "# Custom person index\n"
+    )
+
+
+def test_init_writes_catalog_and_empty_stats(repo_env: dict[str, Path]) -> None:
+    result = runner.invoke(app, ["init", "--handle", "alice"])
+
+    assert result.exit_code == 0
+    catalog = (repo_env["repo"] / "ai-wiki" / "_toolkit" / "catalog.json").read_text(encoding="utf-8")
+    assert '"schema_version": "reuse-v1"' in catalog
+    assert '"doc_id": "review-patterns/index"' in catalog
+    assert '"doc_id": "people/alice/index"' in catalog
+
+    document_stats = (
+        repo_env["repo"] / "ai-wiki" / "_toolkit" / "metrics" / "document-stats.json"
+    ).read_text(encoding="utf-8")
+    task_stats = (
+        repo_env["repo"] / "ai-wiki" / "_toolkit" / "metrics" / "task-stats.json"
+    ).read_text(encoding="utf-8")
+    assert '"documents": {}' in document_stats
+    assert '"tasks": {}' in task_stats
 
 
 def test_init_updates_managed_toolkit_files_on_rerun(repo_env: dict[str, Path]) -> None:

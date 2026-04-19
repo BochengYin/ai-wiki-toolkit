@@ -4,6 +4,16 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Added repo starter indexes for `review-patterns/`, `trails/`, `people/<handle>/`, and `metrics/`.
+- Added a machine-readable AI wiki catalog and first reuse schema scaffold under `ai-wiki/_toolkit/`.
+- Added `aiwiki-toolkit record-reuse` for appending reuse events and refreshing managed metric aggregates.
+
+### Changed
+
+- Updated the default AI wiki read path to point at folder indexes instead of raw directories.
+
 ## v0.1.8
 
 ### Added

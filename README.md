@@ -211,7 +211,9 @@ aiwiki-toolkit init
 
 - create `ai-wiki/` inside the current repository
 - create `~/ai-wiki/system/`
-- create `ai-wiki/review-patterns/`, `ai-wiki/people/<handle>/drafts/`, and repo/home `_toolkit/`
+- create starter indexes such as `ai-wiki/review-patterns/index.md`, `ai-wiki/trails/index.md`, and `ai-wiki/people/<handle>/index.md`
+- create `ai-wiki/review-patterns/`, `ai-wiki/people/<handle>/drafts/`, `ai-wiki/metrics/`, and repo/home `_toolkit/`
+- generate package-managed `_toolkit/catalog.json`, `_toolkit/schema/reuse-v1.md`, and `_toolkit/metrics/*.json`
 - create `.agents/skills/ai-wiki-update-check/` if the repo-local skill does not already exist
 - update `AGENT.md`, `AGENTS.md`, and/or `CLAUDE.md` with a managed instruction block
 
@@ -228,6 +230,22 @@ The tool works best when `git user.name` and `git user.email` are configured fir
 If repo-local skill files already exist at `.agents/skills/ai-wiki-update-check/`, the installer does not overwrite them. It skips those files and prints a manual merge URL back to this repository so you can compare and resolve changes yourself.
 
 `init` remains as a backward-compatible alias for `install`. The actual scaffold creation does not happen at package install time; it happens when you run `aiwiki-toolkit install` or `aiwiki-toolkit init` inside a git repository.
+
+To append one explicit knowledge-reuse observation and refresh managed aggregates:
+
+```bash
+aiwiki-toolkit record-reuse \
+  --doc-id review-patterns/shared-prompt-files-must-be-user-agnostic \
+  --task-id release-followup \
+  --retrieval-mode lookup \
+  --evidence-mode explicit \
+  --reuse-outcome resolved \
+  --reuse-effect avoided_retry \
+  --saved-tokens 1200 \
+  --saved-seconds 45
+```
+
+This appends to the user-owned `ai-wiki/metrics/reuse-events.jsonl` log and refreshes the package-managed aggregate views under `ai-wiki/_toolkit/metrics/`.
 
 To remove the managed layer while keeping your user-owned wiki documents:
 
@@ -256,7 +274,9 @@ Even with `--purge-user-docs --yes`, the shared home wiki under `~/ai-wiki/syste
 
 - Existing user-owned `ai-wiki/**/*.md` files are treated as stable data.
 - `install`/`init` only create missing starter files; they do not merge or overwrite existing user wiki documents.
+- Starter indexes such as `ai-wiki/index.md`, `review-patterns/index.md`, `trails/index.md`, `people/<handle>/index.md`, and `metrics/index.md` become user-owned once created and are not rewritten by future package updates.
 - `ai-wiki/_toolkit/**` and `~/ai-wiki/system/_toolkit/**` are package-managed and may be refreshed by future versions.
+- `ai-wiki/metrics/reuse-events.jsonl` is user-owned evidence data. Package-managed aggregate views are regenerated under `ai-wiki/_toolkit/metrics/`.
 - `.agents/skills/ai-wiki-update-check/**` is installed as starter scaffolding only. Existing files at those paths are skipped instead of overwritten.
 - Prompt files are updated only inside the managed block marked by:
 

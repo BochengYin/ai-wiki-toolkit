@@ -33,7 +33,7 @@ def test_init_updates_only_existing_prompt_files(
     for filename in expected_files:
         text = (repo / filename).read_text(encoding="utf-8")
         assert PROMPT_BLOCK_START in text
-        assert "ai-wiki/people/<handle>/drafts/" in text
+        assert "ai-wiki/people/<handle>/index.md" in text
 
     for filename in {"AGENTS.md", "AGENT.md", "CLAUDE.md"} - set(expected_files):
         assert not (repo / filename).exists()
