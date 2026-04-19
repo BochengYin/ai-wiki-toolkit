@@ -1,0 +1,83 @@
+name: Bug report
+description: Report an install problem, runtime failure, or unexpected behavior.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please include enough detail for someone else to reproduce the problem in a clean environment.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the actual behavior and what you expected instead.
+      placeholder: npm install succeeded, but aiwiki-toolkit --version failed with...
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Include the exact commands you ran.
+      placeholder: |
+        1. npm install -g ai-wiki-toolkit
+        2. mkdir test-repo && cd test-repo
+        3. git init
+        4. aiwiki-toolkit install
+    validations:
+      required: true
+
+  - type: input
+    id: toolkit-version
+    attributes:
+      label: ai-wiki-toolkit version
+      description: Output of `aiwiki-toolkit --version`, if available.
+      placeholder: ai-wiki-toolkit 0.1.8
+    validations:
+      required: false
+
+  - type: dropdown
+    id: install-method
+    attributes:
+      label: Install method
+      options:
+        - npm
+        - Homebrew
+        - pip editable install
+        - Source checkout
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment details
+      description: Include OS, architecture, and relevant tool versions.
+      placeholder: |
+        OS: macOS 15.4 / Ubuntu 24.04 / Debian 12
+        Architecture: arm64 / x64
+        Node: v24.x
+        npm: 11.x
+        Python: 3.11.x
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or error output
+      description: Paste the full error text if you can.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Anything else that may help reproduce or narrow the issue.
+    validations:
+      required: false

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Read the README
+    url: https://github.com/BochengYin/ai-wiki-toolkit#readme
+    about: Install, usage, and distribution details live here.
+  - name: Review release docs
+    url: https://github.com/BochengYin/ai-wiki-toolkit/blob/main/docs/releasing.md
+    about: Use this if your question is specifically about release behavior.

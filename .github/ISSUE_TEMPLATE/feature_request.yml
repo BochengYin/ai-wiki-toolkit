@@ -1,0 +1,62 @@
+name: Feature request
+description: Suggest a workflow improvement, integration, or new capability.
+title: "[Feature]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion. For larger changes, use this issue first so we can align on scope before implementation.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the friction, missing behavior, or workflow gap.
+      placeholder: The current install flow works, but it is hard to understand which files will be changed before running install.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe the behavior you want.
+      placeholder: Add a --dry-run mode that prints which files will be created or updated.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: If you tried another workflow or workaround, include it here.
+    validations:
+      required: false
+
+  - type: textarea
+    id: affected-workflow
+    attributes:
+      label: Affected workflow
+      description: Mention which path this affects most.
+      placeholder: npm install, prompt file integration, AI wiki write-back flow, Codex skill setup, release pipeline
+    validations:
+      required: false
+
+  - type: dropdown
+    id: pr-interest
+    attributes:
+      label: Would you be interested in contributing a PR?
+      options:
+        - No
+        - Maybe, after discussion
+        - Yes
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add screenshots, examples, or links if useful.
+    validations:
+      required: false
