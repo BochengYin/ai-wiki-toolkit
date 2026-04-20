@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Wiki Capture PR Review Learning"
+  short_description: "Classify and store reusable PR review feedback"
+  default_prompt: "Run the capture-review-learning workflow for this review feedback and propose the smallest useful AI wiki update."
