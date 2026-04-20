@@ -139,6 +139,36 @@ def test_record_reuse_requires_initialized_repo_wiki(repo_env: dict[str, Path]) 
     assert "Run `aiwiki-toolkit install` first." in result.output
 
 
+def test_record_reuse_infers_team_memory_doc_kinds(repo_env: dict[str, Path]) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "alice"])
+    assert install_result.exit_code == 0
+
+    result = runner.invoke(
+        app,
+        [
+            "record-reuse",
+            "--doc-id",
+            "conventions/python-typing",
+            "--task-id",
+            "task-typing-followup",
+            "--retrieval-mode",
+            "lookup",
+            "--evidence-mode",
+            "explicit",
+            "--reuse-outcome",
+            "partial",
+            "--handle",
+            "alice",
+        ],
+    )
+
+    assert result.exit_code == 0
+    event_log_path = repo_env["repo"] / "ai-wiki" / "metrics" / "reuse-events" / "alice.jsonl"
+    event = json.loads(event_log_path.read_text(encoding="utf-8").splitlines()[0])
+    assert event["doc_id"] == "conventions/python-typing"
+    assert event["doc_kind"] == "convention"
+
+
 def test_record_reuse_rejects_managed_toolkit_docs(repo_env: dict[str, Path]) -> None:
     install_result = runner.invoke(app, ["install", "--handle", "alice"])
     assert install_result.exit_code == 0

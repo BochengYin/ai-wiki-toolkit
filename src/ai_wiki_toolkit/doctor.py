@@ -100,9 +100,12 @@ def _add_suggestion(
 def _top_level_index_missing_tokens() -> tuple[str, ...]:
     return (
         "_toolkit/index.md",
-        "workflows.md",
+        "conventions/index.md",
         "decisions.md",
         "review-patterns/index.md",
+        "problems/index.md",
+        "features/index.md",
+        "workflows.md",
         "trails/index.md",
         "people/<handle>/index.md",
         "metrics/",
@@ -702,7 +705,13 @@ def _check_prompt_targets(result: DoctorResult) -> None:
         for token in (
             "ai-wiki/_toolkit/index.md",
             "ai-wiki/index.md",
+            "conventions/index.md",
+            "decisions.md",
             "review-patterns/index.md",
+            "problems/index.md",
+            "features/index.md",
+            "workflows.md",
+            "trails/index.md",
             "people/<handle>/index.md",
         ):
             if token not in text:
@@ -759,15 +768,38 @@ def run_doctor(start: Path | None = None, handle: str | None = None) -> DoctorRe
     _check_required_managed_doc(result, relative_path="index.md", description="toolkit index")
     _check_required_managed_doc(result, relative_path="system.md", description="system rules")
     _check_required_managed_doc(result, relative_path="workflows.md", description="baseline workflows")
+    _check_required_managed_doc(
+        result,
+        relative_path="schema/team-memory-v1.md",
+        description="team memory schema",
+    )
     _check_gitignore(result)
     _check_tracked_telemetry(result)
     _check_repo_index(result, starters)
     _check_repo_workflows(result, starters)
     _check_child_index(
         result,
+        relative_path="conventions/index.md",
+        starter_content=starters["conventions/index.md"],
+        description="conventions",
+    )
+    _check_child_index(
+        result,
         relative_path="review-patterns/index.md",
         starter_content=starters["review-patterns/index.md"],
         description="review patterns",
+    )
+    _check_child_index(
+        result,
+        relative_path="problems/index.md",
+        starter_content=starters["problems/index.md"],
+        description="problems",
+    )
+    _check_child_index(
+        result,
+        relative_path="features/index.md",
+        starter_content=starters["features/index.md"],
+        description="features",
     )
     _check_child_index(
         result,

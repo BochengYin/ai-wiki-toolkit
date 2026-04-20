@@ -21,6 +21,7 @@ def test_doctor_is_clean_for_latest_navigation_and_rule_structure(
     assert result.exit_code == 0
     assert "OK    ai-wiki/_toolkit/index.md `ai-wiki/_toolkit/index.md` exists." in result.output
     assert "OK    ai-wiki/_toolkit/workflows.md `ai-wiki/_toolkit/workflows.md` exists." in result.output
+    assert "OK    ai-wiki/_toolkit/schema/team-memory-v1.md `ai-wiki/_toolkit/schema/team-memory-v1.md` exists." in result.output
     assert "OK    .gitignore `.gitignore` already contains the current managed telemetry ignore block." in result.output
     assert "OK    ai-wiki/index.md `ai-wiki/index.md` already uses the current index-based navigation shape." in result.output
     assert "OK    ai-wiki/workflows.md `ai-wiki/workflows.md` points to the managed baseline workflow doc." in result.output
@@ -71,14 +72,18 @@ def test_doctor_suggests_starter_updates_for_repo_docs(repo_env: dict[str, Path]
     assert result.exit_code == 0
     assert "WARN  ai-wiki/_toolkit/index.md `ai-wiki/_toolkit/index.md` is missing." in result.output
     assert "WARN  ai-wiki/_toolkit/workflows.md `ai-wiki/_toolkit/workflows.md` is missing." in result.output
+    assert "WARN  ai-wiki/_toolkit/schema/team-memory-v1.md `ai-wiki/_toolkit/schema/team-memory-v1.md` is missing." in result.output
     assert "WARN  .gitignore `.gitignore` is missing the `aiwiki-toolkit` managed telemetry ignore block." in result.output
     assert "WARN  ai-wiki/index.md `ai-wiki/index.md` is missing current navigation references:" in result.output
     assert "WARN  ai-wiki/workflows.md `ai-wiki/workflows.md` is missing the pointer to `_toolkit/workflows.md`." in result.output
     assert "WARN  AGENT.md `AGENT.md` has a managed block but is missing index-based references:" in result.output
     assert "Suggested starter updates:" in result.output
     assert "Path: ai-wiki/index.md" in result.output
+    assert "Path: ai-wiki/conventions/index.md" in result.output
     assert "Path: ai-wiki/workflows.md" in result.output
     assert "Path: ai-wiki/review-patterns/index.md" in result.output
+    assert "Path: ai-wiki/problems/index.md" in result.output
+    assert "Path: ai-wiki/features/index.md" in result.output
     assert "Read `_toolkit/index.md` for package-managed collaboration rules and baseline workflows." in result.output
     assert "See also `_toolkit/workflows.md` for package-managed baseline workflows" in result.output
 
