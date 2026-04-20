@@ -1,6 +1,6 @@
 {
   "name": "ai-wiki-toolkit",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "Meta npm package for ai-wiki-toolkit platform binaries.",
   "license": "MIT",
   "homepage": "https://github.com/BochengYin/ai-wiki-toolkit#readme",
@@ -29,8 +29,8 @@
     "url": "git+https://github.com/BochengYin/ai-wiki-toolkit.git"
   },
   "optionalDependencies": {
-    "ai-wiki-toolkit-darwin-arm64": "0.1.10",
-    "ai-wiki-toolkit-darwin-x64": "0.1.10",
-    "ai-wiki-toolkit-linux-x64": "0.1.10"
+    "ai-wiki-toolkit-darwin-arm64": "0.1.11",
+    "ai-wiki-toolkit-darwin-x64": "0.1.11",
+    "ai-wiki-toolkit-linux-x64": "0.1.11"
   }
 }
