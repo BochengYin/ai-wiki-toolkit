@@ -6,7 +6,8 @@ This directory is managed by ai-wiki-toolkit. Future package versions may update
 
 1. Read `system.md` for package-managed collaboration rules.
 2. Read `workflows.md` for package-managed baseline workflows.
-3. Read `schema/reuse-v1.md` only when reuse metrics, logging, or schema questions matter.
+3. Read `schema/team-memory-v1.md` when note shapes, memory types, or source pointers matter.
+4. Read `schema/reuse-v1.md` only when reuse metrics, logging, or schema questions matter.
 
 ## Generated Outputs
 

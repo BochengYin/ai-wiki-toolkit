@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Wiki Clarify Before Code"
+  short_description: "Clarify ambiguous coding tasks before implementation"
+  default_prompt: "Run the clarify-before-code workflow for this task and decide whether it is ready to code."

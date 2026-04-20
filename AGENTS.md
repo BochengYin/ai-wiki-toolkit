@@ -25,14 +25,22 @@ Before starting work:
 
 1. Read `ai-wiki/_toolkit/index.md`.
 2. Read `ai-wiki/index.md`.
-3. Read `ai-wiki/review-patterns/index.md` before implementation or review work.
-4. Read your own folder index under `ai-wiki/people/<handle>/index.md` when continuing draft notes.
-5. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
-6. Keep project-specific notes in `ai-wiki/`.
-7. Keep cross-project reusable notes in `<home>/ai-wiki/system/`.
-8. Only suggest promotion from a draft to a shared pattern when the two-signal gate is satisfied.
-9. Agents may suggest promotion candidates, but humans confirm shared patterns.
-10. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them for the end-of-task AI wiki checks.
+3. Read `ai-wiki/conventions/index.md` for shared team conventions that should guide implementation.
+4. Read `ai-wiki/decisions.md` for durable project decisions and tradeoffs.
+5. Read `ai-wiki/review-patterns/index.md` for reusable review rules and reviewer expectations.
+6. Read `ai-wiki/problems/index.md` for known pitfalls and reusable problem-solution memories.
+7. Read `ai-wiki/features/index.md` when task-specific requirements, assumptions, or acceptance criteria matter.
+8. Read `ai-wiki/workflows.md` for repo-specific workflows that extend the managed baseline.
+9. Read `ai-wiki/trails/index.md` when debugging chronology or dead ends may help.
+10. Read your own folder index under `ai-wiki/people/<handle>/index.md` when continuing draft notes.
+11. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
+12. Keep project-specific notes in `ai-wiki/`.
+13. Keep cross-project reusable notes in `<home>/ai-wiki/system/`.
+14. Only suggest promotion from a draft to a shared pattern or convention when the two-signal gate is satisfied.
+15. Agents may suggest promotion candidates, but humans confirm shared patterns and team conventions.
+16. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
+17. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
+18. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them for the end-of-task AI wiki checks.
 
 ## End Of Task
 
@@ -42,10 +50,11 @@ Before starting work:
 4. If a user-owned AI wiki doc materially changed the plan or behavior, cite its path in a progress update or final note.
 5. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
 6. Run one AI wiki update check for every completed task, even if the result is `None`.
-7. Choose exactly one result: `None`, `Draft`, or `PromotionCandidate`.
-8. If the result is `Draft`, record the lesson under `ai-wiki/people/<handle>/drafts/` and print `AI Wiki Update Path: <path>`.
-9. If the result is `PromotionCandidate`, mark or update the draft as a promotion candidate, print `AI Wiki Update Path: <path>`, and ask for human confirmation before creating `ai-wiki/review-patterns/*.md`.
-10. Always print exactly one final status line:
+7. Check whether the task produced a team convention, reusable PR review learning, feature clarification, durable decision, reusable problem-solution memory, conflict or supersession, or a person preference that should stay personal for now.
+8. Choose exactly one result: `None`, `Draft`, or `PromotionCandidate`.
+9. If the result is `Draft`, record the lesson under `ai-wiki/people/<handle>/drafts/` and print `AI Wiki Update Path: <path>`.
+10. If the result is `PromotionCandidate`, mark or update the draft as a promotion candidate, print `AI Wiki Update Path: <path>`, and ask for human confirmation before creating `ai-wiki/review-patterns/*.md` or `ai-wiki/conventions/*.md`.
+11. Always print exactly one final status line:
    - `AI Wiki Update Candidate: None`
    - `AI Wiki Update Candidate: Draft`
    - `AI Wiki Update Candidate: PromotionCandidate`

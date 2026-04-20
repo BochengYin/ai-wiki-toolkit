@@ -13,7 +13,11 @@ This file is managed by ai-wiki-toolkit. Future package versions may update it.
 7. Run one AI wiki update check at the end of every completed task, even when the result is `None`.
 8. Always end with exactly one status line: `AI Wiki Update Candidate: None`, `Draft`, or `PromotionCandidate`.
 9. If the result is `Draft` or `PromotionCandidate`, also print `AI Wiki Update Path: <path>`.
-10. Put reusable repo-specific lessons in `ai-wiki/review-patterns/`.
-11. Put task-specific chronology and dead ends in `ai-wiki/trails/`.
-12. Put raw personal draft notes in `ai-wiki/people/<handle>/drafts/`.
-13. Promote only stable, reviewable rules into shared patterns.
+10. Do not write every task summary into the wiki; capture only durable memory.
+11. Put shared team conventions in `ai-wiki/conventions/`.
+12. Put reusable repo-specific review lessons in `ai-wiki/review-patterns/`.
+13. Put reusable problem-solution memories in `ai-wiki/problems/`.
+14. Put feature clarifications in `ai-wiki/features/`.
+15. Put task-specific chronology and dead ends in `ai-wiki/trails/`.
+16. Put raw personal draft notes in `ai-wiki/people/<handle>/drafts/`.
+17. Promote only stable, reviewable rules into shared patterns or conventions.
