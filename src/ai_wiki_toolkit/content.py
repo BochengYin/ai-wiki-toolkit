@@ -43,22 +43,15 @@ def repo_starter_files(handle: str) -> dict[str, str]:
 
             This is the user-owned entrypoint for project-specific AI wiki content.
 
-            ## Read Order
+            Use this file as a repo-owned map and overview.
 
-            1. Read `_toolkit/index.md` for package-managed collaboration rules and baseline workflows.
-            2. Read `constraints.md` for hard constraints and non-negotiables.
-            3. Read `conventions/index.md` for shared team conventions that should guide implementation.
-            4. Read `decisions.md` for durable project decisions and tradeoffs.
-            5. Read `review-patterns/index.md` for reusable review rules and reviewer expectations.
-            6. Read `problems/index.md` for known pitfalls and reusable problem-solution memories.
-            7. Read `features/index.md` when task-specific requirements, assumptions, or acceptance criteria matter.
-            8. Read `workflows.md` for repo-specific workflows that extend the managed baseline.
-            9. Read `trails/index.md` when debugging chronology or dead ends may help.
-            10. Read `people/<handle>/index.md` when continuing or recording personal draft notes.
+            Package-managed start-of-task routing lives in `_toolkit/system.md` and may evolve without requiring this file to change.
 
             ## Areas
 
+            - `_toolkit/system.md` carries the managed start-of-task workflow and evolving read order.
             - `_toolkit/index.md` maps package-managed collaboration rules, baseline workflows, and schemas.
+            - `constraints.md` maps hard constraints and non-negotiables.
             - `conventions/index.md` maps shared team conventions that coding agents should follow.
             - `decisions.md` maps durable project decisions and tradeoffs.
             - `review-patterns/index.md` maps reusable review rules and reviewer expectations.
@@ -315,20 +308,21 @@ def managed_repo_toolkit_files() -> dict[str, str]:
 
             ## Start Of Task
 
-            1. Read `ai-wiki/_toolkit/index.md`.
-            2. Read `ai-wiki/index.md`.
-            3. Read `ai-wiki/conventions/index.md` for shared team conventions that should guide implementation.
-            4. Read `ai-wiki/decisions.md` for durable project decisions and tradeoffs.
-            5. Read `ai-wiki/review-patterns/index.md` for reusable review rules and reviewer expectations.
-            6. Read `ai-wiki/problems/index.md` before implementing or testing similar behavior.
-            7. Read `ai-wiki/features/index.md` when task-specific requirements, assumptions, or acceptance criteria matter.
-            8. Read `ai-wiki/workflows.md` for repo-specific workflows that extend the managed baseline.
-            9. Read `ai-wiki/trails/index.md` when debugging chronology or dead ends may help.
-            10. Read `ai-wiki/people/<handle>/index.md` when continuing draft work.
-            11. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
-            12. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
-            13. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
-            14. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them for end-of-task AI wiki checks.
+            1. Read `ai-wiki/constraints.md` for hard constraints and non-negotiables.
+            2. Read `ai-wiki/conventions/index.md` for shared team conventions that should guide implementation.
+            3. Read `ai-wiki/decisions.md` for durable project decisions and tradeoffs.
+            4. Read `ai-wiki/review-patterns/index.md` for reusable review rules and reviewer expectations.
+            5. Read `ai-wiki/problems/index.md` before implementing or testing similar behavior.
+            6. Read `ai-wiki/features/index.md` when task-specific requirements, assumptions, or acceptance criteria matter.
+            7. Read `ai-wiki/workflows.md` for repo-specific workflows that extend the managed baseline.
+            8. Read `ai-wiki/trails/index.md` when debugging chronology or dead ends may help.
+            9. Read `ai-wiki/people/<handle>/index.md` when continuing draft work.
+            10. Read `ai-wiki/_toolkit/index.md` when you need package-managed schema, metrics, or directory guidance beyond this workflow.
+            11. Use `ai-wiki/index.md` as a repo-owned map when you need a quick overview of local AI wiki areas.
+            12. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
+            13. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
+            14. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
+            15. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them for end-of-task AI wiki checks.
 
             ## AI Wiki Reuse Check
 
@@ -1395,24 +1389,16 @@ def prompt_block_body() -> str:
 
         Before starting work:
 
-        1. Read `ai-wiki/_toolkit/index.md`.
-        2. Read `ai-wiki/index.md`.
-        3. Read `ai-wiki/conventions/index.md` for shared team conventions that should guide implementation.
-        4. Read `ai-wiki/decisions.md` for durable project decisions and tradeoffs.
-        5. Read `ai-wiki/review-patterns/index.md` for reusable review rules and reviewer expectations.
-        6. Read `ai-wiki/problems/index.md` for known pitfalls and reusable problem-solution memories.
-        7. Read `ai-wiki/features/index.md` when task-specific requirements, assumptions, or acceptance criteria matter.
-        8. Read `ai-wiki/workflows.md` for repo-specific workflows that extend the managed baseline.
-        9. Read `ai-wiki/trails/index.md` when debugging chronology or dead ends may help.
-        10. Read your own folder index under `ai-wiki/people/<handle>/index.md` when continuing draft notes.
-        11. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
-        12. Keep project-specific notes in `ai-wiki/`.
-        13. Keep cross-project reusable notes in `<home>/ai-wiki/system/`.
-        14. Only suggest promotion from a draft to a shared pattern or convention when the two-signal gate is satisfied.
-        15. Agents may suggest promotion candidates, but humans confirm shared patterns and team conventions.
-        16. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
-        17. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
-        18. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them for the end-of-task AI wiki checks.
+        1. Read `ai-wiki/_toolkit/system.md`.
+        2. Use `ai-wiki/index.md` as a repo-owned map when you need a quick overview of local AI wiki areas.
+        3. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
+        4. Keep project-specific notes in `ai-wiki/`.
+        5. Keep cross-project reusable notes in `<home>/ai-wiki/system/`.
+        6. Only suggest promotion from a draft to a shared pattern or convention when the two-signal gate is satisfied.
+        7. Agents may suggest promotion candidates, but humans confirm shared patterns and team conventions.
+        8. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
+        9. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
+        10. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them for the end-of-task AI wiki checks.
 
         ## End Of Task
 
