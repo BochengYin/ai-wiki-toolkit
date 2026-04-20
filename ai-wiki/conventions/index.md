@@ -37,3 +37,7 @@ Each convention file should include:
 - Do Not Use When
 - Source Pointer
 - History / Supersedes
+
+## Current Entries
+
+- [Package-managed vs user-owned AI wiki docs](package-managed-vs-user-owned-docs.md): keep evolving package-controlled guidance in `_toolkit/**` and keep repo-owned AI wiki docs stable unless a contributor intentionally edits them.
