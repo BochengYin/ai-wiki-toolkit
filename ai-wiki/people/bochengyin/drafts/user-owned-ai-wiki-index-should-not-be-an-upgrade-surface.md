@@ -1,4 +1,15 @@
-# User-Owned AI Wiki Index Should Not Be An Upgrade Surface
+---
+title: "User-owned AI wiki index should not be an upgrade surface"
+author_handle: "bochengyin"
+model: "unknown"
+source_kind: "design"
+status: "draft"
+created_at: "2026-04-20T09:00:17+1000"
+updated_at: "2026-04-21T00:12:28+1000"
+promotion_candidate: true
+promotion_basis: "Implemented by PR #13; likely durable package design rule."
+---
+# Review Draft
 
 ## Summary
 
