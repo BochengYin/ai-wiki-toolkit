@@ -7,6 +7,7 @@ from ai_wiki_toolkit.wiki_schema import (
     build_document_stats,
     build_repo_catalog,
     build_task_stats,
+    infer_doc_kind,
 )
 
 
@@ -74,6 +75,88 @@ def test_build_repo_catalog_prefers_frontmatter_title(tmp_path: Path) -> None:
                 "source": "user_owned",
                 "title": "Release note edge case",
             }
+        ],
+    }
+
+
+def test_infer_doc_kind_recognizes_team_memory_docs() -> None:
+    assert infer_doc_kind("conventions/index.md") == "convention_index"
+    assert infer_doc_kind("conventions/python-typing.md") == "convention"
+    assert infer_doc_kind("problems/index.md") == "problem_index"
+    assert infer_doc_kind("problems/async-notification-tests-flaky.md") == "problem"
+    assert infer_doc_kind("features/index.md") == "feature_index"
+    assert infer_doc_kind("features/bulk-invoice-upload.md") == "feature"
+    assert infer_doc_kind("review-patterns/index.md") == "review_pattern_index"
+    assert infer_doc_kind("trails/release-debugging.md") == "trail"
+    assert infer_doc_kind("people/alice/index.md") == "person_index"
+    assert infer_doc_kind("decisions.md") == "decisions"
+
+
+def test_build_repo_catalog_includes_team_memory_kinds(tmp_path: Path) -> None:
+    repo_wiki = tmp_path / "ai-wiki"
+    (repo_wiki / "conventions").mkdir(parents=True)
+    (repo_wiki / "problems").mkdir(parents=True)
+    (repo_wiki / "features").mkdir(parents=True)
+    (repo_wiki / "conventions" / "index.md").write_text("# Conventions Index\n", encoding="utf-8")
+    (repo_wiki / "conventions" / "python-typing.md").write_text("# Python Typing\n", encoding="utf-8")
+    (repo_wiki / "problems" / "index.md").write_text("# Problems Index\n", encoding="utf-8")
+    (repo_wiki / "problems" / "async-notification-tests-flaky.md").write_text(
+        "# Async notification tests\n",
+        encoding="utf-8",
+    )
+    (repo_wiki / "features" / "index.md").write_text("# Features Index\n", encoding="utf-8")
+    (repo_wiki / "features" / "bulk-invoice-upload.md").write_text(
+        "# Bulk invoice upload\n",
+        encoding="utf-8",
+    )
+
+    catalog = build_repo_catalog(repo_wiki)
+
+    assert catalog == {
+        "schema_version": "reuse-v1",
+        "documents": [
+            {
+                "doc_id": "conventions/index",
+                "kind": "convention_index",
+                "path": "ai-wiki/conventions/index.md",
+                "source": "user_owned",
+                "title": "Conventions Index",
+            },
+            {
+                "doc_id": "conventions/python-typing",
+                "kind": "convention",
+                "path": "ai-wiki/conventions/python-typing.md",
+                "source": "user_owned",
+                "title": "Python Typing",
+            },
+            {
+                "doc_id": "features/bulk-invoice-upload",
+                "kind": "feature",
+                "path": "ai-wiki/features/bulk-invoice-upload.md",
+                "source": "user_owned",
+                "title": "Bulk invoice upload",
+            },
+            {
+                "doc_id": "features/index",
+                "kind": "feature_index",
+                "path": "ai-wiki/features/index.md",
+                "source": "user_owned",
+                "title": "Features Index",
+            },
+            {
+                "doc_id": "problems/async-notification-tests-flaky",
+                "kind": "problem",
+                "path": "ai-wiki/problems/async-notification-tests-flaky.md",
+                "source": "user_owned",
+                "title": "Async notification tests",
+            },
+            {
+                "doc_id": "problems/index",
+                "kind": "problem_index",
+                "path": "ai-wiki/problems/index.md",
+                "source": "user_owned",
+                "title": "Problems Index",
+            },
         ],
     }
 

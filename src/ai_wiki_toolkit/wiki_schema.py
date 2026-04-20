@@ -40,8 +40,14 @@ def infer_doc_kind(relative_path: str) -> str:
         return "decisions"
     if relative_path == "metrics/index.md":
         return "metrics_index"
+    if parts[0] == "conventions":
+        return "convention_index" if relative_path.endswith("/index.md") else "convention"
     if parts[0] == "review-patterns":
         return "review_pattern_index" if relative_path.endswith("/index.md") else "review_pattern"
+    if parts[0] == "problems":
+        return "problem_index" if relative_path.endswith("/index.md") else "problem"
+    if parts[0] == "features":
+        return "feature_index" if relative_path.endswith("/index.md") else "feature"
     if parts[0] == "trails":
         return "trail_index" if relative_path.endswith("/index.md") else "trail"
     if parts[0] == "people" and len(parts) >= 3:

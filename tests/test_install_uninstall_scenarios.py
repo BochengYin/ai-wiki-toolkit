@@ -18,6 +18,9 @@ def test_install_command_matches_init_behavior(repo_env: dict[str, Path]) -> Non
     assert (repo_env["repo"] / "AGENT.md").exists()
     assert (repo_env["repo"] / "ai-wiki" / "_toolkit" / "index.md").exists()
     assert (repo_env["repo"] / "ai-wiki" / "_toolkit" / "workflows.md").exists()
+    assert (repo_env["repo"] / "ai-wiki" / "conventions" / "index.md").exists()
+    assert (repo_env["repo"] / "ai-wiki" / "problems" / "index.md").exists()
+    assert (repo_env["repo"] / "ai-wiki" / "features" / "index.md").exists()
     assert (
         repo_env["repo"]
         / ".agents"
@@ -30,6 +33,20 @@ def test_install_command_matches_init_behavior(repo_env: dict[str, Path]) -> Non
         / ".agents"
         / "skills"
         / "ai-wiki-update-check"
+        / "SKILL.md"
+    ).exists()
+    assert (
+        repo_env["repo"]
+        / ".agents"
+        / "skills"
+        / "ai-wiki-clarify-before-code"
+        / "SKILL.md"
+    ).exists()
+    assert (
+        repo_env["repo"]
+        / ".agents"
+        / "skills"
+        / "ai-wiki-capture-review-learning"
         / "SKILL.md"
     ).exists()
     assert (

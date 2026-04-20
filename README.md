@@ -47,6 +47,17 @@ Instead of trying to solve the problem with a server, embeddings, or hidden stat
 
 That gives the repo and the user a stable Markdown place to accumulate knowledge without turning the package into a knowledge platform.
 
+For small teams, the AI wiki is also a shared coding-memory layer.
+
+It helps agents reuse:
+
+- team conventions
+- PR review learnings
+- feature clarifications
+- durable decisions
+- past debugging solutions
+- personal draft observations that may later be promoted
+
 It creates two isolated namespaces:
 
 - `repo/ai-wiki/` for project-specific AI wiki files
@@ -67,6 +78,9 @@ That is why the installer manages both wiki files and prompt wiring together:
 - `ai-wiki/` and `~/ai-wiki/system/` hold the durable Markdown memory
 - `AGENT.md`, `AGENTS.md`, or `CLAUDE.md` tell the agent to read that memory and follow the workflow
 - `.agents/skills/ai-wiki-reuse-check/` and `.agents/skills/ai-wiki-update-check/` provide repeatable end-of-task checks for Codex-style agent runs
+- `.agents/skills/ai-wiki-clarify-before-code/` and `.agents/skills/ai-wiki-capture-review-learning/` help agents clarify ambiguous requests and preserve reusable review feedback
+
+The toolkit does not replace coding agents. It gives them a shared repo-local memory layer so they can avoid repeating the same review issues, misunderstanding the same requirements, or rediscovering the same fixes.
 
 ## Prompt File Integration
 
@@ -85,7 +99,7 @@ If none of those files exist yet, the toolkit creates `AGENT.md` as a generic de
 
 The AI wiki structure is deliberately inspired by how `SKILL.md` files work well: keep a small stable entrypoint, then fan out into focused references.
 
-Each wiki namespace starts with an `index.md` and then links to narrower files such as `constraints.md`, `workflows.md`, `decisions.md`, `review-patterns/`, `trails/`, and personal `drafts/`. That keeps the top-level entrypoint easy for both humans and agents to scan, while still letting the repo accumulate detailed guidance without collapsing into one giant prompt blob.
+Each wiki namespace starts with an `index.md` and then links to narrower files such as `constraints.md`, `conventions/`, `workflows.md`, `decisions.md`, `review-patterns/`, `problems/`, `features/`, `trails/`, and personal `drafts/`. That keeps the top-level entrypoint easy for both humans and agents to scan, while still letting the repo accumulate detailed guidance without collapsing into one giant prompt blob.
 
 ## Current Scope
 
@@ -94,8 +108,9 @@ The current scope is intentionally strict about compatibility:
 - initialize the repo and home AI wiki folders
 - create starter Markdown files only if they do not already exist
 - create managed `_toolkit/` files that package updates are allowed to refresh
-- create `review-patterns/` and `people/<handle>/drafts/` scaffolding
-- create repo-local `.agents/skills/ai-wiki-reuse-check/` and `.agents/skills/ai-wiki-update-check/` skills only when files are missing
+- create `conventions/`, `review-patterns/`, `problems/`, `features/`, and `people/<handle>/drafts/` scaffolding
+- create repo-local `.agents/skills/ai-wiki-reuse-check/`, `.agents/skills/ai-wiki-update-check/`, `.agents/skills/ai-wiki-clarify-before-code/`, and `.agents/skills/ai-wiki-capture-review-learning/` skills only when files are missing
+- create a managed `_toolkit/schema/team-memory-v1.md` guide for lightweight team coding memory
 - update managed instruction blocks inside `AGENT.md`, `AGENTS.md`, and `CLAUDE.md`
 - avoid rewriting existing user-owned `ai-wiki/**/*.md` documents outside `_toolkit/`
 
@@ -234,11 +249,11 @@ aiwiki-toolkit init
 
 - create `ai-wiki/` inside the current repository
 - create `~/ai-wiki/system/`
-- create starter indexes such as `ai-wiki/review-patterns/index.md`, `ai-wiki/trails/index.md`, and `ai-wiki/people/<handle>/index.md`
-- create `ai-wiki/review-patterns/`, `ai-wiki/people/<handle>/drafts/`, `ai-wiki/metrics/`, and repo/home `_toolkit/`
-- generate package-managed `_toolkit/index.md`, `_toolkit/workflows.md`, `_toolkit/catalog.json`, `_toolkit/schema/reuse-v1.md`, and `_toolkit/metrics/*.json`
+- create starter indexes such as `ai-wiki/conventions/index.md`, `ai-wiki/review-patterns/index.md`, `ai-wiki/problems/index.md`, `ai-wiki/features/index.md`, `ai-wiki/trails/index.md`, and `ai-wiki/people/<handle>/index.md`
+- create `ai-wiki/conventions/`, `ai-wiki/review-patterns/`, `ai-wiki/problems/`, `ai-wiki/features/`, `ai-wiki/people/<handle>/drafts/`, `ai-wiki/metrics/`, and repo/home `_toolkit/`
+- generate package-managed `_toolkit/index.md`, `_toolkit/workflows.md`, `_toolkit/catalog.json`, `_toolkit/schema/reuse-v1.md`, `_toolkit/schema/team-memory-v1.md`, and `_toolkit/metrics/*.json`
 - upsert a managed `.gitignore` block that ignores AI wiki telemetry and generated aggregate snapshots so routine agent use does not dirty `git status`
-- create `.agents/skills/ai-wiki-reuse-check/` and `.agents/skills/ai-wiki-update-check/` if the repo-local skills do not already exist
+- create `.agents/skills/ai-wiki-reuse-check/`, `.agents/skills/ai-wiki-update-check/`, `.agents/skills/ai-wiki-clarify-before-code/`, and `.agents/skills/ai-wiki-capture-review-learning/` if the repo-local skills do not already exist
 - update `AGENT.md`, `AGENTS.md`, and/or `CLAUDE.md` with a managed instruction block that reads `ai-wiki/_toolkit/index.md`
 
 If no supported prompt file exists, it creates `AGENT.md`.
@@ -308,7 +323,10 @@ This command does not rewrite user-owned repo docs. It prints which paths need a
 
 - `ai-wiki/index.md`
 - `ai-wiki/workflows.md`
+- `ai-wiki/conventions/index.md`
 - `ai-wiki/review-patterns/index.md`
+- `ai-wiki/problems/index.md`
+- `ai-wiki/features/index.md`
 - `ai-wiki/trails/index.md`
 - `ai-wiki/people/<handle>/index.md`
 - `ai-wiki/metrics/index.md`
@@ -343,13 +361,13 @@ Even with `--purge-user-docs --yes`, the shared home wiki under `~/ai-wiki/syste
 
 - Existing user-owned `ai-wiki/**/*.md` files are treated as stable data.
 - `install`/`init` only create missing starter files; they do not merge or overwrite existing user wiki documents.
-- Starter indexes such as `ai-wiki/index.md`, `review-patterns/index.md`, `trails/index.md`, `people/<handle>/index.md`, and `metrics/index.md` become user-owned once created and are not rewritten by future package updates.
+- Starter indexes such as `ai-wiki/index.md`, `conventions/index.md`, `review-patterns/index.md`, `problems/index.md`, `features/index.md`, `trails/index.md`, `people/<handle>/index.md`, and `metrics/index.md` become user-owned once created and are not rewritten by future package updates.
 - `ai-wiki/_toolkit/**` and `~/ai-wiki/system/_toolkit/**` are package-managed and may be refreshed by future versions.
 - `ai-wiki/workflows.md` remains user-owned; package-managed workflow updates land in `ai-wiki/_toolkit/workflows.md` instead of rewriting the repo-owned file.
 - `ai-wiki/metrics/reuse-events/<handle>.jsonl` and `ai-wiki/metrics/task-checks/<handle>.jsonl` are user-owned evidence data. Package-managed aggregate views are regenerated under `ai-wiki/_toolkit/metrics/`, and the installer ignores all of those telemetry paths by default in `.gitignore`.
 - Legacy flat files such as `ai-wiki/metrics/reuse-events.jsonl` and `ai-wiki/metrics/task-checks.jsonl` are still read for compatibility, but new writes should use the handle-sharded layout.
 - `aiwiki-toolkit doctor --suggest-index-upgrade` prints suggested replacements for outdated repo starter docs, but it does not overwrite them automatically.
-- `.agents/skills/ai-wiki-reuse-check/**` and `.agents/skills/ai-wiki-update-check/**` are installed as starter scaffolding only. Existing files at those paths are skipped instead of overwritten.
+- `.agents/skills/ai-wiki-reuse-check/**`, `.agents/skills/ai-wiki-update-check/**`, `.agents/skills/ai-wiki-clarify-before-code/**`, and `.agents/skills/ai-wiki-capture-review-learning/**` are installed as starter scaffolding only. Existing files at those paths are skipped instead of overwritten.
 - Prompt files are updated only inside the managed block marked by:
 
 ```md
