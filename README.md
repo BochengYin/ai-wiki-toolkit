@@ -99,7 +99,7 @@ If none of those files exist yet, the toolkit creates `AGENT.md` as a generic de
 
 The AI wiki structure is deliberately inspired by how `SKILL.md` files work well: keep a small stable entrypoint, then fan out into focused references.
 
-Each wiki namespace starts with an `index.md` and then links to narrower files such as `constraints.md`, `conventions/`, `workflows.md`, `decisions.md`, `review-patterns/`, `problems/`, `features/`, `trails/`, and personal `drafts/`. That keeps the top-level entrypoint easy for both humans and agents to scan, while still letting the repo accumulate detailed guidance without collapsing into one giant prompt blob.
+Each wiki namespace starts with an `index.md` and then links to narrower files such as `constraints.md`, `conventions/`, `workflows.md`, `decisions.md`, `review-patterns/`, `problems/`, `features/`, `trails/`, and personal `drafts/`. The package-managed start-of-task routing lives in `ai-wiki/_toolkit/system.md`, while repo-owned indexes stay stable maps that humans can customize without turning them into package upgrade surfaces.
 
 ## Current Scope
 
@@ -208,18 +208,19 @@ npm install -g ai-wiki-toolkit@latest
 
 - Files under `ai-wiki/_toolkit/**` and `~/ai-wiki/system/_toolkit/**` are package-managed.
 - Files such as `ai-wiki/index.md`, `ai-wiki/workflows.md`, and other docs you add under `ai-wiki/` are user-owned.
-- `ai-wiki/_toolkit/index.md` is the managed entrypoint for package-managed repo guidance.
+- `ai-wiki/_toolkit/system.md` is the managed entrypoint for package-managed repo guidance and evolving read order.
+- `ai-wiki/index.md` is a repo-owned map, not a package upgrade surface.
 - `ai-wiki/_toolkit/workflows.md` carries the managed baseline workflows that package upgrades can refresh.
 - Agents should extend user-owned workflow docs instead of editing `_toolkit/**`.
 
-After upgrading the package, refresh the managed layer and then check whether your user-owned repo docs are still aligned with the current recommended structure:
+After upgrading the package, refresh the managed layer and then check for missing starter docs, stale managed prompt blocks, or rule drift:
 
 ```bash
 aiwiki-toolkit install
 aiwiki-toolkit doctor --strict
 ```
 
-If `doctor` reports outdated navigation or missing starter pointers, print the latest suggested starter content with:
+If `doctor` reports missing starter pointers, print the latest suggested starter content with:
 
 ```bash
 aiwiki-toolkit doctor --suggest-index-upgrade
@@ -254,7 +255,7 @@ aiwiki-toolkit init
 - generate package-managed `_toolkit/index.md`, `_toolkit/workflows.md`, `_toolkit/catalog.json`, `_toolkit/schema/reuse-v1.md`, `_toolkit/schema/team-memory-v1.md`, and `_toolkit/metrics/*.json`
 - upsert a managed `.gitignore` block that ignores AI wiki telemetry and generated aggregate snapshots so routine agent use does not dirty `git status`
 - create `.agents/skills/ai-wiki-reuse-check/`, `.agents/skills/ai-wiki-update-check/`, `.agents/skills/ai-wiki-clarify-before-code/`, and `.agents/skills/ai-wiki-capture-review-learning/` if the repo-local skills do not already exist
-- update `AGENT.md`, `AGENTS.md`, and/or `CLAUDE.md` with a managed instruction block that reads `ai-wiki/_toolkit/index.md`
+- update `AGENT.md`, `AGENTS.md`, and/or `CLAUDE.md` with a managed instruction block that reads `ai-wiki/_toolkit/system.md`
 
 If no supported prompt file exists, it creates `AGENT.md`.
 
@@ -313,7 +314,7 @@ If you need a fresh local telemetry snapshot, regenerate package-managed aggrega
 aiwiki-toolkit refresh-metrics
 ```
 
-To diagnose outdated navigation, missing starter pointers, or rule drift and print copy-paste upgrade starters:
+To diagnose missing starter pointers, stale managed prompt blocks, or rule drift and print copy-paste upgrade starters:
 
 ```bash
 aiwiki-toolkit doctor --suggest-index-upgrade
@@ -321,7 +322,6 @@ aiwiki-toolkit doctor --suggest-index-upgrade
 
 This command does not rewrite user-owned repo docs. It prints which paths need attention and the latest starter content for those files so you can merge or copy it into:
 
-- `ai-wiki/index.md`
 - `ai-wiki/workflows.md`
 - `ai-wiki/conventions/index.md`
 - `ai-wiki/review-patterns/index.md`
@@ -363,10 +363,11 @@ Even with `--purge-user-docs --yes`, the shared home wiki under `~/ai-wiki/syste
 - `install`/`init` only create missing starter files; they do not merge or overwrite existing user wiki documents.
 - Starter indexes such as `ai-wiki/index.md`, `conventions/index.md`, `review-patterns/index.md`, `problems/index.md`, `features/index.md`, `trails/index.md`, `people/<handle>/index.md`, and `metrics/index.md` become user-owned once created and are not rewritten by future package updates.
 - `ai-wiki/_toolkit/**` and `~/ai-wiki/system/_toolkit/**` are package-managed and may be refreshed by future versions.
+- `ai-wiki/index.md` is a repo-owned map and is not treated as a starter-drift upgrade target by `doctor`.
 - `ai-wiki/workflows.md` remains user-owned; package-managed workflow updates land in `ai-wiki/_toolkit/workflows.md` instead of rewriting the repo-owned file.
 - `ai-wiki/metrics/reuse-events/<handle>.jsonl` and `ai-wiki/metrics/task-checks/<handle>.jsonl` are user-owned evidence data. Package-managed aggregate views are regenerated under `ai-wiki/_toolkit/metrics/`, and the installer ignores all of those telemetry paths by default in `.gitignore`.
 - Legacy flat files such as `ai-wiki/metrics/reuse-events.jsonl` and `ai-wiki/metrics/task-checks.jsonl` are still read for compatibility, but new writes should use the handle-sharded layout.
-- `aiwiki-toolkit doctor --suggest-index-upgrade` prints suggested replacements for outdated repo starter docs, but it does not overwrite them automatically.
+- `aiwiki-toolkit doctor --suggest-index-upgrade` prints suggested replacements for missing repo starter docs and repo-owned companion docs such as `ai-wiki/workflows.md`, but it does not overwrite them automatically.
 - `.agents/skills/ai-wiki-reuse-check/**`, `.agents/skills/ai-wiki-update-check/**`, `.agents/skills/ai-wiki-clarify-before-code/**`, and `.agents/skills/ai-wiki-capture-review-learning/**` are installed as starter scaffolding only. Existing files at those paths are skipped instead of overwritten.
 - Prompt files are updated only inside the managed block marked by:
 

@@ -97,18 +97,15 @@ def _add_suggestion(
     )
 
 
-def _top_level_index_missing_tokens() -> tuple[str, ...]:
+def _prompt_managed_system_tokens() -> tuple[str, ...]:
     return (
-        "_toolkit/index.md",
-        "conventions/index.md",
-        "decisions.md",
-        "review-patterns/index.md",
-        "problems/index.md",
-        "features/index.md",
-        "workflows.md",
-        "trails/index.md",
-        "people/<handle>/index.md",
-        "metrics/",
+        "ai-wiki/_toolkit/system.md",
+        "<home>/ai-wiki/system/_toolkit/system.md",
+        "<home>/ai-wiki/system/index.md",
+        "ai-wiki-clarify-before-code",
+        "ai-wiki-capture-review-learning",
+        "ai-wiki-reuse-check",
+        "ai-wiki-update-check",
     )
 
 
@@ -416,7 +413,7 @@ def _check_rule_overlap(result: DoctorResult) -> None:
         _warn_or_info_for_rule_overlap(result, left, right)
 
 
-def _check_repo_index(result: DoctorResult, starters: dict[str, str]) -> None:
+def _check_repo_index(result: DoctorResult) -> None:
     index_path = result.paths.repo_wiki_dir / "index.md"
     if not index_path.exists():
         _add_finding(
@@ -436,36 +433,12 @@ def _check_repo_index(result: DoctorResult, starters: dict[str, str]) -> None:
         )
         return
 
-    text = index_path.read_text(encoding="utf-8")
-    missing_tokens = [token for token in _top_level_index_missing_tokens() if token not in text]
-    if not missing_tokens:
-        _add_finding(
-            result,
-            severity="OK",
-            code="repo_index_current",
-            path="ai-wiki/index.md",
-            message="`ai-wiki/index.md` already uses the current index-based navigation shape.",
-        )
-        return
-
-    missing_refs = ", ".join(missing_tokens)
     _add_finding(
         result,
-        severity="WARN",
-        code="legacy_repo_index_navigation",
+        severity="OK",
+        code="repo_index_present",
         path="ai-wiki/index.md",
-        message=f"`ai-wiki/index.md` is missing current navigation references: {missing_refs}.",
-        suggested_fix="Update the navigation section or use the suggested starter content as a merge target.",
-    )
-    _add_suggestion(
-        result,
-        path="ai-wiki/index.md",
-        reason=f"Current index is missing recommended navigation references: {missing_refs}.",
-        content=starters["index.md"],
-        replace_hint=(
-            "If the file already contains repo-specific notes, keep those notes and merge in the updated "
-            "navigation structure instead of blindly replacing the whole file."
-        ),
+        message="`ai-wiki/index.md` exists. It is repo-owned and is not compared against starter navigation drift.",
     )
 
 
@@ -702,18 +675,7 @@ def _check_prompt_targets(result: DoctorResult) -> None:
             continue
 
         missing_tokens = []
-        for token in (
-            "ai-wiki/_toolkit/index.md",
-            "ai-wiki/index.md",
-            "conventions/index.md",
-            "decisions.md",
-            "review-patterns/index.md",
-            "problems/index.md",
-            "features/index.md",
-            "workflows.md",
-            "trails/index.md",
-            "people/<handle>/index.md",
-        ):
+        for token in _prompt_managed_system_tokens():
             if token not in text:
                 missing_tokens.append(token)
 
@@ -721,10 +683,10 @@ def _check_prompt_targets(result: DoctorResult) -> None:
             _add_finding(
                 result,
                 severity="WARN",
-                code="legacy_prompt_index_navigation",
+                code="legacy_prompt_managed_system_navigation",
                 path=prompt_path.name,
                 message=(
-                    f"`{prompt_path.name}` has a managed block but is missing index-based references: "
+                    f"`{prompt_path.name}` has a managed block but is missing current managed-system references: "
                     f"{', '.join(missing_tokens)}."
                 ),
                 suggested_fix="Run `aiwiki-toolkit install` to refresh the managed prompt block.",
@@ -734,9 +696,9 @@ def _check_prompt_targets(result: DoctorResult) -> None:
         _add_finding(
             result,
             severity="OK",
-            code="prompt_index_navigation_current",
+            code="prompt_managed_system_navigation_current",
             path=prompt_path.name,
-            message=f"`{prompt_path.name}` already references the current index-based prompt navigation.",
+            message=f"`{prompt_path.name}` already references the current managed-system prompt entrypoint.",
         )
 
 
@@ -775,7 +737,7 @@ def run_doctor(start: Path | None = None, handle: str | None = None) -> DoctorRe
     )
     _check_gitignore(result)
     _check_tracked_telemetry(result)
-    _check_repo_index(result, starters)
+    _check_repo_index(result)
     _check_repo_workflows(result, starters)
     _check_child_index(
         result,

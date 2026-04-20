@@ -2,22 +2,15 @@
 
 This is the user-owned entrypoint for project-specific AI wiki content.
 
-## Read Order
+Use this file as a repo-owned map and overview.
 
-1. Read `_toolkit/index.md` for package-managed collaboration rules and baseline workflows.
-2. Read `constraints.md` for hard constraints and non-negotiables.
-3. Read `conventions/index.md` for shared team conventions that should guide implementation.
-4. Read `decisions.md` for durable project decisions and tradeoffs.
-5. Read `review-patterns/index.md` for reusable review rules and reviewer expectations.
-6. Read `problems/index.md` for known pitfalls and reusable problem-solution memories.
-7. Read `features/index.md` when task-specific requirements, assumptions, or acceptance criteria matter.
-8. Read `workflows.md` for repo-specific workflows that extend the managed baseline.
-9. Read `trails/index.md` when debugging chronology or dead ends may help.
-10. Read `people/<handle>/index.md` when continuing or recording personal draft notes.
+Package-managed start-of-task routing lives in `_toolkit/system.md` and may evolve without requiring this file to change.
 
 ## Areas
 
+- `_toolkit/system.md` carries the managed start-of-task workflow and evolving read order.
 - `_toolkit/index.md` maps package-managed collaboration rules, baseline workflows, and schemas.
+- `constraints.md` maps hard constraints and non-negotiables.
 - `conventions/index.md` maps shared team conventions that coding agents should follow.
 - `decisions.md` maps durable project decisions and tradeoffs.
 - `review-patterns/index.md` maps reusable review rules and reviewer expectations.

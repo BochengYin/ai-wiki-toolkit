@@ -23,24 +23,16 @@ Recent commits use short, imperative, sentence-case subjects such as `Fix releas
 
 Before starting work:
 
-1. Read `ai-wiki/_toolkit/index.md`.
-2. Read `ai-wiki/index.md`.
-3. Read `ai-wiki/conventions/index.md` for shared team conventions that should guide implementation.
-4. Read `ai-wiki/decisions.md` for durable project decisions and tradeoffs.
-5. Read `ai-wiki/review-patterns/index.md` for reusable review rules and reviewer expectations.
-6. Read `ai-wiki/problems/index.md` for known pitfalls and reusable problem-solution memories.
-7. Read `ai-wiki/features/index.md` when task-specific requirements, assumptions, or acceptance criteria matter.
-8. Read `ai-wiki/workflows.md` for repo-specific workflows that extend the managed baseline.
-9. Read `ai-wiki/trails/index.md` when debugging chronology or dead ends may help.
-10. Read your own folder index under `ai-wiki/people/<handle>/index.md` when continuing draft notes.
-11. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
-12. Keep project-specific notes in `ai-wiki/`.
-13. Keep cross-project reusable notes in `<home>/ai-wiki/system/`.
-14. Only suggest promotion from a draft to a shared pattern or convention when the two-signal gate is satisfied.
-15. Agents may suggest promotion candidates, but humans confirm shared patterns and team conventions.
-16. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
-17. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
-18. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them for the end-of-task AI wiki checks.
+1. Read `ai-wiki/_toolkit/system.md`.
+2. Use `ai-wiki/index.md` as a repo-owned map when you need a quick overview of local AI wiki areas.
+3. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
+4. Keep project-specific notes in `ai-wiki/`.
+5. Keep cross-project reusable notes in `<home>/ai-wiki/system/`.
+6. Only suggest promotion from a draft to a shared pattern or convention when the two-signal gate is satisfied.
+7. Agents may suggest promotion candidates, but humans confirm shared patterns and team conventions.
+8. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
+9. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
+10. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them for the end-of-task AI wiki checks.
 
 ## End Of Task
 

@@ -16,6 +16,7 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 - Extended AI wiki read order, doctor checks, and prompt guidance to include team conventions, reusable problems, and feature memory.
 - Extended doc-kind inference, catalog coverage, and reuse logging paths for convention, problem, and feature docs.
 - Expanded the end-of-task AI wiki update and reuse guidance to cover PR review learning, feature clarification, and conflict-aware team memory capture.
+- Moved the evolving repo read-order entrypoint to managed `ai-wiki/_toolkit/system.md` so `ai-wiki/index.md` can remain a repo-owned map instead of a package upgrade surface.
 
 ## v0.1.10
 
