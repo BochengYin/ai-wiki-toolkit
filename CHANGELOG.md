@@ -4,6 +4,8 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+## v0.1.11
+
 ### Added
 
 - Added small-team coding memory scaffolds for `conventions/`, `problems/`, and `features/`.
