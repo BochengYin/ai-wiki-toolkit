@@ -13,6 +13,7 @@ TOOLKIT_GITHUB_URL = "https://github.com/BochengYin/ai-wiki-toolkit"
 TOOLKIT_SKILLS_DIR = ".agents/skills"
 AI_WIKI_CAPTURE_REVIEW_LEARNING_SKILL_DIR = ".agents/skills/ai-wiki-capture-review-learning"
 AI_WIKI_CLARIFY_BEFORE_CODE_SKILL_DIR = ".agents/skills/ai-wiki-clarify-before-code"
+AI_WIKI_CONSOLIDATE_DRAFTS_SKILL_DIR = ".agents/skills/ai-wiki-consolidate-drafts"
 AI_WIKI_UPDATE_SKILL_DIR = ".agents/skills/ai-wiki-update-check"
 AI_WIKI_REUSE_SKILL_DIR = ".agents/skills/ai-wiki-reuse-check"
 TELEMETRY_IGNORE_PATHS = (
@@ -934,6 +935,171 @@ def repo_skill_starter_files() -> dict[str, str]:
               display_name: "AI Wiki Reuse Check"
               short_description: "Record end-of-task AI wiki reuse"
               default_prompt: "Run the ai-wiki end-of-task reuse check for this completed task."
+            """
+        ).strip()
+        + "\n",
+        f"{AI_WIKI_CONSOLIDATE_DRAFTS_SKILL_DIR}/SKILL.md": dedent(
+            """
+            ---
+            name: ai-wiki-consolidate-drafts
+            description: Use when handle-local AI wiki drafts have grown into a noisy backlog and related notes should be clustered, refined, or promoted without directly rewriting shared docs by default.
+            ---
+
+            # AI Wiki Consolidate Drafts
+
+            Use this skill when `ai-wiki/people/*/drafts/` has accumulated related notes and the next step is to consolidate them into clearer draft clusters, promotion candidates, or explicit conflicts and supersessions.
+
+            ## Workflow
+
+            1. Read the relevant draft set, usually under one handle in `ai-wiki/people/*/drafts/`.
+            2. Read nearby context that may confirm or narrow the consolidation target:
+               - `ai-wiki/conventions/index.md`
+               - `ai-wiki/decisions.md`
+               - `ai-wiki/review-patterns/index.md`
+               - `ai-wiki/problems/index.md`
+               - `ai-wiki/features/index.md`
+               - relevant files under `ai-wiki/trails/` when chronology matters
+               - `ai-wiki/metrics/` and `_toolkit/metrics/*.json` only as weak signals
+            3. Cluster drafts by durable topic, repeated failure mode, or repeated rule, not by filename alone.
+            4. For each cluster, choose one next action using [references/candidate-types.md](references/candidate-types.md).
+            5. Use [references/promotion-targets.md](references/promotion-targets.md) to propose the best destination when a cluster is mature enough for shared or repo-level memory.
+            6. Use [references/conflict-and-supersession.md](references/conflict-and-supersession.md) to flag conflicts, refinements, or supersession instead of silently merging away differences.
+            7. Default to refining handle-local drafts first. Do not directly rewrite `ai-wiki/conventions/*.md`, `ai-wiki/review-patterns/*.md`, `ai-wiki/problems/*.md`, or `ai-wiki/features/*.md` unless the user explicitly asks for promotion or doc creation.
+            8. Emit the result using [references/output-contract.md](references/output-contract.md).
+
+            ## Rules
+
+            - Cluster first, judge second.
+            - Do not promote every repeated draft.
+            - Metrics may support prioritization, but they are weak signals and must not be the sole basis for promotion.
+            - Make the suggested target path explicit whenever the action is `Refine draft` or `Promotion candidate`.
+            - If a cluster is still unstable, keep it local and explain what evidence is still missing.
+            - Shared conventions and review patterns still require human confirmation before writing shared docs.
+            """
+        ).strip()
+        + "\n",
+        f"{AI_WIKI_CONSOLIDATE_DRAFTS_SKILL_DIR}/references/candidate-types.md": dedent(
+            """
+            # Candidate Types
+
+            Use exactly one primary action per cluster.
+
+            - `Keep draft`
+              Use when the note is still too raw, too narrow, or only observed once.
+
+            - `Refine draft`
+              Use when the lesson looks durable but the current draft is fragmented, duplicated, or needs a clearer problem statement before promotion.
+
+            - `Promotion candidate`
+              Use when the lesson is stable enough for a shared convention, review pattern, problem note, feature note, or decision update, but still needs human confirmation before shared docs are written.
+
+            - `Conflict`
+              Use when a cluster contradicts active conventions, decisions, features, problems, or existing person-local guidance and the mismatch still needs human review.
+
+            - `Supersession`
+              Use when a newer cluster clearly replaces an older draft or stale shared memory item and the result should point to the replacement path.
+            """
+        ).strip()
+        + "\n",
+        f"{AI_WIKI_CONSOLIDATE_DRAFTS_SKILL_DIR}/references/promotion-targets.md": dedent(
+            """
+            # Promotion Targets
+
+            Choose the narrowest durable target that matches the lesson.
+
+            - `ai-wiki/conventions/<name>.md`
+              Use for shared team rules that should guide future implementation before code is written.
+
+            - `ai-wiki/review-patterns/<name>.md`
+              Use for reusable PR review findings or review checklists that describe how the same mistake shows up in code review.
+
+            - `ai-wiki/problems/<name>.md`
+              Use for reusable problem-solution memories that help future agents avoid repeating the same debugging loop.
+
+            - `ai-wiki/features/<name>.md`
+              Use for feature-specific requirements, accepted assumptions, or clarified acceptance criteria.
+
+            - `ai-wiki/decisions.md`
+              Use for durable project tradeoffs or decisions that should live alongside other explicit repo decisions.
+
+            - `ai-wiki/people/<handle>/drafts/<name>.md`
+              Keep or move the note here when the lesson is still personal, exploratory, or not yet ready for shared memory.
+
+            Do not suggest a shared target just because multiple drafts mention the same area. The target must match the memory type, not only the topic.
+            """
+        ).strip()
+        + "\n",
+        f"{AI_WIKI_CONSOLIDATE_DRAFTS_SKILL_DIR}/references/conflict-and-supersession.md": dedent(
+            """
+            # Conflict And Supersession
+
+            Compare each cluster against existing conventions, decisions, review patterns, problems, features, and nearby drafts.
+
+            ## Mark `Conflict` when
+
+            - two active rules overlap in scope but recommend different behavior
+            - a proposed promotion would contradict an existing decision
+            - the cluster is broad enough that narrowing scope no longer resolves the mismatch
+
+            ## Mark `Supersession` when
+
+            - a newer draft clearly replaces an older draft with better scope or better evidence
+            - a promotion candidate would replace stale shared memory rather than coexist with it
+            - the old note should remain in history, but future reads should prefer the new note
+
+            ## Mark `Refine draft` instead when
+
+            - the notes mostly agree but need a tighter title, narrower scope, or merged source pointers
+            - the evidence is promising but still too rough for a stable shared rule
+            - different drafts describe the same lesson at different levels of detail
+            """
+        ).strip()
+        + "\n",
+        f"{AI_WIKI_CONSOLIDATE_DRAFTS_SKILL_DIR}/references/output-contract.md": dedent(
+            """
+            # Output Contract
+
+            Use this structure:
+
+            ```markdown
+            # AI Wiki Draft Consolidation
+
+            ## Draft Clusters
+
+            ### Cluster 1: <short title>
+
+            Source drafts:
+            - ai-wiki/people/<handle>/drafts/<file>.md
+
+            Existing memory checked:
+            - ai-wiki/conventions/<file>.md
+
+            Suggested action:
+            - Keep draft | Refine draft | Promotion candidate | Conflict | Supersession
+
+            Suggested target:
+            - <path or n/a>
+
+            Why:
+            - <short reason>
+
+            Weak signals considered:
+            - <metrics or trail signal, or `None`>
+
+            Human confirmation:
+            - Required | Not required
+            ```
+
+            Keep each cluster short and actionable. Prefer a few strong clusters over a long inventory of nearly identical notes.
+            """
+        ).strip()
+        + "\n",
+        f"{AI_WIKI_CONSOLIDATE_DRAFTS_SKILL_DIR}/agents/openai.yaml": dedent(
+            """
+            interface:
+              display_name: "AI Wiki Consolidate Drafts"
+              short_description: "Cluster draft notes into next actions"
+              default_prompt: "Use $ai-wiki-consolidate-drafts to cluster related AI wiki drafts and propose the next refinement, promotion, conflict, or supersession actions."
             """
         ).strip()
         + "\n",

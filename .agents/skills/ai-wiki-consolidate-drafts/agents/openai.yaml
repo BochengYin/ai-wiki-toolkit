@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Wiki Consolidate Drafts"
+  short_description: "Cluster draft notes into next actions"
+  default_prompt: "Use $ai-wiki-consolidate-drafts to cluster related AI wiki drafts and propose the next refinement, promotion, conflict, or supersession actions."
