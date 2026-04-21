@@ -56,6 +56,16 @@ def test_release_workflow_passes_license_into_generated_homebrew_formula() -> No
     assert "--license MIT" in workflow
 
 
+def test_release_workflow_installs_binutils_for_linux_musl_builds() -> None:
+    workflow = (ROOT / ".github" / "workflows" / "release-binaries.yml").read_text(
+        encoding="utf-8"
+    )
+
+    assert "target: linux-musl-x64" in workflow
+    assert '--setup-command "apk add --no-cache binutils"' in workflow
+    assert "${{ matrix.container_setup_args }}" in workflow
+
+
 def test_publish_npm_workflow_downloads_release_archives_by_prefix() -> None:
     workflow = (ROOT / ".github" / "workflows" / "publish-npm.yml").read_text(
         encoding="utf-8"
