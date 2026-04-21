@@ -1,4 +1,4 @@
-"""Repo-local helper for creating and finishing GitHub pull requests with gh."""
+"""Repo-local helper for creating PRs, finishing merges, and tagging releases."""
 
 from __future__ import annotations
 
@@ -24,6 +24,14 @@ class PullRequestFinishResult:
     branch: str
     base_branch: str
     merged: bool
+
+
+@dataclass(frozen=True)
+class ReleaseTagResult:
+    tag: str
+    base_branch: str
+    commit: str
+    pushed: bool
 
 
 def resolve_repo_root(start: Path | None = None) -> Path:
@@ -72,6 +80,31 @@ def current_branch(repo_root: Path) -> str:
     if not branch:
         raise PullRequestFlowError("Could not determine the current git branch.")
     return branch
+
+
+def normalize_release_tag(version_or_tag: str) -> str:
+    value = version_or_tag.strip()
+    if not value:
+        raise PullRequestFlowError("Release version must not be empty.")
+    return value if value.startswith("v") else f"v{value}"
+
+
+def local_tag_exists(repo_root: Path, tag: str) -> bool:
+    result = _run_command(
+        repo_root,
+        ["git", "rev-parse", "-q", "--verify", f"refs/tags/{tag}"],
+        check=False,
+    )
+    return result.returncode == 0
+
+
+def remote_tag_exists(repo_root: Path, tag: str) -> bool:
+    result = _run_command(
+        repo_root,
+        ["git", "ls-remote", "--tags", "origin", f"refs/tags/{tag}"],
+        check=True,
+    )
+    return bool(result.stdout.strip())
 
 
 def branch_has_upstream(repo_root: Path, branch: str) -> bool:
@@ -168,6 +201,42 @@ def finish_pull_request(
     return PullRequestFinishResult(branch=branch, base_branch=base_branch, merged=True)
 
 
+def tag_release(
+    repo_root: Path,
+    *,
+    version_or_tag: str,
+    base_branch: str = "main",
+    push: bool = True,
+) -> ReleaseTagResult:
+    require_clean_worktree(repo_root)
+
+    tag = normalize_release_tag(version_or_tag)
+
+    _run_command(repo_root, ["git", "fetch", "origin", "--prune", "--tags"], check=True)
+    _run_command(repo_root, ["git", "switch", base_branch], check=True)
+    _run_command(repo_root, ["git", "pull", "--ff-only", "origin", base_branch], check=True)
+
+    if remote_tag_exists(repo_root, tag):
+        raise PullRequestFlowError(f"Release tag `{tag}` already exists on origin.")
+    if local_tag_exists(repo_root, tag):
+        raise PullRequestFlowError(f"Release tag `{tag}` already exists locally.")
+
+    check_script = repo_root / "scripts" / "check_release_version.py"
+    _run_command(repo_root, [sys.executable, str(check_script), tag], check=True)
+
+    _run_command(repo_root, ["git", "tag", tag], check=True)
+    if push:
+        _run_command(repo_root, ["git", "push", "origin", tag], check=True)
+
+    commit = _run_command(repo_root, ["git", "rev-parse", "HEAD"], check=True).stdout.strip()
+    return ReleaseTagResult(
+        tag=tag,
+        base_branch=base_branch,
+        commit=commit,
+        pushed=push,
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -192,6 +261,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="Enable gh auto-merge if required checks are still running.",
     )
 
+    tag_parser = subparsers.add_parser(
+        "tag-release",
+        help="Sync the base branch, verify the version, and create a release tag.",
+    )
+    tag_parser.add_argument(
+        "version",
+        help="Semantic version or tag name, for example `0.1.12` or `v0.1.12`.",
+    )
+    tag_parser.add_argument("--base", default="main", help="Base branch to sync before tagging.")
+    tag_parser.add_argument(
+        "--local-only",
+        action="store_true",
+        help="Create the tag locally without pushing it to origin.",
+    )
+
     return parser
 
 
@@ -213,18 +297,32 @@ def main(argv: list[str] | None = None) -> int:
             print(result.pull_request_url)
             return 0
 
-        result = finish_pull_request(
-            repo_root,
-            base_branch=args.base,
-            auto=args.auto,
-        )
-        if result.merged:
-            print(f"Merged `{result.branch}` and synced `{result.base_branch}`.")
-        else:
-            print(
-                f"Enabled auto-merge for `{result.branch}`. Wait for GitHub to merge it, "
-                f"then rerun `uv run python scripts/pr_flow.py finish` to sync `{result.base_branch}`."
+        if args.command == "finish":
+            result = finish_pull_request(
+                repo_root,
+                base_branch=args.base,
+                auto=args.auto,
             )
+            if result.merged:
+                print(f"Merged `{result.branch}` and synced `{result.base_branch}`.")
+            else:
+                print(
+                    f"Enabled auto-merge for `{result.branch}`. Wait for GitHub to merge it, "
+                    f"then rerun `uv run python scripts/pr_flow.py finish` to sync `{result.base_branch}`."
+                )
+            return 0
+
+        result = tag_release(
+            repo_root,
+            version_or_tag=args.version,
+            base_branch=args.base,
+            push=not args.local_only,
+        )
+        location = "and pushed it to origin" if result.pushed else "without pushing it"
+        print(
+            f"Created release tag `{result.tag}` at `{result.commit}` from `{result.base_branch}` "
+            f"{location}."
+        )
         return 0
     except PullRequestFlowError as exc:
         print(str(exc), file=sys.stderr)

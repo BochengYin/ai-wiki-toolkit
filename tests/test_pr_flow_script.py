@@ -217,3 +217,96 @@ def test_require_clean_worktree_rejects_dirty_repo(
 
     with pytest.raises(module.PullRequestFlowError, match="Working tree is not clean"):
         module.require_clean_worktree(repo_env["repo"])
+
+
+def test_tag_release_syncs_main_checks_version_and_pushes_tag(
+    repo_env: dict[str, Path], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = load_pr_flow_module()
+    seen_commands: list[list[str]] = []
+    monkeypatch.setattr(module.sys, "executable", "python")
+
+    check_script = str(repo_env["repo"] / "scripts" / "check_release_version.py")
+
+    def fake_run(command: list[str], *, cwd: Path, capture_output: bool, text: bool, check: bool):
+        assert capture_output is True
+        assert text is True
+        assert check is False
+        seen_commands.append(command)
+        responses = {
+            ("git", "status", "--short"): subprocess.CompletedProcess(command, 0, "", ""),
+            ("git", "fetch", "origin", "--prune", "--tags"): subprocess.CompletedProcess(
+                command, 0, "", ""
+            ),
+            ("git", "switch", "main"): subprocess.CompletedProcess(command, 0, "", ""),
+            ("git", "pull", "--ff-only", "origin", "main"): subprocess.CompletedProcess(
+                command, 0, "", ""
+            ),
+            ("git", "ls-remote", "--tags", "origin", "refs/tags/v0.1.12"): subprocess.CompletedProcess(
+                command, 0, "", ""
+            ),
+            ("git", "rev-parse", "-q", "--verify", "refs/tags/v0.1.12"): subprocess.CompletedProcess(
+                command, 1, "", ""
+            ),
+            ("python", check_script, "v0.1.12"): subprocess.CompletedProcess(command, 0, "", ""),
+            ("git", "tag", "v0.1.12"): subprocess.CompletedProcess(command, 0, "", ""),
+            ("git", "push", "origin", "v0.1.12"): subprocess.CompletedProcess(command, 0, "", ""),
+            ("git", "rev-parse", "HEAD"): subprocess.CompletedProcess(command, 0, "abc123\n", ""),
+        }
+        key = tuple(command)
+        if key not in responses:
+            raise AssertionError(f"Unexpected command: {command}")
+        return responses[key]
+
+    monkeypatch.setattr(module.subprocess, "run", fake_run)
+
+    result = module.tag_release(repo_env["repo"], version_or_tag="0.1.12")
+
+    assert result == module.ReleaseTagResult(
+        tag="v0.1.12",
+        base_branch="main",
+        commit="abc123",
+        pushed=True,
+    )
+    assert seen_commands == [
+        ["git", "status", "--short"],
+        ["git", "fetch", "origin", "--prune", "--tags"],
+        ["git", "switch", "main"],
+        ["git", "pull", "--ff-only", "origin", "main"],
+        ["git", "ls-remote", "--tags", "origin", "refs/tags/v0.1.12"],
+        ["git", "rev-parse", "-q", "--verify", "refs/tags/v0.1.12"],
+        ["python", check_script, "v0.1.12"],
+        ["git", "tag", "v0.1.12"],
+        ["git", "push", "origin", "v0.1.12"],
+        ["git", "rev-parse", "HEAD"],
+    ]
+
+
+def test_tag_release_rejects_existing_remote_tag(
+    repo_env: dict[str, Path], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = load_pr_flow_module()
+
+    def fake_run(command: list[str], *, cwd: Path, capture_output: bool, text: bool, check: bool):
+        responses = {
+            ("git", "status", "--short"): subprocess.CompletedProcess(command, 0, "", ""),
+            ("git", "fetch", "origin", "--prune", "--tags"): subprocess.CompletedProcess(
+                command, 0, "", ""
+            ),
+            ("git", "switch", "main"): subprocess.CompletedProcess(command, 0, "", ""),
+            ("git", "pull", "--ff-only", "origin", "main"): subprocess.CompletedProcess(
+                command, 0, "", ""
+            ),
+            ("git", "ls-remote", "--tags", "origin", "refs/tags/v0.1.12"): subprocess.CompletedProcess(
+                command, 0, "deadbeef\trefs/tags/v0.1.12\n", ""
+            ),
+        }
+        key = tuple(command)
+        if key not in responses:
+            raise AssertionError(f"Unexpected command: {command}")
+        return responses[key]
+
+    monkeypatch.setattr(module.subprocess, "run", fake_run)
+
+    with pytest.raises(module.PullRequestFlowError, match="already exists on origin"):
+        module.tag_release(repo_env["repo"], version_or_tag="v0.1.12")

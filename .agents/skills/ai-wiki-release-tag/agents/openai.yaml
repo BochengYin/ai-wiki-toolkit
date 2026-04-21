@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Wiki Release Tag"
+  short_description: "Create and push a release tag from main"
+  default_prompt: "Run the repo release-tag workflow for the requested version and report the pushed tag."
