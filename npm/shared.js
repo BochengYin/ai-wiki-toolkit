@@ -1,7 +1,39 @@
 const path = require("path");
+const fs = require("fs");
 const TARGETS = require("./platform-targets.json");
 
-function currentTarget(platform = process.platform, arch = process.arch) {
+function detectLibc(platform = process.platform) {
+  if (platform !== "linux") {
+    return null;
+  }
+
+  try {
+    if (process.report && typeof process.report.getReport === "function") {
+      const report = process.report.getReport();
+      if (report && report.header && report.header.glibcVersionRuntime) {
+        return "glibc";
+      }
+    }
+  } catch (_error) {
+    // Fall through to file-based heuristics.
+  }
+
+  try {
+    if (fs.existsSync("/etc/alpine-release")) {
+      return "musl";
+    }
+  } catch (_error) {
+    // Ignore file access failures and keep falling back.
+  }
+
+  return "glibc";
+}
+
+function currentTarget(platform = process.platform, arch = process.arch, libc = detectLibc(platform)) {
+  const qualifiedKey = libc ? `${platform}-${arch}-${libc}` : null;
+  if (qualifiedKey && TARGETS[qualifiedKey]) {
+    return TARGETS[qualifiedKey];
+  }
   return TARGETS[`${platform}-${arch}`] || null;
 }
 
@@ -22,6 +54,7 @@ function installedBinaryPath(targetInfo) {
 
 module.exports = {
   TARGETS,
+  detectLibc,
   currentTarget,
   installedBinaryPath,
   resolvePlatformPackageRoot,

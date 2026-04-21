@@ -9,6 +9,7 @@ import subprocess
 
 CLI_BINARY_NAME = "aiwiki-toolkit"
 DEFAULT_DOCKER_PLATFORM = "linux/amd64"
+DEFAULT_RUNTIME_SHELL = "bash"
 
 
 @dataclass(frozen=True)
@@ -40,7 +41,7 @@ def linux_runtime_inner_command(asset_name: str) -> str:
             "set -eu",
             "mkdir -p /work",
             f"tar -xzf {archive_path} -C /work",
-            "ldd --version | head -n1",
+            "(ldd --version 2>/dev/null || ldd /work/aiwiki-toolkit 2>/dev/null || true) | head -n1",
             f"{binary_path} --version",
         ]
     )
@@ -51,6 +52,7 @@ def docker_run_args(
     check: LinuxRuntimeCheck,
     *,
     docker_platform: str = DEFAULT_DOCKER_PLATFORM,
+    shell: str = DEFAULT_RUNTIME_SHELL,
 ) -> list[str]:
     return [
         "docker",
@@ -61,7 +63,7 @@ def docker_run_args(
         "-v",
         f"{asset_path.parent.resolve()}:/release-assets:ro",
         check.image,
-        "bash",
+        shell,
         "-lc",
         linux_runtime_inner_command(asset_path.name),
     ]
@@ -72,6 +74,7 @@ def verify_linux_runtime_asset(
     *,
     checks: tuple[LinuxRuntimeCheck, ...] = DEFAULT_LINUX_RUNTIME_CHECKS,
     docker_platform: str = DEFAULT_DOCKER_PLATFORM,
+    shell: str = DEFAULT_RUNTIME_SHELL,
 ) -> None:
     if not asset_path.exists():
         raise FileNotFoundError(f"Linux release asset does not exist: {asset_path}")
@@ -79,6 +82,6 @@ def verify_linux_runtime_asset(
     for check in checks:
         print(f"Checking {check.name} runtime with {check.image}", flush=True)
         subprocess.run(
-            docker_run_args(asset_path, check, docker_platform=docker_platform),
+            docker_run_args(asset_path, check, docker_platform=docker_platform, shell=shell),
             check=True,
         )

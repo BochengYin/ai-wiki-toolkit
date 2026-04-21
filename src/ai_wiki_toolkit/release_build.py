@@ -19,6 +19,7 @@ DEFAULT_CONTAINER_HOME = "/tmp/aiwiki-release-home"
 class LinuxContainerBuildConfig:
     image: str = DEFAULT_LINUX_BUILD_IMAGE
     docker_platform: str = DEFAULT_DOCKER_PLATFORM
+    shell: str = "bash"
     workspace_dir: str = DEFAULT_WORKSPACE_DIR
     container_home: str = DEFAULT_CONTAINER_HOME
     target: str = "linux-x64"
@@ -27,6 +28,7 @@ class LinuxContainerBuildConfig:
     dist_dir: str = "build/linux-release-dist"
     pyinstaller_work_dir: str = "build/linux-pyinstaller-work"
     pyinstaller_spec_dir: str = "build/linux-pyinstaller-spec"
+    setup_commands: tuple[str, ...] = ()
 
 
 DEFAULT_LINUX_CONTAINER_BUILD = LinuxContainerBuildConfig()
@@ -43,6 +45,7 @@ def linux_build_inner_command(version: str, config: LinuxContainerBuildConfig) -
         [
             "set -eu",
             "mkdir -p \"$HOME\"",
+            *config.setup_commands,
             f"rm -rf {shlex.quote(config.venv_dir)}",
             f"rm -rf {shlex.quote(config.dist_dir)}",
             f"rm -rf {shlex.quote(config.pyinstaller_work_dir)}",
@@ -92,7 +95,7 @@ def docker_build_args(
         "-w",
         config.workspace_dir,
         config.image,
-        "bash",
+        config.shell,
         "-lc",
         linux_build_inner_command(version, config),
     ]

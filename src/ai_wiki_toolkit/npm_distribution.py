@@ -26,6 +26,7 @@ class PlatformPackage:
     release_target: str
     os: tuple[str, ...]
     cpu: tuple[str, ...]
+    libc: tuple[str, ...]
     binary_name: str
 
 
@@ -38,6 +39,7 @@ def load_platform_packages(config_path: Path = PLATFORM_TARGETS_PATH) -> tuple[P
             release_target=config["release_target"],
             os=tuple(config["os"]),
             cpu=tuple(config["cpu"]),
+            libc=tuple(config.get("libc", [])),
             binary_name=config["binary_name"],
         )
         for node_target, config in raw.items()
@@ -74,6 +76,8 @@ def render_platform_package_json(package: PlatformPackage, version: str) -> str:
             package.binary_name: f"bin/{package.binary_name}",
         },
     }
+    if package.libc:
+        payload["libc"] = package.libc[0] if len(package.libc) == 1 else list(package.libc)
     return json.dumps(payload, indent=2) + "\n"
 
 

@@ -7,6 +7,7 @@ import pytest
 from ai_wiki_toolkit.release_runtime import (
     DEFAULT_DOCKER_PLATFORM,
     DEFAULT_LINUX_RUNTIME_CHECKS,
+    DEFAULT_RUNTIME_SHELL,
     LinuxRuntimeCheck,
     docker_run_args,
     parse_linux_runtime_check,
@@ -45,10 +46,22 @@ def test_docker_run_args_mounts_release_assets_and_runs_version() -> None:
         "-v",
     ]
     assert command[6] == f"{asset_path.parent.resolve()}:/release-assets:ro"
-    assert command[7:10] == ["node:24-bookworm", "bash", "-lc"]
+    assert command[7:10] == ["node:24-bookworm", DEFAULT_RUNTIME_SHELL, "-lc"]
     assert "/release-assets/ai-wiki-toolkit-v0.1.7-linux-x64.tar.gz" in command[10]
     assert "ldd --version" in command[10]
     assert "/work/aiwiki-toolkit --version" in command[10]
+
+
+def test_docker_run_args_supports_custom_shell() -> None:
+    asset_path = Path("/tmp/release-assets/ai-wiki-toolkit-v0.1.7-linux-musl-x64.tar.gz")
+
+    command = docker_run_args(
+        asset_path,
+        LinuxRuntimeCheck(name="musl", image="node:24-alpine"),
+        shell="sh",
+    )
+
+    assert command[7:10] == ["node:24-alpine", "sh", "-lc"]
 
 
 def test_verify_linux_runtime_asset_runs_all_checks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

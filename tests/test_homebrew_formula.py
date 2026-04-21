@@ -31,13 +31,19 @@ def test_formula_assets_from_directory_reads_expected_archives(tmp_path: Path) -
     for filename in (
         "ai-wiki-toolkit-v0.1.0-macos-arm64.tar.gz",
         "ai-wiki-toolkit-v0.1.0-macos-x64.tar.gz",
+        "ai-wiki-toolkit-v0.1.0-linux-arm64.tar.gz",
         "ai-wiki-toolkit-v0.1.0-linux-x64.tar.gz",
     ):
         (tmp_path / filename).write_text(filename, encoding="utf-8")
 
     assets = formula_assets_from_directory(tmp_path, "v0.1.0")
 
-    assert [asset.target for asset in assets] == ["macos-arm64", "macos-x64", "linux-x64"]
+    assert [asset.target for asset in assets] == [
+        "macos-arm64",
+        "macos-x64",
+        "linux-arm64",
+        "linux-x64",
+    ]
 
 
 def test_render_homebrew_formula_includes_expected_urls_and_checksums() -> None:
@@ -48,7 +54,8 @@ def test_render_homebrew_formula_includes_expected_urls_and_checksums() -> None:
         assets=[
             FormulaAsset("macos-arm64", "a" * 64),
             FormulaAsset("macos-x64", "b" * 64),
-            FormulaAsset("linux-x64", "c" * 64),
+            FormulaAsset("linux-arm64", "c" * 64),
+            FormulaAsset("linux-x64", "d" * 64),
         ],
     )
 
@@ -58,4 +65,5 @@ def test_render_homebrew_formula_includes_expected_urls_and_checksums() -> None:
     assert 'license "MIT"' in formula
     assert 'url "https://github.com/example/ai-wiki-toolkit/releases/download/v0.1.0/ai-wiki-toolkit-v0.1.0-macos-arm64.tar.gz"' in formula
     assert 'sha256 "' + ("a" * 64) + '"' in formula
+    assert 'url "https://github.com/example/ai-wiki-toolkit/releases/download/v0.1.0/ai-wiki-toolkit-v0.1.0-linux-arm64.tar.gz"' in formula
     assert 'assert_match version.to_s, shell_output("#{bin}/aiwiki-toolkit --version")' in formula

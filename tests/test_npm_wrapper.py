@@ -51,7 +51,7 @@ def _current_npm_target() -> str | None:
             "-e",
             "const { currentTarget } = require('./npm/shared');"
             "const target = currentTarget();"
-            "process.stdout.write(target ? `${process.platform}-${process.arch}` : '');",
+            "process.stdout.write(target ? target.node_target : '');",
         ],
         cwd=ROOT,
         capture_output=True,
@@ -61,6 +61,38 @@ def _current_npm_target() -> str | None:
     if result.returncode != 0:
         return None
     return result.stdout.strip() or None
+
+
+def test_current_target_resolves_linux_libc_variants() -> None:
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("node is not available")
+
+    script = """
+const { currentTarget } = require('./npm/shared');
+const values = [
+  currentTarget('linux', 'x64', 'glibc')?.package_name || '',
+  currentTarget('linux', 'x64', 'musl')?.package_name || '',
+  currentTarget('linux', 'arm64', 'glibc')?.package_name || '',
+  currentTarget('win32', 'arm64')?.package_name || '',
+];
+process.stdout.write(values.join('\\n'));
+"""
+    result = subprocess.run(
+        [node, "-e", script],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == [
+        "ai-wiki-toolkit-linux-x64",
+        "ai-wiki-toolkit-linux-musl-x64",
+        "ai-wiki-toolkit-linux-arm64",
+        "ai-wiki-toolkit-win32-arm64",
+    ]
 
 
 def test_npm_bin_invokes_installed_platform_binary(tmp_path: Path) -> None:
