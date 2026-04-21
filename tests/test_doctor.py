@@ -4,6 +4,7 @@ from pathlib import Path
 import shutil
 import subprocess
 
+import pytest
 from typer.testing import CliRunner
 
 from ai_wiki_toolkit.cli import app
