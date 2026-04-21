@@ -25,6 +25,9 @@ def test_release_smoke_workflow_checks_release_archive_and_npm_install() -> None
 
     assert 'gh release download "${{ steps.release.outputs.release_tag }}" --pattern "ai-wiki-toolkit-${{ steps.release.outputs.release_tag }}-windows-arm64.zip"' in workflow
     assert 'Expand-Archive -Path $archive -DestinationPath $destination' in workflow
+    assert '$expected = "ai-wiki-toolkit ${{ steps.release.outputs.package_version }}"' in workflow
     assert '& "release-assets/windows-arm64/aiwiki-toolkit.exe" --version' in workflow
+    assert "Expected binary version '$expected' but binary returned '$version'." in workflow
     assert 'npm install -g "ai-wiki-toolkit@$version"' in workflow
     assert '& aiwiki-toolkit --version' in workflow
+    assert "Expected npm-installed version '$expected' but binary returned '$version'." in workflow
