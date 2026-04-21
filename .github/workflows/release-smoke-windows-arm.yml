@@ -81,9 +81,10 @@ jobs:
       - name: Run Windows ARM binary smoke check
         shell: pwsh
         run: |
+          $expected = "ai-wiki-toolkit ${{ steps.release.outputs.package_version }}"
           $version = (& "release-assets/windows-arm64/aiwiki-toolkit.exe" --version).Trim()
-          if ($version -ne "${{ steps.release.outputs.package_version }}") {
-            throw "Expected version ${{ steps.release.outputs.package_version }} but binary returned $version."
+          if ($version -ne $expected) {
+            throw "Expected binary version '$expected' but binary returned '$version'."
           }
 
   npm-smoke:
@@ -148,7 +149,8 @@ jobs:
       - name: Run npm-installed Windows ARM smoke check
         shell: pwsh
         run: |
+          $expected = "ai-wiki-toolkit ${{ steps.release.outputs.package_version }}"
           $version = (& aiwiki-toolkit --version).Trim()
-          if ($version -ne "${{ steps.release.outputs.package_version }}") {
-            throw "Expected version ${{ steps.release.outputs.package_version }} but npm-installed binary returned $version."
+          if ($version -ne $expected) {
+            throw "Expected npm-installed version '$expected' but binary returned '$version'."
           }
