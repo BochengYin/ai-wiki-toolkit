@@ -37,10 +37,9 @@ The platform package map currently supports:
 - `darwin-arm64` -> `macos-arm64`
 - `darwin-x64` -> `macos-x64`
 - `linux-x64` -> `linux-x64`
+- `win32-x64` -> `windows-x64`
 
 Unsupported platforms fail fast during installation.
-
-Windows is intentionally excluded from the public npm target map until the main release workflow publishes matching `windows-x64` assets.
 
 ## Why Keep It Thin
 

@@ -25,10 +25,9 @@ This workflow is the base distribution layer for later package-manager integrati
 The workflow currently builds these targets:
 
 - `linux-x64`
+- `windows-x64`
 - `macos-arm64`
 - `macos-x64`
-
-Windows packaging remains implemented in the codebase, but it is currently excluded from the release matrix until the Windows test lane is stabilized.
 
 The target labels map to GitHub-hosted runners and determine the release asset names.
 
@@ -44,6 +43,7 @@ ai-wiki-toolkit-vX.Y.Z-<target>.zip
 Examples:
 
 - `ai-wiki-toolkit-v0.1.0-linux-x64.tar.gz`
+- `ai-wiki-toolkit-v0.1.0-windows-x64.zip`
 - `ai-wiki-toolkit-v0.1.0-macos-arm64.tar.gz`
 
 The archive contains a single executable:
@@ -87,7 +87,7 @@ PYTHONPATH=src python scripts/check_linux_runtime_matrix.py --asset release-asse
 
 This path expects Docker locally. The build itself happens inside `python:3.11-bookworm`, so the host Python environment does not need the release extras installed.
 
-Windows local dry runs can still be performed manually with `--binary dist/aiwiki-toolkit.exe --target windows-x64`, but that target is not part of the automated public release matrix yet.
+Windows local dry runs can still be performed manually with `--binary dist/aiwiki-toolkit.exe --target windows-x64` when you need to validate packaging outside GitHub Actions.
 
 ## Next Distribution Layers
 

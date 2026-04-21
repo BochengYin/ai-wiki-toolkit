@@ -19,7 +19,8 @@
   ],
   "os": [
     "darwin",
-    "linux"
+    "linux",
+    "win32"
   ],
   "engines": {
     "node": ">=18"
@@ -31,6 +32,7 @@
   "optionalDependencies": {
     "ai-wiki-toolkit-darwin-arm64": "0.1.11",
     "ai-wiki-toolkit-darwin-x64": "0.1.11",
-    "ai-wiki-toolkit-linux-x64": "0.1.11"
+    "ai-wiki-toolkit-linux-x64": "0.1.11",
+    "ai-wiki-toolkit-win32-x64": "0.1.11"
   }
 }

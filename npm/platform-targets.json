@@ -19,5 +19,12 @@
     "os": ["linux"],
     "cpu": ["x64"],
     "binary_name": "aiwiki-toolkit"
+  },
+  "win32-x64": {
+    "package_name": "ai-wiki-toolkit-win32-x64",
+    "release_target": "windows-x64",
+    "os": ["win32"],
+    "cpu": ["x64"],
+    "binary_name": "aiwiki-toolkit.exe"
   }
 }

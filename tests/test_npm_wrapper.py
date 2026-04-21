@@ -5,6 +5,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import tarfile
+import zipfile
 
 import pytest
 from ai_wiki_toolkit import __version__
@@ -74,6 +75,8 @@ def test_npm_bin_invokes_installed_platform_binary(tmp_path: Path) -> None:
     package = next(
         package for package in load_platform_packages() if package.node_target == node_target
     )
+    if package.binary_name.endswith(".exe"):
+        pytest.skip("wrapper integration test uses a shell stub and is skipped on Windows targets")
 
     package_dir = tmp_path / "package"
     package_dir.mkdir()
@@ -110,8 +113,12 @@ def test_stage_platform_packages_creates_publishable_directories(tmp_path: Path)
         archive_path = asset_dir / release_archive_name(__version__, package.release_target)
         payload = tmp_path / f"{package.release_target}-{package.binary_name}"
         payload.write_text("binary payload\n", encoding="utf-8")
-        with tarfile.open(archive_path, "w:gz") as archive:
-            archive.add(payload, arcname=package.binary_name)
+        if archive_path.suffix == ".zip":
+            with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+                archive.write(payload, arcname=package.binary_name)
+        else:
+            with tarfile.open(archive_path, "w:gz") as archive:
+                archive.add(payload, arcname=package.binary_name)
 
     staged = stage_platform_packages(
         version=__version__,
@@ -128,4 +135,7 @@ def test_stage_platform_packages_creates_publishable_directories(tmp_path: Path)
         platform_readme = (package_dir / "README.md").read_text(encoding="utf-8")
         assert root_readme in platform_readme
         assert (package_dir / "LICENSE").exists()
-        assert (package_dir / "bin" / "aiwiki-toolkit").exists()
+        bin_mapping = package_json["bin"]
+        assert len(bin_mapping) == 1
+        expected_binary_name = Path(next(iter(bin_mapping.values()))).name
+        assert (package_dir / "bin" / expected_binary_name).exists()
