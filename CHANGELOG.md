@@ -4,6 +4,12 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+## v0.1.14
+
+### Fixed
+
+- Fixed the `linux-musl-x64` release lane by importing `pytest` in `tests/test_doctor.py`, so the tracked-telemetry skip path works inside minimal musl build containers.
+
 ## v0.1.13
 
 ### Added
