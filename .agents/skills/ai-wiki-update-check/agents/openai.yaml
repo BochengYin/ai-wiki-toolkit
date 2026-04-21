@@ -1,4 +1,4 @@
 interface:
-  display_name: "AI Wiki Update Check"
-  short_description: "Run the mandatory end-of-task AI wiki check"
-  default_prompt: "Run the ai-wiki end-of-task update check for this completed task."
+  display_name: "AI Wiki Update Evidence"
+  short_description: "Detect durable memory from completed tasks"
+  default_prompt: "Use $ai-wiki-update-check to produce the end-of-task AI wiki update outcome for this completed task."

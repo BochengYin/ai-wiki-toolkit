@@ -2,6 +2,12 @@
 
 This folder is user-owned evidence space for measuring whether the AI wiki is helping in real work.
 
+## Evidence Model
+
+- The end-of-task AI wiki footer is the user-facing evidence surface.
+- Local telemetry under `metrics/` is the machine-readable record behind that footer.
+- Managed `_toolkit/**` docs guide workflow, but they do not count as knowledge-reuse evidence.
+
 ## Files
 
 - `reuse-events/<handle>.jsonl` stores per-handle document-level AI wiki reuse observations.

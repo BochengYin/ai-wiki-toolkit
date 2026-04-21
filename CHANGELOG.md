@@ -4,9 +4,23 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+## v0.1.17
+
+### Added
+
+- Added runtime AI wiki memory candidate detection guidance for problem-solution memory, feature clarification memory, missed relevant memory, and conflict-aware update decisions.
+- Added `docs/ai-wiki-usefulness-metrics-v2.md` to define eligibility-aware coverage, material reuse, and missed-memory metrics for AI wiki evaluation.
+
+### Changed
+
+- Reframed end-of-task AI wiki reuse guidance around a user-facing evidence footer, task eligibility, and material-reuse hints instead of an extra visible check step.
+- Updated generated prompt blocks, managed workflow docs, and repo-local skill scaffolds to emit AI wiki evidence and update outcomes with clearer routing rules.
+- Updated the Python package description to position `ai-wiki-toolkit` as a repository-native AI wiki memory harness for coding agents.
+
 ### Fixed
 
 - Fixed Windows ARM smoke workflow version assertions to compare against the CLI's full `ai-wiki-toolkit <version>` output.
+
 ## v0.1.16
 
 ### Fixed

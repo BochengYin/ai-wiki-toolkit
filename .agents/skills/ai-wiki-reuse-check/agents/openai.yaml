@@ -1,4 +1,4 @@
 interface:
-  display_name: "AI Wiki Reuse Check"
-  short_description: "Record end-of-task AI wiki reuse"
-  default_prompt: "Run the ai-wiki end-of-task reuse check for this completed task."
+  display_name: "AI Wiki Reuse Evidence"
+  short_description: "Produce end-of-task AI wiki evidence"
+  default_prompt: "Use $ai-wiki-reuse-check to produce the end-of-task AI wiki reuse footer for this completed task."

@@ -236,6 +236,12 @@ def repo_starter_files(handle: str) -> dict[str, str]:
 
             This folder is user-owned evidence space for measuring whether the AI wiki is helping in real work.
 
+            ## Evidence Model
+
+            - The end-of-task AI wiki footer is the user-facing evidence surface.
+            - Local telemetry under `metrics/` is the machine-readable record behind that footer.
+            - Managed `_toolkit/**` docs guide workflow, but they do not count as knowledge-reuse evidence.
+
             ## Files
 
             - `reuse-events/<handle>.jsonl` stores per-handle document-level AI wiki reuse observations.
@@ -323,41 +329,51 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             12. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
             13. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
             14. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
-            15. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them for end-of-task AI wiki checks.
+            15. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them to produce end-of-task AI wiki evidence and update outcomes.
 
-            ## AI Wiki Reuse Check
+            ## AI Wiki Reuse Evidence
 
-            1. Run one AI wiki reuse check at the end of every completed task, even when no wiki docs were used.
-            2. If any user-owned repo or system AI wiki docs were consulted, record one `aiwiki-toolkit record-reuse` event per consulted document.
-            3. If a managed `_toolkit/**` doc changed the plan or behavior, cite its path in a progress update or final note, but do not record it with `record-reuse`.
-            4. When a user-owned AI wiki doc materially changes the plan or behavior, cite its path in a progress update or final note.
-            5. Use `reuse_outcome=not_helpful` when a consulted user-owned AI wiki document did not help materially but still influenced the search path.
-            6. Record one `aiwiki-toolkit record-reuse-check` entry for the task with:
+            1. Produce one AI wiki reuse evidence footer at the end of every completed task.
+            2. First classify the task as `eligible`, `optional`, or `not_applicable` for AI wiki use.
+            3. Treat pure operational tasks such as pushing a PR, renaming a branch, or running an already-decided command as `not_applicable`; do not force unrelated wiki reads just to improve coverage metrics.
+            4. If any user-owned repo or system AI wiki docs were consulted, record one `aiwiki-toolkit record-reuse` event per consulted document.
+            5. If a managed `_toolkit/**` doc changed the plan or behavior, cite its path in a progress update or final note, but do not record it with `record-reuse`.
+            6. When a user-owned AI wiki doc materially changes the plan or behavior, cite its path in a progress update or final note.
+            7. Use `reuse_outcome=not_helpful` when a consulted user-owned AI wiki document did not help materially but still influenced the search path.
+            8. Record one `aiwiki-toolkit record-reuse-check` entry for the task with:
                - `wiki_used` when one or more AI wiki document events were recorded
                - `no_wiki_use` when no AI wiki document events were needed for the task
 
-            ## AI Wiki Update Check
+            ## AI Wiki Update Outcome
 
-            1. Run one AI wiki update check at the end of every completed task, even when you expect the result to be `None`.
-            2. Choose exactly one outcome:
+            1. Produce one AI wiki update outcome at the end of every completed task, even when you expect the result to be `None`.
+            2. Before returning `None`, run memory candidate detection for:
+               - a new or refined team convention
+               - reusable PR review learning
+               - feature clarification memory
+               - a durable decision note
+               - a reusable problem-solution memory
+               - missed relevant memory
+               - a conflict, refinement, or supersession with existing memory
+               - a person preference that should stay personal for now
+            3. Use concrete task signals before returning `None`, especially:
+               - repeated release, CI, or platform failure
+               - workflow, packaging, or environment assumption mismatch
+               - tooling fixes future agents may need again
+               - multi-turn requirement clarification or accepted implementation assumptions
+               - acceptance criteria or unresolved feature questions that emerged during the task
+            4. Choose exactly one outcome:
                - `None`: you checked and found no durable lesson worth recording.
                - `Draft`: you found a durable lesson, recorded it under `ai-wiki/people/<handle>/drafts/`, and it is not yet ready for shared promotion.
                - `PromotionCandidate`: you recorded or updated a draft, the two-signal gate is satisfied, and human confirmation is still required before creating `ai-wiki/review-patterns/*.md` or `ai-wiki/conventions/*.md`.
-            3. Check whether the task produced:
-               - a new or refined team convention
-               - reusable PR review learning
-               - feature requirement clarification
-               - a durable decision note
-               - a reusable problem-solution memory
-               - a conflict, refinement, or supersession with existing memory
-               - a person preference that should stay personal for now
-            4. Prefer small durable memory over long task transcripts or generic summaries.
-            5. If new memory conflicts with existing conventions, decisions, features, problems, or person preferences, flag it as a conflict, refinement, or supersession instead of silently overwriting.
-            6. Always print exactly one final status line:
+            5. Prefer small durable memory over long task transcripts or generic summaries.
+            6. If new memory conflicts with existing conventions, decisions, features, problems, or person preferences, flag it as a conflict, refinement, or supersession instead of silently overwriting.
+            7. If a relevant existing AI wiki doc should have been used but was missed, treat that as missed relevant memory instead of silently returning `None`.
+            8. Always print exactly one final status line:
                - `AI Wiki Update Candidate: None`
                - `AI Wiki Update Candidate: Draft`
                - `AI Wiki Update Candidate: PromotionCandidate`
-            7. If the outcome is `Draft` or `PromotionCandidate`, also print:
+            9. If the outcome is `Draft` or `PromotionCandidate`, also print:
                - `AI Wiki Update Path: <path>`
 
             ## Review Draft Workflow
@@ -417,23 +433,26 @@ def managed_repo_toolkit_files() -> dict[str, str]:
 
             ## AI Wiki Maintenance
 
-            1. Run one AI wiki reuse check at the end of every completed task, even when no AI wiki docs were used.
-            2. If any user-owned repo or system AI wiki docs were consulted, record one `aiwiki-toolkit record-reuse` event per consulted doc.
-            3. Do not log managed `_toolkit/**` docs with `record-reuse`; if they changed the plan or behavior, cite their paths in a progress update or the final note instead.
-            4. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
-            5. The installer manages a `.gitignore` block that ignores `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/metrics/`, and `ai-wiki/_toolkit/catalog.json` so telemetry stays local by default.
-            6. If those telemetry paths were tracked before you upgraded, run `aiwiki-toolkit doctor` and follow the suggested `git rm --cached` fix once to untrack them.
-            7. Run one AI wiki update check at the end of every completed task, even when the result is `None`.
-            8. Always end with exactly one status line: `AI Wiki Update Candidate: None`, `Draft`, or `PromotionCandidate`.
-            9. If the result is `Draft` or `PromotionCandidate`, also print `AI Wiki Update Path: <path>`.
-            10. Do not write every task summary into the wiki; capture only durable memory.
-            11. Put shared team conventions in `ai-wiki/conventions/`.
-            12. Put reusable repo-specific review lessons in `ai-wiki/review-patterns/`.
-            13. Put reusable problem-solution memories in `ai-wiki/problems/`.
-            14. Put feature clarifications in `ai-wiki/features/`.
-            15. Put task-specific chronology and dead ends in `ai-wiki/trails/`.
-            16. Put raw personal draft notes in `ai-wiki/people/<handle>/drafts/`.
-            17. Promote only stable, reviewable rules into shared patterns or conventions.
+            1. Produce one AI wiki reuse evidence footer at the end of every completed task.
+            2. First classify the task as `eligible`, `optional`, or `not_applicable` for AI wiki use.
+            3. Record one `aiwiki-toolkit record-reuse` event per consulted user-owned AI wiki doc.
+            4. Do not log managed `_toolkit/**` docs with `record-reuse`; if they changed the plan or behavior, cite their paths in a progress update or the final note instead.
+            5. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
+            6. Treat the footer as the user-facing evidence surface; telemetry and generated aggregates are the local machine-readable record behind it.
+            7. The installer manages a `.gitignore` block that ignores `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/metrics/`, and `ai-wiki/_toolkit/catalog.json` so telemetry stays local by default.
+            8. If those telemetry paths were tracked before you upgraded, run `aiwiki-toolkit doctor` and follow the suggested `git rm --cached` fix once to untrack them.
+            9. Produce one AI wiki update outcome at the end of every completed task, even when the result is `None`.
+            10. Before returning `None`, run memory candidate detection for problem-solution memory, feature clarification memory, convention candidates, missed relevant memory, and conflict or supersession.
+            11. Always end with exactly one status line: `AI Wiki Update Candidate: None`, `Draft`, or `PromotionCandidate`.
+            12. If the result is `Draft` or `PromotionCandidate`, also print `AI Wiki Update Path: <path>`.
+            13. Do not write every task summary into the wiki; capture only durable memory.
+            14. Put shared team conventions in `ai-wiki/conventions/`.
+            15. Put reusable repo-specific review lessons in `ai-wiki/review-patterns/`.
+            16. Put reusable problem-solution memories in `ai-wiki/problems/`.
+            17. Put feature clarifications in `ai-wiki/features/`.
+            18. Put task-specific chronology and dead ends in `ai-wiki/trails/`.
+            19. Put raw personal draft notes in `ai-wiki/people/<handle>/drafts/`.
+            20. Promote only stable, reviewable rules into shared patterns or conventions.
             """
         ).strip()
         + "\n",
@@ -696,37 +715,40 @@ def repo_skill_starter_files() -> dict[str, str]:
             """
             ---
             name: ai-wiki-update-check
-            description: Run the mandatory end-of-task AI wiki update check for ai-wiki-toolkit. Use at the end of every completed task in this repository to decide whether the result is None, Draft, or PromotionCandidate, update ai-wiki notes when needed, and emit the required final status line.
+            description: Produce the mandatory end-of-task AI wiki update outcome for ai-wiki-toolkit. Use it to detect durable memory candidates, decide whether the result is None, Draft, or PromotionCandidate, and emit the required final status line.
             ---
 
             # AI Wiki Update Check
 
             Use this skill at the end of every completed task in this repository.
 
-            This check is mandatory even when the correct outcome is `None`.
+            This outcome is mandatory even when the correct result is `None`.
 
             ## Core Workflow
 
             1. Review the task outcome, changes made, and lessons learned.
-            2. Check whether the task produced or refined:
+            2. Before returning `None`, run memory candidate detection for:
                - a team convention
                - reusable PR review learning
-               - feature requirement clarification
+               - feature clarification memory
                - a durable decision note
                - a reusable problem-solution memory
+               - missed relevant memory
                - a conflict, refinement, or supersession with existing memory
                - a person preference that should stay personal for now
-            3. Choose exactly one outcome: `None`, `Draft`, or `PromotionCandidate`.
-            4. If the outcome is `Draft` or `PromotionCandidate`, create or update a note under `ai-wiki/people/<handle>/drafts/`.
-            5. Emit the final result using the exact output contract in [references/output-contract.md](references/output-contract.md).
-            6. Use [references/decision-rules.md](references/decision-rules.md) for the decision gate, promotion rules, conflict handling, and note placement rules.
+            3. Check concrete task signals before returning `None`, especially repeated release, CI, or platform failures; workflow or packaging assumption mismatches; environment or tooling fixes future agents may need; multi-turn clarification; accepted assumptions; emerging acceptance criteria; and unresolved feature questions.
+            4. Choose exactly one outcome: `None`, `Draft`, or `PromotionCandidate`.
+            5. If the outcome is `Draft` or `PromotionCandidate`, create or update a note under `ai-wiki/people/<handle>/drafts/`.
+            6. Emit the final result using the exact output contract in [references/output-contract.md](references/output-contract.md).
+            7. Use [references/decision-rules.md](references/decision-rules.md) for the decision gate, promotion rules, memory candidate detection, conflict handling, and note placement rules.
 
             ## Constraints
 
-            - Do not skip the check just because no durable lesson is expected.
+            - Do not skip the update outcome just because no durable lesson is expected.
             - Do not write every task summary into the wiki.
             - Do not create or update `ai-wiki/review-patterns/*.md` without human confirmation.
             - Do not promote a reviewer preference into a team convention unless the promotion rules are met.
+            - Do not treat "no wiki docs were opened" as proof that no durable memory was produced.
             - If new memory conflicts with existing memory, flag it as a conflict, refinement, or supersession.
             - Prefer small durable memory over long transcripts.
             - Keep project-specific knowledge in `ai-wiki/`.
@@ -762,11 +784,39 @@ def repo_skill_starter_files() -> dict[str, str]:
 
             - a new or refined team convention
             - reusable PR review learning
-            - feature requirement clarification
+            - feature clarification memory
             - a durable decision note
             - a reusable problem-solution memory
+            - missed relevant memory
             - a conflict, refinement, or supersession with existing memory
             - a person preference that should stay personal for now
+
+            ## Memory Candidate Detection
+
+            Before returning `None`, check whether the task produced any of these signals.
+
+            ### Problem-Solution Candidate Signals
+
+            - repeated failure across release, CI, or platform work
+            - workflow, packaging, or environment assumption mismatch
+            - user correction of an agent mistake that could recur
+            - tooling or environment fix that future agents may need again
+            - workaround discovered after debugging
+
+            ### Feature Memory Candidate Signals
+
+            - multi-turn clarification
+            - accepted implementation assumption
+            - acceptance criteria that emerged during the task
+            - feature behavior that changed from the initial understanding
+            - unresolved question that still matters for the feature
+
+            ### Convention, Conflict, And Missed-Memory Signals
+
+            - a reusable rule now spans code, tests, docs, or release workflow changes
+            - the task revealed conflict, refinement, or supersession with existing memory
+            - a relevant AI wiki doc should have been used but the agent only found it after user correction, review, or later failure
+            - the task repeated work that existing team memory should have prevented
 
             ## Writing Targets
 
@@ -776,6 +826,7 @@ def repo_skill_starter_files() -> dict[str, str]:
             - Put reusable problem-solution memories in `ai-wiki/problems/`.
             - Put feature clarifications in `ai-wiki/features/`.
             - Put durable project decisions in `ai-wiki/decisions.md` or a linked decision note if the repo splits decisions.
+            - Put missed-relevant-memory follow-ups in `ai-wiki/people/<handle>/drafts/` until the repo chooses a dedicated incident format.
             - Keep project-specific lessons in `ai-wiki/`.
             - Keep cross-project lessons in `<home>/ai-wiki/system/`.
 
@@ -827,9 +878,9 @@ def repo_skill_starter_files() -> dict[str, str]:
         f"{AI_WIKI_UPDATE_SKILL_DIR}/agents/openai.yaml": dedent(
             """
             interface:
-              display_name: "AI Wiki Update Check"
-              short_description: "Run the mandatory end-of-task AI wiki check"
-              default_prompt: "Run the ai-wiki end-of-task update check for this completed task."
+              display_name: "AI Wiki Update Evidence"
+              short_description: "Detect durable memory from completed tasks"
+              default_prompt: "Use $ai-wiki-update-check to produce the end-of-task AI wiki update outcome for this completed task."
             """
         ).strip()
         + "\n",
@@ -837,19 +888,21 @@ def repo_skill_starter_files() -> dict[str, str]:
             """
             ---
             name: ai-wiki-reuse-check
-            description: Run the mandatory end-of-task AI wiki reuse check for ai-wiki-toolkit. Use it to record whether AI wiki docs were consulted during the task, append one reuse event per consulted doc, append one task-level reuse check, and report the outcome.
+            description: Produce the mandatory end-of-task AI wiki reuse evidence for ai-wiki-toolkit. Use it to classify task eligibility, record consulted user-owned docs, append local telemetry, and emit the user-facing footer.
             ---
 
-            # AI Wiki Reuse Check
+            # AI Wiki Reuse Evidence
 
             Use this skill at the end of every completed task in this repository.
 
-            This check is mandatory even when the correct outcome is `no_wiki_use`.
+            This evidence footer is mandatory even when the correct outcome is `no_wiki_use`.
 
             ## Core Workflow
 
-            1. Review whether any repo-local or cross-project AI wiki docs were consulted during the task.
-            2. Before or during the task, check whether relevant memory existed in:
+            1. Classify the task as `eligible`, `optional`, or `not_applicable` for AI wiki use before judging whether the absence of wiki reads is a problem.
+            2. Use the final AI wiki footer as the user-facing evidence surface; local telemetry is the machine-readable record behind it.
+            3. Review whether any repo-local or cross-project AI wiki docs were consulted during the task.
+            4. Before or during the task, check whether relevant memory existed in:
                - `conventions/`
                - `decisions.md`
                - `review-patterns/`
@@ -857,22 +910,26 @@ def repo_skill_starter_files() -> dict[str, str]:
                - `features/`
                - `trails/`
                - `people/<handle>/`
-            3. If one or more user-owned AI wiki docs were consulted, append one `aiwiki-toolkit record-reuse` event per consulted doc.
-            4. If a managed `_toolkit/**` doc changed the plan or behavior, cite its path in a progress update or final note, but do not log it with `record-reuse`.
-            5. When a user-owned AI wiki doc materially changes the plan or behavior, cite its path in a progress update or final note.
-            6. Use `reuse_outcome=not_helpful` for consulted user-owned docs that did not help materially but still affected the task flow.
-            7. Prefer specific doc ids such as `conventions/python-typing`, `problems/async-notification-tests-flaky`, or `features/bulk-invoice-upload`.
-            8. Append one `aiwiki-toolkit record-reuse-check` entry for the task using:
+            5. If one or more user-owned AI wiki docs were consulted, append one `aiwiki-toolkit record-reuse` event per consulted doc.
+            6. If a managed `_toolkit/**` doc changed the plan or behavior, cite its path in a progress update or final note, but do not log it with `record-reuse`.
+            7. When a user-owned AI wiki doc materially changes the plan or behavior, cite its path in a progress update or final note.
+            8. Use `reuse_outcome=not_helpful` for consulted user-owned docs that did not help materially but still affected the task flow.
+            9. Prefer specific doc ids such as `conventions/python-typing`, `problems/async-notification-tests-flaky`, or `features/bulk-invoice-upload`.
+            10. Append one `aiwiki-toolkit record-reuse-check` entry for the task using:
                - `wiki_used` when one or more doc events were recorded
                - `no_wiki_use` when no AI wiki doc events were recorded
-            9. Emit the final result using [references/output-contract.md](references/output-contract.md).
+            11. Emit the final result using [references/output-contract.md](references/output-contract.md).
 
             ## Constraints
 
-            - Do not skip the check just because the task was small or the result seems obvious.
+            - Do not skip the footer just because the task was small or the result seems obvious.
             - Record one task-level reuse check for every completed task.
+            - `no_wiki_use` is correct for `not_applicable` operational tasks.
+            - Do not force unrelated wiki reads just to improve coverage metrics.
             - If multiple user-owned AI wiki docs were consulted, record them as separate `record-reuse` events.
             - Do not record managed `_toolkit/**` docs with `record-reuse`.
+            - Listing used docs is evidence of touch, not proof of material reuse.
+            - If a relevant user-owned AI wiki doc should have been used but was not, note the miss in the footer even if telemetry still records `no_wiki_use`.
             - If an AI wiki doc changed the task plan or behavior, name the path explicitly in a user-facing update.
             """
         ).strip()
@@ -880,6 +937,19 @@ def repo_skill_starter_files() -> dict[str, str]:
         f"{AI_WIKI_REUSE_SKILL_DIR}/references/decision-rules.md": dedent(
             """
             # Decision Rules
+
+            ## Task Eligibility
+
+            Classify the task before judging whether `no_wiki_use` is acceptable.
+
+            - `not_applicable`
+              Pure operational work such as pushing a PR, renaming a branch, or running an already-decided command.
+
+            - `optional`
+              Low-risk work where repo memory may help, but the task can often complete correctly without it.
+
+            - `eligible`
+              Coding, debugging, release, review, clarification, or conflict-heavy work where existing team memory could materially change the plan.
 
             ## Outcome Meanings
 
@@ -896,6 +966,22 @@ def repo_skill_starter_files() -> dict[str, str]:
             - Use `reuse_outcome=not_helpful` when a consulted user-owned doc did not help materially but still influenced the search path.
             - Record the task-level `aiwiki-toolkit record-reuse-check` entry after all document-level reuse events for that task are appended.
             - Prefer specific doc ids such as `conventions/python-typing`, `problems/async-notification-tests-flaky`, `features/bulk-invoice-upload`, or `review-patterns/shared-prompt-files-must-be-user-agnostic`.
+            - `no_wiki_use` is correct for `not_applicable` tasks; do not force unrelated wiki reads just to improve coverage metrics.
+
+            ## Material Reuse Hints
+
+            Listing used docs is not enough to prove usefulness. When relevant, note whether the wiki:
+
+            - changed the plan
+            - avoided a retry
+            - blocked a wrong path
+            - resolved a conflict
+            - reused an existing convention
+            - captured durable memory
+
+            ## Missed Relevant Memory
+
+            If a relevant user-owned AI wiki doc should have been used but was only discovered after user correction, review, or later failure, note the miss in the footer even when telemetry still records `no_wiki_use`.
             """
         ).strip()
         + "\n",
@@ -903,28 +989,44 @@ def repo_skill_starter_files() -> dict[str, str]:
             """
             # Output Contract
 
-            Choose exactly one reuse status line:
+            Use the AI wiki footer as the user-facing evidence surface.
 
-            - `AI Wiki Reuse Check: wiki_used`
-            - `AI Wiki Reuse Check: no_wiki_use`
+            Choose exactly one reuse evidence status line:
+
+            - `AI Wiki Reuse Evidence: wiki_used`
+            - `AI Wiki Reuse Evidence: no_wiki_use`
+
+            Also print:
+
+            - `AI Wiki Eligibility: eligible | optional | not_applicable`
 
             If the result is `wiki_used`, also print:
 
             - `AI Wiki Reuse Docs: <comma-separated doc ids>`
 
+            When relevant, also print:
+
+            - `AI Wiki Material Effects: <comma-separated effects or none>`
+            - `AI Wiki Missed Memory: none known | <short note>`
+
             ## Examples
 
-            No AI wiki docs were used:
+            No AI wiki docs were needed for an operational task:
 
             ```text
-            AI Wiki Reuse Check: no_wiki_use
+            AI Wiki Reuse Evidence: no_wiki_use
+            AI Wiki Eligibility: not_applicable
+            AI Wiki Missed Memory: none known
             ```
 
-            AI wiki docs were used:
+            AI wiki docs were used in an eligible task:
 
             ```text
-            AI Wiki Reuse Check: wiki_used
+            AI Wiki Reuse Evidence: wiki_used
+            AI Wiki Eligibility: eligible
             AI Wiki Reuse Docs: conventions/python-typing, review-patterns/shared-prompt-files-must-be-user-agnostic
+            AI Wiki Material Effects: changed_plan, reused_convention
+            AI Wiki Missed Memory: none known
             ```
             """
         ).strip()
@@ -932,9 +1034,9 @@ def repo_skill_starter_files() -> dict[str, str]:
         f"{AI_WIKI_REUSE_SKILL_DIR}/agents/openai.yaml": dedent(
             """
             interface:
-              display_name: "AI Wiki Reuse Check"
-              short_description: "Record end-of-task AI wiki reuse"
-              default_prompt: "Run the ai-wiki end-of-task reuse check for this completed task."
+              display_name: "AI Wiki Reuse Evidence"
+              short_description: "Produce end-of-task AI wiki evidence"
+              default_prompt: "Use $ai-wiki-reuse-check to produce the end-of-task AI wiki reuse footer for this completed task."
             """
         ).strip()
         + "\n",
@@ -1564,21 +1666,22 @@ def prompt_block_body() -> str:
         7. Agents may suggest promotion candidates, but humans confirm shared patterns and team conventions.
         8. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
         9. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
-        10. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them for the end-of-task AI wiki checks.
+        10. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them to produce the end-of-task AI wiki evidence footer and update outcome.
 
         ## End Of Task
 
-        1. Run one AI wiki reuse check for every completed task, even if no AI wiki docs were used.
-        2. If any user-owned AI wiki docs were consulted, record one `aiwiki-toolkit record-reuse` event per consulted doc.
-        3. If a managed `_toolkit/**` doc materially changed the plan or behavior, cite its path in a progress update or final note, but do not log it with `record-reuse`.
-        4. If a user-owned AI wiki doc materially changed the plan or behavior, cite its path in a progress update or final note.
-        5. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
-        6. Run one AI wiki update check for every completed task, even if the result is `None`.
-        7. Check whether the task produced a team convention, reusable PR review learning, feature clarification, durable decision, reusable problem-solution memory, conflict or supersession, or a person preference that should stay personal for now.
-        8. Choose exactly one result: `None`, `Draft`, or `PromotionCandidate`.
-        9. If the result is `Draft`, record the lesson under `ai-wiki/people/<handle>/drafts/` and print `AI Wiki Update Path: <path>`.
-        10. If the result is `PromotionCandidate`, mark or update the draft as a promotion candidate, print `AI Wiki Update Path: <path>`, and ask for human confirmation before creating `ai-wiki/review-patterns/*.md` or `ai-wiki/conventions/*.md`.
-        11. Always print exactly one final status line:
+        1. Produce one AI wiki reuse footer for every completed task.
+        2. First classify the task as `eligible`, `optional`, or `not_applicable` for AI wiki use; pure operational tasks such as pushing a PR or running an already-decided command are `not_applicable`.
+        3. If any user-owned AI wiki docs were consulted, record one `aiwiki-toolkit record-reuse` event per consulted doc.
+        4. If a managed `_toolkit/**` doc materially changed the plan or behavior, cite its path in a progress update or final note, but do not log it with `record-reuse`.
+        5. If a user-owned AI wiki doc materially changed the plan or behavior, cite its path in a progress update or final note.
+        6. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
+        7. Produce one AI wiki update outcome for every completed task, even if the result is `None`.
+        8. Before returning `None`, check for convention candidates, reusable PR review learning, feature clarification memory, durable decisions, problem-solution memory, missed relevant memory, conflict or supersession, or a person preference that should stay personal for now.
+        9. Choose exactly one result: `None`, `Draft`, or `PromotionCandidate`.
+        10. If the result is `Draft`, record the lesson under `ai-wiki/people/<handle>/drafts/` and print `AI Wiki Update Path: <path>`.
+        11. If the result is `PromotionCandidate`, mark or update the draft as a promotion candidate, print `AI Wiki Update Path: <path>`, and ask for human confirmation before creating `ai-wiki/review-patterns/*.md` or `ai-wiki/conventions/*.md`.
+        12. Always print exactly one final status line:
            - `AI Wiki Update Candidate: None`
            - `AI Wiki Update Candidate: Draft`
            - `AI Wiki Update Candidate: PromotionCandidate`
