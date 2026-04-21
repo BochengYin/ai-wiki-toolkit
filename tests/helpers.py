@@ -18,11 +18,13 @@ def write_git_config(
 
 
 def snapshot_tree(root: Path) -> list[str]:
-    entries: list[str] = []
-    for path in sorted(root.rglob("*")):
-        relative = path.relative_to(root).as_posix()
-        entries.append(f"{relative}/" if path.is_dir() else relative)
-    return entries
+    entries = [
+        f"{path.relative_to(root).as_posix()}/"
+        if path.is_dir()
+        else path.relative_to(root).as_posix()
+        for path in root.rglob("*")
+    ]
+    return sorted(entries)
 
 
 def strip_margin(text: str) -> str:

@@ -38,27 +38,22 @@ def test_docker_build_args_mount_repo_and_use_bookworm_image() -> None:
 
     command = docker_build_args(repo_root, "0.1.7")
 
-    assert command[:6] == [
+    assert command[:5] == [
         "docker",
         "run",
         "--rm",
         "--platform",
         DEFAULT_DOCKER_PLATFORM,
-        "--user",
     ]
-    assert command[9:13] == [
-        "-e",
-        "PIP_DISABLE_PIP_VERSION_CHECK=1",
-        "-v",
-        f"{repo_root.resolve()}:/workspace",
-    ]
-    assert command[13:17] == [
-        "-w",
-        "/workspace",
-        DEFAULT_LINUX_BUILD_IMAGE,
+    assert f"{repo_root.resolve()}:/workspace" in command
+    assert "PIP_DISABLE_PIP_VERSION_CHECK=1" in command
+    assert DEFAULT_LINUX_BUILD_IMAGE in command
+    image_index = command.index(DEFAULT_LINUX_BUILD_IMAGE)
+    assert command[image_index + 1 : image_index + 3] == [
         DEFAULT_LINUX_CONTAINER_BUILD.shell,
+        "-lc",
     ]
-    assert "build/linux-release-venv/bin/python -m pytest" in command[18]
+    assert "build/linux-release-venv/bin/python -m pytest" in command[image_index + 3]
 
 
 def test_linux_build_inner_command_supports_custom_target_and_setup_commands() -> None:
@@ -89,3 +84,14 @@ def test_build_linux_release_archive_in_container_runs_docker(monkeypatch: pytes
 
     assert len(seen_commands) == 1
     assert seen_commands[0][0:2] == ["docker", "run"]
+
+
+def test_docker_build_args_omits_user_flag_without_posix_uid(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delattr("os.getuid", raising=False)
+    monkeypatch.delattr("os.getgid", raising=False)
+
+    command = docker_build_args(Path("/tmp/repo"), "0.1.7")
+
+    assert "--user" not in command
