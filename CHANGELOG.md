@@ -4,6 +4,19 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+## v0.1.12
+
+### Added
+
+- Added public release targets for `linux-arm64`, `linux-musl-x64`, and `windows-arm64`.
+- Added a dedicated `Release Smoke Windows ARM` workflow that verifies the published `windows-arm64.zip` asset and npm install path on `windows-11-arm`.
+
+### Changed
+
+- Extended the npm platform target map and package metadata to cover Linux `glibc` versus `musl`, Linux ARM64, and Windows ARM64.
+- Extended Linux build and runtime verification helpers so release workflows can validate the new Linux ARM64 and musl targets.
+- Extended the generated Homebrew formula and release documentation to reflect the expanded public target matrix.
+
 ## v0.1.11
 
 ### Added
