@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ai-wiki-toolkit"
-version = "0.1.16"
-description = "Minimal scaffold for repo-local and home-level AI wiki prompts."
+version = "0.1.17"
+description = "Repository-native AI wiki memory harness for coding agents."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
