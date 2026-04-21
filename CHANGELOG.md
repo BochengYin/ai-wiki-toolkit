@@ -4,6 +4,12 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+## v0.1.16
+
+### Fixed
+
+- Fixed the `linux-musl-x64` release lane so Alpine package setup can run as root before switching back to the normal containerized build flow, allowing `binutils` and `objdump` to be installed during release packaging.
+
 ## v0.1.15
 
 ### Fixed
