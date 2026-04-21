@@ -80,7 +80,11 @@ The archive contains a single executable:
 6. Confirm that the Linux runtime checks passed for the published glibc and musl targets.
 7. Verify that the GitHub Release for the tag contains all expected archives and `aiwiki-toolkit.rb`.
 8. Wait for the npm publish workflow to stage and publish the platform packages plus the meta package.
-9. If tap sync is enabled, verify that the tap repository received the updated `Formula/aiwiki-toolkit.rb`.
+9. Watch the `Release Smoke Windows ARM` workflow:
+   - after `Release Binaries`, it downloads `windows-arm64.zip` on `windows-11-arm` and runs `aiwiki-toolkit.exe --version`
+   - after `Publish npm Package`, it installs `ai-wiki-toolkit@<version>` on `windows-11-arm` and runs `aiwiki-toolkit --version`
+   - you can also run it manually with `workflow_dispatch` for any existing release tag
+10. If tap sync is enabled, verify that the tap repository received the updated `Formula/aiwiki-toolkit.rb`.
 
 ## Local Dry Run
 

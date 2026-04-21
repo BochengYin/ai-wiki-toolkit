@@ -1,0 +1,154 @@
+name: Release Smoke Windows ARM
+
+on:
+  workflow_run:
+    workflows:
+      - Release Binaries
+      - Publish npm Package
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Release tag to smoke test, for example v0.1.12
+        required: true
+        type: string
+      run_binary_smoke:
+        description: Run the GitHub Release binary smoke check
+        required: false
+        default: true
+        type: boolean
+      run_npm_smoke:
+        description: Run the npm install smoke check
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  binary-smoke:
+    if: ${{ (github.event_name == 'workflow_run' && github.event.workflow_run.name == 'Release Binaries' && github.event.workflow_run.conclusion == 'success') || (github.event_name == 'workflow_dispatch' && inputs.run_binary_smoke) }}
+    runs-on: windows-11-arm
+
+    steps:
+      - name: Check out source at released commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.event.workflow_run.head_sha }}
+
+      - name: Resolve release tag
+        id: release
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $tag = "${{ inputs.release_tag }}".Trim()
+            if (-not $tag) {
+              throw "release_tag input must not be empty."
+            }
+            if (-not $tag.StartsWith("v")) {
+              $tag = "v$tag"
+            }
+            $packageVersion = $tag.TrimStart("v")
+          }
+          else {
+            $packageVersion = (Get-Content package.json -Raw | ConvertFrom-Json).version
+            $tag = "v$packageVersion"
+          }
+
+          "release_tag=$tag" >> $env:GITHUB_OUTPUT
+          "package_version=$packageVersion" >> $env:GITHUB_OUTPUT
+
+      - name: Download Windows ARM release archive
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path release-assets | Out-Null
+          gh release download "${{ steps.release.outputs.release_tag }}" --pattern "ai-wiki-toolkit-${{ steps.release.outputs.release_tag }}-windows-arm64.zip" --dir release-assets
+
+      - name: Extract Windows ARM release archive
+        shell: pwsh
+        run: |
+          $archive = "release-assets/ai-wiki-toolkit-${{ steps.release.outputs.release_tag }}-windows-arm64.zip"
+          $destination = "release-assets/windows-arm64"
+          if (Test-Path $destination) {
+            Remove-Item -Recurse -Force $destination
+          }
+          Expand-Archive -Path $archive -DestinationPath $destination
+
+      - name: Run Windows ARM binary smoke check
+        shell: pwsh
+        run: |
+          $version = (& "release-assets/windows-arm64/aiwiki-toolkit.exe" --version).Trim()
+          if ($version -ne "${{ steps.release.outputs.package_version }}") {
+            throw "Expected version ${{ steps.release.outputs.package_version }} but binary returned $version."
+          }
+
+  npm-smoke:
+    if: ${{ (github.event_name == 'workflow_run' && github.event.workflow_run.name == 'Publish npm Package' && github.event.workflow_run.conclusion == 'success' && vars.NPM_PUBLISH_ENABLED == 'true') || (github.event_name == 'workflow_dispatch' && inputs.run_npm_smoke) }}
+    runs-on: windows-11-arm
+
+    steps:
+      - name: Check out source at released commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.event.workflow_run.head_sha }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Resolve release tag
+        id: release
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $tag = "${{ inputs.release_tag }}".Trim()
+            if (-not $tag) {
+              throw "release_tag input must not be empty."
+            }
+            if (-not $tag.StartsWith("v")) {
+              $tag = "v$tag"
+            }
+            $packageVersion = $tag.TrimStart("v")
+          }
+          else {
+            $packageVersion = (Get-Content package.json -Raw | ConvertFrom-Json).version
+            $tag = "v$packageVersion"
+          }
+
+          "release_tag=$tag" >> $env:GITHUB_OUTPUT
+          "package_version=$packageVersion" >> $env:GITHUB_OUTPUT
+
+      - name: Add npm global prefix to PATH
+        shell: pwsh
+        run: |
+          $prefix = npm prefix -g
+          $prefix >> $env:GITHUB_PATH
+
+      - name: Install released npm package with retry
+        shell: pwsh
+        run: |
+          $version = "${{ steps.release.outputs.package_version }}"
+          for ($attempt = 1; $attempt -le 5; $attempt++) {
+            npm install -g "ai-wiki-toolkit@$version"
+            if ($LASTEXITCODE -eq 0) {
+              exit 0
+            }
+            if ($attempt -eq 5) {
+              throw "npm install failed after $attempt attempts."
+            }
+            Start-Sleep -Seconds 15
+          }
+
+      - name: Run npm-installed Windows ARM smoke check
+        shell: pwsh
+        run: |
+          $version = (& aiwiki-toolkit --version).Trim()
+          if ($version -ne "${{ steps.release.outputs.package_version }}") {
+            throw "Expected version ${{ steps.release.outputs.package_version }} but npm-installed binary returned $version."
+          }
