@@ -20,7 +20,7 @@ def test_release_asset_url_uses_github_release_download_path() -> None:
 
 def test_sha256_for_file_returns_expected_digest(tmp_path: Path) -> None:
     sample = tmp_path / "sample.txt"
-    sample.write_text("aiwiki\n", encoding="utf-8")
+    sample.write_bytes(b"aiwiki\n")
 
     assert sha256_for_file(sample) == (
         "78be2802a078f6cb1653d5aee09b96b5bb36f704f0a8f7bf7a111b17f8329aa3"

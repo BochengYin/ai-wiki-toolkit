@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import shutil
 import subprocess
 
 from typer.testing import CliRunner
@@ -243,6 +244,9 @@ def test_doctor_reports_cross_scope_conflicts_as_info(repo_env: dict[str, Path])
 
 
 def test_doctor_warns_when_telemetry_paths_are_still_tracked(repo_env: dict[str, Path]) -> None:
+    if shutil.which("git") is None:
+        pytest.skip("git is required for tracked-telemetry doctor coverage")
+
     repo = repo_env["repo"]
     subprocess.run(
         ["git", "init", "-b", "main"],

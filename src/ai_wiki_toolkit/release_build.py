@@ -34,6 +34,14 @@ class LinuxContainerBuildConfig:
 DEFAULT_LINUX_CONTAINER_BUILD = LinuxContainerBuildConfig()
 
 
+def _docker_user_args() -> list[str]:
+    getuid = getattr(os, "getuid", None)
+    getgid = getattr(os, "getgid", None)
+    if getuid is None or getgid is None:
+        return []
+    return ["--user", f"{getuid()}:{getgid()}"]
+
+
 def linux_build_inner_command(version: str, config: LinuxContainerBuildConfig) -> str:
     venv_python = shlex.quote(f"{config.venv_dir}/bin/python")
     binary_path = shlex.quote(f"{config.dist_dir}/{CLI_BINARY_NAME}")
@@ -84,8 +92,7 @@ def docker_build_args(
         "--rm",
         "--platform",
         config.docker_platform,
-        "--user",
-        f"{os.getuid()}:{os.getgid()}",
+        *_docker_user_args(),
         "-e",
         f"HOME={config.container_home}",
         "-e",
