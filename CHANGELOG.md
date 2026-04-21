@@ -4,6 +4,12 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+## v0.1.15
+
+### Fixed
+
+- Fixed the `linux-musl-x64` release container to install `binutils` before running PyInstaller, so Alpine-based musl builds provide the required `objdump` tool during binary packaging.
+
 ## v0.1.14
 
 ### Fixed
