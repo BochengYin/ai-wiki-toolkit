@@ -55,6 +55,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=[],
         help="Optional command to run inside the container before creating the venv.",
     )
+    parser.add_argument(
+        "--run-as-root",
+        action="store_true",
+        help="Run the container as root instead of mapping the current host uid/gid.",
+    )
     return parser
 
 
@@ -72,6 +77,7 @@ def main() -> None:
         pyinstaller_work_dir=DEFAULT_LINUX_CONTAINER_BUILD.pyinstaller_work_dir,
         pyinstaller_spec_dir=DEFAULT_LINUX_CONTAINER_BUILD.pyinstaller_spec_dir,
         setup_commands=tuple(args.setup_command),
+        map_current_user=not args.run_as_root,
     )
     build_linux_release_archive_in_container(
         args.repository_root,

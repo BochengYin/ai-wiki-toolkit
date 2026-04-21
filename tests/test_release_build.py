@@ -71,6 +71,14 @@ def test_linux_build_inner_command_supports_custom_target_and_setup_commands() -
     assert "--target linux-musl-x64" in command
 
 
+def test_docker_build_args_can_run_as_root_when_requested() -> None:
+    config = LinuxContainerBuildConfig(map_current_user=False)
+
+    command = docker_build_args(Path("/tmp/repo"), "0.1.7", config)
+
+    assert "--user" not in command
+
+
 def test_build_linux_release_archive_in_container_runs_docker(monkeypatch: pytest.MonkeyPatch) -> None:
     seen_commands: list[list[str]] = []
 

@@ -29,12 +29,15 @@ class LinuxContainerBuildConfig:
     pyinstaller_work_dir: str = "build/linux-pyinstaller-work"
     pyinstaller_spec_dir: str = "build/linux-pyinstaller-spec"
     setup_commands: tuple[str, ...] = ()
+    map_current_user: bool = True
 
 
 DEFAULT_LINUX_CONTAINER_BUILD = LinuxContainerBuildConfig()
 
 
-def _docker_user_args() -> list[str]:
+def _docker_user_args(*, map_current_user: bool = True) -> list[str]:
+    if not map_current_user:
+        return []
     getuid = getattr(os, "getuid", None)
     getgid = getattr(os, "getgid", None)
     if getuid is None or getgid is None:
@@ -92,7 +95,7 @@ def docker_build_args(
         "--rm",
         "--platform",
         config.docker_platform,
-        *_docker_user_args(),
+        *_docker_user_args(map_current_user=config.map_current_user),
         "-e",
         f"HOME={config.container_home}",
         "-e",

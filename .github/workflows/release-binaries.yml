@@ -40,7 +40,7 @@ jobs:
             docker_platform: linux/amd64
             container_image: python:3.11-bookworm
             container_shell: bash
-            container_setup_args: ""
+            container_extra_args: ""
           - runner: ubuntu-24.04-arm
             target: linux-arm64
             build_mode: container
@@ -48,7 +48,7 @@ jobs:
             docker_platform: linux/arm64
             container_image: python:3.11-bookworm
             container_shell: bash
-            container_setup_args: ""
+            container_extra_args: ""
           - runner: ubuntu-24.04
             target: linux-musl-x64
             build_mode: container
@@ -56,8 +56,8 @@ jobs:
             docker_platform: linux/amd64
             container_image: python:3.11-alpine
             container_shell: sh
-            container_setup_args: >-
-              --setup-command "apk add --no-cache binutils"
+            container_extra_args: >-
+              --run-as-root --setup-command "apk add --no-cache binutils"
           - runner: windows-2022
             target: windows-x64
             build_mode: host
@@ -113,7 +113,7 @@ jobs:
           --image "${{ matrix.container_image }}"
           --docker-platform "${{ matrix.docker_platform }}"
           --shell "${{ matrix.container_shell }}"
-          ${{ matrix.container_setup_args }}
+          ${{ matrix.container_extra_args }}
 
       - name: Package release archive
         if: ${{ matrix.build_mode == 'host' }}
