@@ -4,6 +4,18 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+## v0.1.13
+
+### Added
+
+- Added a repo-local `ai-wiki-release-tag` skill plus `scripts/pr_flow.py tag-release` helper so release tags can be created from synced `main` with version verification.
+
+### Fixed
+
+- Fixed release-facing tests and build helpers that still carried cross-platform assumptions after the target-matrix expansion.
+- Normalized digest fixtures and tree snapshot assertions so Windows newline and traversal-order differences no longer break release CI.
+- Stopped requiring POSIX-only uid/gid APIs in Docker build arguments and skipped tracked-telemetry git coverage when `git` is unavailable in minimal musl build containers.
+
 ## v0.1.12
 
 ### Added
