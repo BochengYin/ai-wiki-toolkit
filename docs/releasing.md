@@ -72,9 +72,11 @@ The archive contains a single executable:
 4. Create and push a semantic tag:
 
    ```bash
-   git tag v0.1.0
-   git push origin v0.1.0
+   uv run python scripts/pr_flow.py tag-release 0.1.0
    ```
+
+   This helper syncs `main`, verifies the package metadata against the release version,
+   creates the tag, and pushes it to `origin`.
 
 5. Wait for the `Release Binaries` workflow to finish.
 6. Confirm that the Linux runtime checks passed for the published glibc and musl targets.
