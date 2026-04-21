@@ -4,6 +4,9 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- Fixed Windows ARM smoke workflow version assertions to compare against the CLI's full `ai-wiki-toolkit <version>` output.
 ## v0.1.16
 
 ### Fixed
