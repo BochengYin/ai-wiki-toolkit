@@ -36,11 +36,15 @@ The platform package map currently supports:
 
 - `darwin-arm64` -> `macos-arm64`
 - `darwin-x64` -> `macos-x64`
-- `linux-x64` -> `linux-x64`
+- `linux-arm64 (glibc)` -> `linux-arm64`
+- `linux-x64 (glibc)` -> `linux-x64`
+- `linux-x64 (musl)` -> `linux-musl-x64`
+- `win32-arm64` -> `windows-arm64`
+- `win32-x64` -> `windows-x64`
 
 Unsupported platforms fail fast during installation.
 
-Windows is intentionally excluded from the public npm target map until the main release workflow publishes matching `windows-x64` assets.
+On Linux, the wrapper resolves the platform package from `os`, `cpu`, and `libc` so glibc and musl targets can stay distinct.
 
 ## Why Keep It Thin
 

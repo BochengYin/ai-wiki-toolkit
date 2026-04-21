@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 import shutil
 import tarfile
+import zipfile
 
 from ai_wiki_toolkit.release_artifacts import release_archive_path
 
@@ -25,6 +26,7 @@ class PlatformPackage:
     release_target: str
     os: tuple[str, ...]
     cpu: tuple[str, ...]
+    libc: tuple[str, ...]
     binary_name: str
 
 
@@ -37,6 +39,7 @@ def load_platform_packages(config_path: Path = PLATFORM_TARGETS_PATH) -> tuple[P
             release_target=config["release_target"],
             os=tuple(config["os"]),
             cpu=tuple(config["cpu"]),
+            libc=tuple(config.get("libc", [])),
             binary_name=config["binary_name"],
         )
         for node_target, config in raw.items()
@@ -73,6 +76,8 @@ def render_platform_package_json(package: PlatformPackage, version: str) -> str:
             package.binary_name: f"bin/{package.binary_name}",
         },
     }
+    if package.libc:
+        payload["libc"] = package.libc[0] if len(package.libc) == 1 else list(package.libc)
     return json.dumps(payload, indent=2) + "\n"
 
 
@@ -97,6 +102,20 @@ def render_platform_package_readme(package: PlatformPackage, version: str) -> st
 
 
 def extract_release_binary(asset_path: Path, destination: Path) -> None:
+    if asset_path.suffix == ".zip":
+        with zipfile.ZipFile(asset_path) as archive:
+            members = [member for member in archive.infolist() if not member.is_dir()]
+            if len(members) != 1:
+                raise ValueError(f"expected exactly one file in {asset_path}, found {len(members)}")
+
+            member = members[0]
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            with archive.open(member) as extracted, destination.open("wb") as output:
+                shutil.copyfileobj(extracted, output)
+
+        destination.chmod(0o755)
+        return
+
     with tarfile.open(asset_path, "r:gz") as archive:
         members = [member for member in archive.getmembers() if member.isfile()]
         if len(members) != 1:

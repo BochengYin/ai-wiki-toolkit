@@ -1,4 +1,4 @@
-"""Build the linux-x64 release archive inside a Dockerized bookworm baseline."""
+"""Build a Linux release archive inside a Dockerized baseline."""
 
 from __future__ import annotations
 
@@ -39,6 +39,22 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_DOCKER_PLATFORM,
         help="Docker platform passed to docker run. Defaults to linux/amd64.",
     )
+    parser.add_argument(
+        "--target",
+        default=DEFAULT_LINUX_CONTAINER_BUILD.target,
+        help="Release target label such as linux-x64, linux-arm64, or linux-musl-x64.",
+    )
+    parser.add_argument(
+        "--shell",
+        default=DEFAULT_LINUX_CONTAINER_BUILD.shell,
+        help="Shell binary used inside the container. Defaults to bash.",
+    )
+    parser.add_argument(
+        "--setup-command",
+        action="append",
+        default=[],
+        help="Optional command to run inside the container before creating the venv.",
+    )
     return parser
 
 
@@ -48,12 +64,14 @@ def main() -> None:
     config = LinuxContainerBuildConfig(
         image=args.image,
         docker_platform=args.docker_platform,
-        target=DEFAULT_LINUX_CONTAINER_BUILD.target,
+        shell=args.shell,
+        target=args.target,
         output_dir=DEFAULT_LINUX_CONTAINER_BUILD.output_dir,
         venv_dir=DEFAULT_LINUX_CONTAINER_BUILD.venv_dir,
         dist_dir=DEFAULT_LINUX_CONTAINER_BUILD.dist_dir,
         pyinstaller_work_dir=DEFAULT_LINUX_CONTAINER_BUILD.pyinstaller_work_dir,
         pyinstaller_spec_dir=DEFAULT_LINUX_CONTAINER_BUILD.pyinstaller_spec_dir,
+        setup_commands=tuple(args.setup_command),
     )
     build_linux_release_archive_in_container(
         args.repository_root,

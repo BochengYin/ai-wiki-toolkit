@@ -11,7 +11,7 @@ from ai_wiki_toolkit.release_artifacts import release_archive_name
 DEFAULT_DESCRIPTION = "Local-first scaffold for repo-local and home-level AI wiki prompts"
 FORMULA_CLASS_NAME = "AiwikiToolkit"
 FORMULA_FILENAME = "aiwiki-toolkit.rb"
-BREW_TARGETS = ("macos-arm64", "macos-x64", "linux-x64")
+BREW_TARGETS = ("macos-arm64", "macos-x64", "linux-arm64", "linux-x64")
 
 
 @dataclass(frozen=True)
@@ -87,6 +87,11 @@ def render_homebrew_formula(
             "  end",
             "",
             "  on_linux do",
+            "    on_arm do",
+            f'      url "{release_asset_url(repository, version, "linux-arm64")}"',
+            f'      sha256 "{asset_map["linux-arm64"].sha256}"',
+            "    end",
+            "",
             "    on_intel do",
             f'      url "{release_asset_url(repository, version, "linux-x64")}"',
             f'      sha256 "{asset_map["linux-x64"].sha256}"',

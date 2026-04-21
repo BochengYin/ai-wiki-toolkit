@@ -56,9 +56,24 @@ def test_docker_build_args_mount_repo_and_use_bookworm_image() -> None:
         "-w",
         "/workspace",
         DEFAULT_LINUX_BUILD_IMAGE,
-        "bash",
+        DEFAULT_LINUX_CONTAINER_BUILD.shell,
     ]
     assert "build/linux-release-venv/bin/python -m pytest" in command[18]
+
+
+def test_linux_build_inner_command_supports_custom_target_and_setup_commands() -> None:
+    config = LinuxContainerBuildConfig(
+        image="python:3.11-alpine",
+        docker_platform="linux/amd64",
+        shell="sh",
+        target="linux-musl-x64",
+        setup_commands=("echo preparing-musl",),
+    )
+
+    command = linux_build_inner_command("v0.1.7", config)
+
+    assert "echo preparing-musl" in command
+    assert "--target linux-musl-x64" in command
 
 
 def test_build_linux_release_archive_in_container_runs_docker(monkeypatch: pytest.MonkeyPatch) -> None:

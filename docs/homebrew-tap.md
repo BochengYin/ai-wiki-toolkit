@@ -39,6 +39,7 @@ It selects among these release assets:
 
 - `ai-wiki-toolkit-vX.Y.Z-macos-arm64.tar.gz`
 - `ai-wiki-toolkit-vX.Y.Z-macos-x64.tar.gz`
+- `ai-wiki-toolkit-vX.Y.Z-linux-arm64.tar.gz`
 - `ai-wiki-toolkit-vX.Y.Z-linux-x64.tar.gz`
 
 The formula installs the extracted `aiwiki-toolkit` executable into Homebrew’s `bin`.

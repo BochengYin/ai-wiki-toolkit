@@ -37,6 +37,31 @@ jobs:
             target: linux-x64
             build_mode: container
             binary_path: dist/aiwiki-toolkit
+            docker_platform: linux/amd64
+            container_image: python:3.11-bookworm
+            container_shell: bash
+          - runner: ubuntu-24.04-arm
+            target: linux-arm64
+            build_mode: container
+            binary_path: dist/aiwiki-toolkit
+            docker_platform: linux/arm64
+            container_image: python:3.11-bookworm
+            container_shell: bash
+          - runner: ubuntu-24.04
+            target: linux-musl-x64
+            build_mode: container
+            binary_path: dist/aiwiki-toolkit
+            docker_platform: linux/amd64
+            container_image: python:3.11-alpine
+            container_shell: sh
+          - runner: windows-2022
+            target: windows-x64
+            build_mode: host
+            binary_path: dist/aiwiki-toolkit.exe
+          - runner: windows-11-arm
+            target: windows-arm64
+            build_mode: host
+            binary_path: dist/aiwiki-toolkit.exe
           - runner: macos-15
             target: macos-arm64
             build_mode: host
@@ -75,11 +100,15 @@ jobs:
           --specpath build/pyinstaller
           src/ai_wiki_toolkit/cli.py
 
-      - name: Build Linux release archive in bookworm container
+      - name: Build Linux release archive in container baseline
         if: ${{ matrix.build_mode == 'container' }}
         run: >
           PYTHONPATH=src python scripts/build_linux_release_in_container.py
           --version "${{ github.ref_name }}"
+          --target "${{ matrix.target }}"
+          --image "${{ matrix.container_image }}"
+          --docker-platform "${{ matrix.docker_platform }}"
+          --shell "${{ matrix.container_shell }}"
 
       - name: Package release archive
         if: ${{ matrix.build_mode == 'host' }}
@@ -98,9 +127,30 @@ jobs:
           if-no-files-found: error
 
   verify-linux-runtime:
-    name: Verify Linux runtime matrix
-    runs-on: ubuntu-24.04
+    name: Verify ${{ matrix.target }} runtime matrix
+    runs-on: ${{ matrix.runner }}
     needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: linux-x64
+            docker_platform: linux/amd64
+            shell: bash
+            extra_checks: ""
+          - runner: ubuntu-24.04-arm
+            target: linux-arm64
+            docker_platform: linux/arm64
+            shell: bash
+            extra_checks: ""
+          - runner: ubuntu-24.04
+            target: linux-musl-x64
+            docker_platform: linux/amd64
+            shell: sh
+            extra_checks: >-
+              --check older-musl=node:22-alpine
+              --check current-musl=node:24-alpine
 
     steps:
       - name: Check out source
@@ -114,13 +164,16 @@ jobs:
       - name: Download Linux release archive
         uses: actions/download-artifact@v4
         with:
-          name: release-linux-x64
+          name: release-${{ matrix.target }}
           path: release-assets
 
       - name: Verify Linux runtime compatibility
         run: >
           PYTHONPATH=src python scripts/check_linux_runtime_matrix.py
-          --asset "release-assets/ai-wiki-toolkit-${{ github.ref_name }}-linux-x64.tar.gz"
+          --asset "release-assets/ai-wiki-toolkit-${{ github.ref_name }}-${{ matrix.target }}.tar.gz"
+          --docker-platform "${{ matrix.docker_platform }}"
+          --shell "${{ matrix.shell }}"
+          ${{ matrix.extra_checks }}
 
   publish:
     name: Publish GitHub Release assets

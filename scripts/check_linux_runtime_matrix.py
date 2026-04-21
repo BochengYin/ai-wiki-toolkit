@@ -8,6 +8,7 @@ from pathlib import Path
 from ai_wiki_toolkit.release_runtime import (
     DEFAULT_DOCKER_PLATFORM,
     DEFAULT_LINUX_RUNTIME_CHECKS,
+    DEFAULT_RUNTIME_SHELL,
     parse_linux_runtime_check,
     verify_linux_runtime_asset,
 )
@@ -34,6 +35,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_DOCKER_PLATFORM,
         help="Docker platform passed to docker run. Defaults to linux/amd64.",
     )
+    parser.add_argument(
+        "--shell",
+        default=DEFAULT_RUNTIME_SHELL,
+        help="Shell binary used inside the runtime container. Defaults to bash.",
+    )
     return parser
 
 
@@ -49,6 +55,7 @@ def main() -> None:
         args.asset,
         checks=checks,
         docker_platform=args.docker_platform,
+        shell=args.shell,
     )
 
 

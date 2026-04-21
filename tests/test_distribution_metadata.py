@@ -37,7 +37,7 @@ def test_public_package_metadata_includes_license_and_repository_links() -> None
     assert package_json["license"] == "MIT"
     assert package_json["homepage"] == "https://github.com/BochengYin/ai-wiki-toolkit#readme"
     assert package_json["bugs"]["url"] == "https://github.com/BochengYin/ai-wiki-toolkit/issues"
-    assert package_json["os"] == ["darwin", "linux"]
+    assert package_json["os"] == ["darwin", "linux", "win32"]
     assert package_json["optionalDependencies"] == expected_optional_dependencies(__version__)
 
     assert pyproject["project"]["license"] == "MIT"
@@ -54,3 +54,11 @@ def test_release_workflow_passes_license_into_generated_homebrew_formula() -> No
     )
 
     assert "--license MIT" in workflow
+
+
+def test_publish_npm_workflow_downloads_release_archives_by_prefix() -> None:
+    workflow = (ROOT / ".github" / "workflows" / "publish-npm.yml").read_text(
+        encoding="utf-8"
+    )
+
+    assert '--pattern "ai-wiki-toolkit-${version}-*"' in workflow

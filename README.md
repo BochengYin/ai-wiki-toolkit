@@ -116,7 +116,7 @@ The current scope is intentionally strict about compatibility:
 
 ## Install
 
-For end users on macOS and Linux, the simplest install paths are Homebrew and npm.
+For end users, the simplest install paths are Homebrew on macOS/Linux and npm on macOS/Linux/Windows. The npm distribution now splits supported Linux targets by `glibc` versus `musl` where needed, so the installed platform package can match the published release asset family.
 
 ### Homebrew
 

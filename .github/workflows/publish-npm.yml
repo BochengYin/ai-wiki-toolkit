@@ -95,7 +95,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           version="${{ steps.release.outputs.tag }}"
-          gh release download "$version" --pattern "ai-wiki-toolkit-${version}-*.tar.gz" --dir release-assets
+          gh release download "$version" --pattern "ai-wiki-toolkit-${version}-*" --dir release-assets
 
       - name: Stage platform npm packages
         run: >

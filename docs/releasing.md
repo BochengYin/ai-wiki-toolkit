@@ -24,11 +24,13 @@ This workflow is the base distribution layer for later package-manager integrati
 
 The workflow currently builds these targets:
 
+- `linux-arm64`
 - `linux-x64`
+- `linux-musl-x64`
+- `windows-x64`
+- `windows-arm64`
 - `macos-arm64`
 - `macos-x64`
-
-Windows packaging remains implemented in the codebase, but it is currently excluded from the release matrix until the Windows test lane is stabilized.
 
 The target labels map to GitHub-hosted runners and determine the release asset names.
 
@@ -43,7 +45,11 @@ ai-wiki-toolkit-vX.Y.Z-<target>.zip
 
 Examples:
 
+- `ai-wiki-toolkit-v0.1.0-linux-arm64.tar.gz`
 - `ai-wiki-toolkit-v0.1.0-linux-x64.tar.gz`
+- `ai-wiki-toolkit-v0.1.0-linux-musl-x64.tar.gz`
+- `ai-wiki-toolkit-v0.1.0-windows-x64.zip`
+- `ai-wiki-toolkit-v0.1.0-windows-arm64.zip`
 - `ai-wiki-toolkit-v0.1.0-macos-arm64.tar.gz`
 
 The archive contains a single executable:
@@ -71,7 +77,7 @@ The archive contains a single executable:
    ```
 
 5. Wait for the `Release Binaries` workflow to finish.
-6. Confirm that the Linux runtime check passed in both the older and current glibc lanes.
+6. Confirm that the Linux runtime checks passed for the published glibc and musl targets.
 7. Verify that the GitHub Release for the tag contains all expected archives and `aiwiki-toolkit.rb`.
 8. Wait for the npm publish workflow to stage and publish the platform packages plus the meta package.
 9. If tap sync is enabled, verify that the tap repository received the updated `Formula/aiwiki-toolkit.rb`.
@@ -81,13 +87,13 @@ The archive contains a single executable:
 You can test the Linux binary build locally before cutting a release:
 
 ```bash
-PYTHONPATH=src python scripts/build_linux_release_in_container.py --version v0.1.0
+PYTHONPATH=src python scripts/build_linux_release_in_container.py --version v0.1.0 --target linux-x64
 PYTHONPATH=src python scripts/check_linux_runtime_matrix.py --asset release-assets/ai-wiki-toolkit-v0.1.0-linux-x64.tar.gz
 ```
 
 This path expects Docker locally. The build itself happens inside `python:3.11-bookworm`, so the host Python environment does not need the release extras installed.
 
-Windows local dry runs can still be performed manually with `--binary dist/aiwiki-toolkit.exe --target windows-x64`, but that target is not part of the automated public release matrix yet.
+Windows local dry runs can still be performed manually with `--binary dist/aiwiki-toolkit.exe --target windows-x64` or `--target windows-arm64` when you need to validate packaging outside GitHub Actions.
 
 ## Next Distribution Layers
 

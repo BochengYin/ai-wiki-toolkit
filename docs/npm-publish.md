@@ -81,7 +81,7 @@ The workflow:
 8. runs `npm pack --dry-run --ignore-scripts` for the meta package
 9. publishes the meta package when requested
 
-Before enabling `NPM_PUBLISH_ENABLED`, make sure the npm platform target map only advertises targets that the `Release Binaries` workflow actually publishes.
+Before enabling `NPM_PUBLISH_ENABLED`, make sure the npm platform target map only advertises targets that the `Release Binaries` workflow actually publishes, including any Linux `libc` split such as glibc versus musl.
 
 The meta package is published from `package.json` in this repository, so its version must stay in sync with:
 
