@@ -63,7 +63,7 @@ def test_release_workflow_installs_binutils_for_linux_musl_builds() -> None:
 
     assert "target: linux-musl-x64" in workflow
     assert "--run-as-root" in workflow
-    assert '--setup-command "apk add --no-cache binutils"' in workflow
+    assert '--setup-command "apk add --no-cache binutils git"' in workflow
     assert "${{ matrix.container_extra_args }}" in workflow
 
 
