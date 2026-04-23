@@ -285,3 +285,175 @@ def test_record_reuse_check_appends_task_check_and_refreshes_stats(repo_env: dic
         "tasks_with_wiki_use": 1,
         "tasks_without_wiki_use": 0,
     }
+
+
+def test_refresh_metrics_rebuilds_multi_handle_reuse_aggregates_from_sharded_logs(
+    repo_env: dict[str, Path],
+) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "alice"])
+    assert install_result.exit_code == 0
+
+    alice_event = runner.invoke(
+        app,
+        [
+            "record-reuse",
+            "--doc-id",
+            "workflows",
+            "--task-id",
+            "task-shared",
+            "--retrieval-mode",
+            "preloaded",
+            "--evidence-mode",
+            "explicit",
+            "--reuse-outcome",
+            "resolved",
+            "--saved-tokens",
+            "100",
+            "--saved-seconds",
+            "30",
+            "--observed-at",
+            "2026-04-19T22:00:00+10:00",
+            "--handle",
+            "alice",
+        ],
+    )
+    assert alice_event.exit_code == 0
+
+    bob_event = runner.invoke(
+        app,
+        [
+            "record-reuse",
+            "--doc-id",
+            "workflows",
+            "--task-id",
+            "task-shared",
+            "--retrieval-mode",
+            "lookup",
+            "--evidence-mode",
+            "explicit",
+            "--reuse-outcome",
+            "resolved",
+            "--saved-tokens",
+            "40",
+            "--saved-seconds",
+            "15",
+            "--observed-at",
+            "2026-04-19T22:10:00+10:00",
+            "--handle",
+            "bob",
+        ],
+    )
+    assert bob_event.exit_code == 0
+
+    bob_unchecked_event = runner.invoke(
+        app,
+        [
+            "record-reuse",
+            "--doc-id",
+            "decisions",
+            "--task-id",
+            "task-unchecked",
+            "--retrieval-mode",
+            "lookup",
+            "--evidence-mode",
+            "explicit",
+            "--reuse-outcome",
+            "partial",
+            "--observed-at",
+            "2026-04-19T22:20:00+10:00",
+            "--handle",
+            "bob",
+        ],
+    )
+    assert bob_unchecked_event.exit_code == 0
+
+    shared_check = runner.invoke(
+        app,
+        [
+            "record-reuse-check",
+            "--task-id",
+            "task-shared",
+            "--check-outcome",
+            "wiki_used",
+            "--checked-at",
+            "2026-04-19T22:30:00+10:00",
+            "--handle",
+            "alice",
+        ],
+    )
+    assert shared_check.exit_code == 0
+
+    reuse_events_dir = repo_env["repo"] / "ai-wiki" / "metrics" / "reuse-events"
+    assert sorted(path.name for path in reuse_events_dir.glob("*.jsonl")) == [
+        "alice.jsonl",
+        "bob.jsonl",
+    ]
+    assert len((reuse_events_dir / "alice.jsonl").read_text(encoding="utf-8").splitlines()) == 1
+    assert len((reuse_events_dir / "bob.jsonl").read_text(encoding="utf-8").splitlines()) == 2
+
+    document_stats_path = (
+        repo_env["repo"] / "ai-wiki" / "_toolkit" / "metrics" / "document-stats.json"
+    )
+    task_stats_path = repo_env["repo"] / "ai-wiki" / "_toolkit" / "metrics" / "task-stats.json"
+    document_stats_path.write_text("{}", encoding="utf-8")
+    task_stats_path.write_text("{}", encoding="utf-8")
+
+    refresh_result = runner.invoke(app, ["refresh-metrics"])
+
+    assert refresh_result.exit_code == 0
+
+    document_stats = json.loads(document_stats_path.read_text(encoding="utf-8"))
+    assert document_stats["documents"] == {
+        "decisions": {
+            "effective_reuse_count": 0,
+            "last_effective_at": None,
+            "last_observed_at": "2026-04-19T22:20:00+10:00",
+            "lookup_reuse_count": 1,
+            "preloaded_reuse_count": 0,
+            "total_events": 1,
+        },
+        "workflows": {
+            "effective_reuse_count": 2,
+            "last_effective_at": "2026-04-19T22:10:00+10:00",
+            "last_observed_at": "2026-04-19T22:10:00+10:00",
+            "lookup_reuse_count": 1,
+            "preloaded_reuse_count": 1,
+            "total_events": 2,
+        },
+    }
+
+    task_stats = json.loads(task_stats_path.read_text(encoding="utf-8"))
+    assert task_stats["tasks"] == {
+        "task-shared": {
+            "check_count": 1,
+            "effective_reuse_count": 2,
+            "estimated_seconds_saved": 45,
+            "estimated_token_savings": 140,
+            "last_check_outcome": "wiki_used",
+            "last_checked_at": "2026-04-19T22:30:00+10:00",
+            "lookup_reuse_count": 1,
+            "preloaded_reuse_count": 1,
+            "reuse_checked": True,
+            "reused_docs": 1,
+            "total_events": 2,
+        },
+        "task-unchecked": {
+            "check_count": 0,
+            "effective_reuse_count": 0,
+            "estimated_seconds_saved": 0,
+            "estimated_token_savings": 0,
+            "last_check_outcome": None,
+            "last_checked_at": None,
+            "lookup_reuse_count": 1,
+            "preloaded_reuse_count": 0,
+            "reuse_checked": False,
+            "reused_docs": 1,
+            "total_events": 1,
+        },
+    }
+    assert task_stats["summary"] == {
+        "checked_tasks": 1,
+        "tasks_with_events_but_no_check": 1,
+        "tasks_with_wiki_use": 1,
+        "tasks_without_wiki_use": 0,
+    }
