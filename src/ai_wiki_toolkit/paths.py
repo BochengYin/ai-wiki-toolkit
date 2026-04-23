@@ -107,10 +107,35 @@ def _read_git_config_file_value(repo_root: Path, key: str) -> str | None:
         return None
 
     parser = configparser.ConfigParser()
-    parser.read(config_path, encoding="utf-8")
+    try:
+        parser.read(config_path, encoding="utf-8")
+    except configparser.Error:
+        return None
     if parser.has_option(section, option):
         return parser.get(section, option)
     return None
+
+
+def _read_git_config_local_subprocess_value(repo_root: Path, key: str) -> str | None:
+    config_path = _git_config_path(repo_root)
+    if not config_path or not config_path.exists():
+        return None
+
+    try:
+        result = subprocess.run(
+            ["git", "config", "--file", str(config_path), "--get", key],
+            cwd=repo_root,
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+    except OSError:
+        return None
+
+    if result.returncode != 0:
+        return None
+    value = result.stdout.strip()
+    return value or None
 
 
 def _read_git_config_subprocess_value(repo_root: Path, key: str) -> str | None:
@@ -132,14 +157,20 @@ def _read_git_config_subprocess_value(repo_root: Path, key: str) -> str | None:
 
 
 def read_git_config_value(repo_root: Path, key: str) -> str | None:
-    return _read_git_config_file_value(repo_root, key) or _read_git_config_subprocess_value(
-        repo_root, key
+    return (
+        _read_git_config_file_value(repo_root, key)
+        or _read_git_config_local_subprocess_value(repo_root, key)
+        or _read_git_config_subprocess_value(repo_root, key)
     )
 
 
 def git_identity(repo_root: Path) -> tuple[str | None, str | None]:
-    local_email = _read_git_config_file_value(repo_root, "user.email")
-    local_name = _read_git_config_file_value(repo_root, "user.name")
+    local_email = _read_git_config_file_value(
+        repo_root, "user.email"
+    ) or _read_git_config_local_subprocess_value(repo_root, "user.email")
+    local_name = _read_git_config_file_value(
+        repo_root, "user.name"
+    ) or _read_git_config_local_subprocess_value(repo_root, "user.name")
     if local_email is not None or local_name is not None:
         return local_email, local_name
 
