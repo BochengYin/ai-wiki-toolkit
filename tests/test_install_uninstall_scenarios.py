@@ -74,6 +74,34 @@ def test_install_command_matches_init_behavior(repo_env: dict[str, Path]) -> Non
     )
 
 
+def test_install_tolerates_duplicate_options_in_git_config(
+    repo_env: dict[str, Path],
+) -> None:
+    (repo_env["repo"] / ".git" / "config").write_text(
+        "\n".join(
+            (
+                "[core]",
+                "\trepositoryformatversion = 0",
+                "\tbare = false",
+                "\tlogallrefupdates = true",
+                "[user]",
+                "\temail = review.bot@example.com",
+                "\tname = Review Bot",
+                '[branch "feat/test"]',
+                "\tgithub-pr-owner-number = 1",
+                "\tgithub-pr-owner-number = 2",
+            )
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["install"])
+
+    assert result.exit_code == 0
+    assert (repo_env["repo"] / "ai-wiki" / "people" / "review-bot" / "drafts").is_dir()
+
+
 def test_install_refreshes_managed_workflow_docs_without_overwriting_user_workflows(
     repo_env: dict[str, Path],
 ) -> None:

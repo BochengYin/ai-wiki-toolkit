@@ -9,6 +9,7 @@ from ai_wiki_toolkit.paths import (
     HOST_MODEL_ENV_VARS,
     MODEL_OVERRIDE_ENV,
     git_derived_handle,
+    git_identity,
     resolve_model_name,
     resolve_user_handle,
     slugify,
@@ -56,6 +57,32 @@ def test_resolve_user_handle_from_user_name_fallback(repo_env: dict[str, Path]) 
     write_git_config(repo_env["repo"], name="Alice Reviewer")
     handle = resolve_user_handle(repo_env["repo"])
     assert handle == "alice-reviewer"
+
+
+def test_git_identity_falls_back_when_config_parser_rejects_duplicate_option(
+    repo_env: dict[str, Path],
+) -> None:
+    (repo_env["repo"] / ".git" / "config").write_text(
+        "\n".join(
+            (
+                "[core]",
+                "\trepositoryformatversion = 0",
+                "\tbare = false",
+                "\tlogallrefupdates = true",
+                "[user]",
+                "\temail = review.bot@example.com",
+                "\tname = Review Bot",
+                '[branch "feat/test"]',
+                "\tgithub-pr-owner-number = 1",
+                "\tgithub-pr-owner-number = 2",
+            )
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    assert git_identity(repo_env["repo"]) == ("review.bot@example.com", "Review Bot")
+    assert resolve_user_handle(repo_env["repo"]) == "review-bot"
 
 
 def test_resolve_user_handle_falls_back_to_unknown(repo_env: dict[str, Path]) -> None:
