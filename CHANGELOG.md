@@ -4,6 +4,12 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+## v0.1.19
+
+### Fixed
+
+- Fixed the `linux-musl-x64` release lane to install `git` alongside `binutils` inside the Alpine build container, so release-time tests that shell out to Git keep passing during packaging.
+
 ## v0.1.18
 
 ### Fixed

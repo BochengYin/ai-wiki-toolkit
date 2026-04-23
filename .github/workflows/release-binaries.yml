@@ -57,7 +57,7 @@ jobs:
             container_image: python:3.11-alpine
             container_shell: sh
             container_extra_args: >-
-              --run-as-root --setup-command "apk add --no-cache binutils"
+              --run-as-root --setup-command "apk add --no-cache binutils git"
           - runner: windows-2022
             target: windows-x64
             build_mode: host
