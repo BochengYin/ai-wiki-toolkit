@@ -4,6 +4,12 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+## v0.1.18
+
+### Fixed
+
+- Fixed `aiwiki-toolkit install` so duplicate options in unrelated `.git/config` sections no longer crash handle resolution; the installer now falls back to Git's own config parser when Python's `configparser` rejects the file.
+
 ## v0.1.17
 
 ### Added
