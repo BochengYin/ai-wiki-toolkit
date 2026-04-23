@@ -10,6 +10,18 @@ from ai_wiki_toolkit.cli import app
 runner = CliRunner()
 
 
+def _snapshot_workspace_text_files(repo_env: dict[str, Path]) -> dict[str, str]:
+    snapshots: dict[str, str] = {}
+    for prefix, root in (("repo", repo_env["repo"]), ("home", repo_env["home_dir"])):
+        for path in sorted(root.rglob("*")):
+            if not path.is_file():
+                continue
+            snapshots[f"{prefix}/{path.relative_to(root).as_posix()}"] = path.read_text(
+                encoding="utf-8"
+            )
+    return snapshots
+
+
 def test_install_command_matches_init_behavior(repo_env: dict[str, Path]) -> None:
     result = runner.invoke(app, ["install", "--handle", "alice"])
 
@@ -261,6 +273,75 @@ def test_install_skips_existing_repo_skill_files_and_reports_manual_merge(
         "Manual merge guide: https://github.com/BochengYin/ai-wiki-toolkit/tree/main/.agents/skills"
         in result.output
     )
+
+
+def test_repeated_install_is_product_idempotent_for_same_handle(
+    repo_env: dict[str, Path],
+) -> None:
+    first = runner.invoke(app, ["install", "--handle", "alice"])
+    assert first.exit_code == 0
+
+    first_snapshot = _snapshot_workspace_text_files(repo_env)
+
+    second = runner.invoke(app, ["install", "--handle", "alice"])
+
+    assert second.exit_code == 0
+    assert _snapshot_workspace_text_files(repo_env) == first_snapshot
+    assert "Created directories: 0" in second.output
+    assert "Created files: 0" in second.output
+    assert "Updated ignore files: 0" in second.output
+    assert "Updated managed files: 0" in second.output
+    assert "Updated prompt files: 0" in second.output
+
+
+def test_install_with_second_handle_adds_person_tree_without_churning_shared_files(
+    repo_env: dict[str, Path],
+) -> None:
+    first = runner.invoke(app, ["install", "--handle", "alice"])
+    assert first.exit_code == 0
+
+    repo = repo_env["repo"]
+    alice_draft = repo / "ai-wiki" / "people" / "alice" / "drafts" / "alice-note.md"
+    alice_draft.write_text("# Alice note\n", encoding="utf-8")
+    agent_before = (repo / "AGENT.md").read_text(encoding="utf-8")
+    index_before = (repo / "ai-wiki" / "index.md").read_text(encoding="utf-8")
+    workflows_before = (repo / "ai-wiki" / "workflows.md").read_text(encoding="utf-8")
+
+    second = runner.invoke(app, ["install", "--handle", "bob"])
+
+    assert second.exit_code == 0
+    assert "Resolved handle: bob" in second.output
+    assert (repo / "ai-wiki" / "people" / "alice" / "index.md").exists()
+    assert (repo / "ai-wiki" / "people" / "alice" / "drafts").is_dir()
+    assert (repo / "ai-wiki" / "people" / "bob" / "index.md").exists()
+    assert (repo / "ai-wiki" / "people" / "bob" / "drafts").is_dir()
+    assert alice_draft.read_text(encoding="utf-8") == "# Alice note\n"
+    assert (repo / "AGENT.md").read_text(encoding="utf-8") == agent_before
+    assert (repo / "ai-wiki" / "index.md").read_text(encoding="utf-8") == index_before
+    assert (repo / "ai-wiki" / "workflows.md").read_text(encoding="utf-8") == workflows_before
+
+
+def test_install_reuses_existing_person_tree_when_two_inputs_resolve_to_same_handle(
+    repo_env: dict[str, Path],
+) -> None:
+    first = runner.invoke(app, ["install", "--handle", "Alice Reviewer"])
+    assert first.exit_code == 0
+
+    repo = repo_env["repo"]
+    person_dir = repo / "ai-wiki" / "people" / "alice-reviewer"
+    person_index_before = (person_dir / "index.md").read_text(encoding="utf-8")
+    draft = person_dir / "drafts" / "carry-forward.md"
+    draft.write_text("# Keep me\n", encoding="utf-8")
+
+    second = runner.invoke(app, ["install", "--handle", "alice-reviewer"])
+
+    assert second.exit_code == 0
+    assert "Resolved handle: alice-reviewer" in second.output
+    assert draft.read_text(encoding="utf-8") == "# Keep me\n"
+    assert (person_dir / "index.md").read_text(encoding="utf-8") == person_index_before
+    assert sorted(path.name for path in (repo / "ai-wiki" / "people").iterdir()) == [
+        "alice-reviewer"
+    ]
 
 
 def test_refresh_metrics_regenerates_managed_catalog_and_stats(repo_env: dict[str, Path]) -> None:
