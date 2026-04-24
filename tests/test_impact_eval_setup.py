@@ -185,11 +185,151 @@ def test_prepare_variants_creates_expected_ownership_boundary_variants(tmp_path:
     ).exists()
 
 
+def test_prepare_variants_creates_expected_release_distribution_variants(tmp_path: Path) -> None:
+    module = _load_prepare_variants_module()
+    source = tmp_path / "source"
+    output = tmp_path / "output"
+    source.mkdir()
+    (source / ".git").mkdir()
+    _write(
+        source / "AGENTS.md",
+        "Before\n\n<!-- aiwiki-toolkit:start -->\nmanaged\n<!-- aiwiki-toolkit:end -->\n\nAfter\n",
+    )
+    _write(source / ".agents" / "skills" / "ai-wiki-reuse-check" / "SKILL.md", "reuse\n")
+    _write(source / "src" / "module.py", "print('ok')\n")
+    _write(
+        source / "ai-wiki" / "conventions" / "index.md",
+        "# Conventions Index\n\n"
+        "- [Distribution target matrix must match published assets](distribution-target-matrix-must-match-published-assets.md): keep every public release target aligned across release workflows, published assets, runtime target maps, package metadata, archive handling, docs, and smoke checks.\n",
+    )
+    _write(
+        source / "ai-wiki" / "conventions" / "distribution-target-matrix-must-match-published-assets.md",
+        "rule\n",
+    )
+    _write(
+        source
+        / "ai-wiki"
+        / "people"
+        / "bochengyin"
+        / "drafts"
+        / "distribution-target-matrix-must-match-published-assets.md",
+        "draft\n",
+    )
+
+    prepared = module.prepare_variants(
+        source,
+        output,
+        module.RELEASE_DISTRIBUTION_INTEGRITY,
+        source_mode=module.SOURCE_MODE_WORKING_TREE,
+        control_root=source,
+        baseline_ref="HEAD",
+    )
+    assert len(prepared) == 5
+
+    plain = output / "plain_repo_no_aiwiki"
+    assert not (plain / "ai-wiki").exists()
+    assert "managed" not in (plain / "AGENTS.md").read_text(encoding="utf-8")
+    assert not (plain / ".agents").exists()
+    assert _git_status_clean(plain)
+
+    no_memory = output / "aiwiki_no_relevant_memory"
+    assert not (
+        no_memory
+        / "ai-wiki"
+        / "conventions"
+        / "distribution-target-matrix-must-match-published-assets.md"
+    ).exists()
+    assert not (
+        no_memory
+        / "ai-wiki"
+        / "people"
+        / "bochengyin"
+        / "drafts"
+        / "distribution-target-matrix-must-match-published-assets.md"
+    ).exists()
+    assert "distribution-target-matrix-must-match-published-assets.md" not in (
+        no_memory / "ai-wiki" / "conventions" / "index.md"
+    ).read_text(encoding="utf-8")
+    assert _git_status_clean(no_memory)
+
+    raw = output / "aiwiki_raw_drafts"
+    assert not (
+        raw
+        / "ai-wiki"
+        / "conventions"
+        / "distribution-target-matrix-must-match-published-assets.md"
+    ).exists()
+    assert (
+        raw
+        / "ai-wiki"
+        / "people"
+        / "bochengyin"
+        / "drafts"
+        / "distribution-target-matrix-must-match-published-assets.md"
+    ).exists()
+
+    consolidated = output / "aiwiki_consolidated"
+    assert (
+        consolidated
+        / "ai-wiki"
+        / "conventions"
+        / "distribution-target-matrix-must-match-published-assets.md"
+    ).exists()
+    assert not (
+        consolidated
+        / "ai-wiki"
+        / "people"
+        / "bochengyin"
+        / "drafts"
+        / "distribution-target-matrix-must-match-published-assets.md"
+    ).exists()
+    assert "distribution-target-matrix-must-match-published-assets.md" in (
+        consolidated / "ai-wiki" / "conventions" / "index.md"
+    ).read_text(encoding="utf-8")
+
+    raw_plus = output / "aiwiki_raw_plus_consolidated"
+    assert (
+        raw_plus
+        / "ai-wiki"
+        / "conventions"
+        / "distribution-target-matrix-must-match-published-assets.md"
+    ).exists()
+    assert (
+        raw_plus
+        / "ai-wiki"
+        / "people"
+        / "bochengyin"
+        / "drafts"
+        / "distribution-target-matrix-must-match-published-assets.md"
+    ).exists()
+
+
 def test_prepare_variants_timestamp_slug_is_stable() -> None:
     module = _load_prepare_variants_module()
     assert (
         module.timestamp_slug(datetime(2026, 4, 22, 23, 45, 6))
         == "20260422-234506"
+    )
+
+
+def test_prepare_variants_default_output_root_uses_first_round_layout() -> None:
+    module = _load_prepare_variants_module()
+    module.timestamp_slug = lambda now=None: "20260424-200001"
+    source_root = Path("/tmp/example-repo")
+    assert module.default_output_root(source_root, "ownership_boundary") == Path(
+        "/private/tmp/aiwiki_first_round/ownership_boundary/workspaces/20260424-200001"
+    )
+
+
+def test_prepare_variants_experiment_output_root_uses_workspace_layer() -> None:
+    module = _load_prepare_variants_module()
+    base_root = Path("/tmp/custom-round")
+    assert module.experiment_output_root(
+        base_root,
+        "release_distribution_integrity",
+        datetime(2026, 4, 24, 19, 20, 21),
+    ) == Path(
+        "/tmp/custom-round/release_distribution_integrity/workspaces/20260424-192021"
     )
 
 

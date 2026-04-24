@@ -45,7 +45,7 @@ Reference implementation:
 | family | status | type | core question | likely source memory |
 | --- | --- | --- | --- | --- |
 | `ownership_boundary` | `done` | repeated-problem / surface-choice | does AI wiki memory keep a contributor-only helper out of package code? | `repo-local-contributor-workflows-should-stay-out-of-the-package-layer`, adjacent ownership/prompt docs |
-| `release_distribution_integrity` | `next` | repeated-problem / coordinated multi-surface change | when a public distribution target changes, does memory help the agent keep workflows, asset names, npm metadata, archive handling, docs, and smoke checks aligned? | `ai-wiki/conventions/distribution-target-matrix-must-match-published-assets.md`, source draft, related release-fix drafts |
+| `release_distribution_integrity` | `done` | repeated-problem / coordinated multi-surface change | when a public distribution target changes, does memory help the agent keep workflows, asset names, npm metadata, archive handling, docs, and smoke checks aligned? | `ai-wiki/conventions/distribution-target-matrix-must-match-published-assets.md`, source draft, related release-fix drafts |
 | `windows_arm_smoke_cli_output` | `planned` | narrow repeated-problem benchmark | does memory help the agent fix the exact Windows ARM smoke assertion by comparing against full CLI output instead of the bare version? | `ai-wiki/problems/windows-arm-smoke-version-checks-need-full-cli-output.md` |
 | `release_runtime_compatibility` | `planned` | repeated-problem / release-runtime verification | does memory help the agent choose an older glibc baseline and add runtime verification instead of stopping at build or install success? | `linux-release-binaries-need-runtime-checks-against-an-older-glibc-baseline.md` |
 | `postinstall_archive_staging` | `planned` | repeated-problem / packaging | does memory help the agent avoid self-deleting npm postinstall staging paths? | `npm-postinstall-must-not-delete-its-own-download-archive.md` |
@@ -66,20 +66,25 @@ Artifacts:
 
 ### release_distribution_integrity
 
-This is the best candidate for the next family because it already has:
+Already run and documented.
+
+Artifacts:
+
+- `evals/impact/release_distribution_integrity_runbook.md`
+- `evals/impact/notes/release_distribution_integrity_round1_findings.md`
+- `evals/impact/notes/round1_process_lessons.md`
+
+Current defended takeaway:
+
+- this family is useful for coordinated multi-surface completeness
+- it is less discriminating than `ownership_boundary short` for basic success/failure
+- full prompt surface still needs tighter control before stronger causal claims
+
+Why this family was still a strong candidate:
 
 - a promoted shared convention
 - a detailed source draft
 - repeated multi-surface failures across workflows, npm, docs, and smoke verification
-
-This family should likely test whether the agent coordinates:
-
-- release workflow matrix
-- published asset naming
-- npm target maps and install guards
-- archive handling
-- docs
-- release-facing tests
 
 ### windows_arm_smoke_cli_output
 
@@ -146,13 +151,13 @@ Promote it later if more concrete consolidation tasks appear.
 
 ## Suggested Next Session Starts
 
-If you want the most comparable next benchmark:
-
-1. `release_distribution_integrity`
-
-If you want the smallest next benchmark:
+If you want the closest follow-on to the current release family:
 
 1. `windows_arm_smoke_cli_output`
+
+If you want the next broader release/verification benchmark:
+
+1. `release_runtime_compatibility`
 
 If you want the next workflow-style benchmark:
 

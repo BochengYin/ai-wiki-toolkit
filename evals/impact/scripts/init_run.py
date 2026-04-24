@@ -7,10 +7,15 @@ from datetime import datetime
 import json
 from pathlib import Path
 
-from prepare_variants import EXPERIMENTS, WORKDIR_ROOT, timestamp_slug
+from prepare_variants import (
+    EXPERIMENTS,
+    RUNS_DIRNAME,
+    WORKDIR_ROOT,
+    WORKSPACES_DIRNAME,
+    timestamp_slug,
+)
 
 
-RUNS_ROOT = Path.home() / "aiwiki-impact-runs"
 DEFAULT_MEMORY_AXIS_VARIANTS = (
     "plain_repo_no_aiwiki",
     "aiwiki_no_relevant_memory",
@@ -31,7 +36,7 @@ def parse_csv(value: str) -> tuple[str, ...]:
 
 
 def default_workspace_root(experiment: str) -> Path:
-    return WORKDIR_ROOT / "ai-wiki-toolkit" / experiment
+    return WORKDIR_ROOT / experiment / WORKSPACES_DIRNAME
 
 
 def latest_subdirectory(root: Path) -> Path | None:
@@ -61,7 +66,7 @@ def parse_args() -> argparse.Namespace:
         "--output-root",
         type=Path,
         default=None,
-        help="Root directory for result runs. Defaults to ~/aiwiki-impact-runs/<repo>/<experiment>/",
+        help="Root directory for result runs. Defaults to /private/tmp/aiwiki_first_round/<experiment>/runs/",
     )
     parser.add_argument(
         "--variants",
@@ -108,7 +113,7 @@ def resolve_workspace_root(experiment: str, requested: Path | None) -> Path:
 
 
 def default_output_root(experiment: str) -> Path:
-    return RUNS_ROOT / "ai-wiki-toolkit" / experiment
+    return WORKDIR_ROOT / experiment / RUNS_DIRNAME
 
 
 def normalize_run_label(label: str | None) -> str:

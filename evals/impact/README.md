@@ -7,22 +7,45 @@ Primary repo-local documentation for the current benchmark lives in:
 
 - `evals/impact/TODO.md`
 - `evals/impact/ownership_boundary_runbook.md`
+- `evals/impact/release_distribution_integrity_runbook.md`
 - `evals/impact/notes/ownership_boundary_v0_failure.md`
 - `evals/impact/notes/ownership_boundary_round1_findings.md`
+- `evals/impact/notes/release_distribution_integrity_round1_findings.md`
+- `evals/impact/notes/round1_process_lessons.md`
 
-The first benchmark family is `ownership_boundary`. It measures whether different AI wiki
-memory states change how reliably an agent:
+The current documented benchmark families are:
+
+- `ownership_boundary`
+- `release_distribution_integrity`
+
+`ownership_boundary` measures whether different AI wiki memory states change how reliably an
+agent:
 
 - keeps a contributor helper out of distributed package surfaces
 - adds a helper under repo surfaces such as `scripts/` instead of inventing a package feature
 - updates the relevant local workflow guidance
 - avoids turning contributor-only behavior into `src/ai_wiki_toolkit/` product code
 
+`release_distribution_integrity` measures whether different memory states change how completely an
+agent keeps a public release/distribution matrix aligned across:
+
+- release workflows
+- npm target resolution and package metadata
+- archive handling
+- docs
+- release-facing checks
+
 The original version of this benchmark leaked too much of the intended answer. That failure is
 documented in:
 
 ```text
 evals/impact/notes/ownership_boundary_v0_failure.md
+```
+
+The current round-level process strengths, weaknesses, and shareable workflow are documented in:
+
+```text
+evals/impact/notes/round1_process_lessons.md
 ```
 
 ## Workspace Variants
@@ -53,7 +76,7 @@ uv run python evals/impact/scripts/prepare_variants.py --experiment ownership_bo
 By default this creates clean git repos outside the main repository under:
 
 ```text
-~/aiwiki-impact-workdirs/ai-wiki-toolkit/ownership_boundary/<timestamp>/
+/private/tmp/aiwiki_first_round/<experiment>/workspaces/<timestamp>/
 ```
 
 Important: `prepare_variants.py` now copies a committed git snapshot by default, not the current
@@ -144,13 +167,13 @@ Initialize an external run directory:
 ```bash
 uv run python evals/impact/scripts/init_run.py \
   --experiment ownership_boundary \
-  --workspace-root /tmp/aiwiki-impact-ownership-boundary
+  --workspace-root /private/tmp/aiwiki_first_round/ownership_boundary/workspaces/20260423-170541
 ```
 
 This creates a result tree under:
 
 ```text
-~/aiwiki-impact-runs/ai-wiki-toolkit/ownership_boundary/<run-label>/
+/private/tmp/aiwiki_first_round/<experiment>/runs/<run-label>/
 ```
 
 Each slot contains a small README showing how to capture the workspace result. Saving a
@@ -160,10 +183,10 @@ After a manual run finishes, capture the result:
 
 ```bash
 uv run python evals/impact/scripts/save_result.py \
-  --run-dir ~/aiwiki-impact-runs/ai-wiki-toolkit/ownership_boundary/run_20260422-120000 \
+  --run-dir /private/tmp/aiwiki_first_round/ownership_boundary/runs/run_20260422-120000 \
   --variant aiwiki_consolidated \
   --prompt-level medium \
-  --workspace /tmp/aiwiki-impact-ownership-boundary/aiwiki_consolidated
+  --workspace /private/tmp/aiwiki_first_round/ownership_boundary/workspaces/20260423-170541/aiwiki_consolidated
 ```
 
 If you also want to preserve the final response text, save it as `final_message.md` in the slot
@@ -189,11 +212,104 @@ all outside the experiment repo, so reruns do not contaminate future sessions.
 
 ## Current Scope
 
-The current setup script prepares only the `ownership_boundary` benchmark family because it
-already has both:
+The current setup script prepares the benchmark families registered in
+`evals/impact/scripts/prepare_variants.py`. Today that includes:
 
-- raw draft evidence under `ai-wiki/people/bochengyin/drafts/`
-- consolidated shared memory under `ai-wiki/conventions/` and `ai-wiki/review-patterns/`
+- `ownership_boundary`
+- `release_distribution_integrity`
 
 Add new benchmark families only after deciding which raw draft cluster and which consolidated
 target should be compared.
+
+## Current Filesystem Layout
+
+Use one round root per experiment batch:
+
+```text
+/private/tmp/aiwiki_first_round/
+  <experiment>/
+    workspaces/
+      <timestamp>/
+        plain_repo_no_aiwiki/
+        aiwiki_no_relevant_memory/
+        aiwiki_raw_drafts/
+        aiwiki_consolidated/
+        aiwiki_raw_plus_consolidated/
+        codex_sessions/
+    runs/
+      <run-label>/
+        <variant>/
+          <prompt-level>/
+```
+
+Rules:
+
+- `workspaces/<timestamp>/` is a prepared five-repo set for one experiment family.
+- `workspaces/<timestamp>/codex_sessions/` is optional workspace-level metadata for exported visible Codex traces.
+- Reuse the same workspace set across `short` and `medium` runs.
+- `runs/<run-label>/` stores captured results only; it must stay outside the variant repos.
+- Treat prompt level as a run dimension, not a workspace dimension.
+- Put obsolete or invalid workspace sets under `/private/tmp/aiwiki_first_round/archive/`.
+
+## Standard Generation Flow
+
+Prepare one workspace set:
+
+```bash
+uv run python evals/impact/scripts/prepare_variants.py \
+  --experiment release_distribution_integrity
+```
+
+This prints the new workspace root, for example:
+
+```text
+/private/tmp/aiwiki_first_round/release_distribution_integrity/workspaces/20260424-182219
+```
+
+Create a run directory for one comparison pass:
+
+```bash
+uv run python evals/impact/scripts/init_run.py \
+  --experiment release_distribution_integrity \
+  --workspace-root /private/tmp/aiwiki_first_round/release_distribution_integrity/workspaces/20260424-182219 \
+  --prompt-levels medium \
+  --run-label medium-five-way
+```
+
+Then open each variant repo in a fresh session, run the chosen prompt, and capture the result into
+the matching run slot with `save_result.py`.
+
+If you also want to preserve the visible Codex chat-window trace for the workspace set, export it
+after the variant runs finish:
+
+```bash
+uv run python evals/impact/scripts/export_codex_sessions.py \
+  --workspace-root /private/tmp/aiwiki_first_round/release_distribution_integrity/workspaces/20260424-182219
+```
+
+If the historical Codex sessions were recorded under an older workspace root but you want to store
+the export under a newer copied workspace tree, add:
+
+```bash
+  --match-workspace-root /private/tmp/old-experiment-root/<experiment>/workspaces/<timestamp>
+```
+
+This creates:
+
+```text
+/private/tmp/aiwiki_first_round/release_distribution_integrity/workspaces/20260424-182219/codex_sessions/
+```
+
+The export is workspace-level metadata, not variant-repo content. Each exported session keeps:
+
+- `metadata.json`
+- `prompt.md`
+- `session_without_reasoning.jsonl`
+- `visible_session.jsonl`
+- `visible_transcript.md`
+
+Important boundary:
+
+- `session_without_reasoning.jsonl` keeps the raw session stream except hidden reasoning records
+- `visible_session.jsonl` and `visible_transcript.md` are the human-usable filtered views
+- hidden internal reasoning records are intentionally omitted

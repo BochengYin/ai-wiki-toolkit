@@ -16,7 +16,10 @@ START_MARKER = "<!-- aiwiki-toolkit:start -->"
 END_MARKER = "<!-- aiwiki-toolkit:end -->"
 DEFAULT_HANDLE = "eval-user"
 DEFAULT_EMAIL = "eval-user@example.com"
-WORKDIR_ROOT = Path.home() / "aiwiki-impact-workdirs"
+ROUND_ROOT = Path("/private/tmp") / "aiwiki_first_round"
+WORKSPACES_DIRNAME = "workspaces"
+RUNS_DIRNAME = "runs"
+WORKDIR_ROOT = ROUND_ROOT
 SOURCE_MODE_COMMITTED_HEAD = "committed-head"
 SOURCE_MODE_WORKING_TREE = "working-tree"
 EXCLUDED_ROOT_NAMES = {
@@ -76,7 +79,28 @@ OWNERSHIP_BOUNDARY = ExperimentSpec(
     ),
 )
 
-EXPERIMENTS = {OWNERSHIP_BOUNDARY.name: OWNERSHIP_BOUNDARY}
+RELEASE_DISTRIBUTION_INTEGRITY = ExperimentSpec(
+    name="release_distribution_integrity",
+    prompt_family="release_distribution_integrity",
+    baseline_ref="06a47cd^",
+    raw_docs=(
+        "ai-wiki/people/bochengyin/drafts/distribution-target-matrix-must-match-published-assets.md",
+    ),
+    consolidated_docs=(
+        "ai-wiki/conventions/distribution-target-matrix-must-match-published-assets.md",
+    ),
+    consolidated_index_entries=(
+        (
+            "ai-wiki/conventions/index.md",
+            "- [Distribution target matrix must match published assets](distribution-target-matrix-must-match-published-assets.md): keep every public release target aligned across release workflows, published assets, runtime target maps, package metadata, archive handling, docs, and smoke checks.",
+        ),
+    ),
+)
+
+EXPERIMENTS = {
+    OWNERSHIP_BOUNDARY.name: OWNERSHIP_BOUNDARY,
+    RELEASE_DISTRIBUTION_INTEGRITY.name: RELEASE_DISTRIBUTION_INTEGRITY,
+}
 
 
 def resolve_repo_root(start: Path | None = None) -> Path:
@@ -92,11 +116,12 @@ def timestamp_slug(now: datetime | None = None) -> str:
 
 
 def default_output_root(source_root: Path, experiment: str) -> Path:
-    return WORKDIR_ROOT / source_root.name / experiment / timestamp_slug()
+    del source_root
+    return WORKDIR_ROOT / experiment / WORKSPACES_DIRNAME / timestamp_slug()
 
 
 def experiment_output_root(base_root: Path, experiment: str, now: datetime | None = None) -> Path:
-    return base_root / experiment / timestamp_slug(now)
+    return base_root / experiment / WORKSPACES_DIRNAME / timestamp_slug(now)
 
 
 def parse_args() -> argparse.Namespace:

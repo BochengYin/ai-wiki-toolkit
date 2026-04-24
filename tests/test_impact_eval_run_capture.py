@@ -85,6 +85,16 @@ def test_init_run_creates_external_result_slots(tmp_path: Path) -> None:
     assert (run_dir / "plain_repo_no_aiwiki" / "medium" / "README.md").exists()
 
 
+def test_init_run_default_paths_use_first_round_layout() -> None:
+    module = _load_script("init_run.py")
+    assert module.default_workspace_root("ownership_boundary") == Path(
+        "/private/tmp/aiwiki_first_round/ownership_boundary/workspaces"
+    )
+    assert module.default_output_root("release_distribution_integrity") == Path(
+        "/private/tmp/aiwiki_first_round/release_distribution_integrity/runs"
+    )
+
+
 def test_save_result_captures_diff_and_message(tmp_path: Path) -> None:
     module = _load_script("save_result.py")
     workspace = tmp_path / "workspace"
@@ -313,3 +323,254 @@ def test_report_runs_builds_markdown_summary(tmp_path: Path) -> None:
     assert "changed_file_count" in report_text
     assert "tests/test_pr_flow_script.py" in report_text
     assert "untracked_files" in report_text
+
+
+def test_export_codex_sessions_exports_latest_visible_session_per_variant(tmp_path: Path) -> None:
+    module = _load_script("export_codex_sessions.py")
+    workspace_root = tmp_path / "workspaces" / "20260424-182219"
+    plain_repo = workspace_root / "plain_repo_no_aiwiki"
+    consolidated_repo = workspace_root / "aiwiki_consolidated"
+    plain_repo.mkdir(parents=True)
+    consolidated_repo.mkdir(parents=True)
+
+    codex_root = tmp_path / ".codex"
+    sessions_root = codex_root / "sessions" / "2026" / "04" / "24"
+    sessions_root.mkdir(parents=True)
+    session_index_path = codex_root / "session_index.jsonl"
+
+    def write_session(
+        session_id: str,
+        *,
+        cwd: Path,
+        prompt: str,
+        assistant: str,
+        session_timestamp: str,
+        updated_at: str,
+        thread_name: str,
+    ) -> None:
+        session_file = sessions_root / f"rollout-{session_id}.jsonl"
+        records = [
+            {
+                "type": "session_meta",
+                "payload": {
+                    "id": session_id,
+                    "timestamp": session_timestamp,
+                    "cwd": str(cwd),
+                    "source": "vscode",
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "message",
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "input_text",
+                            "text": f"# AGENTS.md instructions for {cwd}",
+                        }
+                    ],
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "message",
+                    "role": "user",
+                    "content": [{"type": "input_text", "text": prompt}],
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [{"type": "output_text", "text": assistant}],
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "reasoning",
+                    "encrypted_content": "hidden",
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "function_call",
+                    "name": "exec_command",
+                    "arguments": "{\"cmd\":\"pwd\"}",
+                    "call_id": f"call-{session_id}",
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "function_call_output",
+                    "call_id": f"call-{session_id}",
+                    "output": "pwd output",
+                },
+            },
+        ]
+        session_file.write_text(
+            "\n".join(json.dumps(record) for record in records) + "\n",
+            encoding="utf-8",
+        )
+        with session_index_path.open("a", encoding="utf-8") as handle:
+            handle.write(
+                json.dumps(
+                    {
+                        "id": session_id,
+                        "thread_name": thread_name,
+                        "updated_at": updated_at,
+                    }
+                )
+                + "\n"
+            )
+
+    write_session(
+        "plain-old",
+        cwd=plain_repo,
+        prompt="older prompt",
+        assistant="older assistant",
+        session_timestamp="2026-04-24T08:00:00Z",
+        updated_at="2026-04-24T08:05:00Z",
+        thread_name="Older plain thread",
+    )
+    write_session(
+        "plain-new",
+        cwd=plain_repo,
+        prompt="Expand public release and npm distribution support.",
+        assistant="Reading files now.",
+        session_timestamp="2026-04-24T09:00:00Z",
+        updated_at="2026-04-24T09:10:00Z",
+        thread_name="Latest plain thread",
+    )
+    write_session(
+        "consolidated",
+        cwd=consolidated_repo,
+        prompt="Keep docs and tests up to date.",
+        assistant="Checking docs and tests.",
+        session_timestamp="2026-04-24T10:00:00Z",
+        updated_at="2026-04-24T10:15:00Z",
+        thread_name="Consolidated thread",
+    )
+
+    output_root = workspace_root / "codex_sessions"
+    manifest = module.export_workspace_sessions(
+        workspace_root=workspace_root,
+        output_root=output_root,
+        sessions_root=codex_root / "sessions",
+        session_index_path=session_index_path,
+        variants=("plain_repo_no_aiwiki", "aiwiki_consolidated"),
+    )
+
+    assert manifest["exported_session_count"] == 2
+    assert manifest["missing_variants"] == []
+    assert not (output_root / "plain_repo_no_aiwiki" / "plain-old").exists()
+
+    latest_plain = output_root / "plain_repo_no_aiwiki" / "plain-new"
+    assert latest_plain.exists()
+    assert (latest_plain / "prompt.md").read_text(encoding="utf-8") == (
+        "Expand public release and npm distribution support.\n"
+    )
+    plain_metadata = json.loads((latest_plain / "metadata.json").read_text(encoding="utf-8"))
+    assert plain_metadata["thread_name"] == "Latest plain thread"
+    assert plain_metadata["hidden_reasoning_exported"] is False
+
+    visible_session = (latest_plain / "visible_session.jsonl").read_text(encoding="utf-8")
+    assert '"type": "reasoning"' not in visible_session
+    assert "encrypted_content" not in visible_session
+    assert '"type": "function_call"' in visible_session
+    assert '"type": "function_call_output"' in visible_session
+
+    session_without_reasoning = (latest_plain / "session_without_reasoning.jsonl").read_text(
+        encoding="utf-8"
+    )
+    assert '"type": "reasoning"' not in session_without_reasoning
+    assert "encrypted_content" not in session_without_reasoning
+    assert '"type": "session_meta"' in session_without_reasoning
+    assert '"type": "function_call"' in session_without_reasoning
+    assert '"type": "function_call_output"' in session_without_reasoning
+
+    transcript = (latest_plain / "visible_transcript.md").read_text(encoding="utf-8")
+    assert "## Task Prompt" in transcript
+    assert "Expand public release and npm distribution support." in transcript
+    assert "Reading files now." in transcript
+    assert "visible_session.jsonl" in transcript
+
+    consolidated = output_root / "aiwiki_consolidated" / "consolidated"
+    assert consolidated.exists()
+    assert "Keep docs and tests up to date." in (consolidated / "prompt.md").read_text(encoding="utf-8")
+
+
+def test_export_codex_sessions_can_match_legacy_workspace_root(tmp_path: Path) -> None:
+    module = _load_script("export_codex_sessions.py")
+    workspace_root = tmp_path / "first_round" / "ownership_boundary" / "20260423-170541"
+    legacy_root = tmp_path / "legacy" / "ownership_boundary" / "20260423-170541"
+    target_repo = workspace_root / "plain_repo_no_aiwiki"
+    legacy_repo = legacy_root / "plain_repo_no_aiwiki"
+    target_repo.mkdir(parents=True)
+    legacy_repo.mkdir(parents=True)
+
+    codex_root = tmp_path / ".codex"
+    sessions_root = codex_root / "sessions" / "2026" / "04" / "23"
+    sessions_root.mkdir(parents=True)
+    session_index_path = codex_root / "session_index.jsonl"
+
+    session_file = sessions_root / "rollout-legacy.jsonl"
+    session_file.write_text(
+        "\n".join(
+            [
+                json.dumps(
+                    {
+                        "type": "session_meta",
+                        "payload": {
+                            "id": "legacy-session",
+                            "timestamp": "2026-04-23T07:00:00Z",
+                            "cwd": str(legacy_repo),
+                        },
+                    }
+                ),
+                json.dumps(
+                    {
+                        "type": "response_item",
+                        "payload": {
+                            "type": "message",
+                            "role": "user",
+                            "content": [{"type": "input_text", "text": "medium prompt"}],
+                        },
+                    }
+                ),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    session_index_path.write_text(
+        json.dumps(
+            {
+                "id": "legacy-session",
+                "thread_name": "Legacy thread",
+                "updated_at": "2026-04-23T07:05:00Z",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    output_root = workspace_root / "codex_sessions"
+    manifest = module.export_workspace_sessions(
+        workspace_root=workspace_root,
+        match_workspace_root=legacy_root,
+        output_root=output_root,
+        sessions_root=codex_root / "sessions",
+        session_index_path=session_index_path,
+        variants=("plain_repo_no_aiwiki",),
+    )
+
+    assert manifest["exported_session_count"] == 1
+    assert manifest["match_workspace_root"] == str(legacy_root.resolve())
+    exported = output_root / "plain_repo_no_aiwiki" / "legacy-session"
+    assert exported.exists()

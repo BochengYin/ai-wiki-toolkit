@@ -247,20 +247,20 @@ Any of the following is enough for failure:
 ### Short run
 
 - workspace root:
-  - `/private/tmp/aiwiki-impact-experiments/ownership_boundary/20260423-115153`
+  - `/private/tmp/aiwiki_first_round/ownership_boundary/workspaces/20260423-115153`
 - run dir:
-  - `/private/tmp/aiwiki-impact-runs/ownership_boundary/20260423-115153`
+  - `/private/tmp/aiwiki_first_round/ownership_boundary/runs/20260423-115153`
 - report:
-  - `/private/tmp/aiwiki-impact-runs/ownership_boundary/20260423-115153/report.md`
+  - `/private/tmp/aiwiki_first_round/ownership_boundary/runs/20260423-115153/report.md`
 
 ### Medium run
 
 - workspace root:
-  - `/private/tmp/aiwiki-impact-experiments/ownership_boundary/20260423-170541`
+  - `/private/tmp/aiwiki_first_round/ownership_boundary/workspaces/20260423-170541`
 - run dir:
-  - `/private/tmp/aiwiki-impact-runs/ownership_boundary/20260423-170541`
+  - `/private/tmp/aiwiki_first_round/ownership_boundary/runs/20260423-170541`
 - report:
-  - `/private/tmp/aiwiki-impact-runs/ownership_boundary/20260423-170541/report.md`
+  - `/private/tmp/aiwiki_first_round/ownership_boundary/runs/20260423-170541/report.md`
 
 ## What The Diffs Actually Contained
 

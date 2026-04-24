@@ -9,11 +9,11 @@ These findings are now the repo-recorded result summary for this benchmark famil
 
 ### Short
 
-- report: `/private/tmp/aiwiki-impact-runs/ownership_boundary/20260423-115153/report.md`
+- report: `/private/tmp/aiwiki_first_round/ownership_boundary/runs/20260423-115153/report.md`
 
 ### Medium
 
-- report: `/private/tmp/aiwiki-impact-runs/ownership_boundary/20260423-170541/report.md`
+- report: `/private/tmp/aiwiki_first_round/ownership_boundary/runs/20260423-170541/report.md`
 
 ## Execution Conditions
 
