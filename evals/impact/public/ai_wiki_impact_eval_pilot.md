@@ -4,18 +4,24 @@ This note summarizes an artifact-backed pilot evaluation of whether `ai-wiki-too
 coding-agent behavior on repeated historical repository problems. It is not a statistically powered
 benchmark or an academic paper.
 
+The question is about agent memory and workflow, not raw model capability. I am not trying to show
+that `gpt-5.5` can or cannot solve these tasks. I am trying to test whether a fresh agent session,
+with the same model and task prompt, behaves differently when reusable project memory is exposed
+through repo-local files, managed guidance, and end-of-task write-back checks.
+
 ## Abstract
 
 I ran a small artifact-backed pilot eval to test whether repo-local AI memory changes coding-agent
 behavior on repeated historical problems. The tool under test, `ai-wiki-toolkit`, gives a repo an
 `ai-wiki/` memory tree, managed prompt guidance, end-of-task memory-use footers, and write-back
 checks. I used five real problems from developing the toolkit itself, recreated earlier repo states,
-and ran six isolated Codex CLI sessions per family with the original prompt, `gpt-5.5`, and `xhigh`
-reasoning. The primary comparison was no AI wiki workflow versus the realistic ambient AI wiki
-workflow. In 4 of 5 families, the ambient workflow produced a better primary outcome; in 1 family
-both conditions succeeded. This is not a statistically powered benchmark, but the artifacts provide
-directional evidence that repo memory can help agents avoid repeated mistakes, especially around
-ownership boundaries, release hazards, and workflow discipline.
+and ran six isolated Codex CLI sessions per family with the original effective task prompt,
+`gpt-5.5`, and `xhigh` reasoning. The primary comparison was no AI wiki workflow versus the
+realistic ambient AI wiki workflow. In 4 of 5 families, the ambient workflow produced a better
+primary outcome; in 1 family both conditions succeeded. This is not a statistically powered
+benchmark, but the artifacts provide directional evidence that repo-visible memory can help fresh
+agents avoid repeated mistakes, especially around ownership boundaries, release hazards, and
+workflow discipline.
 
 ## Headline Statistical Status
 
@@ -58,6 +64,12 @@ The goal is not to make a global knowledge base. The goal is to keep project-spe
 to the codebase, so future agents can reuse lessons from previous failures, reviews, and release
 work.
 
+The broader hypothesis is that self-updating memory should not be limited to one agent inside one
+long-running workspace. If the memory is stored in reviewable repo files, refreshed through explicit
+workflow checks, and visible to future independent sessions, the same pattern may help multiple
+agents collaborate on a shared codebase. This pilot tests that hypothesis in one repo where the
+toolkit was itself developed using the toolkit.
+
 ## Footer And Write-Back Behavior
 
 The end-of-task footer is the user-visible evidence surface. It is meant to make memory use auditable
@@ -87,6 +99,13 @@ workflow-boundary mistakes, naming drift, scaffold behavior, and smoke-test fail
 those historical problems and replays them against earlier repository states, using the original
 task-style prompts rather than prompts that directly reveal the answer.
 
+Some original tasks came from the actual agent operating context rather than from a polished
+human-written benchmark prompt. In those cases, the user-level request could be as small as "code",
+while the effective task instruction came from the surrounding system/developer prompt and repo
+state. That is intentional for this pilot: the goal is to reproduce the conditions under which the
+original development failures happened, then compare whether the AI wiki workflow changes the
+outcome under the same effective task prompt.
+
 This gives realistic test cases because:
 
 - the problems came from actual development work, not synthetic puzzles
@@ -110,14 +129,15 @@ Fixed conditions:
 - model: `gpt-5.5`
 - reasoning effort: `xhigh`
 - execution path: Codex CLI first
-- prompt: each family uses its own `original.md`
+- prompt: each family uses its own `original.md`, representing the original effective task prompt
 - session isolation: one independent persisted CLI session per slot
 - workspace isolation: each slot runs in its own repo checkout
 - scoring: manual `success`, `partial`, or `fail`, based on diffs, transcripts, tests, and rubric
 - validation: session export and `validate_run.py` must show no critical confounds
 
-The formal runs use original historical prompts only. They do not test whether the same conclusions
-hold under prompt paraphrases, more ambiguous prompts, or more leading prompts.
+The formal runs use original historical effective prompts only. They do not test whether the same
+conclusions hold under prompt paraphrases, more ambiguous prompts, more polished human-written
+prompts, or more leading prompts.
 
 Primary comparison:
 
@@ -141,9 +161,12 @@ Each benchmark family starts from a real historical problem in `ai-wiki-toolkit`
 selected a repository baseline from before the historical fix landed, then generated six isolated
 workspace copies from that baseline.
 
-The same original prompt was used for every slot within a family. The prompt was intentionally
-task-like rather than answer-like: it recreated the historical user request without naming the exact
-memory document or directly telling the agent the desired implementation strategy.
+The same original effective prompt was used for every slot within a family. The prompt was
+intentionally task-like rather than answer-like: it recreated the historical task request without
+naming the exact memory document or directly telling the agent the desired implementation strategy.
+For some families, the effective prompt includes task context that originally came from the agent
+runtime or repo state rather than from a standalone user-authored sentence. The comparison still
+holds within that family because every slot received the same effective prompt.
 
 The six slots were neutral directories named `s01` through `s06`. Their semantic roles were stored
 outside the workspace in assignment metadata so the visible working directory would not leak names
@@ -216,9 +239,9 @@ mixed VS Code UI and Codex CLI fallback. It was useful qualitative evidence, but
 evidence because the execution surface and manifest metadata were inconsistent.
 
 The final Manual v2 formal runs moved to a CLI-first protocol: independent persisted Codex CLI
-sessions, neutral slot paths, one original prompt per family, immediate artifact capture, exported
-session manifests, run-level sleep protection, validator checks, and manual scoring from diffs plus
-visible transcripts.
+sessions, neutral slot paths, one original effective prompt per family, immediate artifact capture,
+exported session manifests, run-level sleep protection, validator checks, and manual scoring from
+diffs plus visible transcripts.
 
 This iterative process matters because the benchmark itself was a source of failure modes. The
 useful result is not just the final table of scores; it is also the record of how prompt leakage,
@@ -261,7 +284,7 @@ SHA-256 hashes for the withheld raw session exports.
 
 ## Family Table
 
-| family | original prompt | problem being tested | success means | failure or partial means |
+| family | original effective prompt excerpt | problem being tested | success means | failure or partial means |
 | --- | --- | --- | --- | --- |
 | `ownership_boundary` | "Add a helper for the contributor branch-and-PR workflow in this repository..." | Will the agent keep a contributor-only workflow out of package code? | The helper stays repo-local, for example under `scripts/`, with tests/docs and no package CLI or package-module implementation. | Core logic goes into `src/ai_wiki_toolkit/` or the package CLI, even if the helper works. |
 | `release_distribution_integrity` | "Expand public release and npm distribution support in this repository..." | Will the agent keep a public release and npm target expansion aligned across workflow, packages, archives, docs, and tests? | Release matrix, npm target resolution, package metadata, Windows zip staging, musl/libc handling, docs, Homebrew, and tests stay aligned. | The agent updates many surfaces but misses a central release hazard, such as Alpine musl binutils or root setup. |
@@ -269,7 +292,7 @@ SHA-256 hashes for the withheld raw session exports.
 | `release_runtime_compatibility` | "A Linux npm install smoke test exposed a runtime compatibility problem..." | Will the agent catch binary runtime incompatibility before publishing, instead of stopping at build or install success? | The release process uses an older compatible Linux build baseline and runs release/npm runtime smoke checks before publishing. | The agent adds smoke gates but still builds on a too-new baseline, or only checks install success. |
 | `scaffold_prompt_workflow_compliance` | "Extend the AI wiki scaffold so the toolkit better supports team coding memory..." | Will the agent keep scaffold, skill names, prompt routing, docs, and tests aligned with established repo memory? | It adds `conventions/`, `problems/`, `features/`, correct skill names, managed schema guidance, prompt/system workflow updates, doctor checks, README, and tests. | It invents incompatible names, keeps old routing, creates prompt churn, or crosses managed/user-owned boundaries. |
 
-Full prompts live under:
+Full prompt files live under:
 
 - `evals/impact/prompts/ownership_boundary/original.md`
 - `evals/impact/prompts/release_distribution_integrity/original.md`
@@ -303,6 +326,14 @@ Reasonable claim:
 > tasks. It helped agents avoid a repeated ownership-boundary mistake, avoid known release hazards,
 > improve runtime-release verification, and preserve scaffold/prompt workflow discipline.
 
+Broader but still limited interpretation:
+
+> The results are consistent with the idea that self-updating agent memory can be moved from a
+> private single-agent workspace into repo-visible collaboration infrastructure. Because every slot
+> starts from a fresh session, the useful memory must come from the repository, scaffold, skills, or
+> AI wiki workflow rather than from conversational carryover. That is a useful signal for future
+> multi-agent team workflows, but it is not yet proof that the effect generalizes across teams.
+
 More precise by family:
 
 - `ownership_boundary`: evidence that memory can change where an agent places code.
@@ -324,14 +355,18 @@ This note does not claim:
 - a general success-rate improvement
 - that AI wiki memory is necessary for success
 - that the result generalizes to all tasks, repos, models, or agents
+- that the result has already been validated in a multi-person or multi-team deployment
 - that the result is robust to prompt variants or paraphrases
 - that the diagnostic variants are the main causal result
+- that this is a comparison against every other self-updating memory system
 - that GitHub Actions releases would necessarily pass when no actual release workflow was run
 
 ## Prompt Robustness Follow-Up
 
-The current formal runs intentionally use each family's original historical prompt. That keeps the
-replay close to the real task request, but it leaves prompt robustness untested.
+The current formal runs intentionally use each family's original historical effective prompt. That
+keeps the replay close to the real task request, including cases where the operative instruction came
+from the surrounding agent context rather than a polished user prompt. It also leaves prompt
+robustness untested.
 
 A stronger follow-up would rerun the same five families with controlled prompt variants, for example:
 
@@ -342,7 +377,11 @@ A stronger follow-up would rerun the same five families with controlled prompt v
 Those replications would test whether the observed AI wiki advantage depends on the exact wording of
 the original prompt or survives reasonable task-request variation.
 
-## Appendix A: Verbatim Original Prompts
+## Appendix A: Verbatim Original Effective Prompts
+
+These are the prompt files used in the formal runs. They preserve the effective task instruction for
+the historical reproduction, even when the original user-facing request was shorter and the fuller
+task context came from the agent runtime or repository state.
 
 ### `ownership_boundary`
 
