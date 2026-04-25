@@ -208,6 +208,9 @@ npm install -g ai-wiki-toolkit@latest
 
 - Files under `ai-wiki/_toolkit/**` and `~/ai-wiki/system/_toolkit/**` are package-managed.
 - Files such as `ai-wiki/index.md`, `ai-wiki/workflows.md`, and other docs you add under `ai-wiki/` are user-owned.
+- Starter files such as `ai-wiki/constraints.md` and `ai-wiki/decisions.md` may look mostly empty
+  after install. That is intentional: they are placeholders for rules and decisions your team has
+  actually made, not generic package defaults.
 - `ai-wiki/_toolkit/system.md` is the managed entrypoint for package-managed repo guidance and evolving read order.
 - `ai-wiki/index.md` is a repo-owned map, not a package upgrade surface.
 - `ai-wiki/_toolkit/workflows.md` carries the managed baseline workflows that package upgrades can refresh.
