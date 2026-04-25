@@ -41,6 +41,54 @@ Reference implementation:
 - `evals/impact/notes/manual_v2_original_10_repo_findings.md`
 - `evals/impact/notes/ownership_boundary_round1_findings.md`
 
+## Publication Prep
+
+Current public-writeup draft:
+
+- `evals/impact/public_writeup_draft.md`
+
+Published artifact repository:
+
+- https://github.com/BochengYin/ai-wiki-toolkit-impact-eval-artifacts
+
+The public note itself should stay focused on the experiment, results, limitations, and artifact
+links. Keep publication logistics in this TODO or release-prep notes rather than in the public note.
+
+Recommended publishing layout:
+
+- keep stable benchmark materials in this repository under `evals/impact/`
+- do not commit large or sensitive raw session exports directly into the source tree
+- publish redacted per-run artifacts as a GitHub Release artifact bundle, Git LFS artifact repo, or
+  separate `eval-artifacts` repository
+- use Gist, a blog post, or a social post only as a short narrative pointer back to the repo and
+  artifact bundle
+
+Before publishing an artifact bundle:
+
+1. collect each run's `assignment.json`, `confounds.json`, `scores.json`, generated `report.md`, slot
+   `workspace_diff.patch`, `visible_transcript.md`, `visible_session.jsonl`,
+   `first_pass/final_message.md`, and `codex_sessions/manifest.json`
+2. decide whether full raw session exports can be public
+3. redact or withhold any logs containing API keys, tokens, cookies, credentials, private URLs,
+   personal identifiers, unrelated filesystem details, unpublished product context, or private chat
+   content
+4. if raw logs are withheld, publish visible logs plus SHA-256 hashes of the raw logs and state why
+   the raw files are withheld
+5. update `evals/impact/public_writeup_draft.md` with final artifact links
+6. run `git diff --check`
+
+Initial 2026-04-25 scan notes:
+
+- focused scan over the five formal run dirs plus exported `codex_sessions/` found no obvious
+  token-shaped secrets such as OpenAI keys, GitHub PATs, npm tokens, PyPI tokens, Slack tokens, AWS
+  access keys, Google API keys, or private keys
+- raw session exports still contain local filesystem paths, sandbox paths, and skill/plugin
+  inventory; treat those as redaction candidates before publishing raw logs
+- email-like matches were public GitHub noreply or test/example fixture addresses; still re-check
+  before publishing a final bundle
+- published `ai-wiki-toolkit-impact-eval-artifacts` with visible artifacts only; raw
+  `session_without_reasoning.jsonl` files are omitted and represented by SHA-256 hashes
+
 ## Status Legend
 
 - `done`: benchmark family has already been run and documented

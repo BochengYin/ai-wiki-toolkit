@@ -5,6 +5,7 @@ changes agent behavior on repeated repo problems.
 
 Primary repo-local documentation for the current benchmark lives in:
 
+- `evals/impact/public_writeup_draft.md`
 - `evals/impact/notes/index.md`
 - `evals/impact/report.md`
 - `evals/impact/TODO.md`
