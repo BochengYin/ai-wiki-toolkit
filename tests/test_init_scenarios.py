@@ -190,6 +190,32 @@ def test_init_writes_expected_repo_index_snapshot(repo_env: dict[str, Path]) -> 
         See also `_toolkit/workflows.md` for package-managed baseline workflows that ship with `ai-wiki-toolkit`.
         """
     )
+    assert (repo_env["repo"] / "ai-wiki" / "constraints.md").read_text(encoding="utf-8") == strip_margin(
+        """
+        # Project Constraints
+
+        This file is intentionally project-specific.
+
+        Record hard repo boundaries and non-negotiable requirements here. If no constraints are
+        listed yet, the team has not recorded any project-specific hard constraints.
+
+        Good entries include security requirements, compatibility promises, release boundaries,
+        data handling rules, or areas agents must not modify without approval.
+        """
+    )
+    assert (repo_env["repo"] / "ai-wiki" / "decisions.md").read_text(encoding="utf-8") == strip_margin(
+        """
+        # Project Decisions
+
+        This file is intentionally project-specific.
+
+        Record durable architecture or process decisions here after the team has made them. If no
+        decisions are listed yet, the team has not recorded any project-specific decisions.
+
+        Good entries explain what was decided, why, what alternatives were rejected, and when the
+        decision was made.
+        """
+    )
 
 
 def test_init_writes_expected_gitignore_snapshot(repo_env: dict[str, Path]) -> None:

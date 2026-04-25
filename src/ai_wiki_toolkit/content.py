@@ -69,7 +69,13 @@ def repo_starter_files(handle: str) -> dict[str, str]:
             """
             # Project Constraints
 
-            Capture stable project rules, boundaries, and non-negotiable requirements here.
+            This file is intentionally project-specific.
+
+            Record hard repo boundaries and non-negotiable requirements here. If no constraints are
+            listed yet, the team has not recorded any project-specific hard constraints.
+
+            Good entries include security requirements, compatibility promises, release boundaries,
+            data handling rules, or areas agents must not modify without approval.
             """
         ).strip()
         + "\n",
@@ -87,7 +93,13 @@ def repo_starter_files(handle: str) -> dict[str, str]:
             """
             # Project Decisions
 
-            Capture durable architectural and process decisions here.
+            This file is intentionally project-specific.
+
+            Record durable architecture or process decisions here after the team has made them. If no
+            decisions are listed yet, the team has not recorded any project-specific decisions.
+
+            Good entries explain what was decided, why, what alternatives were rejected, and when the
+            decision was made.
             """
         ).strip()
         + "\n",
