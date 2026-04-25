@@ -135,6 +135,96 @@ Diagnostic variants:
 The diagnostic variants are useful for mechanism analysis. They should not be promoted into the main
 claim.
 
+## Method Details
+
+Each benchmark family starts from a real historical problem in `ai-wiki-toolkit`. For each family, I
+selected a repository baseline from before the historical fix landed, then generated six isolated
+workspace copies from that baseline.
+
+The same original prompt was used for every slot within a family. The prompt was intentionally
+task-like rather than answer-like: it recreated the historical user request without naming the exact
+memory document or directly telling the agent the desired implementation strategy.
+
+The six slots were neutral directories named `s01` through `s06`. Their semantic roles were stored
+outside the workspace in assignment metadata so the visible working directory would not leak names
+such as `no_aiwiki_workflow` or `aiwiki_ambient_memory_workflow`.
+
+The slot roles were:
+
+- `s01`: no AI wiki workflow
+- `s02`: AI wiki scaffold without the target memory
+- `s03`: AI wiki workflow linked to raw draft memory for the target problem
+- `s04`: AI wiki workflow linked to consolidated memory for the target problem
+- `s05`: realistic ambient AI wiki workflow
+- `s06`: AI wiki scaffold without target or adjacent task-specific memory
+
+For every slot, I ran a fresh persisted Codex CLI session with the same model and reasoning effort:
+
+- `gpt-5.5`
+- `xhigh`
+- `codex exec`
+- `--output-last-message` to save the first-pass final message
+
+No VS Code UI or Computer Use execution path was used for the formal runs. The runner wrapped each
+family in a run-level `caffeinate` guard to reduce sleep or lock-screen interference. Each slot used
+its own repository checkout, and no slot was run from another slot's repo.
+
+Immediately after each slot finished, `save_result.py` captured first-pass artifacts:
+
+- workspace diff
+- diff stat
+- workspace status
+- workspace head
+- command result metadata
+- final message
+
+After all slots in a family finished, `export_codex_sessions.py` exported the visible Codex session
+artifacts and a manifest. Then `validate_run.py` checked for critical confounds such as missing
+sessions, missing first-pass artifacts, non-CLI execution, reused sessions, or model/effort mismatch.
+Only runs with no critical confounds are treated as the current formal result.
+
+Scoring was manual but artifact-backed. For each slot, I reviewed:
+
+- `workspace_diff.patch`
+- `visible_transcript.md`
+- `visible_session.jsonl`
+- changed tests
+- `first_pass/final_message.md`
+- the family-specific rubric
+
+Scores were recorded as `success`, `partial`, or `fail`. A generated family report summarized the
+slot scores, but the manual score was based on the artifacts rather than on the final message alone.
+
+## How The Protocol Evolved
+
+The current method was not the first version. It came from several failed or partially confounded
+rounds.
+
+The first `ownership_boundary` design failed because it leaked the answer. The baseline already
+contained the repo-local helper surface, and the prompt asked the agent to extend the existing
+repo-local PR flow. That meant every variant was already pointed at the correct surface, so the run
+could not test whether AI wiki memory changed implementation-surface choice.
+
+The next round fixed that by using historical baselines from before the fix landed. That made the
+tasks real again, but it revealed other problems: semantic variant names leaked through workspace
+paths, full prompt surfaces differed across variants, first-pass final messages were not always
+stable after follow-up interaction, and the result capture was weaker than the later analysis
+standard.
+
+The original-prompt transition run improved the task prompts and neutral slot layout, but it still
+mixed VS Code UI and Codex CLI fallback. It was useful qualitative evidence, but not clean formal
+evidence because the execution surface and manifest metadata were inconsistent.
+
+The final Manual v2 formal runs moved to a CLI-first protocol: independent persisted Codex CLI
+sessions, neutral slot paths, one original prompt per family, immediate artifact capture, exported
+session manifests, run-level sleep protection, validator checks, and manual scoring from diffs plus
+visible transcripts.
+
+This iterative process matters because the benchmark itself was a source of failure modes. The
+useful result is not just the final table of scores; it is also the record of how prompt leakage,
+workspace leakage, UI instability, sleep risk, session export gaps, and weak final-message artifacts
+were found and removed before making the current public claim.
+
 ## Artifacts And Reproducibility
 
 The benchmark materials are meant to be auditable, not just summarized.
