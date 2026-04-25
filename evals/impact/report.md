@@ -22,7 +22,9 @@ prompt run documented in:
 
 - `evals/impact/notes/manual_v2_cli_original_release_distribution_20260425_findings.md`
 
-Both runs used five independent persisted Codex CLI sessions, `gpt-5.5`, `xhigh`, the original
+Both runs started as five-slot clean formal batches and were then extended with a supplemental `s06`
+`aiwiki_scaffold_no_adjacent_memory` diagnostic in the same workspace/run folders. The six exported
+sessions per family used independent persisted Codex CLI sessions, `gpt-5.5`, `xhigh`, the original
 prompt, and complete session exports validated by `validate_run.py` with no critical confounds.
 
 The earlier 2026-04-25 10-repo transition run remains useful qualitative evidence, but it is no
@@ -48,6 +50,11 @@ Diagnostic variants are explanatory only:
 - `aiwiki_linked_consolidated_only` failed by putting the core helper in `src/ai_wiki_toolkit/`.
 - `aiwiki_scaffold_no_target_memory` succeeded, but is contaminated as a no-target diagnostic because
   it still used workflow and impact-eval meta memory.
+- `aiwiki_scaffold_no_adjacent_memory` failed after adjacent workflow memory was removed; it added
+  tests and a repo-local script but still put core logic in `src/ai_wiki_toolkit/`.
+
+The supplemental `s06` result strengthens the ownership mechanism story: the ambient AI wiki success
+looks tied to reachable workflow/placement memory, not just to having an AI wiki scaffold present.
 
 ### Release Distribution Integrity
 
@@ -65,9 +72,14 @@ work. It does not show that AI wiki is necessary for the agent to attempt the ex
 no-AI-wiki control already did substantial work.
 
 Diagnostic variants are explanatory only. In the clean release run, `aiwiki_scaffold_no_target_memory`,
-`aiwiki_linked_raw_only`, and `aiwiki_linked_consolidated_only` all scored success. They help explain
-that adjacent release memory and targeted raw/consolidated notes can carry the missing musl/npm
-details, but they are not the primary causal comparison.
+`aiwiki_linked_raw_only`, `aiwiki_linked_consolidated_only`, and the supplemental
+`aiwiki_scaffold_no_adjacent_memory` all scored success. They help explain that release-distribution
+success can come from adjacent release memory, targeted raw/consolidated notes, or even generic
+scaffold/workflow context plus current official docs. They are not the primary causal comparison.
+
+The `s06` success narrows the release claim: this family is evidence that AI wiki can improve
+coordination quality and known-hazard avoidance, not evidence that AI wiki memory is necessary for a
+complete release-distribution implementation.
 
 ## Current Claim Boundaries
 
@@ -77,6 +89,9 @@ Reasonable to claim:
   repeated-problem ownership-boundary task.
 - The clean CLI-first release-distribution run supports a narrower AI wiki usefulness claim for
   completeness and known-hazard avoidance in multi-surface release work.
+- The supplemental strict diagnostics point in different directions by family: ownership still needs
+  reachable placement memory, while release distribution can be solved without adjacent release
+  memory in at least this one sample.
 - Original prompts are better than medium-style prompts for testing memory reuse.
 - Session exports are necessary for judging why the agent made a decision.
 
@@ -85,12 +100,13 @@ Not yet reasonable to claim:
 - a clean quantitative causal estimate of AI wiki impact
 - a seed-controlled benchmark result
 - a final model comparison
-- proof that AI wiki is necessary for release-distribution success
+- proof that AI wiki is necessary for release-distribution success; the supplemental `s06` result
+  argues against that stronger claim
 - a formal claim from the 2026-04-25 transition batch
 
 ## Next Formal Work
 
-The next useful formal work is replication with the updated six-slot protocol:
+The next useful formal work is replication with the now-default six-slot protocol:
 
 1. Repeat each family with additional independent six-slot batches.
 2. Keep `original.md`, Codex CLI-first execution, and run-level `caffeinate`.

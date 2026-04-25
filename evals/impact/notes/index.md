@@ -11,9 +11,9 @@ synthesizes across notes.
 2. `evals/impact/report.md`
    Current synthesis across completed runs, including what can and cannot be claimed.
 3. `evals/impact/notes/manual_v2_cli_original_ownership_20260425_findings.md`
-   The clean formal CLI-first ownership-boundary run.
+   The clean formal CLI-first ownership-boundary run, extended with supplemental `s06`.
 4. `evals/impact/notes/manual_v2_cli_original_release_distribution_20260425_findings.md`
-   The clean formal CLI-first release-distribution run.
+   The clean formal CLI-first release-distribution run, extended with supplemental `s06`.
 5. `evals/impact/notes/manual_v2_original_10_repo_findings.md`
    The earlier 10-repo original-prompt transition run across both benchmark families.
 6. `evals/impact/ownership_boundary_runbook.md`
@@ -38,8 +38,8 @@ synthesizes across notes.
 | 3 | `release_distribution_integrity_round1_findings.md` | historical | first release-distribution evidence |
 | 4 | `round1_process_lessons.md` | historical/process | captures process failures that v2 addresses |
 | 5 | `manual_v2_original_10_repo_findings.md` | transition run | 10-repo original-prompt evidence and remaining confounds |
-| 6 | `manual_v2_cli_original_ownership_20260425_findings.md` | current formal run | clean CLI-first ownership-boundary primary comparison |
-| 7 | `manual_v2_cli_original_release_distribution_20260425_findings.md` | current formal run | clean CLI-first release-distribution primary comparison |
+| 6 | `manual_v2_cli_original_ownership_20260425_findings.md` | current formal run + supplemental diagnostic | clean CLI-first ownership-boundary primary comparison plus `s06` no-adjacent mechanism check |
+| 7 | `manual_v2_cli_original_release_distribution_20260425_findings.md` | current formal run + supplemental diagnostic | clean CLI-first release-distribution primary comparison plus `s06` no-adjacent mechanism check |
 
 ## Documentation Roles
 

@@ -1,6 +1,7 @@
 # Manual v2 CLI Original Release Distribution Findings
 
-This note records the clean formal `release_distribution_integrity` run from 2026-04-25.
+This note records the clean formal `release_distribution_integrity` run from 2026-04-25, plus the
+supplemental `s06` diagnostic added later the same day.
 
 It used Codex CLI-first execution for every slot, persisted one independent session per slot, and
 validated the exported session manifest before scoring.
@@ -29,15 +30,20 @@ The run used `evals/impact/scripts/run_cli_slots.py`, which wrapped the full fiv
 `/usr/bin/caffeinate -dimsu`. `sleep_guard.json` shows the guard was enabled from
 `2026-04-25T12:46:59` to `2026-04-25T13:54:47`.
 
+After the original five-slot run had already been scored, a supplemental `s06`
+`aiwiki_scaffold_no_adjacent_memory` repo was added inside the same workspace/run folder and executed
+with the same original prompt, model, reasoning effort, and Codex CLI-first path. The original
+`s01` through `s05` results were not rerun.
+
 ## Validation
 
-`export_codex_sessions.py` exported five sessions, one for each neutral slot. The session manifest
+`export_codex_sessions.py` now exports six sessions, one for each neutral slot. The session manifest
 records:
 
 - `source=exec`
 - `model=gpt-5.5`
 - `reasoning_effort=xhigh`
-- one distinct session id for each of `s01` through `s05`
+- one distinct session id for each of `s01` through `s06`
 
 After export, `validate_run.py` reported:
 
@@ -45,8 +51,8 @@ After export, `validate_run.py` reported:
 - `critical_confounds: []`
 - `warnings: []`
 
-All five `codex exec` processes returned 0, all five `save_result.py` captures returned 0, and all
-five slots produced `final_message.md`.
+All six `codex exec` processes returned 0, all six `save_result.py` captures returned 0, and all
+six slots produced `final_message.md`.
 
 ## Slot Scores
 
@@ -57,6 +63,7 @@ five slots produced `final_message.md`.
 | `s03` | `aiwiki_linked_raw_only` | diagnostic | success | Used raw release-memory surface and coordinated workflow, npm, docs, tests, Windows zip staging, and musl root/setup handling. |
 | `s04` | `aiwiki_linked_consolidated_only` | diagnostic | success | Used consolidated release-memory surface and coordinated workflow, npm, docs, tests, Windows zip staging, and musl root/setup handling. |
 | `s05` | `aiwiki_ambient_memory_workflow` | primary treatment | success | Aligned all major coupled surfaces and explicitly handled the known Alpine musl binutils/root setup hazard plus npm libc target resolution. |
+| `s06` | `aiwiki_scaffold_no_adjacent_memory` | diagnostic | success | Without adjacent release/task memory, still aligned the workflow matrix, npm targets/libc selection, Windows zip staging, docs, Homebrew, and release-facing checks. |
 
 The manual scores were written with `evals/impact/scripts/score_run.py` and the aggregate report was
 generated with `evals/impact/scripts/report_runs.py`.
@@ -103,6 +110,14 @@ carry enough concrete detail to close the musl, npm, and Windows archive surface
 `aiwiki_linked_consolidated_only` also succeeded. In this run, the promoted distribution convention
 plus adjacent problem memory were enough to produce a complete coordinated implementation.
 
+`aiwiki_scaffold_no_adjacent_memory` also succeeded. This strict scaffold diagnostic removed the
+targeted distribution memories and adjacent release-fix drafts, yet still completed the matrix
+alignment. Its transcript shows external official/current reference checks for runner labels, npm
+`libc` metadata, and PyInstaller platform support. That weakens any claim that release-distribution
+success required task-specific AI wiki memory. The primary comparison remains `s01` versus `s05`,
+where the no-AI-wiki control was partial and the ambient workflow was success, but `s06` shows that
+generic scaffold/workflow context plus model reasoning and current docs can be enough on this family.
+
 ## Non-Critical Observations
 
 - `s02` needed an npm cache workaround for `npm pack`; the command passed after using a local cache.
@@ -110,6 +125,8 @@ plus adjacent problem memory were enough to produce a complete coordinated imple
   the AI wiki workflow variants and are captured as artifacts, not repo changes.
 - Several slots consulted current GitHub and npm documentation for runner labels and package
   metadata. That makes the run realistic, but it is still a time-varying external input.
+- The supplemental `s06` slot explicitly reported reference checks against current GitHub, npm, and
+  PyInstaller docs; this is relevant when interpreting why it succeeded without adjacent memory.
 
 None of these were reported by `validate_run.py` as critical confounds.
 
@@ -124,6 +141,8 @@ Remaining threats:
   workflow parsing, and local verification commands.
 - Manual scoring was rubric-based and artifact-backed, but still human judgment.
 - Slots ran sequentially, so time/order effects are not ruled out.
+- The `s06` strict no-adjacent diagnostic was added after the original five slots rather than as part
+  of the initial sequential batch, so it is explanatory rather than part of the primary comparison.
 - External GitHub/npm docs were available to all variants and can mask some memory benefit.
 - `temperature` and seed are not captured.
 
@@ -139,10 +158,14 @@ Controls that improved over the transition run:
 
 ## Bottom Line
 
-For the formal release-distribution primary comparison, this run directionally supports "AI wiki
-working mode is useful": the no-AI-wiki slot did a broad partial implementation but missed a known
-musl release-build hazard, while the realistic AI wiki slot completed that hazard along with the
-rest of the release/npm distribution matrix.
+For the formal release-distribution primary comparison, this run directionally supports a narrow
+"AI wiki working mode is useful" claim: the no-AI-wiki slot did a broad partial implementation but
+missed a known musl release-build hazard, while the realistic AI wiki slot completed that hazard
+along with the rest of the release/npm distribution matrix.
+
+The supplemental `s06` success keeps that claim narrow. It shows that this task family can also be
+solved without adjacent task memory, so release-distribution is better evidence for AI wiki improving
+coordination quality than for AI wiki being necessary for success.
 
 The diagnostic variants are useful for mechanism analysis, but they should not be promoted into the
 main causal conclusion.

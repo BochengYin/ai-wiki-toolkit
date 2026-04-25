@@ -1,6 +1,7 @@
 # Manual v2 CLI Original Ownership Findings
 
-This note records the clean formal `ownership_boundary` run from 2026-04-25.
+This note records the clean formal `ownership_boundary` run from 2026-04-25, plus the
+supplemental `s06` diagnostic added later the same day.
 
 Unlike the earlier transition batch, this run used Codex CLI-first execution for every slot,
 persisted one independent session per slot, and validated the exported session manifest before
@@ -30,15 +31,20 @@ The run used `evals/impact/scripts/run_cli_slots.py`, which wrapped the full fiv
 `/usr/bin/caffeinate -dimsu`. `sleep_guard.json` shows the guard was enabled from
 `2026-04-25T11:58:43` to `2026-04-25T12:37:58`.
 
+After the original five-slot run had already been scored, a supplemental `s06`
+`aiwiki_scaffold_no_adjacent_memory` repo was added inside the same workspace/run folder and executed
+with the same original prompt, model, reasoning effort, and Codex CLI-first path. The original
+`s01` through `s05` results were not rerun.
+
 ## Validation
 
-`export_codex_sessions.py` exported five sessions, one for each neutral slot. The session manifest
+`export_codex_sessions.py` now exports six sessions, one for each neutral slot. The session manifest
 records:
 
 - `source=exec`
 - `model=gpt-5.5`
 - `reasoning_effort=xhigh`
-- one distinct session id for each of `s01` through `s05`
+- one distinct session id for each of `s01` through `s06`
 
 After the export completed, `validate_run.py` reported:
 
@@ -59,8 +65,9 @@ post-export validator output is the authoritative validation artifact.
 | `s03` | `aiwiki_linked_raw_only` | diagnostic | success | Used raw placement draft, added repo-local helper/tests, and updated `ai-wiki/workflows.md`. |
 | `s04` | `aiwiki_linked_consolidated_only` | diagnostic | fail | Added a wrapper under `scripts/`, but core implementation went into `src/ai_wiki_toolkit/pr_flow.py`. |
 | `s05` | `aiwiki_ambient_memory_workflow` | primary treatment | success | Added repo-local `scripts/pr_flow.py`, tests, `CONTRIBUTING.md`, and `ai-wiki/workflows.md`; no package code. |
+| `s06` | `aiwiki_scaffold_no_adjacent_memory` | diagnostic | fail | Added a repo-local script and tests, but also put core implementation under `src/ai_wiki_toolkit/contributor_workflow.py`, which is a hard rubric failure. |
 
-All five slots produced `final_message.md`, first-pass capture artifacts, and changed-test evidence.
+All six slots produced `final_message.md`, first-pass capture artifacts, and changed-test evidence.
 All `codex exec` and `save_result.py` commands returned 0.
 
 ## Primary Comparison
@@ -102,6 +109,12 @@ mechanistic explanation that direct raw memory can route the implementation away
 but still put the core helper in `src/ai_wiki_toolkit/pr_flow.py`. That suggests adjacent consolidated
 docs alone did not carry enough task-specific placement force in this run.
 
+`aiwiki_scaffold_no_adjacent_memory` also failed. This is the strictest scaffold diagnostic: it kept
+the AI wiki scaffold path but removed the adjacent workflow memory that contaminated `s02`. The slot
+still built a working helper and tests, but placed core logic in package code. That strengthens the
+mechanism story that the successful ambient run depended on reachable workflow/placement memory, not
+just the existence of an AI wiki scaffold.
+
 ## Validity Threats
 
 Remaining threats:
@@ -111,6 +124,8 @@ Remaining threats:
   matched to the task.
 - The diagnostic no-target slot was contaminated by remaining workflow and meta-eval memory, so it
   should not be used as a pure mechanism control.
+- The `s06` strict no-adjacent diagnostic was added after the original five slots rather than as part
+  of the initial sequential batch, so it is explanatory rather than part of the primary comparison.
 - Slots ran sequentially, so time/order effects are not ruled out.
 - Manual scoring was rubric-based and artifact-backed, but still human judgment.
 - `temperature` and seed are not captured.
@@ -131,5 +146,6 @@ For the formal ownership-boundary primary comparison, this run supports "AI wiki
 useful": the no-AI-wiki slot failed by entering the package surface, while the realistic AI wiki
 slot succeeded by keeping the workflow repo-local.
 
-The diagnostic variants are useful for explanation, especially the raw-draft success and
-consolidated-only failure, but they should not be promoted into the main causal conclusion.
+The diagnostic variants are useful for explanation, especially the raw-draft success,
+consolidated-only failure, and strict `s06` scaffold failure, but they should not be promoted into
+the main causal conclusion.
