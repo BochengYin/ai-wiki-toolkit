@@ -1,0 +1,47 @@
+name = "release_runtime_compatibility"
+prompt_family = "release_runtime_compatibility"
+baseline_ref = "f946ed6^"
+historical_issue = "Linux release binaries can publish and install successfully while still failing at runtime on an older glibc baseline."
+
+raw_docs = [
+  "ai-wiki/people/bochengyin/drafts/linux-release-binaries-need-runtime-checks-against-an-older-glibc-baseline.md",
+]
+
+consolidated_docs = []
+
+ambient_exclude_paths = [
+  "ai-wiki/people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history.md",
+  "ai-wiki/people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files.md",
+  "ai-wiki/people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff.md",
+]
+
+strict_scaffold_exclude_paths = [
+  "ai-wiki/conventions/distribution-target-matrix-must-match-published-assets.md",
+  "ai-wiki/problems/linux-musl-pyinstaller-needs-binutils-objdump.md",
+  "ai-wiki/problems/windows-arm-smoke-version-checks-need-full-cli-output.md",
+  "ai-wiki/trails/2026-04-18-release-workflow-and-prompt-block-edge-cases.md",
+]
+
+[[strict_scaffold_index_tokens]]
+path = "ai-wiki/conventions/index.md"
+token = "distribution-target-matrix-must-match-published-assets.md"
+
+[[strict_scaffold_index_tokens]]
+path = "ai-wiki/problems/index.md"
+token = "linux-musl-pyinstaller-needs-binutils-objdump.md"
+
+[[strict_scaffold_index_tokens]]
+path = "ai-wiki/problems/index.md"
+token = "windows-arm-smoke-version-checks-need-full-cli-output.md"
+
+[[strict_scaffold_index_tokens]]
+path = "ai-wiki/trails/index.md"
+token = "2026-04-18-release-workflow-and-prompt-block-edge-cases.md"
+
+[[consolidated_index_entries]]
+path = "ai-wiki/problems/index.md"
+entry = "- [Linux release binaries need runtime checks against an older glibc baseline](linux-release-binaries-need-runtime-checks-against-an-older-glibc-baseline.md): build Linux release binaries on an older glibc baseline and verify the actual binary in older and current runtime containers."
+
+[[consolidated_overlays]]
+source = "evals/impact/families/release_runtime_compatibility/memory/consolidated/linux-release-runtime-compatibility-problem.md"
+destination = "ai-wiki/problems/linux-release-binaries-need-runtime-checks-against-an-older-glibc-baseline.md"

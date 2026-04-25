@@ -277,7 +277,7 @@ def test_reinstall_restores_managed_layer_without_overwriting_user_docs(
     assert (repo / "ai-wiki" / "constraints.md").read_text(encoding="utf-8") == "# User constraints\n"
 
 
-def test_install_skips_existing_repo_skill_files_and_reports_manual_merge(
+def test_install_refreshes_existing_repo_skill_files(
     repo_env: dict[str, Path],
 ) -> None:
     skill_file = (
@@ -294,13 +294,47 @@ def test_install_skips_existing_repo_skill_files_and_reports_manual_merge(
     result = runner.invoke(app, ["install", "--handle", "alice"])
 
     assert result.exit_code == 0
-    assert skill_file.read_text(encoding="utf-8") == "# Custom consolidate output contract\n"
-    assert "Skipped existing skill files: 1" in result.output
-    assert f"Skipped skill file: {skill_file}" in result.output
-    assert (
-        "Manual merge guide: https://github.com/BochengYin/ai-wiki-toolkit/tree/main/.agents/skills"
-        in result.output
+    assert "# AI Wiki Draft Consolidation" in skill_file.read_text(encoding="utf-8")
+    assert "Updated skill files: 1" in result.output
+    assert f"Updated skill file: {skill_file}" in result.output
+
+
+def test_install_refreshes_existing_ai_wiki_footer_skill_contracts(
+    repo_env: dict[str, Path],
+) -> None:
+    output_contract = (
+        repo_env["repo"]
+        / ".agents"
+        / "skills"
+        / "ai-wiki-reuse-check"
+        / "references"
+        / "output-contract.md"
     )
+    output_contract.parent.mkdir(parents=True, exist_ok=True)
+    output_contract.write_text(
+        "\n".join(
+            (
+                "# Output Contract",
+                "",
+                "AI Wiki Reuse Evidence: wiki_used",
+                "AI Wiki Eligibility: eligible",
+                "AI Wiki Material Effects: changed_plan",
+            )
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["install", "--handle", "alice"])
+
+    assert result.exit_code == 0
+    refreshed = output_contract.read_text(encoding="utf-8")
+    assert "AI Wiki Reuse: user-owned memory used" in refreshed
+    assert "AI Wiki Task Relevance: relevant | optional | not_relevant" in refreshed
+    assert "AI Wiki Impact: <short user-facing impacts or none>" in refreshed
+    assert "AI Wiki Eligibility" not in refreshed
+    assert "AI Wiki Material Effects" not in refreshed
+    assert "Updated skill files: 1" in result.output
 
 
 def test_repeated_install_is_product_idempotent_for_same_handle(
@@ -319,6 +353,7 @@ def test_repeated_install_is_product_idempotent_for_same_handle(
     assert "Created files: 0" in second.output
     assert "Updated ignore files: 0" in second.output
     assert "Updated managed files: 0" in second.output
+    assert "Updated skill files: 0" in second.output
     assert "Updated prompt files: 0" in second.output
 
 

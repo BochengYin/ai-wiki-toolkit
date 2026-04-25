@@ -4,6 +4,17 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+## v0.1.20
+
+### Added
+
+- Added completed CLI-first impact-eval documentation for Windows ARM smoke output, release runtime compatibility, and scaffold prompt workflow compliance.
+
+### Changed
+
+- Reworded the user-facing AI wiki footer around task relevance, impact, and write-back outcomes instead of internal eligibility and update-candidate labels.
+- Changed `aiwiki-toolkit install` to refresh package-owned repo-local `.agents/skills/ai-wiki-*` files so existing repos receive updated workflow and footer contracts after package upgrades.
+
 ## v0.1.19
 
 ### Fixed

@@ -1,0 +1,36 @@
+name = "scaffold_prompt_workflow_compliance"
+prompt_family = "scaffold_prompt_workflow_compliance"
+baseline_ref = "b1366fe^"
+historical_issue = "Scaffold and prompt behavior changes can miss tests, install verification, prompt-block boundary checks, or user-agnostic shared prompt guidance."
+
+raw_docs = [
+  "ai-wiki/people/bochengyin/drafts/user-owned-ai-wiki-index-should-not-be-an-upgrade-surface.md",
+  "ai-wiki/people/bochengyin/drafts/toolkit-installed-repo-local-skills-should-skip-existing-files.md",
+  "ai-wiki/trails/2026-04-18-release-workflow-and-prompt-block-edge-cases.md",
+]
+
+consolidated_docs = [
+  "ai-wiki/workflows.md",
+  "ai-wiki/conventions/package-managed-vs-user-owned-docs.md",
+  "ai-wiki/review-patterns/shared-prompt-files-must-be-user-agnostic.md",
+]
+
+ambient_exclude_paths = [
+  "ai-wiki/people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history.md",
+  "ai-wiki/people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files.md",
+  "ai-wiki/people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff.md",
+]
+
+strict_scaffold_exclude_paths = [
+  "ai-wiki/people/bochengyin/drafts/managed-toolkit-workflows-need-a-toc-and-scope-aware-conflict-checks.md",
+  "ai-wiki/people/bochengyin/drafts/repo-local-contributor-workflows-should-stay-out-of-the-package-layer.md",
+  "ai-wiki/people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn.md",
+]
+
+[[consolidated_index_entries]]
+path = "ai-wiki/conventions/index.md"
+entry = "- [Package-managed vs user-owned AI wiki docs](package-managed-vs-user-owned-docs.md): keep evolving package-controlled guidance in `_toolkit/**` and keep repo-owned AI wiki docs stable unless a contributor intentionally edits them."
+
+[[consolidated_index_entries]]
+path = "ai-wiki/review-patterns/index.md"
+entry = "- [Shared prompt files must be user-agnostic](shared-prompt-files-must-be-user-agnostic.md): keep repo-shared prompt content stable across different local handles."

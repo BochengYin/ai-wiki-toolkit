@@ -14,19 +14,25 @@ synthesizes across notes.
    The clean formal CLI-first ownership-boundary run, extended with supplemental `s06`.
 4. `evals/impact/notes/manual_v2_cli_original_release_distribution_20260425_findings.md`
    The clean formal CLI-first release-distribution run, extended with supplemental `s06`.
-5. `evals/impact/notes/manual_v2_original_10_repo_findings.md`
+5. `evals/impact/notes/manual_v2_cli_original_release_runtime_20260425_findings.md`
+   The clean formal CLI-first release-runtime compatibility run.
+6. `evals/impact/notes/manual_v2_cli_original_scaffold_prompt_workflow_20260425_findings.md`
+   The clean formal CLI-first scaffold/prompt workflow-compliance run.
+7. `evals/impact/notes/manual_v2_cli_original_windows_arm_20260425_findings.md`
+   The clean formal CLI-first Windows ARM smoke-output run.
+8. `evals/impact/notes/manual_v2_original_10_repo_findings.md`
    The earlier 10-repo original-prompt transition run across both benchmark families.
-6. `evals/impact/ownership_boundary_runbook.md`
+9. `evals/impact/ownership_boundary_runbook.md`
    Reproduction spec and rubric for the ownership-boundary family.
-7. `evals/impact/release_distribution_integrity_runbook.md`
+10. `evals/impact/release_distribution_integrity_runbook.md`
    Reproduction spec and rubric for the release-distribution family.
-8. `evals/impact/notes/round1_process_lessons.md`
+11. `evals/impact/notes/round1_process_lessons.md`
    Historical round1 process lessons and why v2 changed the harness.
-9. `evals/impact/notes/ownership_boundary_round1_findings.md`
+12. `evals/impact/notes/ownership_boundary_round1_findings.md`
    Historical ownership-boundary short/medium results.
-10. `evals/impact/notes/release_distribution_integrity_round1_findings.md`
+13. `evals/impact/notes/release_distribution_integrity_round1_findings.md`
    Historical release-distribution short results.
-11. `evals/impact/notes/ownership_boundary_v0_failure.md`
+14. `evals/impact/notes/ownership_boundary_v0_failure.md`
    Original failed benchmark design and prompt leakage.
 
 ## Run Chronology
@@ -40,6 +46,9 @@ synthesizes across notes.
 | 5 | `manual_v2_original_10_repo_findings.md` | transition run | 10-repo original-prompt evidence and remaining confounds |
 | 6 | `manual_v2_cli_original_ownership_20260425_findings.md` | current formal run + supplemental diagnostic | clean CLI-first ownership-boundary primary comparison plus `s06` no-adjacent mechanism check |
 | 7 | `manual_v2_cli_original_release_distribution_20260425_findings.md` | current formal run + supplemental diagnostic | clean CLI-first release-distribution primary comparison plus `s06` no-adjacent mechanism check |
+| 8 | `manual_v2_cli_original_windows_arm_20260425_findings.md` | current formal run | narrow Windows ARM smoke-output benchmark |
+| 9 | `manual_v2_cli_original_release_runtime_20260425_findings.md` | current formal run | release-runtime compatibility primary comparison and diagnostics |
+| 10 | `manual_v2_cli_original_scaffold_prompt_workflow_20260425_findings.md` | current formal run | scaffold/prompt workflow-compliance primary comparison and diagnostics |
 
 ## Documentation Roles
 

@@ -1,0 +1,43 @@
+name = "windows_arm_smoke_cli_output"
+prompt_family = "windows_arm_smoke_cli_output"
+baseline_ref = "e0d6fa9^"
+historical_issue = "Windows ARM smoke checks can fail even when the binary is healthy if version assertions compare against the bare package version instead of the full CLI output."
+
+raw_docs = []
+
+consolidated_docs = [
+  "ai-wiki/problems/windows-arm-smoke-version-checks-need-full-cli-output.md",
+]
+
+ambient_exclude_paths = [
+  "ai-wiki/people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history.md",
+  "ai-wiki/people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files.md",
+  "ai-wiki/people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff.md",
+]
+
+strict_scaffold_exclude_paths = [
+  "ai-wiki/conventions/distribution-target-matrix-must-match-published-assets.md",
+  "ai-wiki/problems/linux-musl-pyinstaller-needs-binutils-objdump.md",
+  "ai-wiki/people/bochengyin/drafts/linux-release-binaries-need-runtime-checks-against-an-older-glibc-baseline.md",
+  "ai-wiki/trails/2026-04-18-release-workflow-and-prompt-block-edge-cases.md",
+]
+
+[[strict_scaffold_index_tokens]]
+path = "ai-wiki/conventions/index.md"
+token = "distribution-target-matrix-must-match-published-assets.md"
+
+[[strict_scaffold_index_tokens]]
+path = "ai-wiki/problems/index.md"
+token = "linux-musl-pyinstaller-needs-binutils-objdump.md"
+
+[[strict_scaffold_index_tokens]]
+path = "ai-wiki/trails/index.md"
+token = "2026-04-18-release-workflow-and-prompt-block-edge-cases.md"
+
+[[consolidated_index_entries]]
+path = "ai-wiki/problems/index.md"
+entry = "- [Windows ARM smoke version checks need full CLI output](windows-arm-smoke-version-checks-need-full-cli-output.md): Windows ARM release smoke checks should compare against the full `ai-wiki-toolkit <version>` CLI output instead of the bare package version."
+
+[[raw_overlays]]
+source = "evals/impact/families/windows_arm_smoke_cli_output/memory/raw/windows-arm-smoke-version-checks-draft.md"
+destination = "ai-wiki/people/bochengyin/drafts/windows-arm-smoke-version-checks-need-full-cli-output.md"

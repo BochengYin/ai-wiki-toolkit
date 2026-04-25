@@ -67,9 +67,10 @@ def latest_subdirectory(root: Path) -> Path | None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
+    experiments = available_experiments()
     parser.add_argument(
         "--experiment",
-        choices=sorted(EXPERIMENTS),
+        choices=sorted(experiments),
         default="ownership_boundary",
         help="Experiment family to initialize.",
     )

@@ -180,6 +180,19 @@ def test_init_run_default_paths_use_first_round_layout() -> None:
     )
 
 
+def test_init_run_parse_args_accepts_spec_defined_experiment(monkeypatch) -> None:
+    module = _load_script("init_run.py")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["init_run.py", "--experiment", "windows_arm_smoke_cli_output"],
+    )
+
+    args = module.parse_args()
+
+    assert args.experiment == "windows_arm_smoke_cli_output"
+
+
 def test_save_result_captures_diff_and_message(tmp_path: Path) -> None:
     module = _load_script("save_result.py")
     workspace = tmp_path / "workspace"

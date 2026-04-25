@@ -1,40 +1,43 @@
 # Impact Eval Report
 
-This report summarizes the current evidence across `evals/impact/` notes. It is intentionally short:
-the detailed run evidence lives in `evals/impact/notes/`.
+This report summarizes the current evidence across `evals/impact/` notes. Detailed run evidence
+lives in `evals/impact/notes/`.
 
 ## Current Status
 
-The benchmark now has two useful families:
+The benchmark now has five completed six-slot CLI-first families:
 
 - `ownership_boundary`: tests whether AI wiki workflow helps keep contributor-only behavior out of
   package code.
 - `release_distribution_integrity`: tests whether AI wiki workflow helps coordinate public release
   and npm distribution changes across coupled surfaces.
+- `windows_arm_smoke_cli_output`: tests whether agents fix a narrow Windows ARM version-output
+  smoke failure.
+- `release_runtime_compatibility`: tests whether agents add older-baseline Linux runtime gates before
+  release and npm publishing.
+- `scaffold_prompt_workflow_compliance`: tests whether agents keep scaffold, prompt guidance, docs,
+  and tests aligned with repo memory and ownership boundaries.
 
-The latest report-worthy ownership-boundary evidence is the 2026-04-25 clean CLI-first original
-prompt run documented in:
+Latest report-worthy notes:
 
 - `evals/impact/notes/manual_v2_cli_original_ownership_20260425_findings.md`
-
-The latest report-worthy release-distribution evidence is the 2026-04-25 clean CLI-first original
-prompt run documented in:
-
 - `evals/impact/notes/manual_v2_cli_original_release_distribution_20260425_findings.md`
+- `evals/impact/notes/manual_v2_cli_original_windows_arm_20260425_findings.md`
+- `evals/impact/notes/manual_v2_cli_original_release_runtime_20260425_findings.md`
+- `evals/impact/notes/manual_v2_cli_original_scaffold_prompt_workflow_20260425_findings.md`
 
-Both runs started as five-slot clean formal batches and were then extended with a supplemental `s06`
-`aiwiki_scaffold_no_adjacent_memory` diagnostic in the same workspace/run folders. The six exported
-sessions per family used independent persisted Codex CLI sessions, `gpt-5.5`, `xhigh`, the original
-prompt, and complete session exports validated by `validate_run.py` with no critical confounds.
+All five current formal families used independent persisted Codex CLI sessions, `gpt-5.5`, `xhigh`,
+the `original.md` prompt, complete session exports, and `validate_run.py` outputs with no critical
+confounds.
 
 The earlier 2026-04-25 10-repo transition run remains useful qualitative evidence, but it is no
-longer the current formal ownership result because it mixed VS Code UI and Codex CLI fallback.
+longer the current formal result because it mixed VS Code UI and Codex CLI fallback.
 
 ## Main Findings So Far
 
 ### Ownership Boundary
 
-The clearest positive formal signal for AI wiki is the ownership-boundary primary comparison.
+The clearest positive formal signal for AI wiki is still the ownership-boundary primary comparison.
 
 - No AI wiki (`s01`): fail. The agent repeated the package-surface mistake by adding
   `src/ai_wiki_toolkit/contributor_workflow.py` and package CLI wiring.
@@ -44,21 +47,9 @@ The clearest positive formal signal for AI wiki is the ownership-boundary primar
 This supports the claim that AI wiki workflow can help prevent repeated implementation-surface
 mistakes.
 
-Diagnostic variants are explanatory only:
-
-- `aiwiki_linked_raw_only` succeeded and used the raw repo-local placement draft.
-- `aiwiki_linked_consolidated_only` failed by putting the core helper in `src/ai_wiki_toolkit/`.
-- `aiwiki_scaffold_no_target_memory` succeeded, but is contaminated as a no-target diagnostic because
-  it still used workflow and impact-eval meta memory.
-- `aiwiki_scaffold_no_adjacent_memory` failed after adjacent workflow memory was removed; it added
-  tests and a repo-local script but still put core logic in `src/ai_wiki_toolkit/`.
-
-The supplemental `s06` result strengthens the ownership mechanism story: the ambient AI wiki success
-looks tied to reachable workflow/placement memory, not just to having an AI wiki scaffold present.
-
 ### Release Distribution Integrity
 
-The clean formal release-distribution primary comparison now gives a narrower positive signal.
+The release-distribution primary comparison gives a narrower positive signal.
 
 - No AI wiki (`s01`): partial. The agent produced a broad release/npm matrix expansion, but missed
   the known `linux-musl-x64` build hazard: Alpine PyInstaller builds need binutils/objdump setup run
@@ -68,48 +59,83 @@ The clean formal release-distribution primary comparison now gives a narrower po
   and tests.
 
 This supports the claim that AI wiki can improve coordination quality for multi-surface release
-work. It does not show that AI wiki is necessary for the agent to attempt the expansion; the
-no-AI-wiki control already did substantial work.
+work. It does not show that AI wiki is necessary for the agent to attempt the expansion.
 
-Diagnostic variants are explanatory only. In the clean release run, `aiwiki_scaffold_no_target_memory`,
-`aiwiki_linked_raw_only`, `aiwiki_linked_consolidated_only`, and the supplemental
-`aiwiki_scaffold_no_adjacent_memory` all scored success. They help explain that release-distribution
-success can come from adjacent release memory, targeted raw/consolidated notes, or even generic
-scaffold/workflow context plus current official docs. They are not the primary causal comparison.
+### Windows ARM Smoke Output
 
-The `s06` success narrows the release claim: this family is evidence that AI wiki can improve
-coordination quality and known-hazard avoidance, not evidence that AI wiki memory is necessary for a
-complete release-distribution implementation.
+The Windows ARM smoke family is neutral for AI wiki usefulness.
+
+- No AI wiki (`s01`): success.
+- Realistic AI wiki workflow (`s05`): success.
+- All diagnostic variants: success.
+
+Every slot fixed both release-archive and npm-installed smoke checks to compare against
+`ai-wiki-toolkit <version>` instead of the bare package version and updated tests. This family is
+useful as a deterministic CLI-first harness benchmark, but not as evidence that AI wiki memory is
+needed.
+
+### Release Runtime Compatibility
+
+The release-runtime family gives a narrow positive primary comparison.
+
+- No AI wiki (`s01`): partial. It added release and npm runtime smoke checks in `node:24-bookworm`,
+  but left `linux-x64` building on `ubuntu-24.04`, so the release process catches the failure without
+  producing an older-glibc-compatible baseline.
+- Realistic AI wiki workflow (`s05`): success. It moved Linux builds to `ubuntu-22.04`, added
+  release runtime smoke, added staged npm runtime smoke, and updated docs/tests.
+
+Diagnostics also succeeded, including the strict no-adjacent slot. The best claim is therefore that
+AI wiki improved the primary treatment's fix quality, not that target memory was necessary.
+
+### Scaffold Prompt Workflow Compliance
+
+The scaffold/prompt family gives a workflow-discipline positive primary comparison.
+
+- No AI wiki (`s01`): partial. It implemented many surfaces, but drifted on names and routing:
+  `problem-solutions/`, `ai-wiki-clarify-coding-task`, `ai-wiki-pr-review-learning`, and older
+  `_toolkit/index.md` prompt routing.
+- Realistic AI wiki workflow (`s05`): success. It stayed aligned with `conventions/`, `problems/`,
+  `features/`, `ai-wiki-clarify-before-code`, `ai-wiki-capture-review-learning`, managed schema
+  guidance, prompt/system workflow updates, doctor checks, README, and tests.
+
+Diagnostics also succeeded, so the family is best interpreted as evidence that AI wiki can improve
+workflow consistency and naming/routing discipline, not that target memory is necessary.
 
 ## Current Claim Boundaries
 
 Reasonable to claim:
 
-- The clean CLI-first ownership-boundary run supports AI wiki workflow usefulness for the
+- The clean CLI-first ownership-boundary run supports AI wiki workflow usefulness for a
   repeated-problem ownership-boundary task.
-- The clean CLI-first release-distribution run supports a narrower AI wiki usefulness claim for
-  completeness and known-hazard avoidance in multi-surface release work.
-- The supplemental strict diagnostics point in different directions by family: ownership still needs
-  reachable placement memory, while release distribution can be solved without adjacent release
-  memory in at least this one sample.
-- Original prompts are better than medium-style prompts for testing memory reuse.
-- Session exports are necessary for judging why the agent made a decision.
+- The release-distribution and release-runtime runs support narrower usefulness claims for
+  completeness, known-hazard avoidance, and release-process quality.
+- The scaffold/prompt run supports a workflow-discipline claim: AI wiki context helped the agent keep
+  names, routing, docs, and tests aligned.
+- The Windows ARM smoke run is a good deterministic harness check, but neutral on AI wiki usefulness.
+- Original prompts and complete session exports are now the right baseline for interpreting these
+  workflow-primary runs.
 
 Not yet reasonable to claim:
 
 - a clean quantitative causal estimate of AI wiki impact
 - a seed-controlled benchmark result
 - a final model comparison
-- proof that AI wiki is necessary for release-distribution success; the supplemental `s06` result
-  argues against that stronger claim
+- proof that AI wiki is necessary for release-distribution, release-runtime, scaffold, or Windows ARM
+  success; several diagnostic variants solved those tasks
 - a formal claim from the 2026-04-25 transition batch
 
 ## Next Formal Work
 
-The next useful formal work is replication with the now-default six-slot protocol:
+Remaining untested or immature families:
 
-1. Repeat each family with additional independent six-slot batches.
+1. `postinstall_archive_staging`
+2. `aiwiki_evidence_integrity`
+3. `capture_vs_consolidation`, after more concrete signals exist
+
+The next replication work should keep the now-default protocol:
+
+1. Run six neutral slots per family.
 2. Keep `original.md`, Codex CLI-first execution, and run-level `caffeinate`.
 3. Preserve complete session exports and validator output before scoring.
-4. Include `aiwiki_scaffold_no_adjacent_memory` in both benchmark families.
-5. Continue treating diagnostic variants as explanations, not primary conclusions.
+4. Treat `no_aiwiki_workflow` versus `aiwiki_ambient_memory_workflow` as the primary comparison.
+5. Treat diagnostic variants as explanations, not primary conclusions.

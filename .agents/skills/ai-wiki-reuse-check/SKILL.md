@@ -1,6 +1,6 @@
 ---
 name: ai-wiki-reuse-check
-description: Produce the mandatory end-of-task AI wiki reuse evidence for ai-wiki-toolkit. Use it to classify task eligibility, record consulted user-owned docs, append local telemetry, and emit the user-facing footer.
+description: Produce the mandatory end-of-task AI wiki reuse evidence for ai-wiki-toolkit. Use it to classify task relevance, record consulted user-owned docs, append local telemetry, and emit the user-facing footer.
 ---
 
 # AI Wiki Reuse Evidence
@@ -11,7 +11,7 @@ This evidence footer is mandatory even when the correct outcome is `no_wiki_use`
 
 ## Core Workflow
 
-1. Classify the task as `eligible`, `optional`, or `not_applicable` for AI wiki use before judging whether the absence of wiki reads is a problem.
+1. Classify the task as `relevant`, `optional`, or `not_relevant` for AI wiki use before judging whether the absence of wiki reads is a problem.
 2. Use the final AI wiki footer as the user-facing evidence surface; local telemetry is the machine-readable record behind it.
 3. Review whether any repo-local or cross-project AI wiki docs were consulted during the task.
 4. Before or during the task, check whether relevant memory existed in:
@@ -36,7 +36,7 @@ This evidence footer is mandatory even when the correct outcome is `no_wiki_use`
 
 - Do not skip the footer just because the task was small or the result seems obvious.
 - Record one task-level reuse check for every completed task.
-- `no_wiki_use` is correct for `not_applicable` operational tasks.
+- `no_wiki_use` is correct for `not_relevant` operational tasks.
 - Do not force unrelated wiki reads just to improve coverage metrics.
 - If multiple user-owned AI wiki docs were consulted, record them as separate `record-reuse` events.
 - Do not record managed `_toolkit/**` docs with `record-reuse`.

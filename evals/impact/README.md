@@ -20,6 +20,9 @@ The current documented benchmark families are:
 
 - `ownership_boundary`
 - `release_distribution_integrity`
+- `windows_arm_smoke_cli_output`
+- `release_runtime_compatibility`
+- `scaffold_prompt_workflow_compliance`
 
 ## Manual v2: Workflow-Primary Framing
 

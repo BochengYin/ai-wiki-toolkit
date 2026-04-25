@@ -43,7 +43,7 @@ Instead of trying to solve the problem with a server, embeddings, or hidden stat
 - repo-local AI wiki files
 - home-level cross-project AI wiki files
 - managed prompt blocks
-- repo-local Codex skills for repeatable end-of-task reuse and update checks
+- repo-local Codex skills for repeatable end-of-task reuse and write-back checks
 
 That gives the repo and the user a stable Markdown place to accumulate knowledge without turning the package into a knowledge platform.
 
@@ -109,7 +109,7 @@ The current scope is intentionally strict about compatibility:
 - create starter Markdown files only if they do not already exist
 - create managed `_toolkit/` files that package updates are allowed to refresh
 - create `conventions/`, `review-patterns/`, `problems/`, `features/`, and `people/<handle>/drafts/` scaffolding
-- create repo-local `.agents/skills/ai-wiki-reuse-check/`, `.agents/skills/ai-wiki-update-check/`, `.agents/skills/ai-wiki-clarify-before-code/`, and `.agents/skills/ai-wiki-capture-review-learning/` skills only when files are missing
+- create or refresh package-owned repo-local `.agents/skills/ai-wiki-reuse-check/`, `.agents/skills/ai-wiki-update-check/`, `.agents/skills/ai-wiki-clarify-before-code/`, `.agents/skills/ai-wiki-capture-review-learning/`, and `.agents/skills/ai-wiki-consolidate-drafts/` skills
 - create a managed `_toolkit/schema/team-memory-v1.md` guide for lightweight team coding memory
 - update managed instruction blocks inside `AGENT.md`, `AGENTS.md`, and `CLAUDE.md`
 - avoid rewriting existing user-owned `ai-wiki/**/*.md` documents outside `_toolkit/`
@@ -254,7 +254,7 @@ aiwiki-toolkit init
 - create `ai-wiki/conventions/`, `ai-wiki/review-patterns/`, `ai-wiki/problems/`, `ai-wiki/features/`, `ai-wiki/people/<handle>/drafts/`, `ai-wiki/metrics/`, and repo/home `_toolkit/`
 - generate package-managed `_toolkit/index.md`, `_toolkit/workflows.md`, `_toolkit/catalog.json`, `_toolkit/schema/reuse-v1.md`, `_toolkit/schema/team-memory-v1.md`, and `_toolkit/metrics/*.json`
 - upsert a managed `.gitignore` block that ignores AI wiki telemetry and generated aggregate snapshots so routine agent use does not dirty `git status`
-- create `.agents/skills/ai-wiki-reuse-check/`, `.agents/skills/ai-wiki-update-check/`, `.agents/skills/ai-wiki-clarify-before-code/`, and `.agents/skills/ai-wiki-capture-review-learning/` if the repo-local skills do not already exist
+- create or refresh package-owned `.agents/skills/ai-wiki-reuse-check/`, `.agents/skills/ai-wiki-update-check/`, `.agents/skills/ai-wiki-clarify-before-code/`, `.agents/skills/ai-wiki-capture-review-learning/`, and `.agents/skills/ai-wiki-consolidate-drafts/`
 - update `AGENT.md`, `AGENTS.md`, and/or `CLAUDE.md` with a managed instruction block that reads `ai-wiki/_toolkit/system.md`
 
 If no supported prompt file exists, it creates `AGENT.md`.
@@ -267,7 +267,7 @@ If `--handle` is not passed, the tool resolves a handle from:
 
 The tool works best when `git user.name` and `git user.email` are configured first.
 
-If repo-local skill files already exist under `.agents/skills/`, the installer does not overwrite them. It skips those files and prints a manual merge URL back to this repository so you can compare and resolve changes yourself.
+If package-owned repo-local skill files already exist under `.agents/skills/ai-wiki-*`, the installer refreshes them from the current package so new workflow and footer contracts propagate on upgrade. Because these files live in git, local customizations remain visible in `git diff` after running `install`.
 
 `init` remains as a backward-compatible alias for `install`. The actual scaffold creation does not happen at package install time; it happens when you run `aiwiki-toolkit install` or `aiwiki-toolkit init` inside a git repository.
 
@@ -368,7 +368,7 @@ Even with `--purge-user-docs --yes`, the shared home wiki under `~/ai-wiki/syste
 - `ai-wiki/metrics/reuse-events/<handle>.jsonl` and `ai-wiki/metrics/task-checks/<handle>.jsonl` are user-owned evidence data. Package-managed aggregate views are regenerated under `ai-wiki/_toolkit/metrics/`, and the installer ignores all of those telemetry paths by default in `.gitignore`.
 - Legacy flat files such as `ai-wiki/metrics/reuse-events.jsonl` and `ai-wiki/metrics/task-checks.jsonl` are still read for compatibility, but new writes should use the handle-sharded layout.
 - `aiwiki-toolkit doctor --suggest-index-upgrade` prints suggested replacements for missing repo starter docs and repo-owned companion docs such as `ai-wiki/workflows.md`, but it does not overwrite them automatically.
-- `.agents/skills/ai-wiki-reuse-check/**`, `.agents/skills/ai-wiki-update-check/**`, `.agents/skills/ai-wiki-clarify-before-code/**`, and `.agents/skills/ai-wiki-capture-review-learning/**` are installed as starter scaffolding only. Existing files at those paths are skipped instead of overwritten.
+- Package-owned `.agents/skills/ai-wiki-reuse-check/**`, `.agents/skills/ai-wiki-update-check/**`, `.agents/skills/ai-wiki-clarify-before-code/**`, `.agents/skills/ai-wiki-capture-review-learning/**`, and `.agents/skills/ai-wiki-consolidate-drafts/**` are refreshed by `install` so package workflow updates reach existing repos.
 - Prompt files are updated only inside the managed block marked by:
 
 ```md

@@ -79,7 +79,9 @@ class ExperimentSpec:
     name: str
     prompt_family: str
     raw_docs: tuple[str, ...]
+    raw_overlays: tuple[tuple[str, str], ...]
     consolidated_docs: tuple[str, ...]
+    consolidated_overlays: tuple[tuple[str, str], ...]
     consolidated_index_entries: tuple[tuple[str, str], ...]
     baseline_ref: str = "HEAD"
     historical_issue: str = ""
@@ -97,10 +99,12 @@ OWNERSHIP_BOUNDARY = ExperimentSpec(
         "ai-wiki/people/bochengyin/drafts/repo-local-contributor-workflows-should-stay-out-of-the-package-layer.md",
         "ai-wiki/people/bochengyin/drafts/managed-toolkit-workflows-need-a-toc-and-scope-aware-conflict-checks.md",
     ),
+    raw_overlays=(),
     consolidated_docs=(
         "ai-wiki/conventions/package-managed-vs-user-owned-docs.md",
         "ai-wiki/review-patterns/shared-prompt-files-must-be-user-agnostic.md",
     ),
+    consolidated_overlays=(),
     consolidated_index_entries=(
         (
             "ai-wiki/conventions/index.md",
@@ -126,9 +130,11 @@ RELEASE_DISTRIBUTION_INTEGRITY = ExperimentSpec(
     raw_docs=(
         "ai-wiki/people/bochengyin/drafts/distribution-target-matrix-must-match-published-assets.md",
     ),
+    raw_overlays=(),
     consolidated_docs=(
         "ai-wiki/conventions/distribution-target-matrix-must-match-published-assets.md",
     ),
+    consolidated_overlays=(),
     consolidated_index_entries=(
         (
             "ai-wiki/conventions/index.md",
@@ -175,13 +181,23 @@ def load_experiment_spec(spec_path: Path) -> ExperimentSpec:
         (entry["path"], entry["entry"])
         for entry in payload.get("consolidated_index_entries", [])
     )
+    raw_overlays = tuple(
+        (entry["source"], entry["destination"])
+        for entry in payload.get("raw_overlays", [])
+    )
+    consolidated_overlays = tuple(
+        (entry["source"], entry["destination"])
+        for entry in payload.get("consolidated_overlays", [])
+    )
     return ExperimentSpec(
         name=payload["name"],
         prompt_family=payload.get("prompt_family", payload["name"]),
         baseline_ref=payload.get("baseline_ref", "HEAD"),
         historical_issue=payload.get("historical_issue", ""),
         raw_docs=tuple(payload.get("raw_docs", [])),
+        raw_overlays=raw_overlays,
         consolidated_docs=tuple(payload.get("consolidated_docs", [])),
+        consolidated_overlays=consolidated_overlays,
         consolidated_index_entries=consolidated_index_entries,
         ambient_exclude_paths=tuple(payload.get("ambient_exclude_paths", [])),
         strict_scaffold_exclude_paths=tuple(
@@ -349,6 +365,20 @@ def copy_overlay_file(control_root: Path, destination_root: Path, relative_path:
     shutil.copy2(source, target)
 
 
+def copy_overlay_to_path(
+    control_root: Path,
+    destination_root: Path,
+    source_path: str,
+    destination_path: str,
+) -> None:
+    source = control_root / source_path
+    if not source.exists():
+        raise RuntimeError(f"Expected overlay file does not exist in control repo: {source_path}")
+    target = destination_root / destination_path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source, target)
+
+
 def copy_current_tree(control_root: Path, destination_root: Path, relative_root: str) -> None:
     source = control_root / relative_root
     if not source.exists():
@@ -437,11 +467,15 @@ def ensure_index_entry(root: Path, relative_path: str, entry: str) -> None:
 def inject_raw_memory(root: Path, control_root: Path, spec: ExperimentSpec) -> None:
     for path in spec.raw_docs:
         copy_overlay_file(control_root, root, path)
+    for source_path, destination_path in spec.raw_overlays:
+        copy_overlay_to_path(control_root, root, source_path, destination_path)
 
 
 def inject_consolidated_memory(root: Path, control_root: Path, spec: ExperimentSpec) -> None:
     for path in spec.consolidated_docs:
         copy_overlay_file(control_root, root, path)
+    for source_path, destination_path in spec.consolidated_overlays:
+        copy_overlay_to_path(control_root, root, source_path, destination_path)
     for index_path, entry in spec.consolidated_index_entries:
         ensure_index_entry(root, index_path, entry)
 
@@ -450,6 +484,8 @@ def inject_ambient_memory(root: Path, control_root: Path, spec: ExperimentSpec) 
     copy_current_tree(control_root, root, "ai-wiki")
     copy_ai_wiki_skills(control_root, root)
     copy_current_managed_prompt_block(control_root, root)
+    inject_raw_memory(root, control_root, spec)
+    inject_consolidated_memory(root, control_root, spec)
     for path in spec.ambient_exclude_paths:
         remove_if_exists(root, path)
 
@@ -512,7 +548,16 @@ def sanitize_plain_repo(root: Path) -> None:
 
 
 def remove_relevant_memory(root: Path, spec: ExperimentSpec) -> None:
-    for path in (*spec.raw_docs, *spec.consolidated_docs, *spec.ambient_exclude_paths):
+    overlay_destinations = tuple(
+        destination
+        for _, destination in (*spec.raw_overlays, *spec.consolidated_overlays)
+    )
+    for path in (
+        *spec.raw_docs,
+        *spec.consolidated_docs,
+        *overlay_destinations,
+        *spec.ambient_exclude_paths,
+    ):
         remove_if_exists(root, path)
     for index_path, entry in spec.consolidated_index_entries:
         remove_index_entry(root, index_path, entry)
@@ -539,6 +584,8 @@ def remove_strict_scaffold_memory(root: Path, spec: ExperimentSpec) -> None:
 def remove_consolidated_memory(root: Path, spec: ExperimentSpec) -> None:
     for path in spec.consolidated_docs:
         remove_if_exists(root, path)
+    for _, destination_path in spec.consolidated_overlays:
+        remove_if_exists(root, destination_path)
     for index_path, entry in spec.consolidated_index_entries:
         remove_index_entry(root, index_path, entry)
 
@@ -546,6 +593,8 @@ def remove_consolidated_memory(root: Path, spec: ExperimentSpec) -> None:
 def remove_raw_memory(root: Path, spec: ExperimentSpec) -> None:
     for path in spec.raw_docs:
         remove_if_exists(root, path)
+    for _, destination_path in spec.raw_overlays:
+        remove_if_exists(root, destination_path)
 
 
 def write_variant_note(

@@ -54,10 +54,10 @@ Reference implementation:
 | --- | --- | --- | --- | --- |
 | `ownership_boundary` | `done` | repeated-problem / surface-choice | does AI wiki memory keep a contributor-only helper out of package code? | `repo-local-contributor-workflows-should-stay-out-of-the-package-layer`, adjacent ownership/prompt docs |
 | `release_distribution_integrity` | `done` | repeated-problem / coordinated multi-surface change | when a public distribution target changes, does memory help the agent keep workflows, asset names, npm metadata, archive handling, docs, and smoke checks aligned? | `ai-wiki/conventions/distribution-target-matrix-must-match-published-assets.md`, source draft, related release-fix drafts |
-| `windows_arm_smoke_cli_output` | `planned` | narrow repeated-problem benchmark | does memory help the agent fix the exact Windows ARM smoke assertion by comparing against full CLI output instead of the bare version? | `ai-wiki/problems/windows-arm-smoke-version-checks-need-full-cli-output.md` |
-| `release_runtime_compatibility` | `planned` | repeated-problem / release-runtime verification | does memory help the agent choose an older glibc baseline and add runtime verification instead of stopping at build or install success? | `linux-release-binaries-need-runtime-checks-against-an-older-glibc-baseline.md` |
+| `windows_arm_smoke_cli_output` | `done` | narrow repeated-problem benchmark | does memory help the agent fix the exact Windows ARM smoke assertion by comparing against full CLI output instead of the bare version? | `ai-wiki/problems/windows-arm-smoke-version-checks-need-full-cli-output.md` |
+| `release_runtime_compatibility` | `done` | repeated-problem / release-runtime verification | does memory help the agent choose an older glibc baseline and add runtime verification instead of stopping at build or install success? | `linux-release-binaries-need-runtime-checks-against-an-older-glibc-baseline.md` |
 | `postinstall_archive_staging` | `planned` | repeated-problem / packaging | does memory help the agent avoid self-deleting npm postinstall staging paths? | `npm-postinstall-must-not-delete-its-own-download-archive.md` |
-| `scaffold_prompt_workflow_compliance` | `planned` | workflow-compliance | when changing scaffold or prompt behavior, does memory help the agent update tests, rerun install, and avoid prompt churn? | `ai-wiki/workflows.md`, `shared-prompt-files-must-be-user-agnostic.md`, prompt-churn drafts |
+| `scaffold_prompt_workflow_compliance` | `done` | workflow-compliance | when changing scaffold or prompt behavior, does memory help the agent update tests, rerun install, and avoid prompt churn? | `ai-wiki/workflows.md`, `shared-prompt-files-must-be-user-agnostic.md`, prompt-churn drafts |
 | `aiwiki_evidence_integrity` | `planned` | telemetry / end-of-task workflow | does memory help the agent preserve the distinction between document-level reuse events and task-level checks, and always run update checks? | `ai-wiki-usefulness-metrics-need-task-level-checks-plus-doc-events.md`, `end-of-task-ai-wiki-update-check-must-always-run.md`, `ai-wiki-reuse-metrics-should-exclude-managed-docs-and-shard-by-handle.md` |
 | `capture_vs_consolidation` | `needs-more-signals` | consolidation-design benchmark | when consolidation exists, does it improve reuse without creating shared-doc churn or overwriting end-of-task capture? | `consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn.md` |
 
@@ -96,24 +96,33 @@ Why this family was still a strong candidate:
 
 ### windows_arm_smoke_cli_output
 
-This is narrower and cleaner than the full distribution-integrity family.
+Run and documented.
 
-Good choice if the next benchmark should be small and deterministic.
+Artifacts:
 
-Likely success criterion:
+- `evals/impact/notes/manual_v2_cli_original_windows_arm_20260425_findings.md`
+- `/private/tmp/aiwiki_first_round/windows_arm_smoke_cli_output/runs/cli-original-windows-arm-20260425-1618/report.md`
 
-- fix the smoke check in the right workflow/test surface
-- compare against `ai-wiki-toolkit <version>` instead of bare `<version>`
+Current defended takeaway:
+
+- all six slots succeeded
+- the family is deterministic and useful for harness smoke coverage
+- it is not strong evidence that AI wiki memory is necessary because the no-AI-wiki primary control also succeeded
 
 ### release_runtime_compatibility
 
-This family is attractive because it reflects a real runtime-success versus build-success gap.
+Run and documented.
 
-The benchmark would likely test whether the agent:
+Artifacts:
 
-- adds runtime verification
-- chooses an older Linux/glibc baseline
-- avoids stopping after publish/install-only green signals
+- `evals/impact/notes/manual_v2_cli_original_release_runtime_20260425_findings.md`
+- `/private/tmp/aiwiki_first_round/release_runtime_compatibility/runs/cli-original-runtime-20260425-1618/report.md`
+
+Current defended takeaway:
+
+- the no-AI-wiki primary control was partial because it added smoke gates but left `linux-x64` on the newer `ubuntu-24.04` build baseline
+- the ambient AI wiki primary treatment succeeded by adding an older build baseline plus release/npm runtime verification
+- diagnostics also succeeded, so the claim is usefulness in the primary comparison, not necessity
 
 ### postinstall_archive_staging
 
@@ -126,15 +135,18 @@ The benchmark would likely test whether the agent:
 
 ### scaffold_prompt_workflow_compliance
 
-This is the best workflow-compliance family candidate.
+Run and documented.
 
-It would test whether the agent follows:
+Artifacts:
 
-- test updates
-- `uv run pytest`
-- local `aiwiki-toolkit install` verification
-- prompt-block boundary checks
-- no user-specific churn
+- `evals/impact/notes/manual_v2_cli_original_scaffold_prompt_workflow_20260425_findings.md`
+- `/private/tmp/aiwiki_first_round/scaffold_prompt_workflow_compliance/runs/cli-original-scaffold-20260425-1618/report.md`
+
+Current defended takeaway:
+
+- the no-AI-wiki primary control was partial because it implemented broad scaffold changes but drifted on naming/routing
+- the ambient AI wiki primary treatment succeeded and stayed aligned with repo memory for areas, skills, managed routing, docs, and tests
+- diagnostics also succeeded, so the family is workflow-compliance evidence rather than proof that target memory is necessary
 
 ### aiwiki_evidence_integrity
 
@@ -161,12 +173,12 @@ Promote it later if more concrete consolidation tasks appear.
 
 If you want the closest follow-on to the current release family:
 
-1. `windows_arm_smoke_cli_output`
+1. `postinstall_archive_staging`
 
 If you want the next broader release/verification benchmark:
 
-1. `release_runtime_compatibility`
+1. `aiwiki_evidence_integrity`
 
 If you want the next workflow-style benchmark:
 
-1. `scaffold_prompt_workflow_compliance`
+1. `capture_vs_consolidation` after more concrete signals exist

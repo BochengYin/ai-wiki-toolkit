@@ -400,6 +400,59 @@ def test_prepare_variants_can_write_workflow_primary_neutral_slots(tmp_path: Pat
     ).exists()
 
 
+def test_prepare_variants_supports_family_local_memory_overlays(tmp_path: Path) -> None:
+    module = _load_prepare_variants_module()
+    source = tmp_path / "source"
+    control = tmp_path / "control"
+    output = tmp_path / "output"
+    source.mkdir()
+    (source / ".git").mkdir()
+    _write(source / "AGENTS.md", "Plain instructions\n")
+    _write(source / "src" / "module.py", "print('ok')\n")
+    _write(control / "fixtures" / "raw.md", "raw memory\n")
+    _write(control / "fixtures" / "consolidated.md", "consolidated memory\n")
+
+    spec = module.ExperimentSpec(
+        name="overlay_test",
+        prompt_family="overlay_test",
+        raw_docs=(),
+        raw_overlays=(("fixtures/raw.md", "ai-wiki/people/eval/drafts/raw.md"),),
+        consolidated_docs=(),
+        consolidated_overlays=(
+            ("fixtures/consolidated.md", "ai-wiki/problems/runtime.md"),
+        ),
+        consolidated_index_entries=(
+            ("ai-wiki/problems/index.md", "- [Runtime](runtime.md): runtime memory."),
+        ),
+    )
+
+    module.prepare_variants(
+        source,
+        output,
+        spec,
+        source_mode=module.SOURCE_MODE_WORKING_TREE,
+        control_root=control,
+        baseline_ref="HEAD",
+        workspace_layout=module.WORKSPACE_LAYOUT_NEUTRAL,
+    )
+
+    no_target = output / "slots" / "s02"
+    raw = output / "slots" / "s03"
+    consolidated = output / "slots" / "s04"
+    ambient = output / "slots" / "s05"
+
+    assert not (no_target / "ai-wiki" / "people" / "eval" / "drafts" / "raw.md").exists()
+    assert not (no_target / "ai-wiki" / "problems" / "runtime.md").exists()
+    assert (raw / "ai-wiki" / "people" / "eval" / "drafts" / "raw.md").exists()
+    assert not (raw / "ai-wiki" / "problems" / "runtime.md").exists()
+    assert not (
+        consolidated / "ai-wiki" / "people" / "eval" / "drafts" / "raw.md"
+    ).exists()
+    assert (consolidated / "ai-wiki" / "problems" / "runtime.md").exists()
+    assert (ambient / "ai-wiki" / "people" / "eval" / "drafts" / "raw.md").exists()
+    assert (ambient / "ai-wiki" / "problems" / "runtime.md").exists()
+
+
 def test_prepare_variants_includes_release_strict_scaffold_diagnostic_by_default(
     tmp_path: Path,
 ) -> None:
