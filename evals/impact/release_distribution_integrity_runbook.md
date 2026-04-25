@@ -3,6 +3,12 @@
 This document describes how to reproduce the current `release_distribution_integrity` manual
 impact eval and how the generated repos differ before any prompt is run.
 
+For result chronology and synthesis, read:
+
+- `evals/impact/notes/index.md`
+- `evals/impact/notes/manual_v2_original_10_repo_findings.md`
+- `evals/impact/report.md`
+
 ## Goal
 
 Measure whether AI wiki memory changes how reliably an agent keeps a public release/distribution
@@ -126,7 +132,7 @@ Includes both:
 - the promoted shared convention
 - the restored convention index entry
 
-## Active Prompts
+## Active Prompt
 
 Prompt family:
 
@@ -136,43 +142,36 @@ Task description:
 
 - `evals/impact/prompts/release_distribution_integrity/TASK.md`
 
-Active prompt levels:
+Formal v2 runs use one active prompt level:
+
+- `original.md`
+
+`original.md` recreates the historical distribution request without directly listing every coupled
+surface that should change. That makes the run test whether memory/workflow helps the agent
+coordinate the release matrix instead of simply following an answer-like prompt.
+
+Legacy round1 prompts remain only for old-run interpretation:
 
 - `short.md`
 - `medium.md`
 
-### short
+Do not use `medium.md` for workflow-primary claims; it tells the agent the coordination answer too
+directly.
 
-Contains only the task requirement:
+## Codex CLI-First Protocol
 
-- expand public release and npm distribution support
-- add end-to-end Windows npm support
-- expand the public matrix to:
-  - `linux-arm64`
-  - `linux-musl-x64`
-  - `windows-arm64`
-- keep docs and tests up to date
+For each neutral slot:
 
-### medium
-
-Adds exactly one extra coordination sentence:
-
-- treat this as one coordinated public distribution change
-- keep release assets, npm target resolution/package metadata, archive handling, docs, and
-  release-facing verification aligned
-
-## Manual Protocol
-
-For each variant:
-
-1. Open the workspace in a fresh Codex session.
-2. Paste `short.md` or `medium.md`.
-3. Let the agent work normally.
+1. Prefer `run_cli_slots.py` so the whole slot set runs under one `caffeinate -dimsu` sleep guard.
+2. Run `original.md` with `codex exec` from a fresh persisted CLI session.
+3. Use the same `gpt-5.5` / `xhigh` condition across all slots.
 4. Capture the workspace with:
    - `evals/impact/scripts/save_result.py`
-5. Export the visible Codex session with:
+5. Export the visible Codex sessions with:
    - `evals/impact/scripts/export_codex_sessions.py`
-6. Grade the run from:
+6. Validate the run with:
+   - `evals/impact/scripts/validate_run.py`
+7. Grade the run from:
    - `workspace_diff.patch`
    - `workspace_diff_stat.txt`
    - `visible_transcript.md`
@@ -181,11 +180,29 @@ For each variant:
 
 Important controls:
 
-- one fresh session per variant
-- same selected model across variants if possible
+- one fresh session per slot
+- same selected model and reasoning effort across variants
 - same prompt text within a comparison set
 - save artifacts outside the experiment repos
 - do not grade from `report.md` or `final_message.md` alone
+- require a complete `codex_sessions/manifest.json` before making shareable claims
+- require exported session metadata to show `source=exec`, `model=gpt-5.5`, and
+  `reasoning_effort=xhigh`
+
+Computer Use or the VS Code Codex extension can still be used for smoke checks, but UI automation
+is not the formal execution path.
+
+Whole-run command:
+
+```bash
+uv run python evals/impact/scripts/run_cli_slots.py \
+  --run-dir <run-dir> \
+  --prompt-level original
+```
+
+If the sleep guard is unavailable or a `codex exec` process hangs before writing
+`final_message.md`, treat that run as an infrastructure confound and restart from a new workspace
+for formal claims.
 
 ## Artifact Interpretation Rules
 
@@ -199,28 +216,22 @@ The current harness captures useful artifacts, but the analysis should follow th
 5. If a session continued after the first substantive closeout, use the first closeout block in
    `visible_transcript.md` rather than a later `final_message.md` snapshot.
 
-## Model And Sampling Notes For The Current Runs
+## Model And Sampling Notes
 
-The currently saved release run was executed manually with:
+The formal v2 condition is:
 
-- execution surface: Codex subscription sessions, not direct API calls
-- model family: `gpt-5.4`
-- reasoning effort: `xhigh` / extra high
+- execution surface: `codex-cli`
+- model family: `gpt-5.5`
+- reasoning effort: `xhigh`
 
-These settings were manually held constant by the operator. They are not yet stored as verified
-fields in `result.json`.
+`init_run.py` records those expected fields in `metadata.json`. `export_codex_sessions.py` exports
+the observed session `source`, model, and reasoning effort into each session `metadata.json` and
+the workspace-level `manifest.json`. `validate_run.py` treats mismatches as critical confounds.
 
-Because these runs were done through subscription sessions rather than direct API requests, the
-operator did not have exposed request knobs for parameters such as temperature or seed.
+The legacy saved release run was executed manually with GPT-5.4 at extra-high reasoning through
+subscription sessions. Use it as historical qualitative evidence, not as the formal v2 condition.
 
-What is not currently recorded by the harness:
-
-- exact model and effort fields in result capture
-- an explicit first-pass cutoff timestamp
-- a frozen saved first-pass final message
-
-So current conclusions should be treated as manually controlled qualitative comparisons, not as
-fully instrumented deterministic replays.
+No temperature or seed is captured here.
 
 ## Manual Scoring Rubric
 
@@ -258,6 +269,21 @@ Any of the following is enough for failure:
 - the run advertises support that the repo still does not actually publish or stage correctly
 
 ## Current Saved Runs
+
+### Manual v2 original transition run
+
+- workspace root:
+  - `/private/tmp/aiwiki_first_round/release_distribution_integrity/workspaces/20260425-005106`
+- run dir:
+  - `/private/tmp/aiwiki_first_round/release_distribution_integrity/runs/ui-original-five-slots-20260425-0218`
+- exported sessions:
+  - `/private/tmp/aiwiki_first_round/release_distribution_integrity/workspaces/20260425-005106/codex_sessions_ui_original_release/manifest.json`
+- findings note:
+  - `evals/impact/notes/manual_v2_original_10_repo_findings.md`
+
+Important: this was a transition run. `s01` used VS Code Codex UI, while `s02` through `s05` used
+Codex CLI fallback after Computer Use / VS Code accessibility became unreliable. Use it as
+qualitative evidence, not a clean formal causal run.
 
 ### Short run
 

@@ -11,15 +11,27 @@ import subprocess
 import sys
 
 
-PROMPT_LEVELS = ("short", "medium", "full")
+PROMPT_LEVELS = ("original", "short", "medium", "full")
+CAPTURE_PHASES = ("first_pass", "final")
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-dir", type=Path, required=True, help="Run directory created by init_run.py.")
     parser.add_argument("--variant", required=True, help="Variant name such as aiwiki_consolidated.")
-    parser.add_argument("--prompt-level", required=True, help="Prompt level such as medium.")
+    parser.add_argument(
+        "--slot",
+        default=None,
+        help="Neutral workspace slot such as s01. Defaults to --variant for legacy runs.",
+    )
+    parser.add_argument("--prompt-level", required=True, help="Prompt level such as original.")
     parser.add_argument("--workspace", type=Path, required=True, help="Workspace path for this variant.")
+    parser.add_argument(
+        "--phase",
+        choices=CAPTURE_PHASES,
+        default=None,
+        help="Capture phase. Use first_pass for the first closeout and final for later repaired state.",
+    )
     parser.add_argument(
         "--final-message",
         type=Path,
@@ -136,7 +148,10 @@ def main() -> None:
     if not args.workspace.exists():
         raise SystemExit(f"Workspace does not exist: {args.workspace}")
 
-    slot = args.run_dir / args.variant / args.prompt_level
+    slot_name = args.slot or args.variant
+    slot = args.run_dir / slot_name / args.prompt_level
+    if args.phase is not None:
+        slot = slot / args.phase
     slot.mkdir(parents=True, exist_ok=True)
 
     if args.final_message is not None:
@@ -160,8 +175,11 @@ def main() -> None:
     ]
     changed_files = tracked_changed_files + [path for path in untracked_files if path not in tracked_changed_files]
     result = {
+        "schema_version": 2,
+        "slot": slot_name,
         "variant": args.variant,
         "prompt_level": args.prompt_level,
+        "phase": args.phase or "legacy",
         "workspace": str(args.workspace.resolve()),
         "captured_at": datetime.now().isoformat(timespec="seconds"),
         "attempt": args.attempt,

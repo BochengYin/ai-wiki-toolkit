@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from importlib.util import module_from_spec, spec_from_file_location
+import json
 from pathlib import Path
 import subprocess
 import sys
@@ -49,6 +50,63 @@ def _git(repo: Path, *args: str) -> str:
         text=True,
     )
     return result.stdout
+
+
+def _seed_ownership_memory_source(source: Path) -> None:
+    source.mkdir()
+    (source / ".git").mkdir()
+    _write(
+        source / "AGENTS.md",
+        "Before\n\n<!-- aiwiki-toolkit:start -->\nmanaged\n<!-- aiwiki-toolkit:end -->\n\nAfter\n",
+    )
+    _write(source / ".agents" / "skills" / "ai-wiki-reuse-check" / "SKILL.md", "reuse\n")
+    _write(source / "src" / "module.py", "print('ok')\n")
+    _write(
+        source / "ai-wiki" / "conventions" / "index.md",
+        "# Conventions Index\n\n"
+        "- [Package-managed vs user-owned AI wiki docs](package-managed-vs-user-owned-docs.md): keep evolving package-controlled guidance in `_toolkit/**` and keep repo-owned AI wiki docs stable unless a contributor intentionally edits them.\n",
+    )
+    _write(
+        source / "ai-wiki" / "review-patterns" / "index.md",
+        "# Review Patterns Index\n\n"
+        "- [Shared prompt files must be user-agnostic](shared-prompt-files-must-be-user-agnostic.md): keep repo-shared prompt content stable across different local handles.\n",
+    )
+    _write(
+        source / "ai-wiki" / "conventions" / "package-managed-vs-user-owned-docs.md",
+        "rule\n",
+    )
+    _write(
+        source / "ai-wiki" / "review-patterns" / "shared-prompt-files-must-be-user-agnostic.md",
+        "pattern\n",
+    )
+    _write(
+        source
+        / "ai-wiki"
+        / "people"
+        / "bochengyin"
+        / "drafts"
+        / "user-owned-ai-wiki-index-should-not-be-an-upgrade-surface.md",
+        "draft\n",
+    )
+    _write(
+        source
+        / "ai-wiki"
+        / "people"
+        / "bochengyin"
+        / "drafts"
+        / "repo-local-contributor-workflows-should-stay-out-of-the-package-layer.md",
+        "draft\n",
+    )
+    _write(
+        source
+        / "ai-wiki"
+        / "people"
+        / "bochengyin"
+        / "drafts"
+        / "managed-toolkit-workflows-need-a-toc-and-scope-aware-conflict-checks.md",
+        "draft\n",
+    )
+    _write(source / "ai-wiki" / "problems" / "unrelated.md", "ambient\n")
 
 
 def test_prepare_variants_creates_expected_ownership_boundary_variants(tmp_path: Path) -> None:
@@ -177,6 +235,110 @@ def test_prepare_variants_creates_expected_ownership_boundary_variants(tmp_path:
     ).exists()
     assert (
         raw_plus
+        / "ai-wiki"
+        / "people"
+        / "bochengyin"
+        / "drafts"
+        / "repo-local-contributor-workflows-should-stay-out-of-the-package-layer.md"
+    ).exists()
+
+
+def test_load_experiment_spec_from_family_toml() -> None:
+    module = _load_prepare_variants_module()
+    spec_path = (
+        Path(__file__).resolve().parents[1]
+        / "evals"
+        / "impact"
+        / "families"
+        / "ownership_boundary"
+        / "spec.toml"
+    )
+    spec = module.load_experiment_spec(spec_path)
+
+    assert spec.name == "ownership_boundary"
+    assert spec.baseline_ref == "34cd5a3^"
+    assert "repo-local-contributor-workflows" in "\n".join(spec.raw_docs)
+    assert spec.consolidated_index_entries
+
+
+def test_prepare_variants_can_write_workflow_primary_neutral_slots(tmp_path: Path) -> None:
+    module = _load_prepare_variants_module()
+    source = tmp_path / "source"
+    output = tmp_path / "output"
+    _seed_ownership_memory_source(source)
+
+    prepared = module.prepare_variants(
+        source,
+        output,
+        module.OWNERSHIP_BOUNDARY,
+        source_mode=module.SOURCE_MODE_WORKING_TREE,
+        control_root=source,
+        baseline_ref="HEAD",
+        workspace_layout=module.WORKSPACE_LAYOUT_NEUTRAL,
+    )
+
+    assert prepared == [
+        output / "slots" / "s01",
+        output / "slots" / "s02",
+        output / "slots" / "s03",
+        output / "slots" / "s04",
+        output / "slots" / "s05",
+    ]
+    assert not (output / "no_aiwiki_workflow").exists()
+    assert not (output / "slots" / "s01" / "EVAL_VARIANT.md").exists()
+    assert _git_status_clean(output / "slots" / "s02")
+
+    assignment = json.loads((output / "assignment.json").read_text(encoding="utf-8"))
+    assert assignment["schema_version"] == 2
+    assert assignment["workspace_layout"] == "neutral"
+    assert assignment["primary_comparison"] == [
+        "no_aiwiki_workflow",
+        "aiwiki_ambient_memory_workflow",
+    ]
+    slots = {slot["slot"]: slot["variant"] for slot in assignment["slots"]}
+    assert slots == {
+        "s01": "no_aiwiki_workflow",
+        "s02": "aiwiki_scaffold_no_target_memory",
+        "s03": "aiwiki_linked_raw_only",
+        "s04": "aiwiki_linked_consolidated_only",
+        "s05": "aiwiki_ambient_memory_workflow",
+    }
+
+    no_aiwiki = output / "slots" / "s01"
+    scaffold = output / "slots" / "s02"
+    raw = output / "slots" / "s03"
+    consolidated = output / "slots" / "s04"
+    ambient = output / "slots" / "s05"
+
+    assert not (no_aiwiki / "ai-wiki").exists()
+    assert (scaffold / "ai-wiki" / "problems" / "unrelated.md").exists()
+    assert not (
+        scaffold
+        / "ai-wiki"
+        / "people"
+        / "bochengyin"
+        / "drafts"
+        / "repo-local-contributor-workflows-should-stay-out-of-the-package-layer.md"
+    ).exists()
+    assert (
+        raw
+        / "ai-wiki"
+        / "people"
+        / "bochengyin"
+        / "drafts"
+        / "repo-local-contributor-workflows-should-stay-out-of-the-package-layer.md"
+    ).exists()
+    assert not (
+        raw / "ai-wiki" / "conventions" / "package-managed-vs-user-owned-docs.md"
+    ).exists()
+    assert (
+        consolidated / "ai-wiki" / "conventions" / "package-managed-vs-user-owned-docs.md"
+    ).exists()
+    assert (
+        ambient / "ai-wiki" / "conventions" / "package-managed-vs-user-owned-docs.md"
+    ).exists()
+    assert (
+        ambient
         / "ai-wiki"
         / "people"
         / "bochengyin"

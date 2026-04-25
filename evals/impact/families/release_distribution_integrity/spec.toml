@@ -1,0 +1,22 @@
+name = "release_distribution_integrity"
+prompt_family = "release_distribution_integrity"
+baseline_ref = "06a47cd^"
+historical_issue = "Public release target changes can drift across release workflows, npm metadata, archive handling, docs, and verification."
+
+raw_docs = [
+  "ai-wiki/people/bochengyin/drafts/distribution-target-matrix-must-match-published-assets.md",
+]
+
+consolidated_docs = [
+  "ai-wiki/conventions/distribution-target-matrix-must-match-published-assets.md",
+]
+
+ambient_exclude_paths = [
+  "ai-wiki/people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history.md",
+  "ai-wiki/people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files.md",
+  "ai-wiki/people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff.md",
+]
+
+[[consolidated_index_entries]]
+path = "ai-wiki/conventions/index.md"
+entry = "- [Distribution target matrix must match published assets](distribution-target-matrix-must-match-published-assets.md): keep every public release target aligned across release workflows, published assets, runtime target maps, package metadata, archive handling, docs, and smoke checks."

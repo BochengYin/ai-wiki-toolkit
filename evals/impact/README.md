@@ -5,9 +5,12 @@ changes agent behavior on repeated repo problems.
 
 Primary repo-local documentation for the current benchmark lives in:
 
+- `evals/impact/notes/index.md`
+- `evals/impact/report.md`
 - `evals/impact/TODO.md`
 - `evals/impact/ownership_boundary_runbook.md`
 - `evals/impact/release_distribution_integrity_runbook.md`
+- `evals/impact/notes/manual_v2_original_10_repo_findings.md`
 - `evals/impact/notes/ownership_boundary_v0_failure.md`
 - `evals/impact/notes/ownership_boundary_round1_findings.md`
 - `evals/impact/notes/release_distribution_integrity_round1_findings.md`
@@ -17,6 +20,51 @@ The current documented benchmark families are:
 
 - `ownership_boundary`
 - `release_distribution_integrity`
+
+## Manual v2: Workflow-Primary Framing
+
+The primary v2 question is:
+
+> Does the AI wiki workflow help agents make fewer repeated mistakes when a repo problem that was
+> previously discovered and recorded appears again?
+
+This is a workflow comparison first, not a single-document causality claim.
+
+Primary comparison:
+
+- `no_aiwiki_workflow`
+  No AI wiki scaffold, prompt routing, skills, or accumulated memory.
+- `aiwiki_ambient_memory_workflow`
+  The realistic AI wiki working mode: current repo AI wiki memory is present, including relevant
+  memories, adjacent memories, and normal ambient noise.
+
+Diagnostic variants:
+
+- `aiwiki_scaffold_no_target_memory`
+  Keeps the AI wiki harness and ambient non-target memory, but removes the benchmark-targeted memory.
+- `aiwiki_linked_raw_only`
+  Adds back the source raw drafts for the same problem family.
+- `aiwiki_linked_consolidated_only`
+  Adds back the linked consolidated docs for the same problem family.
+
+Use the primary comparison to answer whether the working mode helps. Use the diagnostic variants to
+explain why it helped, did not help, or introduced noise.
+
+Manual v2 workspaces use neutral slot paths such as:
+
+```text
+.../workspaces/<timestamp>/
+  assignment.json
+  slots/
+    s01/
+    s02/
+    s03/
+    s04/
+    s05/
+```
+
+The semantic variant mapping lives only in external `assignment.json` and run metadata. Do not put
+variant names inside workspace paths or files.
 
 `ownership_boundary` measures whether different AI wiki memory states change how reliably an
 agent:
@@ -42,7 +90,19 @@ documented in:
 evals/impact/notes/ownership_boundary_v0_failure.md
 ```
 
-The current round-level process strengths, weaknesses, and shareable workflow are documented in:
+Read `evals/impact/notes/index.md` first when you need chronology. It separates:
+
+- stable family runbooks
+- concrete run findings
+- the current report synthesis
+
+The latest 10-repo original-prompt transition run is documented in:
+
+```text
+evals/impact/notes/manual_v2_original_10_repo_findings.md
+```
+
+The historical round1 process strengths, weaknesses, and shareable workflow are documented in:
 
 ```text
 evals/impact/notes/round1_process_lessons.md
@@ -50,20 +110,26 @@ evals/impact/notes/round1_process_lessons.md
 
 ## Workspace Variants
 
-Run the experiment across five variants:
+Manual v2 still prepares five workspaces, but their role is different from round1. The primary
+workflow comparison is:
+
+- `no_aiwiki_workflow`
+- `aiwiki_ambient_memory_workflow`
+
+The diagnostic variants are:
+
+- `aiwiki_scaffold_no_target_memory`
+- `aiwiki_linked_raw_only`
+- `aiwiki_linked_consolidated_only`
+
+The round1 semantic variant names are still supported with `--workspace-layout legacy` for old
+analysis:
 
 - `plain_repo_no_aiwiki`
 - `aiwiki_no_relevant_memory`
 - `aiwiki_raw_drafts`
 - `aiwiki_consolidated`
 - `aiwiki_raw_plus_consolidated`
-
-These five variants let you separate:
-
-- harness effect
-- raw draft effect
-- consolidate effect
-- consolidated guidance under raw-draft noise
 
 ## Prepare Workspaces
 
@@ -73,7 +139,7 @@ From the repo root:
 uv run python evals/impact/scripts/prepare_variants.py --experiment ownership_boundary
 ```
 
-By default this creates clean git repos outside the main repository under:
+By default this now creates workflow-primary v2 neutral slots outside the main repository under:
 
 ```text
 /private/tmp/aiwiki_first_round/<experiment>/workspaces/<timestamp>/
@@ -90,7 +156,8 @@ For `ownership_boundary`, the default baseline is the historical ref:
 ```
 
 This rewinds the generated repos to a state before the repo-local PR helper and its tests were
-added, then overlays only the experiment's selected AI wiki memory.
+added, then overlays either the realistic current AI wiki memory or the selected diagnostic memory
+state.
 
 If you explicitly want to build variants from the current dirty working tree, opt in:
 
@@ -100,11 +167,14 @@ uv run python evals/impact/scripts/prepare_variants.py \
   --source-mode working-tree
 ```
 
-Each generated workspace includes an `EVAL_VARIANT.md` file with:
+Legacy semantic-directory workspaces include an `EVAL_VARIANT.md` file with:
 
 - the variant name
 - the prompt family path
 - the rule for running the variant in a fresh Codex session
+
+That `EVAL_VARIANT.md` note is only used by the legacy semantic-directory layout. It is intentionally
+omitted from v2 neutral slots to avoid leaking the treatment name into the visible prompt surface.
 
 ## Prompt Packs
 
@@ -120,42 +190,86 @@ Start with:
 evals/impact/prompts/ownership_boundary/TASK.md
 ```
 
-That file explains the concrete repo-realistic task being tested. The active prompt-specificity
-variants are:
+That file explains the concrete repo-realistic task being tested. Manual v2 uses one active prompt:
 
-- `short.md`
-- `medium.md`
+- `original.md`
 
 Recommended sequence:
 
-1. Fix the prompt level to `medium` and run all five memory variants.
-2. Then compare prompt sensitivity on the most informative three variants:
-   - `plain_repo_no_aiwiki`
-   - `aiwiki_raw_drafts`
-   - `aiwiki_consolidated`
-3. Run `short` and `medium` on those three variants.
+1. Run `original.md` across all five neutral slots.
+2. Read the primary workflow comparison first:
+   - `no_aiwiki_workflow`
+   - `aiwiki_ambient_memory_workflow`
+3. Use the diagnostic slots to explain the result:
+   - `aiwiki_scaffold_no_target_memory`
+   - `aiwiki_linked_raw_only`
+   - `aiwiki_linked_consolidated_only`
+4. Do not run `medium` for workflow-primary claims; it names the boundary too directly and turns
+   the eval into prompt-following rather than memory reuse.
 
-This keeps the first pass manageable while still measuring whether consolidated memory lets you
-write shorter prompts without relying on an over-specified `full` prompt.
+Legacy round1 prompt files such as `short.md`, `medium.md`, and `full.md` remain for interpreting
+old runs only.
 
-## Manual Run Protocol
+## Codex CLI-First Run Protocol
 
-For each variant:
+Formal v2 runs are Codex CLI-first. Computer Use or the VS Code Codex extension may still be used
+for operator smoke checks, but UI automation is not the blocking execution path for shareable evals.
 
-1. Open that workspace in a fresh Codex session.
-2. Paste one prompt from the prompt family.
-3. Let the agent work normally.
-4. Save:
-   - final response
-   - final diff or changed-file snapshot
-   - whether the task succeeded on the first attempt
+For each neutral slot:
+
+1. Run the slot with `codex exec` from a fresh persisted CLI session.
+2. Use the same prompt file, model, reasoning effort, and execution profile across slots.
+3. Write the agent's last message with `--output-last-message`.
+4. Immediately capture:
+   - first-pass diff or changed-file snapshot immediately after the first substantive closeout
+   - final response convenience text when available
+   - later final-state diff only if a human nudge or repair happens
+   - whether the first pass succeeded
    - how many retries or human nudges were needed
+5. Export visible Codex sessions for the whole workspace set.
+6. Validate the run before making workflow or causal claims.
+
+The standard execution condition is:
+
+- execution surface: `codex-cli`
+- model family: `gpt-5.5`
+- reasoning effort: `xhigh`
+
+Preferred formal run command:
+
+```bash
+uv run python evals/impact/scripts/run_cli_slots.py \
+  --run-dir /private/tmp/aiwiki_first_round/ownership_boundary/runs/run_20260425 \
+  --prompt-level original
+```
+
+`run_cli_slots.py` starts one run-level macOS sleep guard with `caffeinate -dimsu`, runs each
+neutral slot in sequence from a fresh `codex exec` session, captures first-pass artifacts
+immediately after each slot with `save_result.py`, and stops the sleep guard at the end. This avoids
+per-slot UI or operator-presence dependencies while keeping session persistence in the Codex CLI.
+
+Example manual slot command:
+
+```bash
+mkdir -p /private/tmp/aiwiki_first_round/ownership_boundary/runs/run_20260425/s01/original/first_pass
+codex exec \
+  --model "gpt-5.5" \
+  --config 'model_reasoning_effort="xhigh"' \
+  --full-auto \
+  --cd /private/tmp/aiwiki_first_round/ownership_boundary/workspaces/20260425-100000/slots/s01 \
+  --output-last-message /private/tmp/aiwiki_first_round/ownership_boundary/runs/run_20260425/s01/original/first_pass/final_message.md \
+  - < evals/impact/prompts/ownership_boundary/original.md
+```
 
 Important constraints:
 
-- Do not reuse the same Codex session across variants.
-- Do not run one variant inside another variant's repository tree.
-- Keep the model and approval mode the same across all variants in the same comparison set.
+- Do not reuse the same Codex session across slots.
+- Do not run one slot inside another slot's repository tree.
+- Keep the model, reasoning effort, and execution profile the same across all variants in the same
+  comparison set.
+- The exported `codex_sessions/manifest.json` must show one matching session per slot.
+- For CLI-first runs, exported session metadata must show `source=exec`, the expected model, and the
+  expected reasoning effort.
 
 ## Save Results Outside The Workspaces
 
@@ -176,22 +290,25 @@ This creates a result tree under:
 /private/tmp/aiwiki_first_round/<experiment>/runs/<run-label>/
 ```
 
-Each slot contains a small README showing how to capture the workspace result. Saving a
-`final_message.md` is optional.
+Each slot contains a small README showing how to run the CLI prompt and capture the workspace
+result. For CLI-first runs, `codex exec --output-last-message` writes `final_message.md`
+automatically before `save_result.py` copies it into the first-pass artifact directory.
 
 After a manual run finishes, capture the result:
 
 ```bash
 uv run python evals/impact/scripts/save_result.py \
   --run-dir /private/tmp/aiwiki_first_round/ownership_boundary/runs/run_20260422-120000 \
-  --variant aiwiki_consolidated \
-  --prompt-level medium \
-  --workspace /private/tmp/aiwiki_first_round/ownership_boundary/workspaces/20260423-170541/aiwiki_consolidated
+  --slot s02 \
+  --variant aiwiki_ambient_memory_workflow \
+  --prompt-level original \
+  --workspace /private/tmp/aiwiki_first_round/ownership_boundary/workspaces/20260423-170541/slots/s02 \
+  --phase first_pass
 ```
 
-If you also want to preserve the final response text, save it as `final_message.md` in the slot
-first, then pass `--final-message <that-path>`. If the file is missing, `save_result.py` now
-skips it and still captures the diff artifacts.
+For UI-only legacy runs, you may still save response text manually as `final_message.md` and pass
+`--final-message <that-path>`. If the file is missing, `save_result.py` skips it and still captures
+the diff artifacts.
 
 If you want to judge correctness immediately, add one of:
 
@@ -209,6 +326,28 @@ If you omit both, the result stays pending so you can analyze correctness later.
 - `result.json`
 
 all outside the experiment repo, so reruns do not contaminate future sessions.
+
+After exporting visible Codex sessions, validate the run before making shareable claims:
+
+```bash
+uv run python evals/impact/scripts/validate_run.py \
+  --run-dir /private/tmp/aiwiki_first_round/ownership_boundary/runs/run_20260422-120000 \
+  --session-export-root /private/tmp/aiwiki_first_round/ownership_boundary/workspaces/20260423-170541/codex_sessions
+```
+
+This writes `confounds.json`. If it contains critical confounds, `report.md` may still summarize
+the run, but it must not be treated as a clean causal claim.
+
+Write manual rubric labels separately from capture artifacts:
+
+```bash
+uv run python evals/impact/scripts/score_run.py \
+  --run-dir /private/tmp/aiwiki_first_round/ownership_boundary/runs/run_20260422-120000 \
+  --slot s02 \
+  --prompt-level original \
+  --label success \
+  --evidence s02/original/first_pass/workspace_diff.patch,s02/original/first_pass/result.json
+```
 
 ## Current Scope
 
@@ -230,23 +369,30 @@ Use one round root per experiment batch:
   <experiment>/
     workspaces/
       <timestamp>/
-        plain_repo_no_aiwiki/
-        aiwiki_no_relevant_memory/
-        aiwiki_raw_drafts/
-        aiwiki_consolidated/
-        aiwiki_raw_plus_consolidated/
+        assignment.json
+        slots/
+          s01/
+          s02/
+          s03/
+          s04/
+          s05/
         codex_sessions/
     runs/
       <run-label>/
-        <variant>/
+        <slot>/
           <prompt-level>/
+            first_pass/
+            final/
+            score.json
 ```
 
 Rules:
 
-- `workspaces/<timestamp>/` is a prepared five-repo set for one experiment family.
-- `workspaces/<timestamp>/codex_sessions/` is optional workspace-level metadata for exported visible Codex traces.
-- Reuse the same workspace set across `short` and `medium` runs.
+- `workspaces/<timestamp>/` is a prepared five-slot set for one experiment family.
+- `assignment.json` is the only place semantic variant names should appear in the workspace set.
+- `workspaces/<timestamp>/codex_sessions/` is required workspace-level metadata for shareable
+  claims; it must contain a complete `manifest.json`.
+- Reuse the same workspace set if you repeat `original` for another model or manual comparison set.
 - `runs/<run-label>/` stores captured results only; it must stay outside the variant repos.
 - Treat prompt level as a run dimension, not a workspace dimension.
 - Put obsolete or invalid workspace sets under `/private/tmp/aiwiki_first_round/archive/`.
@@ -272,15 +418,14 @@ Create a run directory for one comparison pass:
 uv run python evals/impact/scripts/init_run.py \
   --experiment release_distribution_integrity \
   --workspace-root /private/tmp/aiwiki_first_round/release_distribution_integrity/workspaces/20260424-182219 \
-  --prompt-levels medium \
-  --run-label medium-five-way
+  --prompt-levels original \
+  --run-label original-five-way
 ```
 
-Then open each variant repo in a fresh session, run the chosen prompt, and capture the result into
-the matching run slot with `save_result.py`.
+Then run each slot with the CLI command in the slot README and capture the result into the matching
+run slot with `save_result.py`.
 
-If you also want to preserve the visible Codex chat-window trace for the workspace set, export it
-after the variant runs finish:
+After the variant runs finish, export the visible Codex session traces for the workspace set:
 
 ```bash
 uv run python evals/impact/scripts/export_codex_sessions.py \
@@ -300,7 +445,8 @@ This creates:
 /private/tmp/aiwiki_first_round/release_distribution_integrity/workspaces/20260424-182219/codex_sessions/
 ```
 
-The export is workspace-level metadata, not variant-repo content. Each exported session keeps:
+The export is workspace-level metadata, not variant-repo content. A complete export is required
+before `validate_run.py` can mark a run shareable for causal claims. Each exported session keeps:
 
 - `metadata.json`
 - `prompt.md`
@@ -313,3 +459,5 @@ Important boundary:
 - `session_without_reasoning.jsonl` keeps the raw session stream except hidden reasoning records
 - `visible_session.jsonl` and `visible_transcript.md` are the human-usable filtered views
 - hidden internal reasoning records are intentionally omitted
+- `manifest.json` records the exported sessions, missing slots, execution source, model, and
+  reasoning effort fields needed for validation

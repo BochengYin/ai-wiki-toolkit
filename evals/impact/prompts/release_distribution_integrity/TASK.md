@@ -65,22 +65,20 @@ A weak solution often:
 
 ## What varies across variants
 
-- `plain_repo_no_aiwiki`: no AI wiki at all
-- `aiwiki_no_relevant_memory`: AI wiki exists, but not the relevant release/distribution docs
-- `aiwiki_raw_drafts`: relevant raw draft evidence exists, no consolidated shared guidance for this
-  cluster
-- `aiwiki_consolidated`: consolidated shared guidance exists, raw drafts removed
-- `aiwiki_raw_plus_consolidated`: both raw and consolidated evidence exist
+- `no_aiwiki_workflow`: no AI wiki at all
+- `aiwiki_ambient_memory_workflow`: realistic current AI wiki memory
+- `aiwiki_scaffold_no_target_memory`: AI wiki exists, but not the target distribution memory
+- `aiwiki_linked_raw_only`: target raw draft evidence exists
+- `aiwiki_linked_consolidated_only`: linked consolidated guidance exists
 
-## What stays fixed across prompt levels
+## Manual v2 prompt
 
-The task itself stays the same. Only prompt specificity changes:
+Manual v2 uses only:
 
-- `short.md`: task requirements only
-- `medium.md`: the same task requirements plus one coordination boundary sentence
+- `original.md`: the historical task shape without the direct coordination boundary sentence
 
-No `full.md` is included for this benchmark family because over-specifying the release surfaces
-would reduce the benchmark's ability to measure memory effects.
+The old `short.md` and `medium.md` files are retained only for round1 interpretation. `medium.md`
+should not be used for workflow-primary claims because it tells the agent the coordination answer.
 
 ## Human evaluation questions
 
@@ -89,5 +87,5 @@ would reduce the benchmark's ability to measure memory effects.
   docs, and release-facing checks?
 - Did it add the later targets without leaving obvious target drift behind?
 - Did it avoid unrelated product or wiki churn?
-- Did the chosen memory state help it coordinate more of the relevant surfaces with less prompt
+- Did the AI wiki workflow help it coordinate more of the relevant surfaces without extra prompt
   detail?

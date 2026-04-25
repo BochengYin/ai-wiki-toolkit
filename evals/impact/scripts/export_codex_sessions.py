@@ -92,6 +92,15 @@ def parse_timestamp(value: str | None) -> datetime:
 
 
 def discover_workspace_variants(workspace_root: Path) -> tuple[str, ...]:
+    slots_root = workspace_root / "slots"
+    if slots_root.exists():
+        return tuple(
+            sorted(
+                path.name
+                for path in slots_root.iterdir()
+                if path.is_dir() and (path / ".git").exists()
+            )
+        )
     variants = sorted(
         path.name
         for path in workspace_root.iterdir()
@@ -127,6 +136,33 @@ def load_session_meta(session_file: Path) -> dict:
     raise ValueError(f"Could not find session_meta in {session_file}")
 
 
+def load_turn_context(session_file: Path) -> dict:
+    for line in session_file.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        record = json.loads(line)
+        if record.get("type") == "turn_context":
+            payload = record.get("payload", {})
+            if isinstance(payload, dict):
+                return payload
+            return {}
+    return {}
+
+
+def reasoning_effort_from_turn_context(turn_context: dict) -> str | None:
+    effort = turn_context.get("effort")
+    if isinstance(effort, str):
+        return effort
+    collaboration_mode = turn_context.get("collaboration_mode", {})
+    if not isinstance(collaboration_mode, dict):
+        return None
+    settings = collaboration_mode.get("settings", {})
+    if not isinstance(settings, dict):
+        return None
+    effort = settings.get("reasoning_effort")
+    return effort if isinstance(effort, str) else None
+
+
 def variant_from_cwd(workspace_root: Path, variants: set[str], cwd: Path) -> str | None:
     try:
         relative = cwd.resolve().relative_to(workspace_root.resolve())
@@ -134,6 +170,11 @@ def variant_from_cwd(workspace_root: Path, variants: set[str], cwd: Path) -> str
         return None
     if not relative.parts:
         return None
+    if relative.parts[0] == "slots" and len(relative.parts) > 1:
+        candidate = relative.parts[1]
+        if candidate not in variants:
+            return None
+        return candidate
     candidate = relative.parts[0]
     if candidate not in variants:
         return None
@@ -332,6 +373,8 @@ def render_transcript(match: MatchedSession, messages: list[dict[str, str]], tas
 
 
 def export_session(match: MatchedSession, output_root: Path) -> dict:
+    session_meta = load_session_meta(match.session_file)
+    turn_context = load_turn_context(match.session_file)
     session_without_reasoning = load_session_without_reasoning(match.session_file)
     visible_records = load_visible_records(match.session_file)
     messages = collect_visible_messages(visible_records)
@@ -347,6 +390,13 @@ def export_session(match: MatchedSession, output_root: Path) -> dict:
         "workspace_cwd": str(match.cwd),
         "session_timestamp": match.session_timestamp,
         "updated_at": match.updated_at,
+        "source": session_meta.get("source"),
+        "originator": session_meta.get("originator"),
+        "cli_version": session_meta.get("cli_version"),
+        "model_provider": session_meta.get("model_provider"),
+        "model": turn_context.get("model"),
+        "reasoning_effort": reasoning_effort_from_turn_context(turn_context),
+        "turn_context_cwd": turn_context.get("cwd"),
         "user_message_count": sum(1 for message in messages if message["role"] == "user"),
         "assistant_message_count": sum(1 for message in messages if message["role"] == "assistant"),
         "tool_call_count": sum(
@@ -391,6 +441,9 @@ def render_output_readme(manifest: dict) -> str:
         "- `session_without_reasoning.jsonl`\n"
         "- `visible_session.jsonl`\n"
         "- `visible_transcript.md`\n"
+        "\n"
+        "`metadata.json` includes the observed session source, model, and reasoning effort when "
+        "those fields are available in the local Codex session trace.\n"
     )
 
 

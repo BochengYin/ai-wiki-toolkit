@@ -176,7 +176,9 @@ What it showed:
 
 ## Shareable Round 1 Workflow
 
-This is the current best-documented manual process for this repo.
+This is the historical round1 manual process. It has been superseded for formal v2 runs by the
+Codex CLI-first workflow in `evals/impact/README.md`, but remains useful for interpreting old
+artifacts.
 
 1. Choose a real repeated repo problem and a historical baseline before the fix landed.
 2. Define the five standard workspace variants with `prepare_variants.py`.
@@ -203,6 +205,10 @@ If these evals are going to be shared externally, the next round should tighten 
 4. Record model/effort/session metadata in result capture, not just in ad hoc notes.
 5. Treat `report.md` as a summary only and require diff-plus-session review for claims about task
    success or memory effect.
+
+Manual v2 addresses these by using neutral slot workspaces, workflow-primary primary/diagnostic
+variants, `original` prompts, Codex CLI-first execution, exported session manifests, and
+`validate_run.py` confound checks.
 
 ## Bottom Line
 

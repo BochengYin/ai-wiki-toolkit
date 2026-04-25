@@ -63,21 +63,21 @@ A weak solution often:
 
 ## What varies across variants
 
-- `plain_repo_no_aiwiki`: no AI wiki at all
-- `aiwiki_no_relevant_memory`: AI wiki exists, but not the relevant ownership docs
-- `aiwiki_raw_drafts`: relevant raw drafts exist, no consolidated shared guidance for this cluster
-- `aiwiki_consolidated`: consolidated shared guidance exists, raw drafts removed
-- `aiwiki_raw_plus_consolidated`: both raw and consolidated evidence exist
+- `no_aiwiki_workflow`: no AI wiki at all
+- `aiwiki_ambient_memory_workflow`: realistic current AI wiki memory
+- `aiwiki_scaffold_no_target_memory`: AI wiki exists, but not the target ownership memory
+- `aiwiki_linked_raw_only`: target raw drafts exist
+- `aiwiki_linked_consolidated_only`: linked consolidated docs exist
 
-## What stays fixed across prompt levels
+## Manual v2 prompt
 
-The task itself stays the same. Only prompt specificity changes:
+Manual v2 uses only:
 
-- `short.md`: task requirements only
-- `medium.md`: task requirements plus one product-scope boundary sentence
+- `original.md`: the historical task shape without the direct product-scope boundary sentence
 
-`full.md` is intentionally retired for this benchmark family because it over-specified the
-solution and reduced the benchmark's ability to measure memory effects.
+The old `short.md`, `medium.md`, and `full.md` files are retained only for round1 interpretation.
+`medium.md` should not be used for workflow-primary claims because it tells the agent the core
+boundary answer.
 
 ## Human evaluation questions
 
@@ -85,4 +85,4 @@ solution and reduced the benchmark's ability to measure memory effects.
 - Did it add the helper in `scripts/` rather than inventing a package feature?
 - Did it update the most appropriate workflow guidance?
 - Did it avoid unrelated wiki churn?
-- Did the chosen memory state help it succeed with less prompt detail?
+- Did the AI wiki workflow help it avoid the repeated boundary mistake without extra prompt detail?

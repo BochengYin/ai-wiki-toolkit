@@ -6,6 +6,8 @@ import argparse
 import json
 from pathlib import Path
 
+CAPTURE_PHASES = {"first_pass", "final"}
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -43,13 +45,55 @@ def format_paths(paths: list[str]) -> str:
 
 def collect_results(run_dir: Path) -> list[dict]:
     results: list[dict] = []
-    for result_path in sorted(run_dir.glob("*/*/result.json")):
+    result_paths = list(sorted(run_dir.glob("*/*/result.json")))
+    result_paths.extend(
+        path
+        for path in sorted(run_dir.glob("*/*/*/result.json"))
+        if path.parent.name in CAPTURE_PHASES
+    )
+    for result_path in result_paths:
         result = load_json(result_path)
         slot_dir = result_path.parent
+        if slot_dir.name in CAPTURE_PHASES:
+            prompt_level = slot_dir.parent.name
+            slot = slot_dir.parent.parent.name
+            phase = slot_dir.name
+        else:
+            prompt_level = slot_dir.name
+            slot = slot_dir.parent.name
+            phase = result.get("phase", "legacy")
+        result.setdefault("slot", slot)
+        result.setdefault("prompt_level", prompt_level)
+        result.setdefault("phase", phase)
         result["slot_dir"] = str(slot_dir)
         result["final_message_present"] = (slot_dir / "final_message.md").exists()
+        score_path = run_dir / slot / prompt_level / "score.json"
+        result["score"] = load_json(score_path) if score_path.exists() else None
         results.append(result)
     return results
+
+
+def load_confounds(run_dir: Path) -> dict | None:
+    confounds_path = run_dir / "confounds.json"
+    if not confounds_path.exists():
+        return None
+    return load_json(confounds_path)
+
+
+def assignment_variant_map(metadata: dict) -> dict[str, str]:
+    assignment = metadata.get("assignment")
+    if not isinstance(assignment, dict):
+        return {}
+    return {
+        item["slot"]: item.get("variant", item["slot"])
+        for item in assignment.get("slots", [])
+    }
+
+
+def variant_for_result(metadata: dict, result: dict) -> str:
+    if result.get("variant"):
+        return result["variant"]
+    return assignment_variant_map(metadata).get(result.get("slot", ""), result.get("slot", ""))
 
 
 def summarize_by_variant(results: list[dict]) -> list[dict]:
@@ -107,6 +151,12 @@ def markdown_table(headers: list[str], rows: list[list[str]]) -> str:
 
 
 def render_report(run_dir: Path, metadata: dict, results: list[dict]) -> str:
+    confounds = load_confounds(run_dir)
+    primary_variants = set(metadata.get("primary_comparison", []))
+    diagnostic_variants = set(metadata.get("diagnostic_variants", []))
+    variant_map = assignment_variant_map(metadata)
+    for result in results:
+        result["variant"] = variant_for_result(metadata, result)
     summary_rows = [
         [
             item["variant"],
@@ -121,8 +171,11 @@ def render_report(run_dir: Path, metadata: dict, results: list[dict]) -> str:
     ]
     detail_rows = [
         [
+            result.get("slot", ""),
             result["variant"],
             result["prompt_level"],
+            result.get("phase", ""),
+            result.get("score", {}).get("label", "-") if result.get("score") else "-",
             format_first_pass(result.get("first_pass_success")),
             str(result.get("attempt", "")),
             str(result.get("human_nudges", "")),
@@ -133,6 +186,30 @@ def render_report(run_dir: Path, metadata: dict, results: list[dict]) -> str:
             result.get("notes", ""),
         ]
         for result in results
+    ]
+    workflow_rows = [
+        [
+            result.get("slot", ""),
+            result["variant"],
+            result["prompt_level"],
+            result.get("score", {}).get("label", "-") if result.get("score") else "-",
+            format_first_pass(result.get("first_pass_success")),
+            str(len(result.get("changed_files", []))),
+        ]
+        for result in results
+        if result["variant"] in primary_variants
+    ]
+    diagnostic_rows = [
+        [
+            result.get("slot", ""),
+            result["variant"],
+            result["prompt_level"],
+            result.get("score", {}).get("label", "-") if result.get("score") else "-",
+            format_first_pass(result.get("first_pass_success")),
+            str(len(result.get("changed_files", []))),
+        ]
+        for result in results
+        if result["variant"] in diagnostic_variants
     ]
 
     lines = [
@@ -145,11 +222,44 @@ def render_report(run_dir: Path, metadata: dict, results: list[dict]) -> str:
         f'- Prompt levels: `{", ".join(metadata.get("prompt_levels", []))}`',
         f'- Created at: `{metadata.get("created_at", "unknown")}`',
     ]
+    if variant_map:
+        lines.append("- Layout: `workflow-primary neutral slots`")
+    if confounds is not None:
+        shareable = "yes" if confounds.get("shareable_for_causal_claims") else "no"
+        lines.append(f"- Shareable for causal claims: `{shareable}`")
     if metadata.get("notes"):
         lines.append(f'- Notes: `{metadata["notes"]}`')
 
     lines.extend(
         [
+            "",
+            "## Workflow Result",
+            "",
+            markdown_table(
+                [
+                    "slot",
+                    "variant",
+                    "prompt_level",
+                    "score",
+                    "first_pass_success",
+                    "changed_file_count",
+                ],
+                workflow_rows,
+            ),
+            "",
+            "## Diagnostic Result",
+            "",
+            markdown_table(
+                [
+                    "slot",
+                    "variant",
+                    "prompt_level",
+                    "score",
+                    "first_pass_success",
+                    "changed_file_count",
+                ],
+                diagnostic_rows,
+            ),
             "",
             "## Variant Summary",
             "",
@@ -170,8 +280,11 @@ def render_report(run_dir: Path, metadata: dict, results: list[dict]) -> str:
             "",
             markdown_table(
                 [
+                    "slot",
                     "variant",
                     "prompt_level",
+                    "phase",
+                    "score",
                     "first_pass_success",
                     "attempt",
                     "human_nudges",
@@ -186,6 +299,23 @@ def render_report(run_dir: Path, metadata: dict, results: list[dict]) -> str:
             "",
         ]
     )
+    if confounds is not None:
+        critical_rows = [
+            [
+                item.get("slot", "-"),
+                item.get("kind", ""),
+                item.get("detail", ""),
+            ]
+            for item in confounds.get("critical_confounds", [])
+        ]
+        lines.extend(
+            [
+                "## Confounds",
+                "",
+                markdown_table(["slot", "kind", "detail"], critical_rows),
+                "",
+            ]
+        )
     return "\n".join(lines)
 
 

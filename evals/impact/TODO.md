@@ -6,31 +6,39 @@ Use this as the first entrypoint when opening a new session to continue impact-e
 
 ## Reusable Benchmark Recipe
 
-Unless a family clearly needs a different harness, reuse the `ownership_boundary` workflow:
+Unless a family clearly needs a different harness, reuse the Manual v2 workflow-primary harness:
 
 1. choose a real historical problem, not a synthetic toy task
 2. pick a baseline commit from before the fix landed
-3. define the five standard variants:
-   - `plain_repo_no_aiwiki`
-   - `aiwiki_no_relevant_memory`
-   - `aiwiki_raw_drafts`
-   - `aiwiki_consolidated`
-   - `aiwiki_raw_plus_consolidated`
-4. define `short` and `medium` prompts
-5. run each variant in a fresh Codex subscription session
-6. save artifacts with:
+3. define the primary workflow comparison:
+   - `no_aiwiki_workflow`
+   - `aiwiki_ambient_memory_workflow`
+4. define the diagnostic variants:
+   - `aiwiki_scaffold_no_target_memory`
+   - `aiwiki_linked_raw_only`
+   - `aiwiki_linked_consolidated_only`
+5. define one `original` prompt that recreates the historical request without adding the answer
+6. run each neutral slot in a fresh persisted Codex CLI session
+7. save artifacts with:
    - `prepare_variants.py`
    - `init_run.py`
    - `save_result.py`
+   - `export_codex_sessions.py`
+   - `validate_run.py`
+   - `score_run.py`
    - `report_runs.py`
-7. grade the results with the manual rubric:
+8. require `codex_sessions/manifest.json` before making shareable workflow or causal claims
+9. grade the results with the manual rubric:
    - `success`
    - `partial`
    - `fail`
 
 Reference implementation:
 
+- `evals/impact/notes/index.md`
+- `evals/impact/report.md`
 - `evals/impact/ownership_boundary_runbook.md`
+- `evals/impact/notes/manual_v2_original_10_repo_findings.md`
 - `evals/impact/notes/ownership_boundary_round1_findings.md`
 
 ## Status Legend

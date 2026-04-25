@@ -82,7 +82,92 @@ def test_init_run_creates_external_result_slots(tmp_path: Path) -> None:
     metadata = json.loads((run_dir / "metadata.json").read_text(encoding="utf-8"))
     assert metadata["experiment"] == "ownership_boundary"
     assert metadata["variants"] == list(module.DEFAULT_MEMORY_AXIS_VARIANTS)
+    assert metadata["model_family"] == "gpt-5.5"
+    assert metadata["reasoning_effort"] == "xhigh"
+    assert metadata["execution_surface"] == "codex-cli"
     assert (run_dir / "plain_repo_no_aiwiki" / "medium" / "README.md").exists()
+    readme = (run_dir / "plain_repo_no_aiwiki" / "medium" / "README.md").read_text(
+        encoding="utf-8"
+    )
+    assert "codex exec" in readme
+    assert "run_cli_slots.py" in readme
+    assert "--output-last-message" in readme
+    assert "codex_sessions/manifest.json" in readme
+
+
+def test_init_run_creates_neutral_slot_result_slots(tmp_path: Path) -> None:
+    module = _load_script("init_run.py")
+    workspace_root = tmp_path / "workspaces" / "20260425-100000"
+    for slot in ("s01", "s02"):
+        (workspace_root / "slots" / slot).mkdir(parents=True)
+    assignment = {
+        "schema_version": 2,
+        "primary_comparison": ["no_aiwiki_workflow", "aiwiki_ambient_memory_workflow"],
+        "diagnostic_variants": ["aiwiki_linked_raw_only"],
+        "slots": [
+            {"slot": "s01", "variant": "no_aiwiki_workflow", "workspace": str(workspace_root / "slots" / "s01")},
+            {
+                "slot": "s02",
+                "variant": "aiwiki_ambient_memory_workflow",
+                "workspace": str(workspace_root / "slots" / "s02"),
+            },
+        ],
+    }
+
+    run_dir = tmp_path / "runs" / "run_manual_v2"
+    module.create_result_slots(
+        run_dir,
+        experiment="ownership_boundary",
+        workspace_root=workspace_root,
+        variants=("s01", "s02"),
+        prompt_levels=("original",),
+        assignment=assignment,
+    )
+    module.write_metadata(
+        run_dir,
+        experiment="ownership_boundary",
+        workspace_root=workspace_root,
+        variants=("s01", "s02"),
+        prompt_levels=("original",),
+        notes="workflow primary",
+        assignment=assignment,
+        model_family="gpt-5.5",
+        reasoning_effort="xhigh",
+    )
+
+    assert (run_dir / "s01" / "original" / "README.md").exists()
+    readme = (run_dir / "s01" / "original" / "README.md").read_text(encoding="utf-8")
+    assert "codex exec" in readme
+    assert "run_cli_slots.py" in readme
+    assert "--config 'model_reasoning_effort=\"xhigh\"'" in readme
+    assert "--phase first_pass" in readme
+    assert "--slot \"s01\"" in readme
+    metadata = json.loads((run_dir / "metadata.json").read_text(encoding="utf-8"))
+    assert metadata["schema_version"] == 2
+    assert metadata["variants"] == ["s01", "s02"]
+    assert metadata["primary_comparison"] == ["no_aiwiki_workflow", "aiwiki_ambient_memory_workflow"]
+    assert metadata["model_family"] == "gpt-5.5"
+    assert metadata["execution_surface"] == "codex-cli"
+    assert "original" in metadata["prompt_hashes"]
+
+
+def test_init_run_writes_run_readme_with_sleep_guard_runner(tmp_path: Path) -> None:
+    module = _load_script("init_run.py")
+    run_dir = tmp_path / "runs" / "run_manual_v2"
+    workspace_root = tmp_path / "workspaces" / "20260425-100000"
+
+    module.write_run_readme(
+        run_dir,
+        experiment="ownership_boundary",
+        workspace_root=workspace_root,
+        prompt_levels=("original",),
+    )
+
+    readme = (run_dir / "README.md").read_text(encoding="utf-8")
+    assert "run-level sleep guard" in readme
+    assert "caffeinate -dimsu" in readme
+    assert "run_cli_slots.py" in readme
+    assert "validate_run.py" in readme
 
 
 def test_init_run_default_paths_use_first_round_layout() -> None:
@@ -149,6 +234,50 @@ def test_save_result_captures_diff_and_message(tmp_path: Path) -> None:
     assert result["first_pass_success"] is False
     assert result["changed_files"] == ["tracked.txt", "new_file.txt"]
     assert result["untracked_files"] == ["new_file.txt"]
+
+
+def test_save_result_captures_first_pass_phase_under_neutral_slot(tmp_path: Path) -> None:
+    module = _load_script("save_result.py")
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    _init_repo(workspace)
+    (workspace / "tracked.txt").write_text("before\n", encoding="utf-8")
+    _git(workspace, "add", ".")
+    _git(workspace, "commit", "-m", "init")
+    (workspace / "tracked.txt").write_text("after\n", encoding="utf-8")
+    (workspace / "created.txt").write_text("new\n", encoding="utf-8")
+
+    run_dir = tmp_path / "runs" / "run_001"
+    run_dir.mkdir(parents=True)
+    original_argv = sys.argv
+    sys.argv = [
+        "save_result.py",
+        "--run-dir",
+        str(run_dir),
+        "--slot",
+        "s02",
+        "--variant",
+        "aiwiki_ambient_memory_workflow",
+        "--prompt-level",
+        "original",
+        "--workspace",
+        str(workspace),
+        "--phase",
+        "first_pass",
+        "--first-pass-success",
+    ]
+    try:
+        module.main()
+    finally:
+        sys.argv = original_argv
+
+    slot = run_dir / "s02" / "original" / "first_pass"
+    assert (slot / "workspace_diff.patch").exists()
+    result = json.loads((slot / "result.json").read_text(encoding="utf-8"))
+    assert result["slot"] == "s02"
+    assert result["variant"] == "aiwiki_ambient_memory_workflow"
+    assert result["phase"] == "first_pass"
+    assert result["changed_files"] == ["tracked.txt", "created.txt"]
 
 
 def test_save_result_accepts_final_message_already_in_slot(tmp_path: Path) -> None:
@@ -230,6 +359,39 @@ def test_save_result_skips_missing_final_message(tmp_path: Path, capsys) -> None
     assert (slot / "workspace_diff.patch").exists()
     result = json.loads((slot / "result.json").read_text(encoding="utf-8"))
     assert result["first_pass_success"] is None
+
+
+def test_run_cli_slots_builds_slot_commands_without_per_slot_caffeinate(tmp_path: Path) -> None:
+    module = _load_script("run_cli_slots.py")
+    run_dir = tmp_path / "runs" / "run_001"
+    workspace = tmp_path / "workspaces" / "slots" / "s01"
+    final_message = run_dir / "s01" / "original" / "first_pass" / "final_message.md"
+
+    codex_command = module.build_codex_command(
+        codex_bin="codex",
+        model_family="gpt-5.5",
+        reasoning_effort="xhigh",
+        workspace=workspace,
+        final_message=final_message,
+    )
+    save_command = module.build_save_result_command(
+        run_dir=run_dir,
+        variant="no_aiwiki_workflow",
+        slot="s01",
+        prompt_level="original",
+        workspace=workspace,
+        final_message=final_message,
+        notes="captured",
+    )
+
+    assert module.sleep_guard_command("caffeinate") == ["caffeinate", "-dimsu"]
+    assert codex_command[:4] == ["codex", "exec", "--model", "gpt-5.5"]
+    assert "caffeinate" not in codex_command
+    assert "--output-last-message" in codex_command
+    assert str(final_message) in codex_command
+    assert str(run_dir) in save_command
+    assert "--phase" in save_command
+    assert "first_pass" in save_command
 
 
 def test_report_runs_builds_markdown_summary(tmp_path: Path) -> None:
@@ -325,6 +487,227 @@ def test_report_runs_builds_markdown_summary(tmp_path: Path) -> None:
     assert "untracked_files" in report_text
 
 
+def test_validate_run_records_critical_confounds(tmp_path: Path) -> None:
+    module = _load_script("validate_run.py")
+    run_dir = tmp_path / "runs" / "run_001"
+    workspace_root = tmp_path / "workspaces" / "20260425-100000"
+    session_export_root = workspace_root / "codex_sessions"
+    exported = session_export_root / "s01" / "session-a"
+    exported.mkdir(parents=True)
+    expected_hash = module.sha256_text("expected prompt\n")
+    (run_dir).mkdir(parents=True)
+    (run_dir / "metadata.json").write_text(
+        json.dumps(
+            {
+                "workspace_root": str(workspace_root),
+                "variants": ["s01", "s02"],
+                "prompt_hashes": {"original": expected_hash},
+                "assignment": {
+                    "slots": [
+                        {"slot": "s01", "variant": "no_aiwiki_workflow"},
+                        {"slot": "s02", "variant": "aiwiki_ambient_memory_workflow"},
+                    ]
+                },
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (exported / "metadata.json").write_text(
+        json.dumps(
+            {
+                "session_id": "session-a",
+                "variant": "s01",
+                "workspace_cwd": str(workspace_root / "slots" / "s01"),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (exported / "prompt.md").write_text("different prompt\n", encoding="utf-8")
+    (exported / "visible_transcript.md").write_text(
+        "The hidden variant is aiwiki_ambient_memory_workflow.\n",
+        encoding="utf-8",
+    )
+
+    result = module.validate_run(run_dir, session_export_root)
+
+    assert result["shareable_for_causal_claims"] is False
+    kinds = {item["kind"] for item in result["critical_confounds"]}
+    assert "missing_session_manifest" in kinds
+    assert "missing_session_export" in kinds
+    assert "semantic_path_leak" in kinds
+    assert "prompt_mismatch" in kinds
+    assert (run_dir / "confounds.json").exists()
+
+
+def test_validate_run_requires_cli_session_manifest_metadata(tmp_path: Path) -> None:
+    module = _load_script("validate_run.py")
+    run_dir = tmp_path / "runs" / "run_001"
+    workspace_root = tmp_path / "workspaces" / "20260425-100000"
+    session_export_root = workspace_root / "codex_sessions"
+    exported = session_export_root / "s01" / "session-a"
+    exported.mkdir(parents=True)
+    run_dir.mkdir(parents=True)
+    (run_dir / "metadata.json").write_text(
+        json.dumps(
+            {
+                "workspace_root": str(workspace_root),
+                "variants": ["s01", "s02"],
+                "model_family": "gpt-5.5",
+                "reasoning_effort": "xhigh",
+                "execution_surface": "codex-cli",
+                "assignment": {
+                    "slots": [
+                        {"slot": "s01", "variant": "no_aiwiki_workflow"},
+                        {"slot": "s02", "variant": "aiwiki_ambient_memory_workflow"},
+                    ]
+                },
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (session_export_root / "manifest.json").write_text(
+        json.dumps(
+            {
+                "variants": ["s01", "s02"],
+                "exported_session_count": 1,
+                "missing_variants": ["s02"],
+                "sessions": [
+                    {
+                        "session_id": "session-a",
+                        "variant": "s01",
+                        "source": "vscode",
+                        "model": "gpt-5.4",
+                        "reasoning_effort": "high",
+                    }
+                ],
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (exported / "metadata.json").write_text(
+        json.dumps(
+            {
+                "session_id": "session-a",
+                "variant": "s01",
+                "source": "vscode",
+                "model": "gpt-5.4",
+                "reasoning_effort": "high",
+                "workspace_cwd": str(workspace_root / "slots" / "s01"),
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = module.validate_run(run_dir, session_export_root)
+
+    kinds = {item["kind"] for item in result["critical_confounds"]}
+    assert "missing_session_export" in kinds
+    assert "incomplete_session_manifest" in kinds
+    assert "execution_surface_mismatch" in kinds
+    assert "model_mismatch" in kinds
+    assert "reasoning_effort_mismatch" in kinds
+
+
+def test_score_and_report_separate_workflow_and_diagnostic_results(tmp_path: Path) -> None:
+    report_module = _load_script("report_runs.py")
+    score_module = _load_script("score_run.py")
+    run_dir = tmp_path / "runs" / "run_001"
+    run_dir.mkdir(parents=True)
+    metadata = {
+        "experiment": "ownership_boundary",
+        "workspace_root": "/tmp/workspaces",
+        "variants": ["s01", "s02", "s03"],
+        "prompt_levels": ["original"],
+        "created_at": "2026-04-25T10:00:00",
+        "primary_comparison": ["no_aiwiki_workflow", "aiwiki_ambient_memory_workflow"],
+        "diagnostic_variants": ["aiwiki_linked_raw_only"],
+        "assignment": {
+            "slots": [
+                {"slot": "s01", "variant": "no_aiwiki_workflow"},
+                {"slot": "s02", "variant": "aiwiki_ambient_memory_workflow"},
+                {"slot": "s03", "variant": "aiwiki_linked_raw_only"},
+            ]
+        },
+    }
+    (run_dir / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
+    (run_dir / "confounds.json").write_text(
+        json.dumps(
+            {
+                "shareable_for_causal_claims": False,
+                "critical_confounds": [
+                    {"slot": "s02", "kind": "semantic_path_leak", "detail": "variant leaked"}
+                ],
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    for slot, variant, success in (
+        ("s01", "no_aiwiki_workflow", False),
+        ("s02", "aiwiki_ambient_memory_workflow", True),
+        ("s03", "aiwiki_linked_raw_only", True),
+    ):
+        result_dir = run_dir / slot / "original" / "first_pass"
+        result_dir.mkdir(parents=True)
+        (result_dir / "result.json").write_text(
+            json.dumps(
+                {
+                    "slot": slot,
+                    "variant": variant,
+                    "prompt_level": "original",
+                    "phase": "first_pass",
+                    "attempt": 1,
+                    "human_nudges": 0,
+                    "first_pass_success": success,
+                    "changed_files": ["scripts/example.py"],
+                    "untracked_files": [],
+                    "notes": "",
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+    score_module.write_score(
+        run_dir,
+        slot="s01",
+        prompt_level="original",
+        label="fail",
+        evidence=["s01/original/first_pass/workspace_diff.patch"],
+    )
+    score_module.write_score(
+        run_dir,
+        slot="s02",
+        prompt_level="original",
+        label="success",
+        evidence=["s02/original/first_pass/workspace_diff.patch"],
+    )
+
+    report_text = report_module.render_report(
+        run_dir,
+        metadata,
+        report_module.collect_results(run_dir),
+    )
+
+    assert "## Workflow Result" in report_text
+    assert "no_aiwiki_workflow" in report_text
+    assert "aiwiki_ambient_memory_workflow" in report_text
+    assert "## Diagnostic Result" in report_text
+    assert "aiwiki_linked_raw_only" in report_text
+    assert "Shareable for causal claims: `no`" in report_text
+    assert "semantic_path_leak" in report_text
+
+
 def test_export_codex_sessions_exports_latest_visible_session_per_variant(tmp_path: Path) -> None:
     module = _load_script("export_codex_sessions.py")
     workspace_root = tmp_path / "workspaces" / "20260424-182219"
@@ -356,7 +739,18 @@ def test_export_codex_sessions_exports_latest_visible_session_per_variant(tmp_pa
                     "id": session_id,
                     "timestamp": session_timestamp,
                     "cwd": str(cwd),
-                    "source": "vscode",
+                    "source": "exec",
+                    "originator": "Codex Desktop",
+                    "cli_version": "0.124.0",
+                    "model_provider": "openai",
+                },
+            },
+            {
+                "type": "turn_context",
+                "payload": {
+                    "cwd": str(cwd),
+                    "model": "gpt-5.5",
+                    "effort": "xhigh",
                 },
             },
             {
@@ -478,6 +872,10 @@ def test_export_codex_sessions_exports_latest_visible_session_per_variant(tmp_pa
     plain_metadata = json.loads((latest_plain / "metadata.json").read_text(encoding="utf-8"))
     assert plain_metadata["thread_name"] == "Latest plain thread"
     assert plain_metadata["hidden_reasoning_exported"] is False
+    assert plain_metadata["source"] == "exec"
+    assert plain_metadata["model"] == "gpt-5.5"
+    assert plain_metadata["reasoning_effort"] == "xhigh"
+    assert manifest["sessions"][0]["source"] == "exec"
 
     visible_session = (latest_plain / "visible_session.jsonl").read_text(encoding="utf-8")
     assert '"type": "reasoning"' not in visible_session
