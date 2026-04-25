@@ -11,17 +11,17 @@ The goal is not to reward agents for touching wiki files. The goal is to measure
 
 Do not treat this as a request to build a benchmark runner yet.
 
-## First Classify Task Eligibility
+## First Classify Task Relevance
 
 Before interpreting any coverage or reuse metric, classify the task:
 
-- `not_applicable`
+- `not_relevant`
   Pure operational work such as pushing a PR, renaming a branch, running `git status`, or rerunning an already-decided command.
 
 - `optional`
   Low-risk work where repo memory may help, but the task can often complete correctly without it.
 
-- `eligible`
+- `relevant`
   Coding, debugging, release, review, clarification, or conflict-heavy work where existing team memory could materially change the plan.
 
 Simple operational tasks should not be forced to read AI wiki just to improve coverage scores.
@@ -34,22 +34,22 @@ These metrics answer whether the agent routed tasks correctly.
   Tasks with an explicit AI wiki footer or task-level evidence record divided by total tasks.
 
 - `wiki_touch_rate`
-  Eligible tasks that consulted at least one user-owned AI wiki doc divided by eligible tasks.
+  Relevant tasks that consulted at least one user-owned AI wiki doc divided by relevant tasks.
 
-Raw `wiki_touch_rate` across all tasks is misleading because it punishes `not_applicable` operational work.
+Raw `wiki_touch_rate` across all tasks is misleading because it punishes `not_relevant` operational work.
 
 ## Layer 2: Material Reuse
 
 These metrics answer whether AI wiki changed agent behavior, not just whether a doc was listed.
 
 - `material_reuse_given_wiki_use`
-  Tasks with material reuse divided by eligible tasks that used at least one user-owned AI wiki doc.
+  Tasks with material reuse divided by relevant tasks that used at least one user-owned AI wiki doc.
 
-- `material_reuse_per_eligible_task`
-  Tasks with material reuse divided by eligible tasks.
+- `material_reuse_per_relevant_task`
+  Tasks with material reuse divided by relevant tasks.
 
 - `material_reuse_rate`
-  Use this only when the denominator is stated explicitly. Do not report it without saying whether the denominator is `eligible_tasks` or `wiki_used_eligible_tasks`.
+  Use this only when the denominator is stated explicitly. Do not report it without saying whether the denominator is `relevant_tasks` or `wiki_used_relevant_tasks`.
 
 - `avoided_retry_count`
   Count tasks where AI wiki prevented a repeated failed attempt.
@@ -81,7 +81,7 @@ Why did the agent fail to pick relevant memory that already existed?
   Count known incidents where a relevant user-owned AI wiki doc existed but the agent failed to use it in time.
 
 - `missed_relevant_memory_rate`
-  Only use this when the denominator is `reviewed_eligible_tasks`, not all tasks.
+  Only use this when the denominator is `reviewed_relevant_tasks`, not all tasks.
 
 - `repeated_issue_after_memory_exists_count`
   Count tasks that repeated a known issue even though the relevant memory already existed.

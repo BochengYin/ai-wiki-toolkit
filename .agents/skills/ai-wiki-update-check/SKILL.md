@@ -1,9 +1,9 @@
 ---
 name: ai-wiki-update-check
-description: Produce the mandatory end-of-task AI wiki update outcome for ai-wiki-toolkit. Use it to detect durable memory candidates, decide whether the result is None, Draft, or PromotionCandidate, and emit the required final status line.
+description: Produce the mandatory end-of-task AI wiki write-back outcome for ai-wiki-toolkit. Use it to detect durable memory candidates, decide whether the result is None, Draft, or PromotionCandidate, and emit the required final status line.
 ---
 
-# AI Wiki Update Check
+# AI Wiki Write-Back Check
 
 Use this skill at the end of every completed task in this repository.
 
@@ -29,8 +29,12 @@ This outcome is mandatory even when the correct result is `None`.
 
 ## Constraints
 
-- Do not skip the update outcome just because no durable lesson is expected.
-- Do not treat "no wiki docs were opened" as proof that no durable memory was produced.
+- Do not skip the write-back outcome just because no durable lesson is expected.
+- Do not write every task summary into the wiki.
 - Do not create or update `ai-wiki/review-patterns/*.md` without human confirmation.
+- Do not promote a reviewer preference into a team convention unless the promotion rules are met.
+- Do not treat "no wiki docs were opened" as proof that no durable memory was produced.
+- If new memory conflicts with existing memory, flag it as a conflict, refinement, or supersession.
+- Prefer small durable memory over long transcripts.
 - Keep project-specific knowledge in `ai-wiki/`.
 - Keep cross-project knowledge in `<home>/ai-wiki/system/`.

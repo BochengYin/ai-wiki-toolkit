@@ -1,4 +1,4 @@
 interface:
-  display_name: "AI Wiki Update Evidence"
+  display_name: "AI Wiki Write-Back Evidence"
   short_description: "Detect durable memory from completed tasks"
-  default_prompt: "Use $ai-wiki-update-check to produce the end-of-task AI wiki update outcome for this completed task."
+  default_prompt: "Use $ai-wiki-update-check to produce the end-of-task AI wiki write-back outcome for this completed task."

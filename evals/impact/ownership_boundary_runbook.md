@@ -3,6 +3,12 @@
 This document describes how to reproduce the current `ownership_boundary` manual impact eval and
 how the generated repos differ before any prompt is run.
 
+For result chronology and synthesis, read:
+
+- `evals/impact/notes/index.md`
+- `evals/impact/notes/manual_v2_original_10_repo_findings.md`
+- `evals/impact/report.md`
+
 ## Goal
 
 Measure whether AI wiki memory changes where an agent places a contributor-only branch-and-PR
@@ -99,6 +105,26 @@ Removed index entries:
 - `ai-wiki/conventions/index.md` entry for `package-managed-vs-user-owned-docs.md`
 - `ai-wiki/review-patterns/index.md` entry for `shared-prompt-files-must-be-user-agnostic.md`
 
+### aiwiki_scaffold_no_adjacent_memory
+
+This is the sixth default diagnostic for Manual v2 neutral slots.
+
+Start from the realistic AI wiki workflow scaffold, then remove:
+
+- the benchmark-targeted raw drafts and consolidated docs
+- the direct convention/review-pattern index entries
+- adjacent task-specific workflow memories that explain earlier no-target contamination:
+  - `ai-wiki/workflows.md`
+  - `ai-wiki/people/bochengyin/drafts/impact-eval-no-target-aiwiki-slots-must-exclude-task-specific-workflow-memory.md`
+  - `ai-wiki/people/bochengyin/drafts/adjacent-consolidated-guidance-can-underperform-task-specific-raw-drafts-in-impact-evals.md`
+  - `ai-wiki/people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes.md`
+
+Purpose:
+
+- distinguish "AI wiki scaffold and workflow path" from "AI wiki plus adjacent workflow memory"
+- test whether `aiwiki_scaffold_no_target_memory` success was carried by nearby workflow docs rather
+  than the scaffold alone
+
 ### aiwiki_raw_drafts
 
 Starts from `aiwiki_no_relevant_memory`, then adds back only the raw drafts:
@@ -132,7 +158,7 @@ Includes both:
 - the two consolidated shared docs
 - the two index entries
 
-## Active Prompts
+## Active Prompt
 
 Prompt family:
 
@@ -142,73 +168,83 @@ Task description:
 
 - `evals/impact/prompts/ownership_boundary/TASK.md`
 
-Active prompt levels:
+Formal v2 runs use one active prompt level:
+
+- `original.md`
+
+`original.md` recreates the historical user request without directly saying that the helper must
+stay out of the distributed package. That makes the run test memory/workflow reuse instead of
+prompt saturation.
+
+Legacy round1 prompts remain only for old-run interpretation:
 
 - `short.md`
 - `medium.md`
-
-Retired:
-
 - `full.md`
 
-### short
+Do not use `medium.md` for workflow-primary claims; it names the core ownership boundary too
+directly.
 
-Contains only the task requirement:
+## Codex CLI-First Protocol
 
-- add a helper for the contributor branch-and-PR workflow
-- require branch-first work instead of direct work on `main`
-- require return to `main` after merge
-- require branch names:
-  - `feature/YYYY_MM_DD_description`
-  - `chore/YYYY_MM_DD_description`
-  - `fix/YYYY_MM_DD_description`
+For each neutral slot:
 
-### medium
-
-Adds exactly one extra scope boundary:
-
-- this is contributor workflow behavior for this repository
-- it is not a distributed `ai-wiki-toolkit` product feature
-
-## Manual Protocol
-
-For each variant:
-
-1. Open the workspace in a fresh Codex session.
-2. Paste `short.md` or `medium.md`.
-3. Let the agent work normally.
-4. Save the result with:
+1. Prefer `run_cli_slots.py` so the whole slot set runs under one `caffeinate -dimsu` sleep guard.
+2. Run `original.md` with `codex exec` from a fresh persisted CLI session.
+3. Use the same `gpt-5.5` / `xhigh` condition across all slots.
+4. Capture the first pass with:
    - `evals/impact/scripts/save_result.py`
-5. After all runs, aggregate with:
+5. Export session traces with:
+   - `evals/impact/scripts/export_codex_sessions.py`
+6. Validate the run with:
+   - `evals/impact/scripts/validate_run.py`
+7. Score the run manually with:
+   - `evals/impact/scripts/score_run.py`
+8. After all slots are scored, aggregate with:
    - `evals/impact/scripts/report_runs.py`
 
 Important controls:
 
-- one fresh session per variant
-- same selected model across variants if possible
+- one fresh session per slot
+- same selected model and reasoning effort across variants
 - same prompt text within a comparison set
 - save artifacts outside the experiment repos
+- require a complete `codex_sessions/manifest.json` before making shareable claims
+- require exported session metadata to show `source=exec`, `model=gpt-5.5`, and
+  `reasoning_effort=xhigh`
 
-## Model And Sampling Notes For The Current Runs
+Computer Use or the VS Code Codex extension can still be used for smoke checks, but UI automation
+is not the formal execution path.
 
-The currently saved `short` and `medium` runs were executed manually with:
+Whole-run command:
 
-- execution surface: Codex subscription sessions, not direct API calls
-- model family: `gpt-5.4`
-- reasoning effort: `xhigh` / extra high
+```bash
+uv run python evals/impact/scripts/run_cli_slots.py \
+  --run-dir <run-dir> \
+  --prompt-level original
+```
 
-These settings were manually held constant by the operator. They are not yet captured as verified
-fields inside `result.json`.
+If the sleep guard is unavailable or a `codex exec` process hangs before writing
+`final_message.md`, treat that run as an infrastructure confound and restart from a new workspace
+for formal claims.
 
-Because these runs were done through subscription sessions rather than direct API requests, the
-operator did not have exposed request knobs for parameters such as temperature or seed.
+## Model And Sampling Notes
 
-What is not currently recorded by the harness:
+The formal v2 condition is:
 
-- exact session metadata exported from the Codex UI
+- execution surface: `codex-cli`
+- model family: `gpt-5.5`
+- reasoning effort: `xhigh`
 
-So current conclusions should be treated as manually controlled comparisons, not as fully
-instrumented deterministic replays.
+`init_run.py` records those expected fields in `metadata.json`. `export_codex_sessions.py` exports
+the observed session `source`, model, and reasoning effort into each session `metadata.json` and
+the workspace-level `manifest.json`. `validate_run.py` treats mismatches as critical confounds.
+
+The legacy saved `short` and `medium` runs were executed manually with GPT-5.4 at extra-high
+reasoning through subscription sessions. Use them as historical qualitative evidence, not as the
+formal v2 condition.
+
+No temperature or seed is captured here.
 
 ## Manual Scoring Rubric
 
@@ -244,23 +280,37 @@ Any of the following is enough for failure:
 
 ## Current Saved Runs
 
+### Manual v2 original transition run
+
+- workspace root:
+  - `/private/tmp/aiwiki_first_round/ownership_boundary/workspaces/20260425-005106`
+- run dir:
+  - `/private/tmp/aiwiki_first_round/ownership_boundary/runs/ui-original-five-slots-20260425-0139`
+- exported sessions:
+  - `/private/tmp/aiwiki_first_round/ownership_boundary/workspaces/20260425-005106/codex_sessions_ui_original_ownership/manifest.json`
+- findings note:
+  - `evals/impact/notes/manual_v2_original_10_repo_findings.md`
+
+Important: this was a transition run before the formal CLI-first validator was fully in place.
+Use it as qualitative evidence, not a clean formal causal run.
+
 ### Short run
 
 - workspace root:
-  - `/private/tmp/aiwiki-impact-experiments/ownership_boundary/20260423-115153`
+  - `/private/tmp/aiwiki_first_round/ownership_boundary/workspaces/20260423-115153`
 - run dir:
-  - `/private/tmp/aiwiki-impact-runs/ownership_boundary/20260423-115153`
+  - `/private/tmp/aiwiki_first_round/ownership_boundary/runs/20260423-115153`
 - report:
-  - `/private/tmp/aiwiki-impact-runs/ownership_boundary/20260423-115153/report.md`
+  - `/private/tmp/aiwiki_first_round/ownership_boundary/runs/20260423-115153/report.md`
 
 ### Medium run
 
 - workspace root:
-  - `/private/tmp/aiwiki-impact-experiments/ownership_boundary/20260423-170541`
+  - `/private/tmp/aiwiki_first_round/ownership_boundary/workspaces/20260423-170541`
 - run dir:
-  - `/private/tmp/aiwiki-impact-runs/ownership_boundary/20260423-170541`
+  - `/private/tmp/aiwiki_first_round/ownership_boundary/runs/20260423-170541`
 - report:
-  - `/private/tmp/aiwiki-impact-runs/ownership_boundary/20260423-170541/report.md`
+  - `/private/tmp/aiwiki_first_round/ownership_boundary/runs/20260423-170541/report.md`
 
 ## What The Diffs Actually Contained
 
@@ -293,18 +343,16 @@ The repo-local successes usually looked like:
 ## Threats To Validity
 
 - This is still a manual experiment, not an automated benchmark.
-- The harness does not currently record the actual selected model or reasoning effort inside the
-  saved run artifacts.
-- The observed runs were executed with GPT-5.4 at extra-high reasoning, but that is currently a
-  user-controlled condition rather than an automatically verified field in `result.json`.
+- The harness records observed source/model/effort through exported sessions, but it still relies on
+  the local Codex session history being available at export time.
 - No temperature or seed is captured here.
 - Current evidence is from one task family and one run per variant/prompt level.
 
 ## Interpretation Guardrails
 
-- Treat `short` as the more informative memory-sensitivity run.
-- Treat `medium` as the stronger test of whether one explicit boundary sentence can suppress the
-  package-surface failure mode.
+- Treat formal v2 `original` runs as the workflow-primary evidence.
+- Treat legacy `short` and `medium` runs as historical controls only.
+- Treat `medium` as a prompt-strength control, not memory-reuse evidence.
 - Do not claim that the current consolidated docs are generally harmful. The strongest justified
   claim is narrower:
   adjacent consolidated guidance can underperform, or interfere with, a task-specific raw draft in

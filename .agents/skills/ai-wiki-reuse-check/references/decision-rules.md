@@ -1,16 +1,16 @@
 # Decision Rules
 
-## Task Eligibility
+## Task Relevance
 
 Classify the task before judging whether `no_wiki_use` is acceptable.
 
-- `not_applicable`
+- `not_relevant`
   Pure operational work such as pushing a PR, renaming a branch, or running an already-decided command.
 
 - `optional`
   Low-risk work where repo memory may help, but the task can often complete correctly without it.
 
-- `eligible`
+- `relevant`
   Coding, debugging, release, review, clarification, or conflict-heavy work where existing team memory could materially change the plan.
 
 ## Outcome Meanings
@@ -25,10 +25,10 @@ Classify the task before judging whether `no_wiki_use` is acceptable.
 
 - Record one `aiwiki-toolkit record-reuse` event per consulted user-owned AI wiki document.
 - Do not record managed `_toolkit/**` docs with `record-reuse`; cite those paths in progress updates or final notes instead.
-- `no_wiki_use` is correct for `not_applicable` tasks; do not force unrelated wiki reads just to improve coverage metrics.
-- If an AI wiki doc changed the task plan or behavior, cite its path in a progress update or final note.
 - Use `reuse_outcome=not_helpful` when a consulted user-owned doc did not help materially but still influenced the search path.
 - Record the task-level `aiwiki-toolkit record-reuse-check` entry after all document-level reuse events for that task are appended.
+- Prefer specific doc ids such as `conventions/python-typing`, `problems/async-notification-tests-flaky`, `features/bulk-invoice-upload`, or `review-patterns/shared-prompt-files-must-be-user-agnostic`.
+- `no_wiki_use` is correct for `not_relevant` tasks; do not force unrelated wiki reads just to improve coverage metrics.
 
 ## Material Reuse Hints
 

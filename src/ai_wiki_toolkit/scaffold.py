@@ -7,8 +7,6 @@ from pathlib import Path
 import shutil
 
 from ai_wiki_toolkit.content import (
-    TOOLKIT_GITHUB_URL,
-    TOOLKIT_SKILLS_DIR,
     managed_home_toolkit_files,
     managed_repo_toolkit_files,
     repo_starter_files,
@@ -41,7 +39,7 @@ class InitResult:
     updated_ignore_files: list[Path] = field(default_factory=list)
     updated_prompt_files: list[Path] = field(default_factory=list)
     updated_managed_files: list[Path] = field(default_factory=list)
-    skipped_skill_files: list[Path] = field(default_factory=list)
+    updated_skill_files: list[Path] = field(default_factory=list)
 
 
 @dataclass
@@ -77,13 +75,19 @@ def _write_if_missing(path: Path, content: str, result: InitResult) -> None:
     result.created_files.append(path)
 
 
-def _write_skill_if_missing(path: Path, content: str, result: InitResult) -> None:
-    if path.exists():
-        result.skipped_skill_files.append(path)
+def _write_skill(path: Path, content: str, result: InitResult) -> None:
+    if not path.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+        result.created_files.append(path)
         return
-    path.parent.mkdir(parents=True, exist_ok=True)
+
+    current = path.read_text(encoding="utf-8")
+    if current == content:
+        return
+
     path.write_text(content, encoding="utf-8")
-    result.created_files.append(path)
+    result.updated_skill_files.append(path)
 
 
 def _write_managed(path: Path, content: str, result: InitResult) -> None:
@@ -162,7 +166,7 @@ def install_workspace(start: Path | None = None, handle: str | None = None) -> I
         _write_managed(paths.home_toolkit_dir / relative_path, content, result)
 
     for relative_path, content in repo_skill_starter_files().items():
-        _write_skill_if_missing(paths.repo_root / relative_path, content, result)
+        _write_skill(paths.repo_root / relative_path, content, result)
 
     gitignore_path = paths.repo_root / ".gitignore"
     gitignore_existed = gitignore_path.exists()
@@ -271,7 +275,3 @@ def uninstall_workspace(
     _remove_tree_if_exists(paths.repo_toolkit_dir, result)
     _remove_tree_if_exists(paths.home_toolkit_dir, result)
     return result
-
-
-def skill_manual_merge_url() -> str:
-    return f"{TOOLKIT_GITHUB_URL}/tree/main/{TOOLKIT_SKILLS_DIR}"

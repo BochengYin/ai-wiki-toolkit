@@ -2,40 +2,40 @@
 
 Use the AI wiki footer as the user-facing evidence surface.
 
-Choose exactly one reuse evidence status line:
+Choose exactly one user-facing reuse status line:
 
-- `AI Wiki Reuse Evidence: wiki_used`
-- `AI Wiki Reuse Evidence: no_wiki_use`
+- `AI Wiki Reuse: user-owned memory used`
+- `AI Wiki Reuse: no user-owned memory used`
 
 Also print:
 
-- `AI Wiki Eligibility: eligible | optional | not_applicable`
+- `AI Wiki Task Relevance: relevant | optional | not_relevant`
 
-If the result is `wiki_used`, also print:
+If user-owned memory was used, also print:
 
-- `AI Wiki Reuse Docs: <comma-separated doc ids>`
+- `AI Wiki Docs Used: <comma-separated doc ids>`
 
 When relevant, also print:
 
-- `AI Wiki Material Effects: <comma-separated effects or none>`
+- `AI Wiki Impact: <short user-facing impacts or none>`
 - `AI Wiki Missed Memory: none known | <short note>`
 
 ## Examples
 
-No AI wiki docs were used:
+No AI wiki docs were needed for an operational task:
 
 ```text
-AI Wiki Reuse Evidence: no_wiki_use
-AI Wiki Eligibility: not_applicable
+AI Wiki Reuse: no user-owned memory used
+AI Wiki Task Relevance: not_relevant
 AI Wiki Missed Memory: none known
 ```
 
-AI wiki docs were used:
+AI wiki docs were used in a relevant task:
 
 ```text
-AI Wiki Reuse Evidence: wiki_used
-AI Wiki Eligibility: eligible
-AI Wiki Reuse Docs: workflows, review-patterns/shared-prompt-files-must-be-user-agnostic
-AI Wiki Material Effects: changed_plan, reused_convention
+AI Wiki Reuse: user-owned memory used
+AI Wiki Task Relevance: relevant
+AI Wiki Docs Used: conventions/python-typing, review-patterns/shared-prompt-files-must-be-user-agnostic
+AI Wiki Impact: changed the plan, reused an existing convention
 AI Wiki Missed Memory: none known
 ```

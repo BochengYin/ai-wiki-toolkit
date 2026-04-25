@@ -19,7 +19,6 @@ from ai_wiki_toolkit.reuse_events import (
 from ai_wiki_toolkit.scaffold import (
     refresh_managed_metrics,
     install_workspace,
-    skill_manual_merge_url,
     uninstall_workspace,
 )
 
@@ -54,15 +53,13 @@ def _echo_install_result(result) -> None:
     typer.echo(f"Created files: {len(result.created_files)}")
     typer.echo(f"Updated ignore files: {len(result.updated_ignore_files)}")
     typer.echo(f"Updated managed files: {len(result.updated_managed_files)}")
+    typer.echo(f"Updated skill files: {len(result.updated_skill_files)}")
     typer.echo(f"Updated prompt files: {len(result.updated_prompt_files)}")
     typer.echo(
         "Recommendation: configure git user.name and git user.email for stable handle resolution."
     )
-    if result.skipped_skill_files:
-        typer.echo(f"Skipped existing skill files: {len(result.skipped_skill_files)}")
-        for path in result.skipped_skill_files:
-            typer.echo(f"Skipped skill file: {path}")
-        typer.echo(f"Manual merge guide: {skill_manual_merge_url()}")
+    for path in result.updated_skill_files:
+        typer.echo(f"Updated skill file: {path}")
 
 
 def _echo_doctor_result(result, *, suggest_index_upgrade: bool, strict: bool) -> None:

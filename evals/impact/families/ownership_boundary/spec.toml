@@ -1,0 +1,36 @@
+name = "ownership_boundary"
+prompt_family = "ownership_boundary"
+baseline_ref = "34cd5a3^"
+historical_issue = "Contributor-only branch and PR workflow helpers can be misdesigned as distributed package features."
+
+raw_docs = [
+  "ai-wiki/people/bochengyin/drafts/user-owned-ai-wiki-index-should-not-be-an-upgrade-surface.md",
+  "ai-wiki/people/bochengyin/drafts/repo-local-contributor-workflows-should-stay-out-of-the-package-layer.md",
+  "ai-wiki/people/bochengyin/drafts/managed-toolkit-workflows-need-a-toc-and-scope-aware-conflict-checks.md",
+]
+
+consolidated_docs = [
+  "ai-wiki/conventions/package-managed-vs-user-owned-docs.md",
+  "ai-wiki/review-patterns/shared-prompt-files-must-be-user-agnostic.md",
+]
+
+ambient_exclude_paths = [
+  "ai-wiki/people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history.md",
+  "ai-wiki/people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files.md",
+  "ai-wiki/people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff.md",
+]
+
+strict_scaffold_exclude_paths = [
+  "ai-wiki/workflows.md",
+  "ai-wiki/people/bochengyin/drafts/impact-eval-no-target-aiwiki-slots-must-exclude-task-specific-workflow-memory.md",
+  "ai-wiki/people/bochengyin/drafts/adjacent-consolidated-guidance-can-underperform-task-specific-raw-drafts-in-impact-evals.md",
+  "ai-wiki/people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes.md",
+]
+
+[[consolidated_index_entries]]
+path = "ai-wiki/conventions/index.md"
+entry = "- [Package-managed vs user-owned AI wiki docs](package-managed-vs-user-owned-docs.md): keep evolving package-controlled guidance in `_toolkit/**` and keep repo-owned AI wiki docs stable unless a contributor intentionally edits them."
+
+[[consolidated_index_entries]]
+path = "ai-wiki/review-patterns/index.md"
+entry = "- [Shared prompt files must be user-agnostic](shared-prompt-files-must-be-user-agnostic.md): keep repo-shared prompt content stable across different local handles."

@@ -9,7 +9,7 @@
   Use when there is a durable lesson worth keeping, but it is still raw, task-specific, or not yet validated as a shared rule.
 
 - `PromotionCandidate`
-  Use when a draft exists or was updated and the lesson satisfies the promotion gate, but human confirmation is still required before creating or updating `ai-wiki/review-patterns/*.md`.
+  Use when a draft exists or was updated and the lesson satisfies the promotion gate, but human confirmation is still required before creating or updating `ai-wiki/review-patterns/*.md` or `ai-wiki/conventions/*.md`.
 
 ## Promotion Gate
 

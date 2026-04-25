@@ -1,33 +1,33 @@
 # Output Contract
 
-Choose exactly one final status line:
+Choose exactly one user-facing write-back status line:
 
-- `AI Wiki Update Candidate: None`
-- `AI Wiki Update Candidate: Draft`
-- `AI Wiki Update Candidate: PromotionCandidate`
+- `AI Wiki Write-Back: none`
+- `AI Wiki Write-Back: draft recorded`
+- `AI Wiki Write-Back: promotion candidate`
 
 If the outcome is `Draft` or `PromotionCandidate`, also print:
 
-- `AI Wiki Update Path: <path>`
+- `AI Wiki Write-Back Path: <path>`
 
 ## Examples
 
 No durable lesson:
 
 ```text
-AI Wiki Update Candidate: None
+AI Wiki Write-Back: none
 ```
 
 Durable lesson, not yet ready for promotion:
 
 ```text
-AI Wiki Update Candidate: Draft
-AI Wiki Update Path: ai-wiki/people/<handle>/drafts/<file>.md
+AI Wiki Write-Back: draft recorded
+AI Wiki Write-Back Path: ai-wiki/people/<handle>/drafts/<file>.md
 ```
 
 Ready to ask for promotion:
 
 ```text
-AI Wiki Update Candidate: PromotionCandidate
-AI Wiki Update Path: ai-wiki/people/<handle>/drafts/<file>.md
+AI Wiki Write-Back: promotion candidate
+AI Wiki Write-Back Path: ai-wiki/people/<handle>/drafts/<file>.md
 ```
