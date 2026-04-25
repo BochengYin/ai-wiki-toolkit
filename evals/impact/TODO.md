@@ -43,9 +43,9 @@ Reference implementation:
 
 ## Publication Prep
 
-Current public-writeup draft:
+Current public write-up:
 
-- `evals/impact/public_writeup_draft.md`
+- `evals/impact/ai_wiki_impact_eval_pilot.md`
 
 Published artifact repository:
 
@@ -74,7 +74,7 @@ Before publishing an artifact bundle:
    content
 4. if raw logs are withheld, publish visible logs plus SHA-256 hashes of the raw logs and state why
    the raw files are withheld
-5. update `evals/impact/public_writeup_draft.md` with final artifact links
+5. update `evals/impact/ai_wiki_impact_eval_pilot.md` with final artifact links
 6. run `git diff --check`
 
 Initial 2026-04-25 scan notes:
@@ -88,6 +88,18 @@ Initial 2026-04-25 scan notes:
   before publishing a final bundle
 - published `ai-wiki-toolkit-impact-eval-artifacts` with visible artifacts only; raw
   `session_without_reasoning.jsonl` files are omitted and represented by SHA-256 hashes
+
+## Replication Follow-Ups
+
+Prompt robustness is not covered by the current formal result. The completed families all used the
+original historical prompt for their family. A future replication pass should rerun the same primary
+comparison with controlled prompt variants:
+
+- paraphrased but semantically equivalent prompts
+- shorter and more ambiguous prompts
+- more explicit but still non-answer-leaking prompts
+
+Treat this as a replication study, not as part of the current 2026-04-25 formal result.
 
 ## Status Legend
 

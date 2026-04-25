@@ -1,15 +1,29 @@
-# Public Write-Up Draft: AI Wiki Impact Eval Pilot
+# AI Wiki Impact Eval Pilot
 
-This is a draft for publishing the current `ai-wiki-toolkit` impact-eval work. It is written as a
-public-facing artifact, not as an academic paper.
+This note summarizes an artifact-backed pilot evaluation of whether `ai-wiki-toolkit` changes
+coding-agent behavior on repeated historical repository problems. It is not a statistically powered
+benchmark or an academic paper.
+
+## Abstract
+
+I ran a small artifact-backed pilot eval to test whether repo-local AI memory changes coding-agent
+behavior on repeated historical problems. The tool under test, `ai-wiki-toolkit`, gives a repo an
+`ai-wiki/` memory tree, managed prompt guidance, end-of-task memory-use footers, and write-back
+checks. I used five real problems from developing the toolkit itself, recreated earlier repo states,
+and ran six isolated Codex CLI sessions per family with the original prompt, `gpt-5.5`, and `xhigh`
+reasoning. The primary comparison was no AI wiki workflow versus the realistic ambient AI wiki
+workflow. In 4 of 5 families, the ambient workflow produced a better primary outcome; in 1 family
+both conditions succeeded. This is not a statistically powered benchmark, but the artifacts provide
+directional evidence that repo memory can help agents avoid repeated mistakes, especially around
+ownership boundaries, release hazards, and workflow discipline.
 
 ## Headline Statistical Status
 
 This is not a statistically powered benchmark.
 
-Do not claim confidence intervals, statistical significance, general model success-rate estimates,
-or proof that AI wiki memory is necessary. Each family has one primary control sample and one
-primary treatment sample:
+This note does not claim confidence intervals, statistical significance, general model success-rate
+estimates, or proof that AI wiki memory is necessary. Each family has one primary control sample and
+one primary treatment sample:
 
 - `no_aiwiki_workflow`
 - `aiwiki_ambient_memory_workflow`
@@ -101,6 +115,9 @@ Fixed conditions:
 - workspace isolation: each slot runs in its own repo checkout
 - scoring: manual `success`, `partial`, or `fail`, based on diffs, transcripts, tests, and rubric
 - validation: session export and `validate_run.py` must show no critical confounds
+
+The formal runs use original historical prompts only. They do not test whether the same conclusions
+hold under prompt paraphrases, more ambiguous prompts, or more leading prompts.
 
 Primary comparison:
 
@@ -210,28 +227,30 @@ More precise by family:
 
 ## What This Does Not Prove
 
-Do not claim:
+This note does not claim:
 
 - statistical significance
 - confidence intervals
 - a general success-rate improvement
 - that AI wiki memory is necessary for success
 - that the result generalizes to all tasks, repos, models, or agents
+- that the result is robust to prompt variants or paraphrases
 - that the diagnostic variants are the main causal result
 - that GitHub Actions releases would necessarily pass when no actual release workflow was run
 
-## Suggested Public Abstract
+## Prompt Robustness Follow-Up
 
-> I ran a small artifact-backed pilot eval to test whether repo-local AI memory changes coding-agent
-> behavior on repeated historical problems. The tool under test, `ai-wiki-toolkit`, gives a repo an
-> `ai-wiki/` memory tree, managed prompt guidance, end-of-task memory-use footers, and write-back
-> checks. I used five real problems from developing the toolkit itself, recreated earlier repo states,
-> and ran six isolated Codex CLI sessions per family with the original prompt, `gpt-5.5`, and
-> `xhigh` reasoning. The primary comparison was no AI wiki workflow versus the realistic ambient AI
-> wiki workflow. In 4 of 5 families, the ambient workflow produced a better primary outcome; in 1
-> family both conditions succeeded. This is not a statistically powered benchmark, but the artifacts
-> provide directional evidence that repo memory can help agents avoid repeated mistakes, especially
-> around ownership boundaries, release hazards, and workflow discipline.
+The current formal runs intentionally use each family's original historical prompt. That keeps the
+replay close to the real task request, but it leaves prompt robustness untested.
+
+A stronger follow-up would rerun the same five families with controlled prompt variants, for example:
+
+- a paraphrased but semantically equivalent prompt
+- a shorter and more ambiguous prompt
+- a more explicit but non-answer-leaking prompt
+
+Those replications would test whether the observed AI wiki advantage depends on the exact wording of
+the original prompt or survives reasonable task-request variation.
 
 ## Appendix A: Verbatim Original Prompts
 
