@@ -70,6 +70,8 @@ A weak solution often:
 - `aiwiki_scaffold_no_target_memory`: AI wiki exists, but not the target distribution memory
 - `aiwiki_linked_raw_only`: target raw draft evidence exists
 - `aiwiki_linked_consolidated_only`: linked consolidated guidance exists
+- `aiwiki_scaffold_no_adjacent_memory`: AI wiki scaffold exists, but target distribution memory and
+  adjacent release/problem memories are removed
 
 ## Manual v2 prompt
 

@@ -55,6 +55,7 @@ WORKFLOW_DIAGNOSTIC_VARIANTS = (
     "aiwiki_scaffold_no_target_memory",
     "aiwiki_linked_raw_only",
     "aiwiki_linked_consolidated_only",
+    "aiwiki_scaffold_no_adjacent_memory",
 )
 WORKFLOW_VARIANTS = (
     "no_aiwiki_workflow",
@@ -62,6 +63,7 @@ WORKFLOW_VARIANTS = (
     "aiwiki_linked_raw_only",
     "aiwiki_linked_consolidated_only",
     "aiwiki_ambient_memory_workflow",
+    "aiwiki_scaffold_no_adjacent_memory",
 )
 LEGACY_VARIANTS = (
     "plain_repo_no_aiwiki",
@@ -82,6 +84,8 @@ class ExperimentSpec:
     baseline_ref: str = "HEAD"
     historical_issue: str = ""
     ambient_exclude_paths: tuple[str, ...] = ()
+    strict_scaffold_exclude_paths: tuple[str, ...] = ()
+    strict_scaffold_index_tokens: tuple[tuple[str, str], ...] = ()
 
 
 OWNERSHIP_BOUNDARY = ExperimentSpec(
@@ -107,6 +111,12 @@ OWNERSHIP_BOUNDARY = ExperimentSpec(
             "- [Shared prompt files must be user-agnostic](shared-prompt-files-must-be-user-agnostic.md): keep repo-shared prompt content stable across different local handles.",
         ),
     ),
+    strict_scaffold_exclude_paths=(
+        "ai-wiki/workflows.md",
+        "ai-wiki/people/bochengyin/drafts/impact-eval-no-target-aiwiki-slots-must-exclude-task-specific-workflow-memory.md",
+        "ai-wiki/people/bochengyin/drafts/adjacent-consolidated-guidance-can-underperform-task-specific-raw-drafts-in-impact-evals.md",
+        "ai-wiki/people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes.md",
+    ),
 )
 
 RELEASE_DISTRIBUTION_INTEGRITY = ExperimentSpec(
@@ -123,6 +133,27 @@ RELEASE_DISTRIBUTION_INTEGRITY = ExperimentSpec(
         (
             "ai-wiki/conventions/index.md",
             "- [Distribution target matrix must match published assets](distribution-target-matrix-must-match-published-assets.md): keep every public release target aligned across release workflows, published assets, runtime target maps, package metadata, archive handling, docs, and smoke checks.",
+        ),
+    ),
+    strict_scaffold_exclude_paths=(
+        "ai-wiki/problems/linux-musl-pyinstaller-needs-binutils-objdump.md",
+        "ai-wiki/problems/windows-arm-smoke-version-checks-need-full-cli-output.md",
+        "ai-wiki/people/bochengyin/drafts/introducing-new-npm-package-names-needs-a-bootstrap-publish-plan.md",
+        "ai-wiki/people/bochengyin/drafts/linux-release-binaries-need-runtime-checks-against-an-older-glibc-baseline.md",
+        "ai-wiki/trails/2026-04-18-release-workflow-and-prompt-block-edge-cases.md",
+    ),
+    strict_scaffold_index_tokens=(
+        (
+            "ai-wiki/problems/index.md",
+            "linux-musl-pyinstaller-needs-binutils-objdump.md",
+        ),
+        (
+            "ai-wiki/problems/index.md",
+            "windows-arm-smoke-version-checks-need-full-cli-output.md",
+        ),
+        (
+            "ai-wiki/trails/index.md",
+            "2026-04-18-release-workflow-and-prompt-block-edge-cases.md",
         ),
     ),
 )
@@ -153,6 +184,13 @@ def load_experiment_spec(spec_path: Path) -> ExperimentSpec:
         consolidated_docs=tuple(payload.get("consolidated_docs", [])),
         consolidated_index_entries=consolidated_index_entries,
         ambient_exclude_paths=tuple(payload.get("ambient_exclude_paths", [])),
+        strict_scaffold_exclude_paths=tuple(
+            payload.get("strict_scaffold_exclude_paths", [])
+        ),
+        strict_scaffold_index_tokens=tuple(
+            (entry["path"], entry["token"])
+            for entry in payload.get("strict_scaffold_index_tokens", [])
+        ),
     )
 
 
@@ -480,6 +518,24 @@ def remove_relevant_memory(root: Path, spec: ExperimentSpec) -> None:
         remove_index_entry(root, index_path, entry)
 
 
+def remove_index_lines_containing(root: Path, relative_path: str, token: str) -> None:
+    target = root / relative_path
+    if not target.exists():
+        return
+    lines = target.read_text(encoding="utf-8").splitlines()
+    kept = [line for line in lines if token not in line]
+    if kept == lines:
+        return
+    target.write_text("\n".join(kept).rstrip() + "\n", encoding="utf-8")
+
+
+def remove_strict_scaffold_memory(root: Path, spec: ExperimentSpec) -> None:
+    for path in spec.strict_scaffold_exclude_paths:
+        remove_if_exists(root, path)
+    for index_path, token in spec.strict_scaffold_index_tokens:
+        remove_index_lines_containing(root, index_path, token)
+
+
 def remove_consolidated_memory(root: Path, spec: ExperimentSpec) -> None:
     for path in spec.consolidated_docs:
         remove_if_exists(root, path)
@@ -556,6 +612,10 @@ def prepare_variant(
     elif variant == "aiwiki_scaffold_no_target_memory":
         inject_ambient_memory(destination, control_root, spec)
         remove_relevant_memory(destination, spec)
+    elif variant == "aiwiki_scaffold_no_adjacent_memory":
+        inject_ambient_memory(destination, control_root, spec)
+        remove_relevant_memory(destination, spec)
+        remove_strict_scaffold_memory(destination, spec)
     elif variant == "aiwiki_linked_raw_only":
         inject_ambient_memory(destination, control_root, spec)
         remove_relevant_memory(destination, spec)
@@ -599,7 +659,11 @@ def write_assignment_manifest(
         "baseline_ref": baseline_ref,
         "workspace_layout": workspace_layout,
         "primary_comparison": list(WORKFLOW_PRIMARY_VARIANTS),
-        "diagnostic_variants": list(WORKFLOW_DIAGNOSTIC_VARIANTS),
+        "diagnostic_variants": [
+            assignment["variant"]
+            for assignment in assignments
+            if assignment["variant"] not in WORKFLOW_PRIMARY_VARIANTS
+        ],
         "slots": assignments,
     }
     (output_root / "assignment.json").write_text(

@@ -106,6 +106,27 @@ Important:
 - other adjacent release docs still remain in the repo
 - so `aiwiki_no_relevant_memory` is "targeted-memory removed", not "memory-free release repo"
 
+### aiwiki_scaffold_no_adjacent_memory
+
+This is the sixth default diagnostic for Manual v2 neutral slots.
+
+Start from the realistic AI wiki workflow scaffold, then remove:
+
+- the benchmark-targeted distribution-matrix raw draft and promoted convention
+- the direct convention index entry
+- adjacent release/problem memories that explained the clean-run `s02` success:
+  - `ai-wiki/problems/linux-musl-pyinstaller-needs-binutils-objdump.md`
+  - `ai-wiki/problems/windows-arm-smoke-version-checks-need-full-cli-output.md`
+  - `ai-wiki/people/bochengyin/drafts/introducing-new-npm-package-names-needs-a-bootstrap-publish-plan.md`
+  - `ai-wiki/people/bochengyin/drafts/linux-release-binaries-need-runtime-checks-against-an-older-glibc-baseline.md`
+  - `ai-wiki/trails/2026-04-18-release-workflow-and-prompt-block-edge-cases.md`
+
+Purpose:
+
+- distinguish "AI wiki scaffold and workflow path" from "AI wiki plus adjacent release memory"
+- test whether the previous `aiwiki_scaffold_no_target_memory` success was carried by nearby release
+  memories rather than the scaffold alone
+
 ### aiwiki_raw_drafts
 
 Starts from `aiwiki_no_relevant_memory`, then adds back only the raw draft:
@@ -199,6 +220,9 @@ uv run python evals/impact/scripts/run_cli_slots.py \
   --run-dir <run-dir> \
   --prompt-level original
 ```
+
+`run_cli_slots.py` includes `s01` through `s06` by default because `init_run.py` reads
+`assignment.json`.
 
 If the sleep guard is unavailable or a `codex exec` process hangs before writing
 `final_message.md`, treat that run as an infrastructure confound and restart from a new workspace

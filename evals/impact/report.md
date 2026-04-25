@@ -90,10 +90,10 @@ Not yet reasonable to claim:
 
 ## Next Formal Work
 
-The next useful formal work is replication, not a new transition batch:
+The next useful formal work is replication with the updated six-slot protocol:
 
-1. Repeat each family with additional independent five-slot batches.
+1. Repeat each family with additional independent six-slot batches.
 2. Keep `original.md`, Codex CLI-first execution, and run-level `caffeinate`.
 3. Preserve complete session exports and validator output before scoring.
-4. Consider a stricter no-adjacent-memory release diagnostic if mechanism isolation matters.
+4. Include `aiwiki_scaffold_no_adjacent_memory` in both benchmark families.
 5. Continue treating diagnostic variants as explanations, not primary conclusions.

@@ -34,6 +34,7 @@ DEFAULT_WORKFLOW_DIAGNOSTIC_VARIANTS = (
     "aiwiki_scaffold_no_target_memory",
     "aiwiki_linked_raw_only",
     "aiwiki_linked_consolidated_only",
+    "aiwiki_scaffold_no_adjacent_memory",
 )
 DEFAULT_PROMPT_AXIS_VARIANTS = (
     "plain_repo_no_aiwiki",

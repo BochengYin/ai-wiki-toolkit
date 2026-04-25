@@ -105,6 +105,26 @@ Removed index entries:
 - `ai-wiki/conventions/index.md` entry for `package-managed-vs-user-owned-docs.md`
 - `ai-wiki/review-patterns/index.md` entry for `shared-prompt-files-must-be-user-agnostic.md`
 
+### aiwiki_scaffold_no_adjacent_memory
+
+This is the sixth default diagnostic for Manual v2 neutral slots.
+
+Start from the realistic AI wiki workflow scaffold, then remove:
+
+- the benchmark-targeted raw drafts and consolidated docs
+- the direct convention/review-pattern index entries
+- adjacent task-specific workflow memories that explain earlier no-target contamination:
+  - `ai-wiki/workflows.md`
+  - `ai-wiki/people/bochengyin/drafts/impact-eval-no-target-aiwiki-slots-must-exclude-task-specific-workflow-memory.md`
+  - `ai-wiki/people/bochengyin/drafts/adjacent-consolidated-guidance-can-underperform-task-specific-raw-drafts-in-impact-evals.md`
+  - `ai-wiki/people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes.md`
+
+Purpose:
+
+- distinguish "AI wiki scaffold and workflow path" from "AI wiki plus adjacent workflow memory"
+- test whether `aiwiki_scaffold_no_target_memory` success was carried by nearby workflow docs rather
+  than the scaffold alone
+
 ### aiwiki_raw_drafts
 
 Starts from `aiwiki_no_relevant_memory`, then adds back only the raw drafts:

@@ -61,6 +61,7 @@ Manual v2 workspaces use neutral slot paths such as:
     s03/
     s04/
     s05/
+    s06/
 ```
 
 The semantic variant mapping lives only in external `assignment.json` and run metadata. Do not put
@@ -110,8 +111,8 @@ evals/impact/notes/round1_process_lessons.md
 
 ## Workspace Variants
 
-Manual v2 still prepares five workspaces, but their role is different from round1. The primary
-workflow comparison is:
+Manual v2 prepares six standard workspaces by default, but their role is different from round1. The
+primary workflow comparison is:
 
 - `no_aiwiki_workflow`
 - `aiwiki_ambient_memory_workflow`
@@ -121,6 +122,13 @@ The diagnostic variants are:
 - `aiwiki_scaffold_no_target_memory`
 - `aiwiki_linked_raw_only`
 - `aiwiki_linked_consolidated_only`
+- `aiwiki_scaffold_no_adjacent_memory`
+
+The sixth slot is for mechanism analysis only. It keeps the AI wiki scaffold/workflow path but
+removes the targeted memory plus adjacent task-specific memory. For `release_distribution_integrity`,
+that includes nearby release/problem notes such as musl binutils, Windows ARM smoke, npm package
+bootstrap, and release-trail notes. For `ownership_boundary`, that includes workflow docs and
+impact-eval notes that name the repo-local contributor workflow path.
 
 The round1 semantic variant names are still supported with `--workspace-layout legacy` for old
 analysis:
@@ -196,7 +204,7 @@ That file explains the concrete repo-realistic task being tested. Manual v2 uses
 
 Recommended sequence:
 
-1. Run `original.md` across all five neutral slots.
+1. Run `original.md` across all six neutral slots.
 2. Read the primary workflow comparison first:
    - `no_aiwiki_workflow`
    - `aiwiki_ambient_memory_workflow`
@@ -204,6 +212,7 @@ Recommended sequence:
    - `aiwiki_scaffold_no_target_memory`
    - `aiwiki_linked_raw_only`
    - `aiwiki_linked_consolidated_only`
+   - `aiwiki_scaffold_no_adjacent_memory`
 4. Do not run `medium` for workflow-primary claims; it names the boundary too directly and turns
    the eval into prompt-following rather than memory reuse.
 
@@ -376,6 +385,7 @@ Use one round root per experiment batch:
           s03/
           s04/
           s05/
+          s06/
         codex_sessions/
     runs/
       <run-label>/
@@ -388,7 +398,7 @@ Use one round root per experiment batch:
 
 Rules:
 
-- `workspaces/<timestamp>/` is a prepared five-slot set for one experiment family.
+- `workspaces/<timestamp>/` is a prepared standard six-slot set for one experiment family.
 - `assignment.json` is the only place semantic variant names should appear in the workspace set.
 - `workspaces/<timestamp>/codex_sessions/` is required workspace-level metadata for shareable
   claims; it must contain a complete `manifest.json`.
@@ -419,7 +429,7 @@ uv run python evals/impact/scripts/init_run.py \
   --experiment release_distribution_integrity \
   --workspace-root /private/tmp/aiwiki_first_round/release_distribution_integrity/workspaces/20260424-182219 \
   --prompt-levels original \
-  --run-label original-five-way
+  --run-label original-six-way
 ```
 
 Then run each slot with the CLI command in the slot README and capture the result into the matching

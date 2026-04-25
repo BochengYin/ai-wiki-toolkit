@@ -68,6 +68,8 @@ A weak solution often:
 - `aiwiki_scaffold_no_target_memory`: AI wiki exists, but not the target ownership memory
 - `aiwiki_linked_raw_only`: target raw drafts exist
 - `aiwiki_linked_consolidated_only`: linked consolidated docs exist
+- `aiwiki_scaffold_no_adjacent_memory`: AI wiki scaffold exists, but target ownership memory and
+  adjacent task-specific workflow memories are removed
 
 ## Manual v2 prompt
 

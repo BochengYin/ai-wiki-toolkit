@@ -20,6 +20,13 @@ ambient_exclude_paths = [
   "ai-wiki/people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff.md",
 ]
 
+strict_scaffold_exclude_paths = [
+  "ai-wiki/workflows.md",
+  "ai-wiki/people/bochengyin/drafts/impact-eval-no-target-aiwiki-slots-must-exclude-task-specific-workflow-memory.md",
+  "ai-wiki/people/bochengyin/drafts/adjacent-consolidated-guidance-can-underperform-task-specific-raw-drafts-in-impact-evals.md",
+  "ai-wiki/people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes.md",
+]
+
 [[consolidated_index_entries]]
 path = "ai-wiki/conventions/index.md"
 entry = "- [Package-managed vs user-owned AI wiki docs](package-managed-vs-user-owned-docs.md): keep evolving package-controlled guidance in `_toolkit/**` and keep repo-owned AI wiki docs stable unless a contributor intentionally edits them."
