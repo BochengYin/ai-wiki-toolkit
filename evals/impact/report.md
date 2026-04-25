@@ -12,27 +12,37 @@ The benchmark now has two useful families:
 - `release_distribution_integrity`: tests whether AI wiki workflow helps coordinate public release
   and npm distribution changes across coupled surfaces.
 
-The latest evidence is the 2026-04-25 10-repo original-prompt transition run documented in:
+The latest report-worthy ownership-boundary evidence is the 2026-04-25 clean CLI-first original
+prompt run documented in:
 
-- `evals/impact/notes/manual_v2_original_10_repo_findings.md`
+- `evals/impact/notes/manual_v2_cli_original_ownership_20260425_findings.md`
 
-That run is useful qualitative evidence, but it is not the final formal run because execution mixed
-VS Code UI and Codex CLI fallback, and old session exports did not record observed source/model/effort
-fields.
+That run used five independent persisted Codex CLI sessions, `gpt-5.5`, `xhigh`, the original prompt,
+and a complete session export validated by `validate_run.py` with no critical confounds.
+
+The earlier 2026-04-25 10-repo transition run remains useful qualitative evidence, but it is no
+longer the current formal ownership result because it mixed VS Code UI and Codex CLI fallback.
 
 ## Main Findings So Far
 
 ### Ownership Boundary
 
-The clearest positive signal for AI wiki is the ownership-boundary primary comparison.
+The clearest positive formal signal for AI wiki is the ownership-boundary primary comparison.
 
-- No AI wiki: the agent repeated the package-surface mistake by adding code under
-  `src/ai_wiki_toolkit/`.
-- Realistic AI wiki workflow: the agent kept the helper repo-local under `scripts/`, added tests,
-  and updated `ai-wiki/workflows.md`.
+- No AI wiki (`s01`): fail. The agent repeated the package-surface mistake by adding
+  `src/ai_wiki_toolkit/contributor_workflow.py` and package CLI wiring.
+- Realistic AI wiki workflow (`s05`): success. The agent kept the helper repo-local under
+  `scripts/`, added tests, and updated local workflow docs without adding package code.
 
 This supports the claim that AI wiki workflow can help prevent repeated implementation-surface
 mistakes.
+
+Diagnostic variants are explanatory only:
+
+- `aiwiki_linked_raw_only` succeeded and used the raw repo-local placement draft.
+- `aiwiki_linked_consolidated_only` failed by putting the core helper in `src/ai_wiki_toolkit/`.
+- `aiwiki_scaffold_no_target_memory` succeeded, but is contaminated as a no-target diagnostic because
+  it still used workflow and impact-eval meta memory.
 
 ### Release Distribution Integrity
 
@@ -50,7 +60,8 @@ multi-surface release work, but this family needs detailed scoring rather than s
 
 Reasonable to claim:
 
-- AI wiki workflow looks useful for the ownership-boundary repeated-problem task.
+- The clean CLI-first ownership-boundary run supports AI wiki workflow usefulness for the
+  repeated-problem ownership-boundary task.
 - Release-distribution memory appears more helpful for completeness and verification than for
   deciding whether to attempt the work.
 - Original prompts are better than medium-style prompts for testing memory reuse.
@@ -61,11 +72,12 @@ Not yet reasonable to claim:
 - a clean quantitative causal estimate of AI wiki impact
 - a seed-controlled benchmark result
 - a final model comparison
-- a formal result from the 2026-04-25 transition batch
+- a formal release-distribution result from the 2026-04-25 transition batch
 
 ## Next Formal Run
 
-The next report-worthy run should use the stricter protocol now documented in `evals/impact/README.md`:
+The next report-worthy run should apply the same stricter protocol to
+`release_distribution_integrity`:
 
 1. Generate neutral five-slot workspaces.
 2. Run only `original.md`.

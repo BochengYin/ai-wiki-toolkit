@@ -10,19 +10,21 @@ synthesizes across notes.
    Current benchmark framing, workspace layout, and CLI-first execution protocol.
 2. `evals/impact/report.md`
    Current synthesis across completed runs, including what can and cannot be claimed.
-3. `evals/impact/notes/manual_v2_original_10_repo_findings.md`
-   The latest 10-repo original-prompt transition run across both benchmark families.
-4. `evals/impact/ownership_boundary_runbook.md`
+3. `evals/impact/notes/manual_v2_cli_original_ownership_20260425_findings.md`
+   The clean formal CLI-first ownership-boundary run.
+4. `evals/impact/notes/manual_v2_original_10_repo_findings.md`
+   The earlier 10-repo original-prompt transition run across both benchmark families.
+5. `evals/impact/ownership_boundary_runbook.md`
    Reproduction spec and rubric for the ownership-boundary family.
-5. `evals/impact/release_distribution_integrity_runbook.md`
+6. `evals/impact/release_distribution_integrity_runbook.md`
    Reproduction spec and rubric for the release-distribution family.
-6. `evals/impact/notes/round1_process_lessons.md`
+7. `evals/impact/notes/round1_process_lessons.md`
    Historical round1 process lessons and why v2 changed the harness.
-7. `evals/impact/notes/ownership_boundary_round1_findings.md`
+8. `evals/impact/notes/ownership_boundary_round1_findings.md`
    Historical ownership-boundary short/medium results.
-8. `evals/impact/notes/release_distribution_integrity_round1_findings.md`
+9. `evals/impact/notes/release_distribution_integrity_round1_findings.md`
    Historical release-distribution short results.
-9. `evals/impact/notes/ownership_boundary_v0_failure.md`
+10. `evals/impact/notes/ownership_boundary_v0_failure.md`
    Original failed benchmark design and prompt leakage.
 
 ## Run Chronology
@@ -33,7 +35,8 @@ synthesizes across notes.
 | 2 | `ownership_boundary_round1_findings.md` | historical | first repaired ownership-boundary evidence |
 | 3 | `release_distribution_integrity_round1_findings.md` | historical | first release-distribution evidence |
 | 4 | `round1_process_lessons.md` | historical/process | captures process failures that v2 addresses |
-| 5 | `manual_v2_original_10_repo_findings.md` | current transition run | latest 10-repo original-prompt evidence and remaining confounds |
+| 5 | `manual_v2_original_10_repo_findings.md` | transition run | 10-repo original-prompt evidence and remaining confounds |
+| 6 | `manual_v2_cli_original_ownership_20260425_findings.md` | current formal run | clean CLI-first ownership-boundary primary comparison |
 
 ## Documentation Roles
 
