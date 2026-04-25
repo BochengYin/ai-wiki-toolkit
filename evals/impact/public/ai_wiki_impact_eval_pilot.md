@@ -356,6 +356,8 @@ This note does not claim:
 - that AI wiki memory is necessary for success
 - that the result generalizes to all tasks, repos, models, or agents
 - that the result has already been validated in a multi-person or multi-team deployment
+- that the result holds in very large repositories with much larger AI wiki histories, document
+  backlogs, or context-window pressure
 - that the result is robust to prompt variants or paraphrases
 - that the diagnostic variants are the main causal result
 - that this is a comparison against every other self-updating memory system
@@ -376,6 +378,23 @@ A stronger follow-up would rerun the same five families with controlled prompt v
 
 Those replications would test whether the observed AI wiki advantage depends on the exact wording of
 the original prompt or survives reasonable task-request variation.
+
+## Repository Scale Follow-Up
+
+This pilot also does not test AI wiki behavior in a large, long-running repository with many more
+documents, stale notes, unresolved drafts, and accumulated workflow history.
+
+That matters because a memory system can fail at scale in ways that do not appear in a small
+case-study repo:
+
+- relevant notes may be harder to discover
+- old or adjacent notes may crowd out the actual task memory
+- agents may spend too much context budget reading low-value docs
+- context-window pressure may reduce the quality of implementation or final verification
+
+A stronger follow-up would run the same kind of primary comparison in a larger repository or create a
+controlled high-document-count variant of this repo. That would test whether AI wiki still improves
+agent behavior when retrieval, triage, and context budgeting become harder.
 
 ## Appendix A: Verbatim Original Effective Prompts
 
