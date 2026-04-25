@@ -8,7 +8,7 @@ synthesizes across notes.
 
 1. `evals/impact/README.md`
    Current benchmark framing, workspace layout, and CLI-first execution protocol.
-2. `evals/impact/report.md`
+2. `evals/impact/reports/current.md`
    Current synthesis across completed runs, including what can and cannot be claimed.
 3. `evals/impact/notes/manual_v2_cli_original_ownership_20260425_findings.md`
    The clean formal CLI-first ownership-boundary run, extended with supplemental `s06`.
@@ -22,9 +22,9 @@ synthesizes across notes.
    The clean formal CLI-first Windows ARM smoke-output run.
 8. `evals/impact/notes/manual_v2_original_10_repo_findings.md`
    The earlier 10-repo original-prompt transition run across both benchmark families.
-9. `evals/impact/ownership_boundary_runbook.md`
+9. `evals/impact/runbooks/ownership_boundary.md`
    Reproduction spec and rubric for the ownership-boundary family.
-10. `evals/impact/release_distribution_integrity_runbook.md`
+10. `evals/impact/runbooks/release_distribution_integrity.md`
    Reproduction spec and rubric for the release-distribution family.
 11. `evals/impact/notes/round1_process_lessons.md`
    Historical round1 process lessons and why v2 changed the harness.
@@ -54,4 +54,5 @@ synthesizes across notes.
 
 - Runbooks stay relatively stable and describe family setup, variants, prompts, protocol, and rubric.
 - Notes are append-only-ish run records for a concrete batch.
-- `report.md` is the human-facing synthesis. It should cite notes rather than restating every diff.
+- `reports/current.md` is the human-facing synthesis. It should cite notes rather than restating
+  every diff.

@@ -7,7 +7,7 @@ For result chronology and synthesis, read:
 
 - `evals/impact/notes/index.md`
 - `evals/impact/notes/manual_v2_original_10_repo_findings.md`
-- `evals/impact/report.md`
+- `evals/impact/reports/current.md`
 
 ## Goal
 

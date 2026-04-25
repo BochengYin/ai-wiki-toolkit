@@ -39,7 +39,7 @@ The following labels are a manual grading pass over the 10 recorded runs:
 - 5 `short` variants
 - 5 `medium` variants
 
-These labels use the rubric in `evals/impact/ownership_boundary_runbook.md`.
+These labels use the rubric in `evals/impact/runbooks/ownership_boundary.md`.
 
 ### Short
 
@@ -195,6 +195,6 @@ equally good. It mainly shows that one explicit scope boundary can dominate the 
 ## Recommended Next Documentation
 
 - keep this note as the benchmark result summary
-- keep `ownership_boundary_runbook.md` as the reproduction guide
+- keep `runbooks/ownership_boundary.md` as the reproduction guide
 - if this pattern repeats in another benchmark family, promote the lesson about adjacent
   consolidated guidance into a stronger shared evaluation pattern

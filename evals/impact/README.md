@@ -3,14 +3,25 @@
 This directory holds manual-only impact eval assets for comparing how `ai-wiki-toolkit`
 changes agent behavior on repeated repo problems.
 
+## Directory Layout
+
+- `public/`: externally readable write-ups.
+- `reports/`: synthesized cross-run reports.
+- `runbooks/`: reproduction specs and scoring rubrics.
+- `notes/`: concrete run findings and process-history notes.
+- `families/`: benchmark-family specs and memory fixtures.
+- `prompts/`: prompt files used in the runs.
+- `scripts/`: Manual v2 workspace, capture, validation, scoring, and report tools.
+- `schemas/`: schema notes for eval artifacts.
+
 Primary repo-local documentation for the current benchmark lives in:
 
-- `evals/impact/ai_wiki_impact_eval_pilot.md`
+- `evals/impact/public/ai_wiki_impact_eval_pilot.md`
 - `evals/impact/notes/index.md`
-- `evals/impact/report.md`
+- `evals/impact/reports/current.md`
 - `evals/impact/TODO.md`
-- `evals/impact/ownership_boundary_runbook.md`
-- `evals/impact/release_distribution_integrity_runbook.md`
+- `evals/impact/runbooks/ownership_boundary.md`
+- `evals/impact/runbooks/release_distribution_integrity.md`
 - `evals/impact/notes/manual_v2_original_10_repo_findings.md`
 - `evals/impact/notes/ownership_boundary_v0_failure.md`
 - `evals/impact/notes/ownership_boundary_round1_findings.md`
