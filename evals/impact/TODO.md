@@ -36,8 +36,8 @@ Unless a family clearly needs a different harness, reuse the Manual v2 workflow-
 Reference implementation:
 
 - `evals/impact/notes/index.md`
-- `evals/impact/report.md`
-- `evals/impact/ownership_boundary_runbook.md`
+- `evals/impact/reports/current.md`
+- `evals/impact/runbooks/ownership_boundary.md`
 - `evals/impact/notes/manual_v2_original_10_repo_findings.md`
 - `evals/impact/notes/ownership_boundary_round1_findings.md`
 
@@ -45,7 +45,7 @@ Reference implementation:
 
 Current public write-up:
 
-- `evals/impact/ai_wiki_impact_eval_pilot.md`
+- `evals/impact/public/ai_wiki_impact_eval_pilot.md`
 
 Published artifact repository:
 
@@ -74,7 +74,7 @@ Before publishing an artifact bundle:
    content
 4. if raw logs are withheld, publish visible logs plus SHA-256 hashes of the raw logs and state why
    the raw files are withheld
-5. update `evals/impact/ai_wiki_impact_eval_pilot.md` with final artifact links
+5. update `evals/impact/public/ai_wiki_impact_eval_pilot.md` with final artifact links
 6. run `git diff --check`
 
 Initial 2026-04-25 scan notes:
@@ -129,7 +129,7 @@ Already run.
 
 Artifacts:
 
-- `evals/impact/ownership_boundary_runbook.md`
+- `evals/impact/runbooks/ownership_boundary.md`
 - `evals/impact/notes/ownership_boundary_round1_findings.md`
 
 ### release_distribution_integrity
@@ -138,7 +138,7 @@ Already run and documented.
 
 Artifacts:
 
-- `evals/impact/release_distribution_integrity_runbook.md`
+- `evals/impact/runbooks/release_distribution_integrity.md`
 - `evals/impact/notes/release_distribution_integrity_round1_findings.md`
 - `evals/impact/notes/round1_process_lessons.md`
 

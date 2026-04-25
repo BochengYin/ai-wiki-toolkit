@@ -41,7 +41,7 @@ So these are usable qualitative case studies, not clean causal estimates of pure
 ## Manual Scorecard For The 5 Recorded Variants
 
 The following labels are a manual grading pass over the five recorded `short` runs using the rubric
-in `evals/impact/release_distribution_integrity_runbook.md`.
+in `evals/impact/runbooks/release_distribution_integrity.md`.
 
 | variant | manual grade | rationale |
 | --- | --- | --- |
@@ -188,6 +188,6 @@ interpretable. But this artifact path should not be trusted on its own.
 
 ## Recommended Reading With This Note
 
-- `evals/impact/release_distribution_integrity_runbook.md`
+- `evals/impact/runbooks/release_distribution_integrity.md`
 - `evals/impact/notes/round1_process_lessons.md`
 - `evals/impact/notes/ownership_boundary_round1_findings.md`

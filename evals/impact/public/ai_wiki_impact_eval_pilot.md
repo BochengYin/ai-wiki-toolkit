@@ -440,7 +440,7 @@ Detailed family notes:
 
 Current synthesis:
 
-- `evals/impact/report.md`
+- `evals/impact/reports/current.md`
 
 ## Appendix C: Footer Details
 
