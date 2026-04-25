@@ -4,6 +4,19 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+## v0.1.21
+
+### Added
+
+- Added a public AI wiki impact-eval pilot write-up with protocol details, artifact links, and
+  non-statistical claim boundaries.
+
+### Changed
+
+- Clarified the `ai-wiki/constraints.md` and `ai-wiki/decisions.md` starter files so new installs
+  explain that mostly empty project-specific docs are intentional placeholders, not missing package
+  defaults.
+
 ## v0.1.20
 
 ### Added
