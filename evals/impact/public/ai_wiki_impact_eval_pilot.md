@@ -17,11 +17,13 @@ behavior on repeated historical problems. The tool under test, `ai-wiki-toolkit`
 checks. I used five real problems from developing the toolkit itself, recreated earlier repo states,
 and ran six isolated Codex CLI sessions per family with the original effective task prompt,
 `gpt-5.5`, and `xhigh` reasoning. The primary comparison was no AI wiki workflow versus the
-realistic ambient AI wiki workflow. In 4 of 5 families, the ambient workflow produced a better
-primary outcome; in 1 family both conditions succeeded. This is not a statistically powered
-benchmark, but the artifacts provide directional evidence that repo-visible memory can help fresh
-agents avoid repeated mistakes, especially around ownership boundaries, release hazards, and
-workflow discipline.
+realistic ambient AI wiki workflow. Here, `ambient` means the repo memory was present in the normal
+workspace environment and discoverable through the usual AI wiki guidance; the task prompt did not
+name the target memory document or tell the agent the expected solution. In 4 of 5 families, the
+ambient workflow produced a better primary outcome; in 1 family both conditions succeeded. This is
+not a statistically powered benchmark, but the artifacts provide directional evidence that
+repo-visible memory can help fresh agents avoid repeated mistakes, especially around ownership
+boundaries, release hazards, and workflow discipline.
 
 ## Headline Statistical Status
 
@@ -142,8 +144,10 @@ prompts, or more leading prompts.
 Primary comparison:
 
 - `no_aiwiki_workflow`: no AI wiki scaffold, prompt routing, skills, or accumulated memory
-- `aiwiki_ambient_memory_workflow`: realistic AI wiki workflow with normal repo memory and ambient
-  noise
+- `aiwiki_ambient_memory_workflow`: realistic AI wiki workflow with normal repo memory, normal
+  repo-local AI wiki guidance, and ordinary adjacent memory/noise available in the workspace. The
+  prompt is not allowed to explicitly point at the target memory document or directly provide the
+  expected implementation strategy.
 
 Diagnostic variants:
 
