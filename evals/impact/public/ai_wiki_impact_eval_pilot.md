@@ -318,6 +318,155 @@ Aggregate primary comparison:
 
 This aggregate is descriptive only. It is not a statistically powered success-rate estimate.
 
+## Rework-Adjusted Efficiency View
+
+The replay timings above are not enough to estimate productivity impact. AI wiki memory is meant to
+amortize earlier discovery and correction work, so this pilot also records a source incident cost for
+each family.
+
+This source column is a `source active-turn estimate`: selected `task_complete.duration_ms` values
+from the original incident sessions that produced the reusable lesson, plus
+`turn_aborted.duration_ms` when an interrupted failed attempt is part of the incident. It excludes
+human waiting time between turns, but includes tool, CI, release, and package wait that happened
+inside those agent turns. It should be treated as an approximate acquisition or rework-cost estimate,
+not as an exact human time-saved measurement.
+
+It is not a direct no-AI-wiki baseline. The source incidents were real development traces where the
+task scope was still being discovered, corrected, or validated through release feedback. The formal
+replays are cleaner reproductions: they start from an earlier repo state and use the historical
+effective prompt after the task was understood.
+
+The source incidents were normal development sessions that were already initialized and used
+`gpt-5.4` with `xhigh` reasoning. The formal replay sessions used `gpt-5.5` with `xhigh` reasoning,
+fresh persisted Codex CLI sessions, neutral slot workspaces, and the original effective prompt for
+each family. This means the source and replay timing columns are not model-identical timing
+measurements. They are best read as a rework-cost context column beside the formal primary
+comparison, not as a direct speed benchmark.
+
+The public-facing saved-time metric below is `estimated saved active mins using ambient AI wiki`. It
+is not `no_aiwiki_workflow` replay time minus `aiwiki_ambient_memory_workflow` replay time. That
+comparison is the formal outcome control above. For efficiency, the relevant question is whether a
+later ambient AI wiki run used less active agent time than the original source incident that produced
+the reusable lesson:
+
+`estimated saved active mins using ambient AI wiki = source active-turn estimate - ambient AI wiki replay duration`
+
+Positive numbers mean the later AI wiki run used less active agent time than the original
+fail/correct or discovery loop. Negative numbers mean the AI wiki run did not save active time, even
+if it improved correctness.
+
+| family | source active-turn estimate | ambient AI wiki replay | estimated saved active mins using ambient AI wiki | interpretation |
+| --- | --- | --- | --- | --- |
+| `ownership_boundary` | about 7.5 min for interrupted failed attempt, boundary diagnosis, repo-local correction, and push; about 17.9 min if release closeout is included. The failed implementation attempt was an interrupted turn, so it is counted from `turn_aborted.duration_ms` rather than `task_complete.duration_ms`. | 8.5 min, success | `-1.0 min` versus the fail/correct loop; `+9.4 min` if release closeout is included | No core active-time saving, but a strong correctness improvement: AI wiki changed the implementation surface from package code to repo-local workflow code. |
+| `release_distribution_integrity` | about 25.4 min for real target expansion and scope discovery; about 54.1 min if release rescue and musl fixes are included | 13.7 min, success | `+11.7 min` versus core target expansion; `+40.4 min` if release rescue and musl follow-up are included | Positive saved-active-mins signal. AI wiki avoided known release hazards that had been expensive in the source incident. |
+| `windows_arm_smoke_cli_output` | about 4.0 min | 3.8 min, success | `+0.2 min` | Outcome-neutral and timing-neutral. This family does not support a meaningful efficiency claim. |
+| `release_runtime_compatibility` | about 20.4 min, from the `0.1.7` npm install/runtime failure to the older-glibc fix and release | 7.7 min, success | `+12.7 min` | Positive saved-active-mins signal. AI wiki improved the fix from smoke-gate-only to older-baseline plus runtime verification. |
+| `scaffold_prompt_workflow_compliance` | about 15.7 min for core PR #10; about 36.6 min if dogfood and routing follow-ups are included | 18.4 min, success | `-2.7 min` versus core PR work; `+18.2 min` if dogfood and routing follow-ups are included | No core active-time saving, but a workflow-discipline improvement; the timing claim is positive only under the extended follow-up context. |
+
+Summed over the conservative core source estimates, the ambient AI wiki runs took about 52.1 minutes
+against about 73.0 minutes of source active-turn cost, or about `20.9` estimated saved active
+minutes using ambient AI wiki. If the documented release, rescue, dogfood, and routing follow-ups
+are included where available, the source context rises to about 133.0 minutes, giving about `80.9`
+estimated saved active minutes in the extended context. These are not claims of exact human time
+saved; they are artifact-derived active-time context for the cost of acquiring and reusing the
+memory.
+
+I also checked whether the fresh replay sessions paid a meaningful initialization penalty. Using the
+visible session artifact, I measured the time from `session_meta` to the first visible assistant
+message. Across the 10 primary replay sessions (`s01` and `s05`), this window averaged about 10.3
+seconds, with an 11.0 second median and a 5.9 to 17.0 second range. Across all 30 formal replay
+slots, it averaged about 11.9 seconds, with an 11.8 second median and a 5.9 to 19.0 second range.
+
+This startup window is small relative to the multi-minute family differences. Removing it would not
+change the primary outcomes or the interpretation above. The more important timing caveat is the
+model and session-context difference: the source estimates came from already initialized `gpt-5.4`
+development sessions, while the formal replays were fresh `gpt-5.5` CLI sessions.
+
+The conservative efficiency claim is therefore:
+
+> AI wiki did not reduce first-pass runtime in this pilot. It produced estimated saved active
+> minutes only when the avoided discovery or correction loop was larger than the observed AI wiki
+> workflow overhead.
+
+## Fermi Extrapolation
+
+The measured pilot is too small to make a statistically powered productivity claim, but it can
+support a transparent Fermi-style estimate.
+
+This repository is a small side-project repo. At the time of this write-up it has about 25,000
+tracked lines, including about 5,200 lines under `src/`, 5,800 lines under `tests/`, and about 12,300
+lines of docs, AI wiki notes, and eval material.
+
+The repo also did not have AI wiki installed from the first minute. The first commit was on
+2026-04-18 at 20:40 local time. The first repo-local AI wiki scaffold landed on 2026-04-18 at 22:22,
+and the first repo-local AI wiki skills landed on 2026-04-18 at 23:29. A fuller team-memory layout
+landed on 2026-04-20 at 23:39. In other words, the earliest no-AI-wiki window was real, but small
+relative to the rest of this development burst.
+
+To get from per-family saved-time estimates to a repo-level number, I used an explicit future
+frequency assumption. This is not a measured incident count; it is a Fermi input for this small,
+release-heavy side project. I treat the exact `ownership_boundary` incident as a one-off and set it
+to zero future occurrences. I use the extended saved-time column because this estimate is about
+avoiding repeated release, rescue, dogfood, and routing follow-up loops.
+
+| family | assumed small-repo frequency/week | extended saved mins per occurrence | estimated saved active mins/week |
+| --- | ---: | ---: | ---: |
+| `ownership_boundary` | 0/week | 9.4 | 0.0 |
+| `release_distribution_integrity` | 1/week | 40.4 | 40.4 |
+| `windows_arm_smoke_cli_output` | 0.5/week | 0.2 | 0.1 |
+| `release_runtime_compatibility` | 1/week | 12.7 | 12.7 |
+| `scaffold_prompt_workflow_compliance` | 0.5/week | 18.2 | 9.1 |
+| **Total** | | | **62.3, rounded to 62** |
+
+Using the same frequencies with the conservative core saved-time values would give about 23 saved
+active minutes per week. The `62` figure is therefore specifically an extended follow-up and
+rework estimate, not the conservative core estimate.
+
+For an illustrative weekly estimate, I treat this repo as a side project with roughly 25 active
+project hours per week: weekday evenings plus weekend daytime work. Using the extended source
+context above, the five measured families imply about 62 estimated saved active minutes per week in
+this small repo. That gives:
+
+```text
+small-repo extended estimate = 62 saved active mins/week
+weekly active project hours = 25
+62 / 25 = about 2.5 saved active mins per active project hour
+```
+
+Now scale that to a hypothetical medium repository:
+
+- medium repo size: 100,000 lines
+- current repo size: 25,000 lines
+- size multiplier: 4x
+- team size: 6 people
+- active engineering time: 40 hours/person/week
+- team active time: 240 hours/week
+
+The deliberately linear estimate is:
+
+```text
+2.5 saved active mins/hour
+* 240 team active hours/week
+* 4 size multiplier
+= about 2,400 saved active mins/week
+= about 40 saved active hours/week
+```
+
+This `40 saved active hours/week` number should be read as a linear Fermi extrapolation, not as a
+measured result. It assumes memory reuse opportunities scale with both repository size and team
+activity, and it uses the extended saved-time estimate that includes avoided release, rescue,
+dogfood, and routing follow-up loops. A practical planning range should discount this until the same
+method is run on a real medium repo.
+
+This estimate is also project-specific. Different repositories will have different recurring failure
+modes, release cadence, platform surface, automation, reviewer expectations, and documentation
+quality. AI wiki only helps when a task asks an agent to do something it is likely to get wrong or
+rediscover, and the relevant lesson has already been captured in the repo memory. In this repository,
+the npm release path is a good example: when an agent avoids known packaging, target-matrix, runtime,
+and artifact-staging mistakes, it can avoid expensive release rescue work. If the agent would already
+run the release perfectly, or if the project has mature automation that prevents the same mistakes
+without AI wiki, the incremental saving is much smaller.
+
 ## What This Supports
 
 Reasonable claim:
