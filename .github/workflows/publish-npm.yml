@@ -17,6 +17,15 @@ on:
         required: false
         default: true
         type: boolean
+      npm_auth_mode:
+        description: npm publish auth mode. Auto uses NPM_PUBLISH_TOKEN when present; trusted ignores the token.
+        required: false
+        default: auto
+        type: choice
+        options:
+          - auto
+          - trusted
+          - token
 
 permissions:
   contents: read
@@ -82,7 +91,32 @@ jobs:
         id: npm_auth
         shell: bash
         run: |
-          if [ -n "$NPM_PUBLISH_TOKEN" ]; then
+          requested="${{ github.event_name == 'workflow_dispatch' && inputs.npm_auth_mode || 'auto' }}"
+          case "$requested" in
+            auto)
+              if [ -n "$NPM_PUBLISH_TOKEN" ]; then
+                mode=token
+              else
+                mode=trusted
+              fi
+              ;;
+            token)
+              if [ -z "$NPM_PUBLISH_TOKEN" ]; then
+                echo "npm_auth_mode=token requires NPM_PUBLISH_TOKEN." >&2
+                exit 1
+              fi
+              mode=token
+              ;;
+            trusted)
+              mode=trusted
+              ;;
+            *)
+              echo "Unsupported npm_auth_mode: $requested" >&2
+              exit 1
+              ;;
+          esac
+
+          if [ "$mode" = "token" ]; then
             echo "mode=token" >> "$GITHUB_OUTPUT"
             echo "Using token-based npm publish mode."
           else
@@ -120,6 +154,10 @@ jobs:
         run: |
           args=()
           if [ "${{ steps.npm_auth.outputs.mode }}" = "trusted" ]; then
+            unset NODE_AUTH_TOKEN
+            if [ -n "${NPM_CONFIG_USERCONFIG:-}" ] && [ -f "$NPM_CONFIG_USERCONFIG" ]; then
+              sed -i '/_authToken/d;/always-auth/d' "$NPM_CONFIG_USERCONFIG"
+            fi
             args+=(--provenance)
           fi
           for dir in build/npm-platform-packages/*; do
@@ -138,6 +176,10 @@ jobs:
         run: |
           args=(--ignore-scripts)
           if [ "${{ steps.npm_auth.outputs.mode }}" = "trusted" ]; then
+            unset NODE_AUTH_TOKEN
+            if [ -n "${NPM_CONFIG_USERCONFIG:-}" ] && [ -f "$NPM_CONFIG_USERCONFIG" ]; then
+              sed -i '/_authToken/d;/always-auth/d' "$NPM_CONFIG_USERCONFIG"
+            fi
             args+=(--provenance)
           fi
           npm publish "${args[@]}"

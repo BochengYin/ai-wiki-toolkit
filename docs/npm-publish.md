@@ -25,6 +25,12 @@ The npm workflow has two entrypoints:
 - automatic `workflow_run` after `Release Binaries`
 - manual `workflow_dispatch` for bootstrap or recovery publishes
 
+Manual recovery publishes also accept `npm_auth_mode`:
+
+- `auto`: use `NPM_PUBLISH_TOKEN` when present, otherwise use trusted publishing
+- `trusted`: ignore `NPM_PUBLISH_TOKEN` and publish with GitHub Actions OIDC provenance
+- `token`: require `NPM_PUBLISH_TOKEN` and publish with token auth
+
 The automatic path runs only after:
 
 - the `Release Binaries` workflow completes
@@ -63,7 +69,7 @@ For first-time package-name bootstraps or recovery publishes, you can also set:
 
 - `NPM_PUBLISH_TOKEN`
 
-When that secret is present, the workflow falls back to token-based `npm publish` instead of relying on trusted publishing.
+When that secret is present, the automatic path falls back to token-based `npm publish` instead of relying on trusted publishing. For manual recovery publishes, choose `npm_auth_mode=trusted` to ignore a stale or expired token without deleting the secret.
 
 ## Workflow Behavior
 
@@ -73,8 +79,8 @@ The workflow:
 2. sets up Python 3.11 and Node.js 24
 3. resolves the release tag from package metadata
 4. selects npm publish auth mode:
-   - trusted publishing when no token secret is present
-   - token-based publish when `NPM_PUBLISH_TOKEN` is present
+   - automatic publish uses token auth when `NPM_PUBLISH_TOKEN` is present, otherwise trusted publishing
+   - manual recovery publish can force `auto`, `trusted`, or `token`
 5. downloads the matching GitHub Release archives
 6. stages the platform npm packages from those archives
 7. publishes the platform npm packages
@@ -99,4 +105,5 @@ Recommended use:
 
 1. Use trusted publishing for the steady-state release train.
 2. Use `workflow_dispatch` plus `NPM_PUBLISH_TOKEN` when you introduce brand-new package names and need a bootstrap publish path.
-3. After the bootstrap publish succeeds, return to the default trusted-publishing path when possible.
+3. Use `workflow_dispatch` with `npm_auth_mode=trusted` when a stale token blocks an otherwise normal release.
+4. After the bootstrap publish succeeds, return to the default trusted-publishing path when possible.
