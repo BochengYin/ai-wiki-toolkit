@@ -70,6 +70,7 @@ def test_init_empty_repo_creates_expected_tree(repo_env: dict[str, Path]) -> Non
         "ai-wiki/_toolkit/metrics/task-stats.json",
         "ai-wiki/_toolkit/schema/",
         "ai-wiki/_toolkit/schema/reuse-v1.md",
+        "ai-wiki/_toolkit/schema/route-v1.md",
         "ai-wiki/_toolkit/schema/team-memory-v1.md",
         "ai-wiki/_toolkit/system.md",
         "ai-wiki/_toolkit/workflows.md",
@@ -118,16 +119,17 @@ def test_init_writes_expected_agent_snapshot(repo_env: dict[str, Path]) -> None:
 
         Before starting work:
 
-        1. Read `ai-wiki/_toolkit/system.md`.
-        2. Use `ai-wiki/index.md` as a repo-owned map when you need a quick overview of local AI wiki areas.
-        3. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
-        4. Keep project-specific notes in `ai-wiki/`.
-        5. Keep cross-project reusable notes in `<home>/ai-wiki/system/`.
-        6. Only suggest promotion from a draft to a shared pattern or convention when the two-signal gate is satisfied.
-        7. Agents may suggest promotion candidates, but humans confirm shared patterns and team conventions.
-        8. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
-        9. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
-        10. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them to produce the end-of-task AI wiki evidence footer and write-back outcome.
+        1. Run `aiwiki-toolkit route --task "<current user request>"` when available, and use the generated AI Wiki Context Packet as the first-pass routing layer.
+        2. Read `ai-wiki/_toolkit/system.md`.
+        3. Use `ai-wiki/index.md` as a repo-owned map when you need a quick overview of local AI wiki areas.
+        4. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
+        5. Keep project-specific notes in `ai-wiki/`.
+        6. Keep cross-project reusable notes in `<home>/ai-wiki/system/`.
+        7. Only suggest promotion from a draft to a shared pattern or convention when the two-signal gate is satisfied.
+        8. Agents may suggest promotion candidates, but humans confirm shared patterns and team conventions.
+        9. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
+        10. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
+        11. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them to produce the end-of-task AI wiki evidence footer and write-back outcome.
 
         ## End Of Task
 
@@ -251,12 +253,14 @@ def test_init_writes_expected_toolkit_managed_files(repo_env: dict[str, Path]) -
 
         1. Read `system.md` for package-managed collaboration rules.
         2. Read `workflows.md` for package-managed baseline workflows.
-        3. Read `schema/team-memory-v1.md` when note shapes, memory types, or source pointers matter.
-        4. Read `schema/reuse-v1.md` only when reuse metrics, logging, or schema questions matter.
+        3. Read `schema/route-v1.md` when task-aware context packets or routing trust boundaries matter.
+        4. Read `schema/team-memory-v1.md` when note shapes, memory types, or source pointers matter.
+        5. Read `schema/reuse-v1.md` only when reuse metrics, logging, or schema questions matter.
 
         ## Generated Outputs
 
         - `catalog.json` and `metrics/*.json` are generated outputs, not guidance docs.
+        - `aiwiki-toolkit route` emits transient context packets to stdout; packets are derived from source docs and should be regenerated rather than treated as canonical memory.
         - The installer ignores those generated outputs in `.gitignore` so routine telemetry updates stay local.
         - Regenerate those outputs with `aiwiki-toolkit refresh-metrics` whenever you need a fresh local snapshot.
         """
@@ -271,21 +275,25 @@ def test_init_writes_expected_toolkit_managed_files(repo_env: dict[str, Path]) -
 
         ## Start Of Task
 
-        1. Read `ai-wiki/constraints.md` for hard constraints and non-negotiables.
-        2. Read `ai-wiki/conventions/index.md` for shared team conventions that should guide implementation.
-        3. Read `ai-wiki/decisions.md` for durable project decisions and tradeoffs.
-        4. Read `ai-wiki/review-patterns/index.md` for reusable review rules and reviewer expectations.
-        5. Read `ai-wiki/problems/index.md` before implementing or testing similar behavior.
-        6. Read `ai-wiki/features/index.md` when task-specific requirements, assumptions, or acceptance criteria matter.
-        7. Read `ai-wiki/workflows.md` for repo-specific workflows that extend the managed baseline.
-        8. Read `ai-wiki/trails/index.md` when debugging chronology or dead ends may help.
-        9. Read `ai-wiki/people/<handle>/index.md` when continuing draft work.
-        10. Read `ai-wiki/_toolkit/index.md` when you need package-managed schema, metrics, or directory guidance beyond this workflow.
-        11. Use `ai-wiki/index.md` as a repo-owned map when you need a quick overview of local AI wiki areas.
-        12. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
-        13. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
-        14. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
-        15. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them to produce end-of-task AI wiki evidence and write-back outcomes.
+        1. Run `aiwiki-toolkit route --task "<current user request>"` when available to generate a task-aware AI Wiki Context Packet.
+        2. Use the packet's `must_load`, `must_follow`, `context_notes`, and `skip` sections as the first-pass routing layer for the task.
+        3. Treat the packet as a generated view with cited sources, not as canonical memory; the Markdown files under `ai-wiki/` remain the source of truth.
+        4. If routing is unavailable, fails, or looks insufficient, continue with the baseline read order below.
+        5. Read `ai-wiki/constraints.md` for hard constraints and non-negotiables.
+        6. Read `ai-wiki/conventions/index.md` for shared team conventions that should guide implementation.
+        7. Read `ai-wiki/decisions.md` for durable project decisions and tradeoffs.
+        8. Read `ai-wiki/review-patterns/index.md` for reusable review rules and reviewer expectations.
+        9. Read `ai-wiki/problems/index.md` before implementing or testing similar behavior.
+        10. Read `ai-wiki/features/index.md` when task-specific requirements, assumptions, or acceptance criteria matter.
+        11. Read `ai-wiki/workflows.md` for repo-specific workflows that extend the managed baseline.
+        12. Read `ai-wiki/trails/index.md` when debugging chronology or dead ends may help.
+        13. Read `ai-wiki/people/<handle>/index.md` when continuing draft work.
+        14. Read `ai-wiki/_toolkit/index.md` when you need package-managed schema, metrics, or directory guidance beyond this workflow.
+        15. Use `ai-wiki/index.md` as a repo-owned map when you need a quick overview of local AI wiki areas.
+        16. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
+        17. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
+        18. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
+        19. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them to produce end-of-task AI wiki evidence and write-back outcomes.
 
         ## AI Wiki Reuse Evidence
 
@@ -390,28 +398,33 @@ def test_init_writes_expected_toolkit_managed_files(repo_env: dict[str, Path]) -
 
         ## AI Wiki Maintenance
 
-        1. Produce one AI wiki reuse evidence footer at the end of every completed task.
-        2. First classify the task as `relevant`, `optional`, or `not_relevant` for AI wiki use.
-        3. Record one `aiwiki-toolkit record-reuse` event per consulted user-owned AI wiki doc.
-        4. Do not log managed `_toolkit/**` docs with `record-reuse`; if they changed the plan or behavior, cite their paths in a progress update or the final note instead.
-        5. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
-        6. Treat the footer as the user-facing evidence surface; telemetry and generated aggregates are the local machine-readable record behind it.
-        7. The installer manages a `.gitignore` block that ignores `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/metrics/`, and `ai-wiki/_toolkit/catalog.json` so telemetry stays local by default.
-        8. If those telemetry paths were tracked before you upgraded, run `aiwiki-toolkit doctor` and follow the suggested `git rm --cached` fix once to untrack them.
-        9. Produce one AI wiki write-back outcome at the end of every completed task, even when the result is `None`.
-        10. Before returning `None`, run memory candidate detection for problem-solution memory, feature clarification memory, convention candidates, missed relevant memory, and conflict or supersession.
-        11. Always end with exactly one status line: `AI Wiki Write-Back: none`, `draft recorded`, or `promotion candidate`.
-        12. If the result is `Draft` or `PromotionCandidate`, also print `AI Wiki Write-Back Path: <path>`.
-        13. Do not write every task summary into the wiki; capture only durable memory.
-        14. Put shared team conventions in `ai-wiki/conventions/`.
-        15. Put reusable repo-specific review lessons in `ai-wiki/review-patterns/`.
-        16. Put reusable problem-solution memories in `ai-wiki/problems/`.
-        17. Put feature clarifications in `ai-wiki/features/`.
-        18. Put task-specific chronology and dead ends in `ai-wiki/trails/`.
-        19. Put raw personal draft notes in `ai-wiki/people/<handle>/drafts/`.
-        20. Promote only stable, reviewable rules into shared patterns or conventions.
+        1. Start each non-trivial task by running `aiwiki-toolkit route --task "<current user request>"` when available.
+        2. Use the route packet to decide which user-owned docs to consult first, but record reuse only for docs actually consulted or materially used.
+        3. Produce one AI wiki reuse evidence footer at the end of every completed task.
+        4. First classify the task as `relevant`, `optional`, or `not_relevant` for AI wiki use.
+        5. Record one `aiwiki-toolkit record-reuse` event per consulted user-owned AI wiki doc.
+        6. Do not log managed `_toolkit/**` docs with `record-reuse`; if they changed the plan or behavior, cite their paths in a progress update or the final note instead.
+        7. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
+        8. Treat the footer as the user-facing evidence surface; telemetry and generated aggregates are the local machine-readable record behind it.
+        9. The installer manages a `.gitignore` block that ignores `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/metrics/`, and `ai-wiki/_toolkit/catalog.json` so telemetry stays local by default.
+        10. If those telemetry paths were tracked before you upgraded, run `aiwiki-toolkit doctor` and follow the suggested `git rm --cached` fix once to untrack them.
+        11. Produce one AI wiki write-back outcome at the end of every completed task, even when the result is `None`.
+        12. Before returning `None`, run memory candidate detection for problem-solution memory, feature clarification memory, convention candidates, missed relevant memory, and conflict or supersession.
+        13. Always end with exactly one status line: `AI Wiki Write-Back: none`, `draft recorded`, or `promotion candidate`.
+        14. If the result is `Draft` or `PromotionCandidate`, also print `AI Wiki Write-Back Path: <path>`.
+        15. Do not write every task summary into the wiki; capture only durable memory.
+        16. Put shared team conventions in `ai-wiki/conventions/`.
+        17. Put reusable repo-specific review lessons in `ai-wiki/review-patterns/`.
+        18. Put reusable problem-solution memories in `ai-wiki/problems/`.
+        19. Put feature clarifications in `ai-wiki/features/`.
+        20. Put task-specific chronology and dead ends in `ai-wiki/trails/`.
+        21. Put raw personal draft notes in `ai-wiki/people/<handle>/drafts/`.
+        22. Promote only stable, reviewable rules into shared patterns or conventions.
         """
     )
+    assert (
+        repo_env["repo"] / "ai-wiki" / "_toolkit" / "schema" / "route-v1.md"
+    ).read_text(encoding="utf-8").startswith("# Route Schema v1")
     assert (
         repo_env["repo"] / "ai-wiki" / "_toolkit" / "schema" / "team-memory-v1.md"
     ).read_text(encoding="utf-8").startswith("# Team Memory Schema v1")

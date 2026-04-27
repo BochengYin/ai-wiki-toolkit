@@ -77,10 +77,31 @@ That is why the installer manages both wiki files and prompt wiring together:
 
 - `ai-wiki/` and `~/ai-wiki/system/` hold the durable Markdown memory
 - `AGENT.md`, `AGENTS.md`, or `CLAUDE.md` tell the agent to read that memory and follow the workflow
+- `aiwiki-toolkit route` generates a task-aware context packet so the agent can load the most relevant memory before falling back to the broader read order
 - `.agents/skills/ai-wiki-reuse-check/` and `.agents/skills/ai-wiki-update-check/` provide repeatable end-of-task checks for Codex-style agent runs
 - `.agents/skills/ai-wiki-clarify-before-code/` and `.agents/skills/ai-wiki-capture-review-learning/` help agents clarify ambiguous requests and preserve reusable review feedback
 
 The toolkit does not replace coding agents. It gives them a shared repo-local memory layer so they can avoid repeating the same review issues, misunderstanding the same requirements, or rediscovering the same fixes.
+
+## Task-Aware Context Routing
+
+The managed prompt block asks agents to run `aiwiki-toolkit route --task "<current user request>"`
+at the start of a task when the command is available.
+
+Users do not need to run this manually during normal agent use. The agent supplies the current task
+text because the CLI cannot see the private chat request on its own.
+
+The command emits a transient AI Wiki Context Packet with:
+
+- a coarse task type and risk tags
+- `must_load` docs to consult first
+- source-cited `must_follow` rules extracted from authoritative user-owned docs
+- exploratory `context_notes` from drafts or other non-authoritative docs
+- lower-confidence `maybe_load` docs and explicit skip reasons
+
+Markdown remains the source of truth. A context packet is a generated, auditable working set for the
+current task, not canonical memory. Agents should record reuse only for user-owned docs they actually
+consult or materially use.
 
 ## Prompt File Integration
 

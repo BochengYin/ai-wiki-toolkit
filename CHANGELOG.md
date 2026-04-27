@@ -4,6 +4,15 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+## v0.1.22
+
+### Added
+
+- Added `aiwiki-toolkit route` for generating task-aware AI Wiki Context Packets with
+  source-cited `must_load`, `must_follow`, `context_notes`, and skip guidance.
+- Added managed `route-v1` schema guidance and prompt wiring so agents can run route at task start
+  before falling back to the broader AI wiki read order.
+
 ## v0.1.21
 
 ### Added
