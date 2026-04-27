@@ -30,6 +30,8 @@ def test_build_repo_catalog_includes_user_owned_markdown_only(tmp_path: Path) ->
                 "doc_id": "index",
                 "kind": "repo_index",
                 "path": f"ai-wiki/{'index.md'}",
+                "reference_path": "ai-wiki/index.md",
+                "short_description": "Project AI Wiki Index",
                 "source": "user_owned",
                 "title": "Project AI Wiki Index",
             },
@@ -37,6 +39,8 @@ def test_build_repo_catalog_includes_user_owned_markdown_only(tmp_path: Path) ->
                 "doc_id": "review-patterns/index",
                 "kind": "review_pattern_index",
                 "path": "ai-wiki/review-patterns/index.md",
+                "reference_path": "ai-wiki/review-patterns/index.md",
+                "short_description": "Review Patterns Index",
                 "source": "user_owned",
                 "title": "Review Patterns Index",
             },
@@ -72,11 +76,78 @@ def test_build_repo_catalog_prefers_frontmatter_title(tmp_path: Path) -> None:
                 "doc_id": "people/alice/drafts/release-note",
                 "kind": "draft",
                 "path": "ai-wiki/people/alice/drafts/release-note.md",
+                "reference_path": "ai-wiki/people/alice/drafts/release-note.md",
+                "short_description": "Body",
                 "source": "user_owned",
                 "title": "Release note edge case",
             }
         ],
     }
+
+
+def test_build_repo_catalog_includes_short_description_and_routing_hint(tmp_path: Path) -> None:
+    repo_wiki = tmp_path / "ai-wiki"
+    (repo_wiki / "features").mkdir(parents=True)
+    (repo_wiki / "features" / "bulk-actions.md").write_text(
+        "\n".join(
+            [
+                "---",
+                'title: "Bulk actions"',
+                'short_description: "Use when changing multiple records at once."',
+                'applies_when: "Task touches multi-record selection or batch edits."',
+                "---",
+                "",
+                "# Ignored heading",
+                "",
+                "Fallback body.",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    catalog = build_repo_catalog(repo_wiki)
+
+    assert catalog["documents"] == [
+        {
+            "doc_id": "features/bulk-actions",
+            "kind": "feature",
+            "path": "ai-wiki/features/bulk-actions.md",
+            "reference_path": "ai-wiki/features/bulk-actions.md",
+            "routing_hint": "Task touches multi-record selection or batch edits.",
+            "short_description": "Use when changing multiple records at once.",
+            "source": "user_owned",
+            "title": "Bulk actions",
+        }
+    ]
+
+
+def test_build_repo_catalog_skips_status_as_short_description(tmp_path: Path) -> None:
+    repo_wiki = tmp_path / "ai-wiki"
+    (repo_wiki / "conventions").mkdir(parents=True)
+    (repo_wiki / "conventions" / "release-targets.md").write_text(
+        "\n".join(
+            [
+                "# Release Targets",
+                "",
+                "## Status",
+                "",
+                "Active.",
+                "",
+                "## Scope",
+                "",
+                "Keep public release targets aligned across package managers.",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    catalog = build_repo_catalog(repo_wiki)
+
+    assert catalog["documents"][0]["short_description"] == (
+        "Keep public release targets aligned across package managers."
+    )
 
 
 def test_infer_doc_kind_recognizes_team_memory_docs() -> None:
@@ -121,6 +192,8 @@ def test_build_repo_catalog_includes_team_memory_kinds(tmp_path: Path) -> None:
                 "doc_id": "conventions/index",
                 "kind": "convention_index",
                 "path": "ai-wiki/conventions/index.md",
+                "reference_path": "ai-wiki/conventions/index.md",
+                "short_description": "Conventions Index",
                 "source": "user_owned",
                 "title": "Conventions Index",
             },
@@ -128,6 +201,8 @@ def test_build_repo_catalog_includes_team_memory_kinds(tmp_path: Path) -> None:
                 "doc_id": "conventions/python-typing",
                 "kind": "convention",
                 "path": "ai-wiki/conventions/python-typing.md",
+                "reference_path": "ai-wiki/conventions/python-typing.md",
+                "short_description": "Python Typing",
                 "source": "user_owned",
                 "title": "Python Typing",
             },
@@ -135,6 +210,8 @@ def test_build_repo_catalog_includes_team_memory_kinds(tmp_path: Path) -> None:
                 "doc_id": "features/bulk-invoice-upload",
                 "kind": "feature",
                 "path": "ai-wiki/features/bulk-invoice-upload.md",
+                "reference_path": "ai-wiki/features/bulk-invoice-upload.md",
+                "short_description": "Bulk invoice upload",
                 "source": "user_owned",
                 "title": "Bulk invoice upload",
             },
@@ -142,6 +219,8 @@ def test_build_repo_catalog_includes_team_memory_kinds(tmp_path: Path) -> None:
                 "doc_id": "features/index",
                 "kind": "feature_index",
                 "path": "ai-wiki/features/index.md",
+                "reference_path": "ai-wiki/features/index.md",
+                "short_description": "Features Index",
                 "source": "user_owned",
                 "title": "Features Index",
             },
@@ -149,6 +228,8 @@ def test_build_repo_catalog_includes_team_memory_kinds(tmp_path: Path) -> None:
                 "doc_id": "problems/async-notification-tests-flaky",
                 "kind": "problem",
                 "path": "ai-wiki/problems/async-notification-tests-flaky.md",
+                "reference_path": "ai-wiki/problems/async-notification-tests-flaky.md",
+                "short_description": "Async notification tests",
                 "source": "user_owned",
                 "title": "Async notification tests",
             },
@@ -156,6 +237,8 @@ def test_build_repo_catalog_includes_team_memory_kinds(tmp_path: Path) -> None:
                 "doc_id": "problems/index",
                 "kind": "problem_index",
                 "path": "ai-wiki/problems/index.md",
+                "reference_path": "ai-wiki/problems/index.md",
+                "short_description": "Problems Index",
                 "source": "user_owned",
                 "title": "Problems Index",
             },

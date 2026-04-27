@@ -3,29 +3,100 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
 from .frontmatter import parse_frontmatter
 
 REUSE_SCHEMA_VERSION = "reuse-v1"
+_DESCRIPTION_KEYS = ("short_description", "description", "summary")
+_ROUTING_HINT_KEYS = ("applies_when", "routing_hint", "routing_hints", "scope")
+_LOW_INFORMATION_PARAGRAPHS = {
+    "active",
+    "archived",
+    "draft",
+    "planned",
+    "proposed",
+}
+
+
+def _normalize_inline_text(value: object, *, max_chars: int = 220) -> str | None:
+    if not isinstance(value, str):
+        return None
+    normalized = re.sub(r"\s+", " ", value).strip()
+    if not normalized:
+        return None
+    if len(normalized) > max_chars:
+        return normalized[: max_chars - 3].rstrip() + "..."
+    return normalized
 
 
 def _relative_repo_wiki_path(path: Path, repo_wiki_dir: Path) -> str:
     return path.relative_to(repo_wiki_dir).as_posix()
 
 
-def _extract_title(path: Path) -> str:
+def _first_body_paragraph(body: str) -> str | None:
+    paragraph: list[str] = []
+    in_code_block = False
+    for raw_line in body.splitlines():
+        line = raw_line.strip()
+        if line.startswith("```"):
+            in_code_block = not in_code_block
+            continue
+        if in_code_block:
+            continue
+        if not line:
+            if paragraph:
+                break
+            continue
+        if line.startswith("#"):
+            continue
+        if line in {"---", "***", "___"}:
+            continue
+        cleaned = re.sub(r"^(?:[-*]\s+|\d+[.)]\s+|>\s*)+", "", line).strip()
+        if cleaned.lower().rstrip(".") in _LOW_INFORMATION_PARAGRAPHS:
+            continue
+        if cleaned:
+            paragraph.append(cleaned)
+    return _normalize_inline_text(" ".join(paragraph))
+
+
+def _extract_document_card(path: Path, repo_wiki_dir: Path) -> dict[str, str]:
     text = path.read_text(encoding="utf-8")
     metadata, body = parse_frontmatter(text)
     title = metadata.get("title")
     if isinstance(title, str) and title.strip():
-        return title.strip()
+        resolved_title = title.strip()
+    else:
+        resolved_title = ""
 
-    for line in body.splitlines():
-        if line.startswith("# "):
-            return line[2:].strip()
-    return path.stem.replace("-", " ").replace("_", " ").strip() or path.stem
+        for line in body.splitlines():
+            if line.startswith("# "):
+                resolved_title = line[2:].strip()
+                break
+        if not resolved_title:
+            resolved_title = path.stem.replace("-", " ").replace("_", " ").strip() or path.stem
+
+    short_description = None
+    for key in _DESCRIPTION_KEYS:
+        short_description = _normalize_inline_text(metadata.get(key))
+        if short_description:
+            break
+    if not short_description:
+        short_description = _first_body_paragraph(body) or resolved_title
+
+    card = {
+        "title": resolved_title,
+        "short_description": short_description,
+        "reference_path": f"ai-wiki/{_relative_repo_wiki_path(path, repo_wiki_dir)}",
+    }
+    for key in _ROUTING_HINT_KEYS:
+        routing_hint = _normalize_inline_text(metadata.get(key))
+        if routing_hint:
+            card["routing_hint"] = routing_hint
+            break
+    return card
 
 
 def infer_doc_kind(relative_path: str) -> str:
@@ -72,14 +143,18 @@ def build_repo_catalog(repo_wiki_dir: Path) -> dict[str, Any]:
         if "_toolkit" in path.parts:
             continue
         relative_path = _relative_repo_wiki_path(path, repo_wiki_dir)
+        card = _extract_document_card(path, repo_wiki_dir)
         documents.append(
             {
                 "doc_id": doc_id_for_relative_path(relative_path),
                 "kind": infer_doc_kind(relative_path),
                 "path": f"ai-wiki/{relative_path}",
-                "title": _extract_title(path),
+                "reference_path": card["reference_path"],
+                "short_description": card["short_description"],
                 "source": "user_owned",
+                "title": card["title"],
             }
+            | ({"routing_hint": card["routing_hint"]} if "routing_hint" in card else {})
         )
     return {
         "schema_version": REUSE_SCHEMA_VERSION,

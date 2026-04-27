@@ -74,6 +74,81 @@ def test_route_generates_context_packet_with_cited_sources(repo_env: dict[str, P
     )
 
 
+def test_route_packet_includes_index_cards_for_runtime_references(
+    repo_env: dict[str, Path],
+) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "alice"])
+    assert install_result.exit_code == 0
+
+    convention_path = (
+        repo_env["repo"]
+        / "ai-wiki"
+        / "conventions"
+        / "package-managed-vs-user-owned-docs.md"
+    )
+    convention_path.write_text(
+        strip_margin(
+            """
+            ---
+            title: "Package-managed vs user-owned docs"
+            short_description: "Keep package-generated guidance separate from repo-owned notes."
+            applies_when: "Task touches scaffold, install, prompt, or routing behavior."
+            ---
+            # Package-Managed Vs User-Owned Docs
+
+            Do not rewrite user-owned AI wiki docs during install.
+            """
+        ),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "route",
+            "--task",
+            "Update scaffold routing without changing user-owned docs.",
+            "--format",
+            "json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    packet = json.loads(result.output)
+    assert packet["context_budget"]["policy"] == "safety_cap_not_fill_target"
+    assert packet["routing_strategy"]["mode"] == "index_cards_with_runtime_references"
+
+    cards = {card["doc_id"]: card for card in packet["index_cards"]}
+    card = cards["conventions/package-managed-vs-user-owned-docs"]
+    assert card["short_description"] == (
+        "Keep package-generated guidance separate from repo-owned notes."
+    )
+    assert card["routing_hint"] == "Task touches scaffold, install, prompt, or routing behavior."
+    assert card["reference_path"] == "ai-wiki/conventions/package-managed-vs-user-owned-docs.md"
+    assert card["load_mode"] == "required_context"
+
+
+def test_route_classifies_simple_pr_tasks_as_low_effort(repo_env: dict[str, Path]) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "alice"])
+    assert install_result.exit_code == 0
+
+    result = runner.invoke(
+        app,
+        [
+            "route",
+            "--task",
+            "Push PR.",
+            "--format",
+            "json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    packet = json.loads(result.output)
+    assert packet["route"]["effort"] == "low"
+    assert packet["context_budget"]["effective_max_docs"] <= 3
+
+
 def test_route_text_packet_is_agent_readable(repo_env: dict[str, Path]) -> None:
     install_result = runner.invoke(app, ["install", "--handle", "alice"])
     assert install_result.exit_code == 0
@@ -94,6 +169,8 @@ def test_route_text_packet_is_agent_readable(repo_env: dict[str, Path]) -> None:
     assert result.exit_code == 0
     assert "# AI Wiki Context Packet" in result.output
     assert "Task Type: `release_distribution`" in result.output
+    assert "## Index Cards" in result.output
+    assert "Context Safety Cap:" in result.output
     assert "Actor: `alice`" in result.output
     assert "## Must Load" in result.output
     assert "## Trust Model" in result.output

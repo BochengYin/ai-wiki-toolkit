@@ -94,14 +94,17 @@ text because the CLI cannot see the private chat request on its own.
 The command emits a transient AI Wiki Context Packet with:
 
 - a coarse task type and risk tags
-- `must_load` docs to consult first
+- an effort level so simple operational tasks can stay lightweight
+- index cards with short descriptions and reference links for relevant memory
+- `must_load` docs to consult first when direct context is required
 - source-cited `must_follow` rules extracted from authoritative user-owned docs
 - exploratory `context_notes` from drafts or other non-authoritative docs
 - lower-confidence `maybe_load` docs and explicit skip reasons
 
 Markdown remains the source of truth. A context packet is a generated, auditable working set for the
 current task, not canonical memory. Agents should record reuse only for user-owned docs they actually
-consult or materially use.
+consult or materially use. Packet word limits are safety caps, not fill targets; agents should open
+linked reference files at runtime when an index card is relevant and the task needs more detail.
 
 ## Prompt File Integration
 
