@@ -44,6 +44,7 @@ def telemetry_untrack_command() -> str:
         "ai-wiki/metrics/reuse-events",
         "ai-wiki/metrics/task-checks",
         "ai-wiki/_toolkit/metrics",
+        "ai-wiki/_toolkit/work",
         "ai-wiki/_toolkit/catalog.json",
     )
     return "git rm -r --cached --ignore-unmatch " + " ".join(untrack_targets)

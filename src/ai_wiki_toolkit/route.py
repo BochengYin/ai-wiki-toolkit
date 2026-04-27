@@ -16,6 +16,7 @@ from ai_wiki_toolkit.wiki_schema import (
     build_document_stats,
     build_repo_catalog,
 )
+from ai_wiki_toolkit.work_ledger import OPEN_WORK_STATUSES, build_work_state
 
 ROUTE_SCHEMA_VERSION = "route-v1"
 
@@ -142,6 +143,22 @@ _TASK_TYPE_KEYWORDS: dict[str, set[str]] = {
         "stale",
         "write-back",
     },
+    "workflow_state": {
+        "active",
+        "archive",
+        "archived",
+        "blocked",
+        "done",
+        "epic",
+        "ledger",
+        "planned",
+        "processing",
+        "status",
+        "todo",
+        "todos",
+        "work",
+        "work-ledger",
+    },
     "review_feedback": {
         "comment",
         "feedback",
@@ -204,6 +221,14 @@ _KIND_PRIORITIES_BY_TASK_TYPE: dict[str, dict[str, int]] = {
         "feature": 4,
         "problem": 5,
         "review_pattern": 5,
+        "workflows": 5,
+    },
+    "workflow_state": {
+        "constraints": 4,
+        "decisions": 4,
+        "feature": 5,
+        "problem": 4,
+        "trail": 4,
         "workflows": 5,
     },
     "review_feedback": {
@@ -278,6 +303,17 @@ _RISK_TAG_KEYWORDS: dict[str, set[str]] = {
         "reuse",
         "route",
         "write-back",
+    },
+    "workflow_state": {
+        "active",
+        "blocked",
+        "done",
+        "epic",
+        "ledger",
+        "processing",
+        "status",
+        "todo",
+        "work",
     },
     "task_evaluation": {
         "benchmark",
@@ -571,6 +607,80 @@ def _packet_docs(candidates: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
     return rendered
 
 
+def _select_work_context(
+    *,
+    work_state: dict[str, Any],
+    task_tokens: set[str],
+    max_items: int = 5,
+) -> list[dict[str, Any]]:
+    status_weights = {
+        "blocked": 8,
+        "active": 7,
+        "processing": 7,
+        "review": 6,
+        "planned": 4,
+        "todo": 3,
+        "inbox": 3,
+        "proposed": 2,
+        "done": -2,
+        "archived": -4,
+        "dropped": -4,
+    }
+    candidates: list[dict[str, Any]] = []
+    for item_type, collection_name in (("task", "tasks"), ("epic", "epics")):
+        collection = work_state.get(collection_name)
+        if not isinstance(collection, dict):
+            continue
+        for item in collection.values():
+            if not isinstance(item, dict):
+                continue
+            work_id = item.get("work_id")
+            title = item.get("title")
+            status = item.get("status")
+            if not isinstance(work_id, str) or not isinstance(title, str) or not isinstance(status, str):
+                continue
+            text_parts = [
+                work_id,
+                title,
+                status,
+                item.get("epic_id") if isinstance(item.get("epic_id"), str) else "",
+                " ".join(link for link in item.get("links", []) if isinstance(link, str)),
+            ]
+            work_tokens = _tokenize(" ".join(text_parts))
+            matches = sorted(task_tokens & work_tokens)
+            score = min(len(matches) * 4, 16) + status_weights.get(status, 0)
+            if item_type == "epic" and status in OPEN_WORK_STATUSES:
+                score += 1
+            if score < 5:
+                continue
+            reasons: list[str] = []
+            if matches:
+                reasons.append(f"matched work terms: {', '.join(matches[:6])}")
+            if status in {"active", "processing", "blocked", "review"}:
+                reasons.append(f"{status} work should be visible before acting")
+            elif status in {"todo", "planned", "inbox", "proposed"}:
+                reasons.append(f"{status} work may define next steps")
+            if not reasons:
+                reasons.append("open work item")
+            candidates.append(
+                {
+                    "work_id": work_id,
+                    "item_type": item_type,
+                    "title": title,
+                    "status": status,
+                    "epic_id": item.get("epic_id") if isinstance(item.get("epic_id"), str) else None,
+                    "links": item.get("links", []) if isinstance(item.get("links"), list) else [],
+                    "source_paths": item.get("source_paths", [])
+                    if isinstance(item.get("source_paths"), list)
+                    else [],
+                    "reason": "; ".join(reasons),
+                    "score": score,
+                }
+            )
+    candidates.sort(key=lambda item: (-item["score"], item["item_type"], item["work_id"]))
+    return candidates[:max_items]
+
+
 def generate_route_packet(
     *,
     task: str | None = None,
@@ -603,6 +713,11 @@ def generate_route_packet(
     document_stats = build_document_stats(paths.repo_wiki_dir).get("documents", {})
     if not isinstance(document_stats, dict):
         document_stats = {}
+    work_state = build_work_state(paths.repo_wiki_dir)
+    work_context_items = _select_work_context(
+        work_state=work_state,
+        task_tokens=task_tokens,
+    )
 
     scored = [
         _score_document(
@@ -666,6 +781,10 @@ def generate_route_packet(
             "target_words": budget_words,
             "max_docs": max_docs,
         },
+        "work_context": {
+            "source": "ai-wiki/_toolkit/work/state.json",
+            "items": work_context_items,
+        },
         "must_load": _packet_docs(selected),
         "maybe_load": _packet_docs(maybe),
         "must_follow": must_follow,
@@ -702,10 +821,21 @@ def render_route_packet_text(packet: dict[str, Any]) -> str:
         [
             f"Context Budget: {packet['context_budget']['target_words']} words, "
             f"{packet['context_budget']['max_docs']} docs max",
-            "",
-            "## Must Load",
         ]
     )
+    work_context = packet.get("work_context") or {}
+    work_items = work_context.get("items") if isinstance(work_context, dict) else []
+    if work_items:
+        lines.extend(["", "## Work Context"])
+        for item in work_items:
+            epic = f", epic `{item['epic_id']}`" if item.get("epic_id") else ""
+            sources = item.get("source_paths") or [work_context.get("source", "ai-wiki/_toolkit/work/state.json")]
+            source_text = ", ".join(f"`{source}`" for source in sources[:2])
+            lines.append(
+                f"- `{item['work_id']}` ({item['item_type']}, {item['status']}{epic}): "
+                f"{item['title']} - {item['reason']} Source: {source_text}"
+            )
+    lines.extend(["", "## Must Load"])
     must_load = packet.get("must_load") or []
     if must_load:
         for doc in must_load:

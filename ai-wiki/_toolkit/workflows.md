@@ -12,7 +12,7 @@ This file is managed by ai-wiki-toolkit. Future package versions may update it.
 6. Do not log managed `_toolkit/**` docs with `record-reuse`; if they changed the plan or behavior, cite their paths in a progress update or the final note instead.
 7. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
 8. Treat the footer as the user-facing evidence surface; telemetry and generated aggregates are the local machine-readable record behind it.
-9. The installer manages a `.gitignore` block that ignores `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/metrics/`, and `ai-wiki/_toolkit/catalog.json` so telemetry stays local by default.
+9. The installer manages a `.gitignore` block that ignores `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/metrics/`, `ai-wiki/_toolkit/work/`, and `ai-wiki/_toolkit/catalog.json` so telemetry and generated views stay local by default.
 10. If those telemetry paths were tracked before you upgraded, run `aiwiki-toolkit doctor` and follow the suggested `git rm --cached` fix once to untrack them.
 11. Produce one AI wiki write-back outcome at the end of every completed task, even when the result is `None`.
 12. Before returning `None`, run memory candidate detection for problem-solution memory, feature clarification memory, convention candidates, missed relevant memory, and conflict or supersession.
@@ -24,5 +24,6 @@ This file is managed by ai-wiki-toolkit. Future package versions may update it.
 18. Put reusable problem-solution memories in `ai-wiki/problems/`.
 19. Put feature clarifications in `ai-wiki/features/`.
 20. Put task-specific chronology and dead ends in `ai-wiki/trails/`.
-21. Put raw personal draft notes in `ai-wiki/people/<handle>/drafts/`.
-22. Promote only stable, reviewable rules into shared patterns or conventions.
+21. Put todo, active, processing, blocked, review, done, and archived work state in `ai-wiki/work/events/<handle>.jsonl` via `aiwiki-toolkit work`.
+22. Put raw personal draft notes in `ai-wiki/people/<handle>/drafts/`.
+23. Promote only stable, reviewable rules into shared patterns or conventions.

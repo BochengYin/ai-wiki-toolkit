@@ -29,8 +29,16 @@ from ai_wiki_toolkit.scaffold import (
     install_workspace,
     uninstall_workspace,
 )
+from ai_wiki_toolkit.work_ledger import (
+    WORK_ITEM_TYPES,
+    WORK_STATUSES,
+    record_work_event,
+    refresh_work_report,
+)
 
 app = typer.Typer(help="Initialize and maintain ai-wiki-toolkit scaffolds.")
+work_app = typer.Typer(help="Record and report AI wiki work ledger state.")
+app.add_typer(work_app, name="work")
 
 
 def _version_callback(value: bool) -> None:
@@ -288,7 +296,7 @@ def uninstall(
 
 @app.command("refresh-metrics")
 def refresh_metrics() -> None:
-    """Regenerate managed repo catalog and metrics from the current user-owned AI wiki state."""
+    """Regenerate managed repo catalog, metrics, and work views from user-owned AI wiki state."""
     try:
         result = refresh_managed_metrics()
     except RepoRootNotFoundError as exc:
@@ -480,6 +488,220 @@ def record_reuse_check_command(
     typer.echo(f"Check log: {result.check_log_path}")
     typer.echo(f"Document stats: {result.document_stats_path}")
     typer.echo(f"Task stats: {result.task_stats_path}")
+
+
+@work_app.command("capture")
+def work_capture(
+    work_id: str = typer.Option(
+        ...,
+        "--work-id",
+        "--task-id",
+        help="Stable work item id. --task-id is accepted as an alias for task items.",
+    ),
+    title: str = typer.Option(
+        ...,
+        "--title",
+        help="Human-readable work item title.",
+    ),
+    item_type: str = typer.Option(
+        "task",
+        "--item-type",
+        help=f"Work item type. Choices: {', '.join(WORK_ITEM_TYPES)}.",
+    ),
+    status: str | None = typer.Option(
+        None,
+        "--status",
+        help=f"Initial status. Choices: {', '.join(WORK_STATUSES)}.",
+    ),
+    epic_id: str | None = typer.Option(
+        None,
+        "--epic-id",
+        help="Optional parent epic id for task items.",
+    ),
+    source: str | None = typer.Option(
+        "conversation",
+        "--source",
+        help="Where this work item came from, such as conversation, issue, pr, or roadmap.",
+    ),
+    links: list[str] | None = typer.Option(
+        None,
+        "--link",
+        help="Repeatable related path or URL that route can later cite as work context.",
+    ),
+    agent_name: str | None = typer.Option(
+        None,
+        "--agent-name",
+        help="Optional agent identifier such as codex or claude-code.",
+    ),
+    model: str | None = typer.Option(
+        None,
+        "--model",
+        help="Optional model name. Defaults to AIWIKI_TOOLKIT_MODEL or detected host model env vars.",
+    ),
+    notes: str | None = typer.Option(
+        None,
+        "--notes",
+        help="Optional free-form work note.",
+    ),
+    occurred_at: str | None = typer.Option(
+        None,
+        "--occurred-at",
+        help="Optional explicit timestamp. Defaults to the current local time in ISO-8601 format.",
+    ),
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional override for the handle shard used under ai-wiki/work/events/.",
+    ),
+) -> None:
+    """Capture a task or epic in the append-only AI wiki work ledger."""
+    try:
+        result = record_work_event(
+            event_type="captured",
+            item_type=item_type,
+            work_id=work_id,
+            status=status,
+            title=title,
+            epic_id=epic_id,
+            source=source,
+            links=links or [],
+            agent_name=agent_name,
+            model=model,
+            notes=notes,
+            occurred_at=occurred_at,
+            handle=handle,
+        )
+    except RepoRootNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except RepoWikiNotInitializedError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+
+    typer.echo(f"Recorded work event: {result.event_id}")
+    typer.echo(f"Occurred at: {result.occurred_at}")
+    typer.echo(f"Author handle: {result.author_handle}")
+    typer.echo(f"Event log: {result.event_log_path}")
+    typer.echo(f"Work state: {result.state_path}")
+    typer.echo(f"Work report: {result.report_path}")
+
+
+@work_app.command("status")
+def work_status(
+    work_id: str = typer.Option(
+        ...,
+        "--work-id",
+        "--task-id",
+        help="Stable work item id. --task-id is accepted as an alias for task items.",
+    ),
+    status: str = typer.Option(
+        ...,
+        "--status",
+        help=f"New status. Choices: {', '.join(WORK_STATUSES)}.",
+    ),
+    item_type: str = typer.Option(
+        "task",
+        "--item-type",
+        help=f"Work item type. Choices: {', '.join(WORK_ITEM_TYPES)}.",
+    ),
+    title: str | None = typer.Option(
+        None,
+        "--title",
+        help="Optional title update to store with the status event.",
+    ),
+    epic_id: str | None = typer.Option(
+        None,
+        "--epic-id",
+        help="Optional parent epic id for task items.",
+    ),
+    source: str | None = typer.Option(
+        None,
+        "--source",
+        help="Optional source update for the status event.",
+    ),
+    links: list[str] | None = typer.Option(
+        None,
+        "--link",
+        help="Repeatable related path or URL.",
+    ),
+    agent_name: str | None = typer.Option(
+        None,
+        "--agent-name",
+        help="Optional agent identifier such as codex or claude-code.",
+    ),
+    model: str | None = typer.Option(
+        None,
+        "--model",
+        help="Optional model name. Defaults to AIWIKI_TOOLKIT_MODEL or detected host model env vars.",
+    ),
+    notes: str | None = typer.Option(
+        None,
+        "--notes",
+        help="Optional free-form work note.",
+    ),
+    occurred_at: str | None = typer.Option(
+        None,
+        "--occurred-at",
+        help="Optional explicit timestamp. Defaults to the current local time in ISO-8601 format.",
+    ),
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional override for the handle shard used under ai-wiki/work/events/.",
+    ),
+) -> None:
+    """Append a status transition to the AI wiki work ledger."""
+    try:
+        result = record_work_event(
+            event_type="status_changed",
+            item_type=item_type,
+            work_id=work_id,
+            status=status,
+            title=title,
+            epic_id=epic_id,
+            source=source,
+            links=links or [],
+            agent_name=agent_name,
+            model=model,
+            notes=notes,
+            occurred_at=occurred_at,
+            handle=handle,
+        )
+    except RepoRootNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except RepoWikiNotInitializedError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+
+    typer.echo(f"Recorded work event: {result.event_id}")
+    typer.echo(f"Occurred at: {result.occurred_at}")
+    typer.echo(f"Author handle: {result.author_handle}")
+    typer.echo(f"Event log: {result.event_log_path}")
+    typer.echo(f"Work state: {result.state_path}")
+    typer.echo(f"Work report: {result.report_path}")
+
+
+@work_app.command("report")
+def work_report() -> None:
+    """Regenerate AI wiki work ledger managed views."""
+    try:
+        result = refresh_work_report()
+    except RepoRootNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except RepoWikiNotInitializedError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+
+    typer.echo(f"Work state: {result.state_path}")
+    typer.echo(f"Work report: {result.report_path}")
 
 
 @app.command("doctor")

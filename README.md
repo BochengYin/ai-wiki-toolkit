@@ -120,7 +120,7 @@ If none of those files exist yet, the toolkit creates `AGENT.md` as a generic de
 
 The AI wiki structure is deliberately inspired by how `SKILL.md` files work well: keep a small stable entrypoint, then fan out into focused references.
 
-Each wiki namespace starts with an `index.md` and then links to narrower files such as `constraints.md`, `conventions/`, `workflows.md`, `decisions.md`, `review-patterns/`, `problems/`, `features/`, `trails/`, and personal `drafts/`. The package-managed start-of-task routing lives in `ai-wiki/_toolkit/system.md`, while repo-owned indexes stay stable maps that humans can customize without turning them into package upgrade surfaces.
+Each wiki namespace starts with an `index.md` and then links to narrower files such as `constraints.md`, `conventions/`, `workflows.md`, `decisions.md`, `review-patterns/`, `problems/`, `features/`, `trails/`, `work/`, and personal `drafts/`. The package-managed start-of-task routing lives in `ai-wiki/_toolkit/system.md`, while repo-owned indexes stay stable maps that humans can customize without turning them into package upgrade surfaces.
 
 ## Current Scope
 
@@ -129,9 +129,10 @@ The current scope is intentionally strict about compatibility:
 - initialize the repo and home AI wiki folders
 - create starter Markdown files only if they do not already exist
 - create managed `_toolkit/` files that package updates are allowed to refresh
-- create `conventions/`, `review-patterns/`, `problems/`, `features/`, and `people/<handle>/drafts/` scaffolding
+- create `conventions/`, `review-patterns/`, `problems/`, `features/`, `work/`, and `people/<handle>/drafts/` scaffolding
 - create or refresh package-owned repo-local `.agents/skills/ai-wiki-reuse-check/`, `.agents/skills/ai-wiki-update-check/`, `.agents/skills/ai-wiki-clarify-before-code/`, `.agents/skills/ai-wiki-capture-review-learning/`, and `.agents/skills/ai-wiki-consolidate-drafts/` skills
 - create a managed `_toolkit/schema/team-memory-v1.md` guide for lightweight team coding memory
+- create a managed `_toolkit/schema/work-v1.md` guide and local generated work views for repo-native todo/epic lifecycle state
 - update managed instruction blocks inside `AGENT.md`, `AGENTS.md`, and `CLAUDE.md`
 - avoid rewriting existing user-owned `ai-wiki/**/*.md` documents outside `_toolkit/`
 
@@ -281,9 +282,9 @@ aiwiki-toolkit init
 
 - create `ai-wiki/` inside the current repository
 - create `~/ai-wiki/system/`
-- create starter indexes such as `ai-wiki/conventions/index.md`, `ai-wiki/review-patterns/index.md`, `ai-wiki/problems/index.md`, `ai-wiki/features/index.md`, `ai-wiki/trails/index.md`, and `ai-wiki/people/<handle>/index.md`
-- create `ai-wiki/conventions/`, `ai-wiki/review-patterns/`, `ai-wiki/problems/`, `ai-wiki/features/`, `ai-wiki/people/<handle>/drafts/`, `ai-wiki/metrics/`, and repo/home `_toolkit/`
-- generate package-managed `_toolkit/index.md`, `_toolkit/workflows.md`, `_toolkit/catalog.json`, `_toolkit/schema/reuse-v1.md`, `_toolkit/schema/team-memory-v1.md`, and `_toolkit/metrics/*.json`
+- create starter indexes such as `ai-wiki/conventions/index.md`, `ai-wiki/review-patterns/index.md`, `ai-wiki/problems/index.md`, `ai-wiki/features/index.md`, `ai-wiki/trails/index.md`, `ai-wiki/work/index.md`, and `ai-wiki/people/<handle>/index.md`
+- create `ai-wiki/conventions/`, `ai-wiki/review-patterns/`, `ai-wiki/problems/`, `ai-wiki/features/`, `ai-wiki/work/`, `ai-wiki/people/<handle>/drafts/`, `ai-wiki/metrics/`, and repo/home `_toolkit/`
+- generate package-managed `_toolkit/index.md`, `_toolkit/workflows.md`, `_toolkit/catalog.json`, `_toolkit/schema/reuse-v1.md`, `_toolkit/schema/team-memory-v1.md`, `_toolkit/schema/work-v1.md`, `_toolkit/metrics/*.json`, and `_toolkit/work/*`
 - upsert a managed `.gitignore` block that ignores AI wiki telemetry and generated aggregate snapshots so routine agent use does not dirty `git status`
 - create or refresh package-owned `.agents/skills/ai-wiki-reuse-check/`, `.agents/skills/ai-wiki-update-check/`, `.agents/skills/ai-wiki-clarify-before-code/`, `.agents/skills/ai-wiki-capture-review-learning/`, and `.agents/skills/ai-wiki-consolidate-drafts/`
 - update `AGENT.md`, `AGENTS.md`, and/or `CLAUDE.md` with a managed instruction block that reads `ai-wiki/_toolkit/system.md`
@@ -322,6 +323,30 @@ Only record user-owned AI wiki knowledge docs with `record-reuse`.
 
 Managed control-plane docs under `_toolkit/**` should still be cited in user-facing notes when they affect behavior, but they should not be logged as knowledge-reuse events.
 
+To turn conversation todos or epics into routeable repo-local work state:
+
+```bash
+aiwiki-toolkit work capture \
+  --work-id aiwiki-framework-roadmap \
+  --title "Build the coding agent working framework" \
+  --item-type epic \
+  --status proposed \
+  --source conversation
+
+aiwiki-toolkit work capture \
+  --work-id work-ledger \
+  --title "Capture conversation todos as AI wiki work state" \
+  --status todo \
+  --epic-id aiwiki-framework-roadmap \
+  --link ai-wiki/people/your-handle/drafts/agent-framework-roadmap.md
+
+aiwiki-toolkit work status \
+  --work-id work-ledger \
+  --status processing
+```
+
+This appends to `ai-wiki/work/events/<handle>.jsonl` and regenerates local package-managed views under `ai-wiki/_toolkit/work/`. Route packets can then surface matching active, processing, blocked, planned, or todo work items before an agent starts acting. Work events are not knowledge-reuse evidence by themselves, so they are kept separate from `record-reuse`.
+
 To record that a completed task was checked for AI wiki reuse, even when no wiki docs were needed:
 
 ```bash
@@ -339,7 +364,7 @@ Both metrics logs are sharded by handle under:
 
 These logs are intended as local telemetry by default, not merge-heavy source files.
 
-If you need a fresh local telemetry snapshot, regenerate package-managed aggregate views such as `ai-wiki/_toolkit/catalog.json` or `ai-wiki/_toolkit/metrics/*.json` with:
+If you need a fresh local telemetry and work snapshot, regenerate package-managed aggregate views such as `ai-wiki/_toolkit/catalog.json`, `ai-wiki/_toolkit/metrics/*.json`, or `ai-wiki/_toolkit/work/*` with:
 
 ```bash
 aiwiki-toolkit refresh-metrics
@@ -359,6 +384,7 @@ This command does not rewrite user-owned repo docs. It prints which paths need a
 - `ai-wiki/problems/index.md`
 - `ai-wiki/features/index.md`
 - `ai-wiki/trails/index.md`
+- `ai-wiki/work/index.md`
 - `ai-wiki/people/<handle>/index.md`
 - `ai-wiki/metrics/index.md`
 
@@ -392,11 +418,11 @@ Even with `--purge-user-docs --yes`, the shared home wiki under `~/ai-wiki/syste
 
 - Existing user-owned `ai-wiki/**/*.md` files are treated as stable data.
 - `install`/`init` only create missing starter files; they do not merge or overwrite existing user wiki documents.
-- Starter indexes such as `ai-wiki/index.md`, `conventions/index.md`, `review-patterns/index.md`, `problems/index.md`, `features/index.md`, `trails/index.md`, `people/<handle>/index.md`, and `metrics/index.md` become user-owned once created and are not rewritten by future package updates.
+- Starter indexes such as `ai-wiki/index.md`, `conventions/index.md`, `review-patterns/index.md`, `problems/index.md`, `features/index.md`, `trails/index.md`, `work/index.md`, `people/<handle>/index.md`, and `metrics/index.md` become user-owned once created and are not rewritten by future package updates.
 - `ai-wiki/_toolkit/**` and `~/ai-wiki/system/_toolkit/**` are package-managed and may be refreshed by future versions.
 - `ai-wiki/index.md` is a repo-owned map and is not treated as a starter-drift upgrade target by `doctor`.
 - `ai-wiki/workflows.md` remains user-owned; package-managed workflow updates land in `ai-wiki/_toolkit/workflows.md` instead of rewriting the repo-owned file.
-- `ai-wiki/metrics/reuse-events/<handle>.jsonl` and `ai-wiki/metrics/task-checks/<handle>.jsonl` are user-owned evidence data. Package-managed aggregate views are regenerated under `ai-wiki/_toolkit/metrics/`, and the installer ignores all of those telemetry paths by default in `.gitignore`.
+- `ai-wiki/metrics/reuse-events/<handle>.jsonl` and `ai-wiki/metrics/task-checks/<handle>.jsonl` are user-owned evidence data. `ai-wiki/work/events/<handle>.jsonl` is user-owned work state. Package-managed aggregate views are regenerated under `ai-wiki/_toolkit/metrics/` and `ai-wiki/_toolkit/work/`, and the installer ignores those generated paths by default in `.gitignore`.
 - Legacy flat files such as `ai-wiki/metrics/reuse-events.jsonl` and `ai-wiki/metrics/task-checks.jsonl` are still read for compatibility, but new writes should use the handle-sharded layout.
 - `aiwiki-toolkit doctor --suggest-index-upgrade` prints suggested replacements for missing repo starter docs and repo-owned companion docs such as `ai-wiki/workflows.md`, but it does not overwrite them automatically.
 - Package-owned `.agents/skills/ai-wiki-reuse-check/**`, `.agents/skills/ai-wiki-update-check/**`, `.agents/skills/ai-wiki-clarify-before-code/**`, `.agents/skills/ai-wiki-capture-review-learning/**`, and `.agents/skills/ai-wiki-consolidate-drafts/**` are refreshed by `install` so package workflow updates reach existing repos.

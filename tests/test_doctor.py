@@ -23,6 +23,7 @@ def test_doctor_is_clean_for_latest_navigation_and_rule_structure(
     assert result.exit_code == 0
     assert "OK    ai-wiki/_toolkit/index.md `ai-wiki/_toolkit/index.md` exists." in result.output
     assert "OK    ai-wiki/_toolkit/workflows.md `ai-wiki/_toolkit/workflows.md` exists." in result.output
+    assert "OK    ai-wiki/_toolkit/schema/work-v1.md `ai-wiki/_toolkit/schema/work-v1.md` exists." in result.output
     assert "OK    ai-wiki/_toolkit/schema/team-memory-v1.md `ai-wiki/_toolkit/schema/team-memory-v1.md` exists." in result.output
     assert "OK    .gitignore `.gitignore` already contains the current managed telemetry ignore block." in result.output
     assert "OK    ai-wiki/index.md `ai-wiki/index.md` exists. It is repo-owned and is not compared against starter navigation drift." in result.output
@@ -74,6 +75,7 @@ def test_doctor_suggests_starter_updates_for_repo_docs(repo_env: dict[str, Path]
     assert result.exit_code == 0
     assert "WARN  ai-wiki/_toolkit/index.md `ai-wiki/_toolkit/index.md` is missing." in result.output
     assert "WARN  ai-wiki/_toolkit/workflows.md `ai-wiki/_toolkit/workflows.md` is missing." in result.output
+    assert "WARN  ai-wiki/_toolkit/schema/work-v1.md `ai-wiki/_toolkit/schema/work-v1.md` is missing." in result.output
     assert "WARN  ai-wiki/_toolkit/schema/team-memory-v1.md `ai-wiki/_toolkit/schema/team-memory-v1.md` is missing." in result.output
     assert "WARN  .gitignore `.gitignore` is missing the `aiwiki-toolkit` managed telemetry ignore block." in result.output
     assert "WARN  ai-wiki/workflows.md `ai-wiki/workflows.md` is missing the pointer to `_toolkit/workflows.md`." in result.output
@@ -84,6 +86,7 @@ def test_doctor_suggests_starter_updates_for_repo_docs(repo_env: dict[str, Path]
     assert "Path: ai-wiki/review-patterns/index.md" in result.output
     assert "Path: ai-wiki/problems/index.md" in result.output
     assert "Path: ai-wiki/features/index.md" in result.output
+    assert "Path: ai-wiki/work/index.md" in result.output
     assert "Create this file with the starter content below, then customize it as needed." in result.output
     assert "See also `_toolkit/workflows.md` for package-managed baseline workflows" in result.output
     assert "`ai-wiki/index.md` exists. It is repo-owned and is not compared against starter navigation drift." in result.output
@@ -277,4 +280,4 @@ def test_doctor_warns_when_telemetry_paths_are_still_tracked(repo_env: dict[str,
     assert result.exit_code == 1
     assert "WARN  .gitignore Git still tracks AI wiki telemetry paths despite the ignore rules." in result.output
     assert "Untrack legacy telemetry paths once:" in result.output
-    assert "git rm -r --cached --ignore-unmatch ai-wiki/metrics/reuse-events ai-wiki/metrics/task-checks ai-wiki/_toolkit/metrics ai-wiki/_toolkit/catalog.json" in result.output
+    assert "git rm -r --cached --ignore-unmatch ai-wiki/metrics/reuse-events ai-wiki/metrics/task-checks ai-wiki/_toolkit/metrics ai-wiki/_toolkit/work ai-wiki/_toolkit/catalog.json" in result.output

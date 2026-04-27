@@ -88,6 +88,8 @@ def test_infer_doc_kind_recognizes_team_memory_docs() -> None:
     assert infer_doc_kind("features/bulk-invoice-upload.md") == "feature"
     assert infer_doc_kind("review-patterns/index.md") == "review_pattern_index"
     assert infer_doc_kind("trails/release-debugging.md") == "trail"
+    assert infer_doc_kind("work/index.md") == "work_index"
+    assert infer_doc_kind("work/events/alice.jsonl") == "work"
     assert infer_doc_kind("people/alice/index.md") == "person_index"
     assert infer_doc_kind("decisions.md") == "decisions"
 
