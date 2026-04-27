@@ -107,7 +107,7 @@ def _echo_doctor_result(result, *, suggest_index_upgrade: bool, strict: bool) ->
             None,
         )
         if tracked_telemetry and tracked_telemetry.suggested_fix:
-            typer.echo(f"{step}. Untrack legacy telemetry paths once:")
+            typer.echo(f"{step}. Untrack legacy local-state paths once:")
             typer.echo(f"   {tracked_telemetry.suggested_fix}")
             step += 1
         if any(f.path.startswith("ai-wiki/") and not f.path.startswith("ai-wiki/_toolkit/") for f in actionable_findings):
@@ -528,6 +528,16 @@ def work_capture(
         "--link",
         help="Repeatable related path or URL that route can later cite as work context.",
     ),
+    reporter_handle: str | None = typer.Option(
+        None,
+        "--reporter",
+        help="Optional reporter handle. Defaults to the current local AI wiki actor.",
+    ),
+    assignee_handles: list[str] | None = typer.Option(
+        None,
+        "--assignee",
+        help="Repeatable assignee handle. Defaults to the current local AI wiki actor.",
+    ),
     agent_name: str | None = typer.Option(
         None,
         "--agent-name",
@@ -565,6 +575,8 @@ def work_capture(
             epic_id=epic_id,
             source=source,
             links=links or [],
+            reporter_handle=reporter_handle,
+            assignee_handles=assignee_handles or [],
             agent_name=agent_name,
             model=model,
             notes=notes,
@@ -627,6 +639,16 @@ def work_status(
         "--link",
         help="Repeatable related path or URL.",
     ),
+    reporter_handle: str | None = typer.Option(
+        None,
+        "--reporter",
+        help="Optional reporter handle update.",
+    ),
+    assignee_handles: list[str] | None = typer.Option(
+        None,
+        "--assignee",
+        help="Repeatable assignee handle update.",
+    ),
     agent_name: str | None = typer.Option(
         None,
         "--agent-name",
@@ -664,6 +686,8 @@ def work_status(
             epic_id=epic_id,
             source=source,
             links=links or [],
+            reporter_handle=reporter_handle,
+            assignee_handles=assignee_handles or [],
             agent_name=agent_name,
             model=model,
             notes=notes,

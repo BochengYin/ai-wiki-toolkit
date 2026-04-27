@@ -55,6 +55,7 @@ def test_route_generates_context_packet_with_cited_sources(repo_env: dict[str, P
     assert result.exit_code == 0
     packet = json.loads(result.output)
     assert packet["schema_version"] == "route-v1"
+    assert packet["actor"]["handle"] == "alice"
     assert packet["route"]["task_type"] == "scaffold_prompt_workflow"
     assert "user_owned_docs" in packet["route"]["risk_tags"]
     assert "managed_prompt_block" in packet["route"]["risk_tags"]
@@ -93,6 +94,7 @@ def test_route_text_packet_is_agent_readable(repo_env: dict[str, Path]) -> None:
     assert result.exit_code == 0
     assert "# AI Wiki Context Packet" in result.output
     assert "Task Type: `release_distribution`" in result.output
+    assert "Actor: `alice`" in result.output
     assert "## Must Load" in result.output
     assert "## Trust Model" in result.output
 
@@ -137,6 +139,7 @@ def test_route_packet_includes_matching_work_context(repo_env: dict[str, Path]) 
     assert packet["work_context"]["source"] == "ai-wiki/_toolkit/work/state.json"
     assert packet["work_context"]["items"][0]["work_id"] == "framework-ledger"
     assert packet["work_context"]["items"][0]["status"] == "processing"
+    assert packet["work_context"]["items"][0]["assignee_handles"] == ["alice"]
     assert packet["work_context"]["items"][0]["links"] == [
         "ai-wiki/people/alice/drafts/framework-roadmap.md"
     ]

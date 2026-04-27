@@ -46,11 +46,16 @@ def test_work_capture_records_event_and_generated_views(repo_env: dict[str, Path
     assert payload["event_type"] == "captured"
     assert payload["work_id"] == "framework-ledger-mvp"
     assert payload["epic_id"] == "agent-framework"
+    assert payload["author_handle"] == "alice"
+    assert payload["reporter_handle"] == "alice"
+    assert payload["assignee_handles"] == ["alice"]
 
     state = json.loads((repo_wiki / "_toolkit" / "work" / "state.json").read_text(encoding="utf-8"))
     task = state["tasks"]["framework-ledger-mvp"]
     assert task["status"] == "processing"
     assert task["title"] == "Build routeable work ledger"
+    assert task["reporter_handle"] == "alice"
+    assert task["assignee_handles"] == ["alice"]
     assert task["event_count"] == 1
     assert task["links"] == ["ai-wiki/people/alice/drafts/framework-roadmap.md"]
     assert state["summary"]["open_task_count"] == 1
@@ -112,6 +117,62 @@ def test_work_status_updates_current_state_without_rewriting_events(repo_env: di
     assert task["last_notes"] == "Merged and released."
     assert state["summary"]["open_task_count"] == 0
     assert state["summary"]["tasks_by_status"] == {"done": 1}
+
+
+def test_work_capture_uses_env_aiwiki_actor_by_default(repo_env: dict[str, Path]) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "Alice Reviewer"])
+    assert install_result.exit_code == 0
+
+    result = runner.invoke(
+        app,
+        [
+            "work",
+            "capture",
+            "--work-id",
+            "identity-scoped-work",
+            "--title",
+            "Use local identity for work ownership",
+            "--occurred-at",
+            "2026-04-27T10:00:00+10:00",
+        ],
+    )
+
+    assert result.exit_code == 0
+    event_log = repo_env["repo"] / "ai-wiki" / "work" / "events" / "alice-reviewer.jsonl"
+    payload = json.loads(event_log.read_text(encoding="utf-8").splitlines()[0])
+    assert payload["author_handle"] == "alice-reviewer"
+    assert payload["reporter_handle"] == "alice-reviewer"
+    assert payload["assignee_handles"] == ["alice-reviewer"]
+
+
+def test_work_capture_accepts_reporter_and_assignee_overrides(repo_env: dict[str, Path]) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "alice"])
+    assert install_result.exit_code == 0
+
+    result = runner.invoke(
+        app,
+        [
+            "work",
+            "capture",
+            "--work-id",
+            "delegated-work",
+            "--title",
+            "Let Bob own this task",
+            "--reporter",
+            "Alice",
+            "--assignee",
+            "Bob",
+            "--assignee",
+            "Carol",
+        ],
+    )
+
+    assert result.exit_code == 0
+    event_log = repo_env["repo"] / "ai-wiki" / "work" / "events" / "alice.jsonl"
+    payload = json.loads(event_log.read_text(encoding="utf-8").splitlines()[0])
+    assert payload["author_handle"] == "alice"
+    assert payload["reporter_handle"] == "alice"
+    assert payload["assignee_handles"] == ["bob", "carol"]
 
 
 def test_work_report_requires_initialized_repo_wiki(repo_env: dict[str, Path]) -> None:

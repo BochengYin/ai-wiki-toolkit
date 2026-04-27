@@ -14,6 +14,11 @@ REPO_DIRNAME = "ai-wiki"
 HOME_DIRNAME = "ai-wiki"
 HOME_OVERRIDE_ENV = "AIWIKI_TOOLKIT_HOME_DIR"
 HANDLE_OVERRIDE_ENV = "AIWIKI_TOOLKIT_HANDLE"
+LOCAL_ENV_FILENAME = ".env.aiwiki"
+LOCAL_ACTOR_HANDLE_ENV = "AIWIKI_TOOLKIT_ACTOR_HANDLE"
+LOCAL_DISPLAY_NAME_ENV = "AIWIKI_TOOLKIT_DISPLAY_NAME"
+LOCAL_IDENTITY_SOURCE_ENV = "AIWIKI_TOOLKIT_IDENTITY_SOURCE"
+LOCAL_IDENTITY_VERSION_ENV = "AIWIKI_TOOLKIT_LOCAL_IDENTITY_VERSION"
 MODEL_OVERRIDE_ENV = "AIWIKI_TOOLKIT_MODEL"
 HOST_MODEL_ENV_VARS = (
     "OPENAI_MODEL",
@@ -84,10 +89,46 @@ def existing_prompt_targets(repo_root: Path) -> list[Path]:
     return [repo_root / name for name in PROMPT_FILENAMES if (repo_root / name).exists()]
 
 
+def repo_local_env_path(repo_root: Path) -> Path:
+    return repo_root / LOCAL_ENV_FILENAME
+
+
 def slugify(value: str) -> str:
     lowered = value.strip().lower()
     slug = _NON_ALNUM_RE.sub("-", lowered).strip("-")
     return slug or "unknown"
+
+
+def _parse_dotenv_value(value: str) -> str:
+    stripped = value.strip()
+    if len(stripped) >= 2 and stripped[0] == stripped[-1] and stripped[0] in {'"', "'"}:
+        inner = stripped[1:-1]
+        if stripped[0] == '"':
+            inner = inner.replace(r"\"", '"').replace(r"\\", "\\")
+        return inner
+    return stripped
+
+
+def read_repo_local_env(repo_root: Path) -> dict[str, str]:
+    path = repo_local_env_path(repo_root)
+    if not path.exists():
+        return {}
+
+    values: dict[str, str] = {}
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return {}
+    for raw_line in lines:
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        normalized_key = key.strip()
+        if not normalized_key or not re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", normalized_key):
+            continue
+        values[normalized_key] = _parse_dotenv_value(value)
+    return values
 
 
 def _git_config_path(repo_root: Path) -> Path | None:
@@ -209,6 +250,10 @@ def resolve_user_handle(
     env_handle = env.get(HANDLE_OVERRIDE_ENV)
     if env_handle:
         return slugify(env_handle)
+
+    local_handle = read_repo_local_env(repo_root).get(LOCAL_ACTOR_HANDLE_ENV)
+    if local_handle:
+        return slugify(local_handle)
 
     if git_email is None or git_name is None:
         resolved_email, resolved_name = git_identity(repo_root)

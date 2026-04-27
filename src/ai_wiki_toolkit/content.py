@@ -17,6 +17,7 @@ AI_WIKI_CONSOLIDATE_DRAFTS_SKILL_DIR = ".agents/skills/ai-wiki-consolidate-draft
 AI_WIKI_UPDATE_SKILL_DIR = ".agents/skills/ai-wiki-update-check"
 AI_WIKI_REUSE_SKILL_DIR = ".agents/skills/ai-wiki-reuse-check"
 TELEMETRY_IGNORE_PATHS = (
+    ".env.aiwiki",
     "ai-wiki/metrics/reuse-events/",
     "ai-wiki/metrics/task-checks/",
     "ai-wiki/_toolkit/metrics/",
@@ -28,7 +29,8 @@ TELEMETRY_IGNORE_PATHS = (
 def gitignore_block_body() -> str:
     return dedent(
         """
-        # Ignore AI wiki telemetry so normal agent use does not dirty git status.
+        # Ignore AI wiki local state so normal agent use does not dirty git status.
+        .env.aiwiki
         ai-wiki/metrics/reuse-events/
         ai-wiki/metrics/task-checks/
         ai-wiki/_toolkit/metrics/
@@ -258,6 +260,7 @@ def repo_starter_files(handle: str) -> dict[str, str]:
 
             ## Usage
 
+            - Resolve current local actor identity from `.env.aiwiki` when no explicit handle is supplied.
             - Capture conversation todos with `aiwiki-toolkit work capture`.
             - Update status with `aiwiki-toolkit work status`.
             - Regenerate local managed views with `aiwiki-toolkit work report`.
@@ -296,7 +299,7 @@ def repo_starter_files(handle: str) -> dict[str, str]:
             - `task-checks/<handle>.jsonl` stores per-handle task-level AI wiki reuse checks.
             - `aiwiki-toolkit record-reuse ...` appends one document-level observation for the current handle and refreshes managed aggregates.
             - `aiwiki-toolkit record-reuse-check ...` appends one task-level reuse check for the current handle and refreshes managed aggregates.
-            - The installer manages a `.gitignore` block so these telemetry logs and the generated `_toolkit/catalog.json` and `_toolkit/metrics/*.json` files stay local by default.
+            - The installer manages a `.gitignore` block so `.env.aiwiki`, telemetry logs, and generated `_toolkit/catalog.json` and `_toolkit/metrics/*.json` files stay local by default.
             - `aiwiki-toolkit refresh-metrics` regenerates package-managed aggregate views if you need a fresh local snapshot.
             """
         ).strip()
@@ -353,7 +356,7 @@ def managed_repo_toolkit_files() -> dict[str, str]:
 
             - `catalog.json`, `metrics/*.json`, and `work/*` are generated outputs, not guidance docs.
             - `aiwiki-toolkit route` emits transient context packets to stdout; packets are derived from source docs and should be regenerated rather than treated as canonical memory.
-            - The installer ignores those generated outputs in `.gitignore` so routine telemetry updates stay local.
+            - The installer ignores local identity and generated outputs in `.gitignore` so routine agent use stays local.
             - Regenerate catalog, metrics, and work views with `aiwiki-toolkit refresh-metrics` whenever you need a fresh local snapshot.
             """
         ).strip()
@@ -497,8 +500,8 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             6. Do not log managed `_toolkit/**` docs with `record-reuse`; if they changed the plan or behavior, cite their paths in a progress update or the final note instead.
             7. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
             8. Treat the footer as the user-facing evidence surface; telemetry and generated aggregates are the local machine-readable record behind it.
-            9. The installer manages a `.gitignore` block that ignores `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/metrics/`, `ai-wiki/_toolkit/work/`, and `ai-wiki/_toolkit/catalog.json` so telemetry and generated views stay local by default.
-            10. If those telemetry paths were tracked before you upgraded, run `aiwiki-toolkit doctor` and follow the suggested `git rm --cached` fix once to untrack them.
+            9. The installer manages a `.gitignore` block that ignores `.env.aiwiki`, `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/metrics/`, `ai-wiki/_toolkit/work/`, and `ai-wiki/_toolkit/catalog.json` so local identity, telemetry, and generated views stay local by default.
+            10. If those local-state paths were tracked before you upgraded, run `aiwiki-toolkit doctor` and follow the suggested `git rm --cached` fix once to untrack them.
             11. Produce one AI wiki write-back outcome at the end of every completed task, even when the result is `None`.
             12. Before returning `None`, run memory candidate detection for problem-solution memory, feature clarification memory, convention candidates, missed relevant memory, and conflict or supersession.
             13. Always end with exactly one status line: `AI Wiki Write-Back: none`, `draft recorded`, or `promotion candidate`.
@@ -532,6 +535,7 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             - `route.task_type`: coarse task class such as `scaffold_prompt_workflow`, `release_distribution`, `memory_governance`, `workflow_state`, `eval_workflow`, or `general`.
             - `route.risk_tags`: task risks such as `user_owned_docs`, `managed_prompt_block`, `release_distribution`, `ci_workflow`, `memory_governance`, `workflow_state`, or `task_evaluation`.
             - `route.changed_paths`: path signals supplied by the caller or inferred from `git status --short`.
+            - `actor`: resolved local actor handle from CLI/environment, `.env.aiwiki`, git config, or fallback.
             - `context_budget`: target word and document limits for the packet.
             - `work_context`: matching work-ledger items from `ai-wiki/_toolkit/work/state.json`, when available.
             - `must_load`: user-owned AI wiki docs the agent should consult first.
@@ -684,6 +688,8 @@ def managed_repo_toolkit_files() -> dict[str, str]:
 
             ## Source Of Truth
 
+            Local actor identity lives in the gitignored `.env.aiwiki` file at the repository root.
+
             User-owned work events live in `ai-wiki/work/events/<handle>.jsonl`.
 
             Package-managed generated views live under `ai-wiki/_toolkit/work/`:
@@ -702,6 +708,8 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             - `event_type`: `captured` or `status_changed`
             - `occurred_at`
             - `author_handle`
+            - `reporter_handle`
+            - `assignee_handles`
             - `item_type`: `task` or `epic`
             - `work_id`
             - `title`
@@ -733,10 +741,12 @@ def managed_repo_toolkit_files() -> dict[str, str]:
 
             1. Capture conversation todos with `aiwiki-toolkit work capture`.
             2. Move work through lifecycle states with `aiwiki-toolkit work status`.
-            3. Prefer append-only events over rewriting shared work files.
-            4. Treat `_toolkit/work/*` as generated views, not canonical memory.
-            5. Do not automatically archive or drop a large epic without human confirmation.
-            6. Route packets may use active, processing, or matching work items as routing hints, but work events are not knowledge-reuse evidence by themselves.
+            3. Resolve the current actor from explicit CLI input, environment, `.env.aiwiki`, git config, then fallback.
+            4. Default `author_handle`, `reporter_handle`, and `assignee_handles` to the current actor when capturing new work.
+            5. Prefer append-only events over rewriting shared work files.
+            6. Treat `_toolkit/work/*` as generated views, not canonical memory.
+            7. Do not automatically archive or drop a large epic without human confirmation.
+            8. Route packets may use active, processing, or matching work items as routing hints, but work events are not knowledge-reuse evidence by themselves.
             """
         ).strip()
         + "\n",

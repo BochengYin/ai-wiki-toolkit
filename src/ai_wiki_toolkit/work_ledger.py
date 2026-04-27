@@ -106,6 +106,25 @@ def _normalize_work_id(work_id: str) -> str:
     return normalized
 
 
+def _normalize_handle(value: str, label: str) -> str:
+    normalized = slugify(value)
+    if not normalized or normalized == "unknown":
+        raise ValueError(f"{label} must not be empty.")
+    return normalized
+
+
+def _normalize_handles(values: Iterable[str], label: str) -> list[str]:
+    seen: set[str] = set()
+    normalized_handles: list[str] = []
+    for value in values:
+        normalized = _normalize_handle(value, label)
+        if normalized in seen:
+            continue
+        seen.add(normalized)
+        normalized_handles.append(normalized)
+    return normalized_handles
+
+
 def _normalize_links(links: Iterable[str]) -> list[str]:
     seen: set[str] = set()
     normalized_links: list[str] = []
@@ -185,8 +204,13 @@ def _new_work_item(event: dict[str, Any], source_path: str | None) -> dict[str, 
         "last_event_id": event.get("event_id"),
         "last_notes": None,
         "last_author_handle": event.get("author_handle"),
+        "reporter_handle": event.get("reporter_handle")
+        if isinstance(event.get("reporter_handle"), str)
+        else event.get("author_handle"),
+        "assignee_handles": [],
         "source_paths": [source_path] if source_path else [],
         "_event_count": 0,
+        "_assignee_set": set(),
         "_link_set": set(),
         "_source_path_set": {source_path} if source_path else set(),
     }
@@ -212,6 +236,26 @@ def _apply_event(repo_wiki_dir: Path, item: dict[str, Any], event: dict[str, Any
     author_handle = event.get("author_handle")
     if isinstance(author_handle, str) and author_handle:
         item["last_author_handle"] = author_handle
+    reporter_handle = event.get("reporter_handle")
+    if isinstance(reporter_handle, str) and reporter_handle:
+        item["reporter_handle"] = reporter_handle
+    assignee_handles = event.get("assignee_handles")
+    if isinstance(assignee_handles, list):
+        normalized_assignees = [
+            value
+            for value in assignee_handles
+            if isinstance(value, str) and value.strip()
+        ]
+        if normalized_assignees:
+            item["assignee_handles"] = []
+            assignee_set = item["_assignee_set"]
+            if isinstance(assignee_set, set):
+                assignee_set.clear()
+                for value in normalized_assignees:
+                    if value in assignee_set:
+                        continue
+                    assignee_set.add(value)
+                    item["assignee_handles"].append(value)
     event_id = event.get("event_id")
     if isinstance(event_id, str) and event_id:
         item["last_event_id"] = event_id
@@ -233,6 +277,7 @@ def _apply_event(repo_wiki_dir: Path, item: dict[str, Any], event: dict[str, Any
 def _clean_item(item: dict[str, Any]) -> dict[str, Any]:
     cleaned = dict(item)
     cleaned["event_count"] = cleaned.pop("_event_count")
+    cleaned.pop("_assignee_set", None)
     cleaned.pop("_link_set", None)
     cleaned.pop("_source_path_set", None)
     if cleaned.get("status") is None:
@@ -307,6 +352,11 @@ def _format_item_line(item: dict[str, Any]) -> str:
     ]
     if item.get("epic_id"):
         parts.append(f"epic: `{item['epic_id']}`")
+    if item.get("assignee_handles"):
+        assignees = ", ".join(f"`{handle}`" for handle in item["assignee_handles"][:3])
+        parts.append(f"assignees: {assignees}")
+    if item.get("reporter_handle"):
+        parts.append(f"reporter: `{item['reporter_handle']}`")
     if item.get("links"):
         links = ", ".join(f"`{link}`" for link in item["links"][:3])
         parts.append(f"links: {links}")
@@ -391,6 +441,8 @@ def record_work_event(
     links: Sequence[str] = (),
     agent_name: str | None = None,
     model: str | None = None,
+    reporter_handle: str | None = None,
+    assignee_handles: Sequence[str] = (),
     notes: str | None = None,
     occurred_at: str | None = None,
     handle: str | None = None,
@@ -414,6 +466,16 @@ def record_work_event(
         raise ValueError("title is required when capturing a work item.")
 
     resolved_handle = resolve_user_handle(paths.repo_root, explicit_handle=handle)
+    normalized_reporter_handle = (
+        _normalize_handle(reporter_handle, "reporter_handle")
+        if reporter_handle
+        else resolved_handle
+        if normalized_event_type == "captured"
+        else None
+    )
+    normalized_assignee_handles = _normalize_handles(assignee_handles, "assignee_handle")
+    if normalized_event_type == "captured" and not normalized_assignee_handles:
+        normalized_assignee_handles = [resolved_handle]
     resolved_model = resolve_model_name(explicit_model=model)
     resolved_occurred_at = _event_timestamp(occurred_at)
     event_id = f"wrk_{uuid4().hex[:12]}"
@@ -428,6 +490,10 @@ def record_work_event(
         "work_id": normalized_work_id,
         "status": normalized_status,
     }
+    if normalized_reporter_handle:
+        payload["reporter_handle"] = normalized_reporter_handle
+    if normalized_assignee_handles:
+        payload["assignee_handles"] = normalized_assignee_handles
     if title and title.strip():
         payload["title"] = title.strip()
     if epic_id and epic_id.strip():

@@ -15,5 +15,5 @@ This directory is managed by ai-wiki-toolkit. Future package versions may update
 
 - `catalog.json`, `metrics/*.json`, and `work/*` are generated outputs, not guidance docs.
 - `aiwiki-toolkit route` emits transient context packets to stdout; packets are derived from source docs and should be regenerated rather than treated as canonical memory.
-- The installer ignores those generated outputs in `.gitignore` so routine telemetry updates stay local.
+- The installer ignores local identity and generated outputs in `.gitignore` so routine agent use stays local.
 - Regenerate catalog, metrics, and work views with `aiwiki-toolkit refresh-metrics` whenever you need a fresh local snapshot.

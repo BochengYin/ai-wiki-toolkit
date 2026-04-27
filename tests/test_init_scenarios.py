@@ -57,6 +57,7 @@ def test_init_empty_repo_creates_expected_tree(repo_env: dict[str, Path]) -> Non
         ".agents/skills/ai-wiki-update-check/references/",
         ".agents/skills/ai-wiki-update-check/references/decision-rules.md",
         ".agents/skills/ai-wiki-update-check/references/output-contract.md",
+        ".env.aiwiki",
         ".git/",
         ".git/config",
         ".gitignore",
@@ -235,12 +236,23 @@ def test_init_writes_expected_gitignore_snapshot(repo_env: dict[str, Path]) -> N
     assert (repo_env["repo"] / ".gitignore").read_text(encoding="utf-8") == strip_margin(
         """
         # <!-- aiwiki-toolkit:start -->
-        # Ignore AI wiki telemetry so normal agent use does not dirty git status.
+        # Ignore AI wiki local state so normal agent use does not dirty git status.
+        .env.aiwiki
         ai-wiki/metrics/reuse-events/
         ai-wiki/metrics/task-checks/
         ai-wiki/_toolkit/metrics/
         ai-wiki/_toolkit/work/
         ai-wiki/_toolkit/catalog.json
+        # <!-- aiwiki-toolkit:end -->
+        """
+    )
+    assert (repo_env["repo"] / ".env.aiwiki").read_text(encoding="utf-8") == strip_margin(
+        """
+        # <!-- aiwiki-toolkit:start -->
+        # Local aiwiki-toolkit identity. This file is ignored by git.
+        AIWIKI_TOOLKIT_LOCAL_IDENTITY_VERSION=1
+        AIWIKI_TOOLKIT_ACTOR_HANDLE=alice
+        AIWIKI_TOOLKIT_IDENTITY_SOURCE=explicit-handle
         # <!-- aiwiki-toolkit:end -->
         """
     )
@@ -271,7 +283,7 @@ def test_init_writes_expected_toolkit_managed_files(repo_env: dict[str, Path]) -
 
         - `catalog.json`, `metrics/*.json`, and `work/*` are generated outputs, not guidance docs.
         - `aiwiki-toolkit route` emits transient context packets to stdout; packets are derived from source docs and should be regenerated rather than treated as canonical memory.
-        - The installer ignores those generated outputs in `.gitignore` so routine telemetry updates stay local.
+        - The installer ignores local identity and generated outputs in `.gitignore` so routine agent use stays local.
         - Regenerate catalog, metrics, and work views with `aiwiki-toolkit refresh-metrics` whenever you need a fresh local snapshot.
         """
     )
@@ -417,8 +429,8 @@ def test_init_writes_expected_toolkit_managed_files(repo_env: dict[str, Path]) -
         6. Do not log managed `_toolkit/**` docs with `record-reuse`; if they changed the plan or behavior, cite their paths in a progress update or the final note instead.
         7. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
         8. Treat the footer as the user-facing evidence surface; telemetry and generated aggregates are the local machine-readable record behind it.
-        9. The installer manages a `.gitignore` block that ignores `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/metrics/`, `ai-wiki/_toolkit/work/`, and `ai-wiki/_toolkit/catalog.json` so telemetry and generated views stay local by default.
-        10. If those telemetry paths were tracked before you upgraded, run `aiwiki-toolkit doctor` and follow the suggested `git rm --cached` fix once to untrack them.
+        9. The installer manages a `.gitignore` block that ignores `.env.aiwiki`, `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/metrics/`, `ai-wiki/_toolkit/work/`, and `ai-wiki/_toolkit/catalog.json` so local identity, telemetry, and generated views stay local by default.
+        10. If those local-state paths were tracked before you upgraded, run `aiwiki-toolkit doctor` and follow the suggested `git rm --cached` fix once to untrack them.
         11. Produce one AI wiki write-back outcome at the end of every completed task, even when the result is `None`.
         12. Before returning `None`, run memory candidate detection for problem-solution memory, feature clarification memory, convention candidates, missed relevant memory, and conflict or supersession.
         13. Always end with exactly one status line: `AI Wiki Write-Back: none`, `draft recorded`, or `promotion candidate`.
