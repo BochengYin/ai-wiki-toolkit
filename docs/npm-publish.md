@@ -87,6 +87,8 @@ The workflow:
 8. runs `npm pack --dry-run --ignore-scripts` for the meta package
 9. publishes the meta package when requested
 
+Recovery publishes are idempotent: if a platform package or the meta package already exists for the requested version, the workflow skips that package and continues with the remaining publish steps.
+
 Before enabling `NPM_PUBLISH_ENABLED`, make sure the npm platform target map only advertises targets that the `Release Binaries` workflow actually publishes, including any Linux `libc` split such as glibc versus musl.
 
 The meta package is published from `package.json` in this repository, so its version must stay in sync with:

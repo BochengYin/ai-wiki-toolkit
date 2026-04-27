@@ -85,3 +85,12 @@ def test_publish_npm_workflow_can_force_trusted_auth_for_recovery() -> None:
     assert "npm_auth_mode=token requires NPM_PUBLISH_TOKEN." in workflow
     assert "unset NODE_AUTH_TOKEN" in workflow
     assert "sed -i '/_authToken/d;/always-auth/d'" in workflow
+
+
+def test_publish_npm_workflow_skips_already_published_packages() -> None:
+    workflow = (ROOT / ".github" / "workflows" / "publish-npm.yml").read_text(
+        encoding="utf-8"
+    )
+
+    assert 'npm view "${name}@${version}" version' in workflow
+    assert 'echo "Skipping ${name}@${version}; it is already published."' in workflow
