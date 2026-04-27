@@ -9,7 +9,7 @@ import typer
 
 from ai_wiki_toolkit import __version__
 from ai_wiki_toolkit.doctor import run_doctor
-from ai_wiki_toolkit.paths import RepoRootNotFoundError
+from ai_wiki_toolkit.paths import RepoRootNotFoundError, build_paths, resolve_user_handle
 from ai_wiki_toolkit.route import (
     generate_route_packet,
     render_route_packet_json,
@@ -32,8 +32,11 @@ from ai_wiki_toolkit.scaffold import (
 from ai_wiki_toolkit.work_ledger import (
     WORK_ITEM_TYPES,
     WORK_STATUSES,
+    build_work_state,
+    filter_work_items,
     record_work_event,
     refresh_work_report,
+    render_work_items_report,
 )
 
 app = typer.Typer(help="Initialize and maintain ai-wiki-toolkit scaffolds.")
@@ -726,6 +729,108 @@ def work_report() -> None:
 
     typer.echo(f"Work state: {result.state_path}")
     typer.echo(f"Work report: {result.report_path}")
+
+
+@work_app.command("mine")
+def work_mine(
+    include_closed: bool = typer.Option(
+        False,
+        "--include-closed",
+        help="Include done, archived, and dropped tasks.",
+    ),
+    statuses: list[str] | None = typer.Option(
+        None,
+        "--status",
+        help=f"Repeatable status filter. Choices: {', '.join(WORK_STATUSES)}.",
+    ),
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional actor handle override. Defaults to the current local AI wiki actor.",
+    ),
+) -> None:
+    """Print open tasks assigned to the current local AI wiki actor."""
+    try:
+        paths = build_paths()
+        if not paths.repo_wiki_dir.exists():
+            raise RepoWikiNotInitializedError(
+                "Repo AI wiki is not initialized. Run `aiwiki-toolkit install` first."
+            )
+        actor_handle = resolve_user_handle(paths.repo_root, explicit_handle=handle)
+        state = build_work_state(paths.repo_wiki_dir)
+        items = filter_work_items(
+            state,
+            assignee_handle=actor_handle,
+            statuses=statuses or None,
+            include_closed=include_closed,
+        )
+    except RepoRootNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except RepoWikiNotInitializedError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+
+    typer.echo(render_work_items_report(f"My Work: {actor_handle}", items), nl=False)
+
+
+@work_app.command("list")
+def work_list(
+    assignee_handle: str | None = typer.Option(
+        None,
+        "--assignee",
+        help="Filter tasks by assignee handle.",
+    ),
+    reporter_handle: str | None = typer.Option(
+        None,
+        "--reporter",
+        help="Filter tasks by reporter handle.",
+    ),
+    include_closed: bool = typer.Option(
+        False,
+        "--include-closed",
+        help="Include done, archived, and dropped tasks.",
+    ),
+    statuses: list[str] | None = typer.Option(
+        None,
+        "--status",
+        help=f"Repeatable status filter. Choices: {', '.join(WORK_STATUSES)}.",
+    ),
+) -> None:
+    """Print tasks from the central AI wiki work ledger."""
+    try:
+        paths = build_paths()
+        if not paths.repo_wiki_dir.exists():
+            raise RepoWikiNotInitializedError(
+                "Repo AI wiki is not initialized. Run `aiwiki-toolkit install` first."
+            )
+        state = build_work_state(paths.repo_wiki_dir)
+        items = filter_work_items(
+            state,
+            assignee_handle=assignee_handle,
+            reporter_handle=reporter_handle,
+            statuses=statuses or None,
+            include_closed=include_closed,
+        )
+    except RepoRootNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except RepoWikiNotInitializedError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+
+    title_parts = ["Work"]
+    if assignee_handle:
+        title_parts.append(f"assignee={assignee_handle}")
+    if reporter_handle:
+        title_parts.append(f"reporter={reporter_handle}")
+    typer.echo(render_work_items_report(" ".join(title_parts), items), nl=False)
 
 
 @app.command("doctor")
