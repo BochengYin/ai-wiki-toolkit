@@ -11,6 +11,7 @@ from ai_wiki_toolkit import __version__
 from ai_wiki_toolkit.doctor import run_doctor
 from ai_wiki_toolkit.paths import RepoRootNotFoundError, build_paths, resolve_user_handle
 from ai_wiki_toolkit.route import (
+    DEFAULT_ROUTE_SAFETY_CAP_WORDS,
     generate_route_packet,
     render_route_packet_json,
     render_route_packet_text,
@@ -171,10 +172,10 @@ def route(
         help="Optional path signal. Repeat to add multiple paths. Defaults to git status paths.",
     ),
     budget_words: int = typer.Option(
-        900,
+        DEFAULT_ROUTE_SAFETY_CAP_WORDS,
         "--budget-words",
         min=100,
-        help="Target packet context budget in words.",
+        help="Safety cap for rendered packet words. Route may use less.",
     ),
     max_docs: int = typer.Option(
         6,

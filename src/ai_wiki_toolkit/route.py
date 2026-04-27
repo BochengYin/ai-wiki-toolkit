@@ -19,6 +19,7 @@ from ai_wiki_toolkit.wiki_schema import (
 from ai_wiki_toolkit.work_ledger import OPEN_WORK_STATUSES, build_work_state
 
 ROUTE_SCHEMA_VERSION = "route-v1"
+DEFAULT_ROUTE_SAFETY_CAP_WORDS = 3000
 
 _TOKEN_RE = re.compile(r"[a-z0-9][a-z0-9_-]{1,}", re.IGNORECASE)
 _MARKDOWN_LINK_RE = re.compile(r"\[([^\]]+)\]\([^)]+\)")
@@ -324,6 +325,50 @@ _RISK_TAG_KEYWORDS: dict[str, set[str]] = {
     },
 }
 
+_LOW_EFFORT_OPERATIONAL_KEYWORDS = {
+    "branch",
+    "finish",
+    "merge",
+    "open",
+    "pr",
+    "pull-request",
+    "push",
+    "status",
+    "sync",
+}
+
+_NON_LOW_EFFORT_KEYWORDS = {
+    "add",
+    "build",
+    "change",
+    "code",
+    "debug",
+    "design",
+    "fix",
+    "implement",
+    "refactor",
+    "release",
+    "test",
+    "update",
+}
+
+_DEEP_EFFORT_KEYWORDS = {
+    "architecture",
+    "budget",
+    "compile",
+    "consolidation",
+    "context",
+    "design",
+    "diagnosis",
+    "framework",
+    "index",
+    "memory",
+    "roadmap",
+    "route",
+    "routing",
+    "v2",
+}
+
 _ACTION_MARKERS = (
     "avoid ",
     "do not ",
@@ -416,6 +461,14 @@ def _classify_risk_tags(tokens: set[str]) -> list[str]:
         if tokens & keywords
     ]
     return sorted(tags)
+
+
+def _classify_effort(tokens: set[str], task_type: str) -> str:
+    if tokens & _LOW_EFFORT_OPERATIONAL_KEYWORDS and not tokens & _NON_LOW_EFFORT_KEYWORDS:
+        return "low"
+    if task_type in {"memory_governance", "eval_workflow"} or tokens & _DEEP_EFFORT_KEYWORDS:
+        return "deep"
+    return "normal"
 
 
 def _confidence(score: int) -> str:
@@ -519,6 +572,8 @@ def _score_document(
             entry.get("kind", ""),
             entry.get("path", ""),
             entry.get("title", ""),
+            entry.get("short_description", ""),
+            entry.get("routing_hint", ""),
         ]
     )
     path_title_tokens = _tokenize(path_title_text)
@@ -572,6 +627,9 @@ def _score_document(
         "doc_id": entry["doc_id"],
         "path": entry["path"],
         "title": entry["title"],
+        "short_description": entry.get("short_description", entry["title"]),
+        "reference_path": entry.get("reference_path", entry["path"]),
+        "routing_hint": entry.get("routing_hint"),
         "kind": kind,
         "score": score,
         "confidence": _confidence(score),
@@ -598,6 +656,9 @@ def _packet_docs(candidates: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
                 "path": candidate["path"],
                 "kind": candidate["kind"],
                 "title": candidate["title"],
+                "short_description": candidate["short_description"],
+                "reference_path": candidate["reference_path"],
+                "routing_hint": candidate.get("routing_hint"),
                 "reason": candidate["reason"],
                 "confidence": candidate["confidence"],
                 "trust_level": candidate["trust_level"],
@@ -605,6 +666,38 @@ def _packet_docs(candidates: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
             }
         )
     return rendered
+
+
+def _reference_mode(candidate: dict[str, Any], selected_ids: set[str]) -> str:
+    if candidate["doc_id"] not in selected_ids:
+        return "runtime_reference"
+    if candidate["trust_level"] == "authoritative":
+        return "required_context"
+    return "runtime_reference"
+
+
+def _packet_index_cards(
+    candidates: Iterable[dict[str, Any]],
+    *,
+    selected_ids: set[str],
+) -> list[dict[str, Any]]:
+    cards: list[dict[str, Any]] = []
+    for candidate in candidates:
+        cards.append(
+            {
+                "doc_id": candidate["doc_id"],
+                "name": candidate["title"],
+                "short_description": candidate["short_description"],
+                "doc_kind": candidate["kind"],
+                "trust_level": candidate["trust_level"],
+                "confidence": candidate["confidence"],
+                "reference_path": candidate["reference_path"],
+                "routing_hint": candidate.get("routing_hint"),
+                "load_mode": _reference_mode(candidate, selected_ids),
+                "reason": candidate["reason"],
+            }
+        )
+    return cards
 
 
 def _select_work_context(
@@ -737,7 +830,7 @@ def generate_route_packet(
     task: str | None = None,
     task_id: str | None = None,
     changed_paths: Iterable[str] = (),
-    budget_words: int = 900,
+    budget_words: int = DEFAULT_ROUTE_SAFETY_CAP_WORDS,
     max_docs: int = 6,
     start: Path | None = None,
 ) -> RouteResult:
@@ -756,9 +849,11 @@ def generate_route_packet(
     task_text = task.strip() if task else ""
     signal_text = " ".join([task_text, *changed_path_list])
     raw_task_tokens = _tokenize(signal_text, filter_stopwords=False)
+    raw_request_tokens = _tokenize(task_text, filter_stopwords=False)
     task_tokens = _tokenize(signal_text)
     task_type = _classify_task_type(raw_task_tokens)
     risk_tags = _classify_risk_tags(raw_task_tokens)
+    effort = _classify_effort(raw_request_tokens or raw_task_tokens, task_type)
     actor_handle = resolve_user_handle(paths.repo_root)
 
     catalog = build_repo_catalog(paths.repo_wiki_dir)
@@ -786,9 +881,10 @@ def generate_route_packet(
     ]
     scored.sort(key=lambda item: (-item["score"], item["doc_id"]))
 
-    selected = [candidate for candidate in scored if candidate["score"] >= 7][:max_docs]
+    effective_max_docs = min(max_docs, 3) if effort == "low" else max_docs
+    selected = [candidate for candidate in scored if candidate["score"] >= 7][:effective_max_docs]
     if not selected and scored:
-        selected = scored[: min(3, max_docs)]
+        selected = scored[: min(3, effective_max_docs)]
 
     maybe = [
         candidate
@@ -821,12 +917,20 @@ def generate_route_packet(
         if note:
             context_notes.append(note)
 
+    selected_ids = {candidate["doc_id"] for candidate in selected}
+    index_card_candidates = selected + maybe
+    required_docs = [
+        candidate
+        for candidate in selected
+        if _reference_mode(candidate, selected_ids) == "required_context"
+    ]
     packet: dict[str, Any] = {
         "schema_version": ROUTE_SCHEMA_VERSION,
         "task_id": task_id.strip() if task_id and task_id.strip() else _task_id_from_task(task_text),
         "task": task_text,
         "route": {
             "task_type": task_type,
+            "effort": effort,
             "risk_tags": risk_tags,
             "changed_paths": changed_path_list,
         },
@@ -836,14 +940,27 @@ def generate_route_packet(
         },
         "context_budget": {
             "target_words": budget_words,
+            "safety_cap_words": budget_words,
+            "policy": "safety_cap_not_fill_target",
             "max_docs": max_docs,
+            "effective_max_docs": effective_max_docs,
+        },
+        "routing_strategy": {
+            "mode": "index_cards_with_runtime_references",
+            "budget_policy": "safety_cap_not_fill_target",
+            "reference_policy": (
+                "Include mandatory workflow or constraint material directly; provide "
+                "short index cards and reference paths for other memory so the acting "
+                "agent can open full documents at runtime when needed."
+            ),
         },
         "work_context": {
             "source": "ai-wiki/_toolkit/work/state.json",
             "actor_handle": actor_handle,
             "items": work_context_items,
         },
-        "must_load": _packet_docs(selected),
+        "index_cards": _packet_index_cards(index_card_candidates, selected_ids=selected_ids),
+        "must_load": _packet_docs(required_docs),
         "maybe_load": _packet_docs(maybe),
         "must_follow": must_follow,
         "context_notes": context_notes[:5],
@@ -869,6 +986,9 @@ def render_route_packet_text(packet: dict[str, Any]) -> str:
         f"Task ID: `{packet['task_id']}`",
         f"Task Type: `{packet['route']['task_type']}`",
     ]
+    effort = packet["route"].get("effort")
+    if effort:
+        lines.append(f"Effort: `{effort}`")
     actor = packet.get("actor") if isinstance(packet.get("actor"), dict) else {}
     if actor.get("handle"):
         lines.append(f"Actor: `{actor['handle']}`")
@@ -880,10 +1000,22 @@ def render_route_packet_text(packet: dict[str, Any]) -> str:
         lines.append(f"Changed Paths: {', '.join(f'`{path}`' for path in changed_paths[:8])}")
     lines.extend(
         [
-            f"Context Budget: {packet['context_budget']['target_words']} words, "
-            f"{packet['context_budget']['max_docs']} docs max",
+            f"Context Safety Cap: up to {packet['context_budget']['safety_cap_words']} words, "
+            f"{packet['context_budget']['effective_max_docs']} selected docs "
+            f"({packet['context_budget']['max_docs']} max); route may use less",
         ]
     )
+    strategy = packet.get("routing_strategy") if isinstance(packet.get("routing_strategy"), dict) else {}
+    if strategy:
+        lines.extend(
+            [
+                "",
+                "## Routing Strategy",
+                f"- Mode: `{strategy.get('mode', 'unknown')}`",
+                f"- Budget: `{strategy.get('budget_policy', 'unknown')}`",
+                f"- References: {strategy.get('reference_policy', 'Open relevant references at runtime.')}",
+            ]
+        )
     work_context = packet.get("work_context") or {}
     work_items = work_context.get("items") if isinstance(work_context, dict) else []
     if work_items:
@@ -903,6 +1035,16 @@ def render_route_packet_text(packet: dict[str, Any]) -> str:
             lines.append(
                 f"- `{item['work_id']}` ({item['item_type']}, {item['status']}{epic}{assignee_text}{relation_text}): "
                 f"{item['title']} - {item['reason']} Source: {source_text}"
+            )
+    index_cards = packet.get("index_cards") or []
+    if index_cards:
+        lines.extend(["", "## Index Cards"])
+        for card in index_cards:
+            routing_hint = f" Hint: {card['routing_hint']}" if card.get("routing_hint") else ""
+            lines.append(
+                f"- `{card['doc_id']}` ({card['confidence']}, {card['load_mode']}): "
+                f"{card['name']} - {card['short_description']}{routing_hint} "
+                f"Reference: `{card['reference_path']}`"
             )
     lines.extend(["", "## Must Load"])
     must_load = packet.get("must_load") or []

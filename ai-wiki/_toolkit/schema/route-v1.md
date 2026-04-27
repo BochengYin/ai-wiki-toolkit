@@ -14,10 +14,13 @@ remain the source of truth.
 - `route.risk_tags`: task risks such as `user_owned_docs`, `managed_prompt_block`, `release_distribution`, `ci_workflow`, `memory_governance`, `workflow_state`, or `task_evaluation`.
 - `route.changed_paths`: path signals supplied by the caller or inferred from `git status --short`.
 - `actor`: resolved local actor handle from CLI/environment, `.env.aiwiki`, git config, or fallback.
-- `context_budget`: target word and document limits for the packet.
+- `route.effort`: coarse effort level such as `low`, `normal`, or `deep`.
+- `context_budget`: safety cap and document limits for the packet. The word value is not a fill target; route may use less.
+- `routing_strategy`: how the packet expects agents to use direct context versus runtime references.
 - `work_context`: actor-scoped matching work-ledger items from `ai-wiki/_toolkit/work/state.json`, when available.
   Work items include `actor_relation` so agents can distinguish assigned, reported, unassigned, and other matched work.
-- `must_load`: user-owned AI wiki docs the agent should consult first.
+- `index_cards`: short name/description/reference cards for selected docs and runtime references.
+- `must_load`: authoritative user-owned AI wiki docs the agent should consult directly when required.
 - `maybe_load`: lower-confidence docs that may help if the task needs more context.
 - `must_follow`: source-cited rules extracted from authoritative user-owned docs.
 - `context_notes`: source-cited notes from exploratory docs such as drafts.
@@ -32,3 +35,4 @@ remain the source of truth.
 4. If the packet looks wrong or incomplete, agents should fall back to the baseline read order in `ai-wiki/_toolkit/system.md`.
 5. Record reuse only for user-owned docs actually consulted or materially used, not for every packet candidate.
 6. Treat `work_context` items with `actor_relation=assignee` as actionable for the current actor. Treat other matched work as context unless the user explicitly asks to work on it.
+7. Prefer index cards and runtime references over loading broad full documents. Simple operational tasks should follow the specific workflow they need instead of pulling in broad memory.
