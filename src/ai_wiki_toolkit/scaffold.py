@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import os
 from pathlib import Path
 import shutil
 
@@ -14,11 +15,14 @@ from ai_wiki_toolkit.content import (
     system_starter_files,
 )
 from ai_wiki_toolkit.gitignore import remove_gitignore_block_file, upsert_gitignore_block_file
+from ai_wiki_toolkit.local_identity import remove_local_identity_file, upsert_local_identity_file
 from ai_wiki_toolkit.opencode import remove_opencode_config
 from ai_wiki_toolkit.paths import (
+    HANDLE_OVERRIDE_ENV,
     ToolkitPaths,
     build_paths,
     existing_prompt_targets,
+    repo_local_env_path,
     resolve_user_handle,
 )
 from ai_wiki_toolkit.prompt import remove_managed_block_file, upsert_managed_block_file
@@ -125,6 +129,17 @@ def install_workspace(start: Path | None = None, handle: str | None = None) -> I
     paths = build_paths(start)
     resolved_handle = resolve_user_handle(paths.repo_root, explicit_handle=handle)
     result = InitResult(paths=paths, resolved_handle=resolved_handle)
+
+    local_identity_path = repo_local_env_path(paths.repo_root)
+    local_identity_existed = local_identity_path.exists()
+    local_identity_result = upsert_local_identity_file(
+        repo_root=paths.repo_root,
+        actor_handle=resolved_handle,
+        explicit_handle=handle,
+        env_handle=os.getenv(HANDLE_OVERRIDE_ENV),
+    )
+    if local_identity_result.updated and not local_identity_existed:
+        result.created_files.append(local_identity_result.path)
 
     for directory in (
         paths.repo_wiki_dir,
@@ -278,6 +293,10 @@ def uninstall_workspace(
             result.deleted_ignore_files.append(gitignore_path)
         else:
             result.updated_ignore_files.append(gitignore_path)
+
+    updated_identity, deleted_identity = remove_local_identity_file(paths.repo_root)
+    if updated_identity and deleted_identity:
+        result.removed_files.append(repo_local_env_path(paths.repo_root))
 
     repo_opencode = paths.repo_root / "opencode.json"
     opencode_before_exists = repo_opencode.exists()

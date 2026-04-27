@@ -27,6 +27,7 @@ def test_install_command_matches_init_behavior(repo_env: dict[str, Path]) -> Non
 
     assert result.exit_code == 0
     assert (repo_env["repo"] / "ai-wiki" / "people" / "alice" / "drafts").is_dir()
+    assert (repo_env["repo"] / ".env.aiwiki").exists()
     assert (repo_env["repo"] / "AGENT.md").exists()
     assert (repo_env["repo"] / "ai-wiki" / "_toolkit" / "index.md").exists()
     assert (repo_env["repo"] / "ai-wiki" / "_toolkit" / "workflows.md").exists()
@@ -141,7 +142,8 @@ def test_install_upserts_gitignore_block_without_overwriting_user_entries(
         "node_modules/\n"
         "\n"
         "# <!-- aiwiki-toolkit:start -->\n"
-        "# Ignore AI wiki telemetry so normal agent use does not dirty git status.\n"
+        "# Ignore AI wiki local state so normal agent use does not dirty git status.\n"
+        ".env.aiwiki\n"
         "ai-wiki/metrics/reuse-events/\n"
         "ai-wiki/metrics/task-checks/\n"
         "ai-wiki/_toolkit/metrics/\n"
@@ -170,7 +172,8 @@ def test_install_refreshes_stale_gitignore_block_in_place(repo_env: dict[str, Pa
         ".venv/\n"
         "\n"
         "# <!-- aiwiki-toolkit:start -->\n"
-        "# Ignore AI wiki telemetry so normal agent use does not dirty git status.\n"
+        "# Ignore AI wiki local state so normal agent use does not dirty git status.\n"
+        ".env.aiwiki\n"
         "ai-wiki/metrics/reuse-events/\n"
         "ai-wiki/metrics/task-checks/\n"
         "ai-wiki/_toolkit/metrics/\n"
@@ -211,6 +214,7 @@ def test_uninstall_default_removes_managed_layer_but_preserves_user_docs(
     assert uninstall_result.exit_code == 0
     assert not (repo / "ai-wiki" / "_toolkit").exists()
     assert not (home / "system" / "_toolkit").exists()
+    assert not (repo / ".env.aiwiki").exists()
     assert (
         repo / ".agents" / "skills" / "ai-wiki-update-check" / "SKILL.md"
     ).exists()

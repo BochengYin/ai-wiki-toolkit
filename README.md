@@ -282,10 +282,11 @@ aiwiki-toolkit init
 
 - create `ai-wiki/` inside the current repository
 - create `~/ai-wiki/system/`
+- create a gitignored `.env.aiwiki` file for the current local actor identity
 - create starter indexes such as `ai-wiki/conventions/index.md`, `ai-wiki/review-patterns/index.md`, `ai-wiki/problems/index.md`, `ai-wiki/features/index.md`, `ai-wiki/trails/index.md`, `ai-wiki/work/index.md`, and `ai-wiki/people/<handle>/index.md`
 - create `ai-wiki/conventions/`, `ai-wiki/review-patterns/`, `ai-wiki/problems/`, `ai-wiki/features/`, `ai-wiki/work/`, `ai-wiki/people/<handle>/drafts/`, `ai-wiki/metrics/`, and repo/home `_toolkit/`
 - generate package-managed `_toolkit/index.md`, `_toolkit/workflows.md`, `_toolkit/catalog.json`, `_toolkit/schema/reuse-v1.md`, `_toolkit/schema/team-memory-v1.md`, `_toolkit/schema/work-v1.md`, `_toolkit/metrics/*.json`, and `_toolkit/work/*`
-- upsert a managed `.gitignore` block that ignores AI wiki telemetry and generated aggregate snapshots so routine agent use does not dirty `git status`
+- upsert a managed `.gitignore` block that ignores `.env.aiwiki`, AI wiki telemetry, and generated aggregate snapshots so routine agent use does not dirty `git status`
 - create or refresh package-owned `.agents/skills/ai-wiki-reuse-check/`, `.agents/skills/ai-wiki-update-check/`, `.agents/skills/ai-wiki-clarify-before-code/`, `.agents/skills/ai-wiki-capture-review-learning/`, and `.agents/skills/ai-wiki-consolidate-drafts/`
 - update `AGENT.md`, `AGENTS.md`, and/or `CLAUDE.md` with a managed instruction block that reads `ai-wiki/_toolkit/system.md`
 
@@ -338,6 +339,7 @@ aiwiki-toolkit work capture \
   --title "Capture conversation todos as AI wiki work state" \
   --status todo \
   --epic-id aiwiki-framework-roadmap \
+  --assignee your-handle \
   --link ai-wiki/people/your-handle/drafts/agent-framework-roadmap.md
 
 aiwiki-toolkit work status \
@@ -345,7 +347,7 @@ aiwiki-toolkit work status \
   --status processing
 ```
 
-This appends to `ai-wiki/work/events/<handle>.jsonl` and regenerates local package-managed views under `ai-wiki/_toolkit/work/`. Route packets can then surface matching active, processing, blocked, planned, or todo work items before an agent starts acting. Work events are not knowledge-reuse evidence by themselves, so they are kept separate from `record-reuse`.
+By default, `work capture` resolves the current actor from explicit CLI input, environment, `.env.aiwiki`, git config, then fallback. It uses that actor as `author_handle`, `reporter_handle`, and the default assignee. This appends to `ai-wiki/work/events/<handle>.jsonl` and regenerates local package-managed views under `ai-wiki/_toolkit/work/`. Route packets can then surface matching active, processing, blocked, planned, or todo work items before an agent starts acting. Work events are not knowledge-reuse evidence by themselves, so they are kept separate from `record-reuse`.
 
 To record that a completed task was checked for AI wiki reuse, even when no wiki docs were needed:
 
@@ -388,7 +390,7 @@ This command does not rewrite user-owned repo docs. It prints which paths need a
 - `ai-wiki/people/<handle>/index.md`
 - `ai-wiki/metrics/index.md`
 
-It also checks whether the managed `.gitignore` block is present and whether telemetry paths are still tracked in the git index from older versions. If those paths are still tracked, `doctor` prints a one-time `git rm --cached` command to untrack them.
+It also checks whether the managed `.gitignore` block is present and whether local identity, telemetry, or generated-view paths are still tracked in the git index from older versions. If those paths are still tracked, `doctor` prints a one-time `git rm --cached` command to untrack them.
 
 To remove the managed layer while keeping your user-owned wiki documents:
 
@@ -399,7 +401,7 @@ aiwiki-toolkit uninstall
 This removes:
 
 - managed prompt blocks from `AGENT.md` / `AGENTS.md` / `CLAUDE.md`
-- the managed `.gitignore` block for AI wiki telemetry
+- the managed `.gitignore` block for AI wiki local identity and telemetry
 - `ai-wiki/_toolkit/**`
 - `~/ai-wiki/system/_toolkit/**`
 - the `aiwikiToolkit` key from `opencode.json`
@@ -422,6 +424,7 @@ Even with `--purge-user-docs --yes`, the shared home wiki under `~/ai-wiki/syste
 - `ai-wiki/_toolkit/**` and `~/ai-wiki/system/_toolkit/**` are package-managed and may be refreshed by future versions.
 - `ai-wiki/index.md` is a repo-owned map and is not treated as a starter-drift upgrade target by `doctor`.
 - `ai-wiki/workflows.md` remains user-owned; package-managed workflow updates land in `ai-wiki/_toolkit/workflows.md` instead of rewriting the repo-owned file.
+- `.env.aiwiki` stores the current local actor identity in a managed block. It is gitignored and should not be committed.
 - `ai-wiki/metrics/reuse-events/<handle>.jsonl` and `ai-wiki/metrics/task-checks/<handle>.jsonl` are user-owned evidence data. `ai-wiki/work/events/<handle>.jsonl` is user-owned work state. Package-managed aggregate views are regenerated under `ai-wiki/_toolkit/metrics/` and `ai-wiki/_toolkit/work/`, and the installer ignores those generated paths by default in `.gitignore`.
 - Legacy flat files such as `ai-wiki/metrics/reuse-events.jsonl` and `ai-wiki/metrics/task-checks.jsonl` are still read for compatibility, but new writes should use the handle-sharded layout.
 - `aiwiki-toolkit doctor --suggest-index-upgrade` prints suggested replacements for missing repo starter docs and repo-owned companion docs such as `ai-wiki/workflows.md`, but it does not overwrite them automatically.

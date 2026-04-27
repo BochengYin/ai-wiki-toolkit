@@ -10,7 +10,7 @@ import subprocess
 from typing import Any, Iterable
 
 from ai_wiki_toolkit.frontmatter import parse_frontmatter
-from ai_wiki_toolkit.paths import build_paths, slugify
+from ai_wiki_toolkit.paths import build_paths, resolve_user_handle, slugify
 from ai_wiki_toolkit.reuse_events import RepoWikiNotInitializedError
 from ai_wiki_toolkit.wiki_schema import (
     build_document_stats,
@@ -644,6 +644,12 @@ def _select_work_context(
                 title,
                 status,
                 item.get("epic_id") if isinstance(item.get("epic_id"), str) else "",
+                item.get("reporter_handle") if isinstance(item.get("reporter_handle"), str) else "",
+                " ".join(
+                    handle
+                    for handle in item.get("assignee_handles", [])
+                    if isinstance(handle, str)
+                ),
                 " ".join(link for link in item.get("links", []) if isinstance(link, str)),
             ]
             work_tokens = _tokenize(" ".join(text_parts))
@@ -669,6 +675,12 @@ def _select_work_context(
                     "title": title,
                     "status": status,
                     "epic_id": item.get("epic_id") if isinstance(item.get("epic_id"), str) else None,
+                    "reporter_handle": item.get("reporter_handle")
+                    if isinstance(item.get("reporter_handle"), str)
+                    else None,
+                    "assignee_handles": item.get("assignee_handles", [])
+                    if isinstance(item.get("assignee_handles"), list)
+                    else [],
                     "links": item.get("links", []) if isinstance(item.get("links"), list) else [],
                     "source_paths": item.get("source_paths", [])
                     if isinstance(item.get("source_paths"), list)
@@ -708,6 +720,7 @@ def generate_route_packet(
     task_tokens = _tokenize(signal_text)
     task_type = _classify_task_type(raw_task_tokens)
     risk_tags = _classify_risk_tags(raw_task_tokens)
+    actor_handle = resolve_user_handle(paths.repo_root)
 
     catalog = build_repo_catalog(paths.repo_wiki_dir)
     document_stats = build_document_stats(paths.repo_wiki_dir).get("documents", {})
@@ -777,6 +790,10 @@ def generate_route_packet(
             "risk_tags": risk_tags,
             "changed_paths": changed_path_list,
         },
+        "actor": {
+            "handle": actor_handle,
+            "source": ".env.aiwiki, environment, git config, or fallback",
+        },
         "context_budget": {
             "target_words": budget_words,
             "max_docs": max_docs,
@@ -811,6 +828,9 @@ def render_route_packet_text(packet: dict[str, Any]) -> str:
         f"Task ID: `{packet['task_id']}`",
         f"Task Type: `{packet['route']['task_type']}`",
     ]
+    actor = packet.get("actor") if isinstance(packet.get("actor"), dict) else {}
+    if actor.get("handle"):
+        lines.append(f"Actor: `{actor['handle']}`")
     risk_tags = packet["route"].get("risk_tags") or []
     if risk_tags:
         lines.append(f"Risk Tags: {', '.join(f'`{tag}`' for tag in risk_tags)}")
@@ -829,10 +849,16 @@ def render_route_packet_text(packet: dict[str, Any]) -> str:
         lines.extend(["", "## Work Context"])
         for item in work_items:
             epic = f", epic `{item['epic_id']}`" if item.get("epic_id") else ""
+            assignees = item.get("assignee_handles") or []
+            assignee_text = (
+                f", assignees {', '.join(f'`{handle}`' for handle in assignees[:3])}"
+                if assignees
+                else ""
+            )
             sources = item.get("source_paths") or [work_context.get("source", "ai-wiki/_toolkit/work/state.json")]
             source_text = ", ".join(f"`{source}`" for source in sources[:2])
             lines.append(
-                f"- `{item['work_id']}` ({item['item_type']}, {item['status']}{epic}): "
+                f"- `{item['work_id']}` ({item['item_type']}, {item['status']}{epic}{assignee_text}): "
                 f"{item['title']} - {item['reason']} Source: {source_text}"
             )
     lines.extend(["", "## Must Load"])

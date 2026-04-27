@@ -13,6 +13,7 @@ remain the source of truth.
 - `route.task_type`: coarse task class such as `scaffold_prompt_workflow`, `release_distribution`, `memory_governance`, `workflow_state`, `eval_workflow`, or `general`.
 - `route.risk_tags`: task risks such as `user_owned_docs`, `managed_prompt_block`, `release_distribution`, `ci_workflow`, `memory_governance`, `workflow_state`, or `task_evaluation`.
 - `route.changed_paths`: path signals supplied by the caller or inferred from `git status --short`.
+- `actor`: resolved local actor handle from CLI/environment, `.env.aiwiki`, git config, or fallback.
 - `context_budget`: target word and document limits for the packet.
 - `work_context`: matching work-ledger items from `ai-wiki/_toolkit/work/state.json`, when available.
 - `must_load`: user-owned AI wiki docs the agent should consult first.

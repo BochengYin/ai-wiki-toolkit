@@ -13,7 +13,8 @@ uv.lock
 npm/vendor/
 
 # <!-- aiwiki-toolkit:start -->
-# Ignore AI wiki telemetry so normal agent use does not dirty git status.
+# Ignore AI wiki local state so normal agent use does not dirty git status.
+.env.aiwiki
 ai-wiki/metrics/reuse-events/
 ai-wiki/metrics/task-checks/
 ai-wiki/_toolkit/metrics/

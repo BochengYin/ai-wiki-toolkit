@@ -571,7 +571,7 @@ def _check_gitignore(result: DoctorResult) -> None:
             severity="WARN",
             code="missing_gitignore_telemetry_block",
             path=".gitignore",
-            message="`.gitignore` is missing the `aiwiki-toolkit` managed telemetry ignore block.",
+            message="`.gitignore` is missing the `aiwiki-toolkit` managed local-state ignore block.",
             suggested_fix="Run `aiwiki-toolkit install` to add the managed `.gitignore` block.",
         )
         return
@@ -583,7 +583,7 @@ def _check_gitignore(result: DoctorResult) -> None:
             severity="OK",
             code="gitignore_telemetry_block_current",
             path=".gitignore",
-            message="`.gitignore` already contains the current managed telemetry ignore block.",
+            message="`.gitignore` already contains the current managed local-state ignore block.",
         )
         return
 
@@ -592,7 +592,7 @@ def _check_gitignore(result: DoctorResult) -> None:
         severity="WARN",
         code="legacy_gitignore_telemetry_block",
         path=".gitignore",
-        message="`.gitignore` is missing current `aiwiki-toolkit` telemetry ignore entries.",
+        message="`.gitignore` is missing current `aiwiki-toolkit` local-state ignore entries.",
         suggested_fix="Run `aiwiki-toolkit install` to refresh the managed `.gitignore` block.",
     )
 
@@ -604,6 +604,7 @@ def _tracked_telemetry_paths(repo_root: Path) -> list[str] | None:
                 "git",
                 "ls-files",
                 "--",
+                ".env.aiwiki",
                 "ai-wiki/metrics/reuse-events",
                 "ai-wiki/metrics/task-checks",
                 "ai-wiki/_toolkit/metrics",
@@ -634,7 +635,7 @@ def _check_tracked_telemetry(result: DoctorResult) -> None:
             severity="OK",
             code="telemetry_not_tracked",
             path=".gitignore",
-            message="AI wiki telemetry paths are not currently tracked by git.",
+            message="AI wiki local-state paths are not currently tracked by git.",
         )
         return
 
@@ -647,10 +648,10 @@ def _check_tracked_telemetry(result: DoctorResult) -> None:
         code="tracked_telemetry_in_git_index",
         path=".gitignore",
         message=(
-            "Git still tracks AI wiki telemetry paths despite the ignore rules. "
+            "Git still tracks AI wiki local-state paths despite the ignore rules. "
             f"Tracked entries include: {sample}."
         ),
-        suggested_fix=f"Run `{telemetry_untrack_command()}` once to untrack the telemetry paths.",
+        suggested_fix=f"Run `{telemetry_untrack_command()}` once to untrack the local-state paths.",
     )
 
 

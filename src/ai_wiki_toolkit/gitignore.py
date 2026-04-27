@@ -41,6 +41,7 @@ def gitignore_has_current_telemetry_block(text: str) -> bool:
 
 def telemetry_untrack_command() -> str:
     untrack_targets = (
+        ".env.aiwiki",
         "ai-wiki/metrics/reuse-events",
         "ai-wiki/metrics/task-checks",
         "ai-wiki/_toolkit/metrics",
