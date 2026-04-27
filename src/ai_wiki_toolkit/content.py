@@ -20,6 +20,7 @@ TELEMETRY_IGNORE_PATHS = (
     "ai-wiki/metrics/reuse-events/",
     "ai-wiki/metrics/task-checks/",
     "ai-wiki/_toolkit/metrics/",
+    "ai-wiki/_toolkit/work/",
     "ai-wiki/_toolkit/catalog.json",
 )
 
@@ -31,6 +32,7 @@ def gitignore_block_body() -> str:
         ai-wiki/metrics/reuse-events/
         ai-wiki/metrics/task-checks/
         ai-wiki/_toolkit/metrics/
+        ai-wiki/_toolkit/work/
         ai-wiki/_toolkit/catalog.json
         """
     ).strip()
@@ -60,6 +62,7 @@ def repo_starter_files(handle: str) -> dict[str, str]:
             - `features/index.md` maps feature-specific working memory, clarified requirements, and accepted assumptions.
             - `workflows.md` maps repo-specific workflows that extend the managed baseline.
             - `trails/index.md` maps task-specific chronology, dead ends, and release trails.
+            - `work/index.md` maps the append-only work ledger for todos, active tasks, and epics.
             - `people/<handle>/index.md` maps handle-local draft notes and working history.
             - `metrics/` contains user-owned evidence logs such as `reuse-events/<handle>.jsonl` and `task-checks/<handle>.jsonl`.
             """
@@ -229,6 +232,39 @@ def repo_starter_files(handle: str) -> dict[str, str]:
             """
         ).strip()
         + "\n",
+        "work/index.md": dedent(
+            """
+            # Work Ledger Index
+
+            Use this area for repo-native work state that agents should be able to reference across conversations.
+
+            The default machine-readable event log lives under `work/events/<handle>.jsonl`.
+
+            ## Statuses
+
+            Work items may move through:
+
+            - `inbox`
+            - `proposed`
+            - `todo`
+            - `planned`
+            - `active`
+            - `processing`
+            - `blocked`
+            - `review`
+            - `done`
+            - `archived`
+            - `dropped`
+
+            ## Usage
+
+            - Capture conversation todos with `aiwiki-toolkit work capture`.
+            - Update status with `aiwiki-toolkit work status`.
+            - Regenerate local managed views with `aiwiki-toolkit work report`.
+            - Treat generated files under `_toolkit/work/` as views, not canonical work memory.
+            """
+        ).strip()
+        + "\n",
         f"people/{handle}/index.md": dedent(
             """
             # Personal Draft Index
@@ -309,15 +345,16 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             1. Read `system.md` for package-managed collaboration rules.
             2. Read `workflows.md` for package-managed baseline workflows.
             3. Read `schema/route-v1.md` when task-aware context packets or routing trust boundaries matter.
-            4. Read `schema/team-memory-v1.md` when note shapes, memory types, or source pointers matter.
-            5. Read `schema/reuse-v1.md` only when reuse metrics, logging, or schema questions matter.
+            4. Read `schema/work-v1.md` when work-ledger events, task lifecycle state, or generated work reports matter.
+            5. Read `schema/team-memory-v1.md` when note shapes, memory types, or source pointers matter.
+            6. Read `schema/reuse-v1.md` only when reuse metrics, logging, or schema questions matter.
 
             ## Generated Outputs
 
-            - `catalog.json` and `metrics/*.json` are generated outputs, not guidance docs.
+            - `catalog.json`, `metrics/*.json`, and `work/*` are generated outputs, not guidance docs.
             - `aiwiki-toolkit route` emits transient context packets to stdout; packets are derived from source docs and should be regenerated rather than treated as canonical memory.
             - The installer ignores those generated outputs in `.gitignore` so routine telemetry updates stay local.
-            - Regenerate those outputs with `aiwiki-toolkit refresh-metrics` whenever you need a fresh local snapshot.
+            - Regenerate catalog, metrics, and work views with `aiwiki-toolkit refresh-metrics` whenever you need a fresh local snapshot.
             """
         ).strip()
         + "\n",
@@ -341,13 +378,14 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             10. Read `ai-wiki/features/index.md` when task-specific requirements, assumptions, or acceptance criteria matter.
             11. Read `ai-wiki/workflows.md` for repo-specific workflows that extend the managed baseline.
             12. Read `ai-wiki/trails/index.md` when debugging chronology or dead ends may help.
-            13. Read `ai-wiki/people/<handle>/index.md` when continuing draft work.
-            14. Read `ai-wiki/_toolkit/index.md` when you need package-managed schema, metrics, or directory guidance beyond this workflow.
-            15. Use `ai-wiki/index.md` as a repo-owned map when you need a quick overview of local AI wiki areas.
-            16. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
-            17. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
-            18. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
-            19. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them to produce end-of-task AI wiki evidence and write-back outcomes.
+            13. Read `ai-wiki/_toolkit/work/report.md` when the route packet reports relevant active, processing, blocked, or planned work.
+            14. Read `ai-wiki/people/<handle>/index.md` when continuing draft work.
+            15. Read `ai-wiki/_toolkit/index.md` when you need package-managed schema, metrics, work views, or directory guidance beyond this workflow.
+            16. Use `ai-wiki/index.md` as a repo-owned map when you need a quick overview of local AI wiki areas.
+            17. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
+            18. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
+            19. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
+            20. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them to produce end-of-task AI wiki evidence and write-back outcomes.
 
             ## AI Wiki Reuse Evidence
 
@@ -459,7 +497,7 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             6. Do not log managed `_toolkit/**` docs with `record-reuse`; if they changed the plan or behavior, cite their paths in a progress update or the final note instead.
             7. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
             8. Treat the footer as the user-facing evidence surface; telemetry and generated aggregates are the local machine-readable record behind it.
-            9. The installer manages a `.gitignore` block that ignores `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/metrics/`, and `ai-wiki/_toolkit/catalog.json` so telemetry stays local by default.
+            9. The installer manages a `.gitignore` block that ignores `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/metrics/`, `ai-wiki/_toolkit/work/`, and `ai-wiki/_toolkit/catalog.json` so telemetry and generated views stay local by default.
             10. If those telemetry paths were tracked before you upgraded, run `aiwiki-toolkit doctor` and follow the suggested `git rm --cached` fix once to untrack them.
             11. Produce one AI wiki write-back outcome at the end of every completed task, even when the result is `None`.
             12. Before returning `None`, run memory candidate detection for problem-solution memory, feature clarification memory, convention candidates, missed relevant memory, and conflict or supersession.
@@ -471,8 +509,9 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             18. Put reusable problem-solution memories in `ai-wiki/problems/`.
             19. Put feature clarifications in `ai-wiki/features/`.
             20. Put task-specific chronology and dead ends in `ai-wiki/trails/`.
-            21. Put raw personal draft notes in `ai-wiki/people/<handle>/drafts/`.
-            22. Promote only stable, reviewable rules into shared patterns or conventions.
+            21. Put todo, active, processing, blocked, review, done, and archived work state in `ai-wiki/work/events/<handle>.jsonl` via `aiwiki-toolkit work`.
+            22. Put raw personal draft notes in `ai-wiki/people/<handle>/drafts/`.
+            23. Promote only stable, reviewable rules into shared patterns or conventions.
             """
         ).strip()
         + "\n",
@@ -490,10 +529,11 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             - `schema_version`: currently `route-v1`.
             - `task_id`: stable task id, either supplied by the caller or derived from the task text.
             - `task`: current user request text, when supplied by the agent.
-            - `route.task_type`: coarse task class such as `scaffold_prompt_workflow`, `release_distribution`, `memory_governance`, `eval_workflow`, or `general`.
-            - `route.risk_tags`: task risks such as `user_owned_docs`, `managed_prompt_block`, `release_distribution`, `ci_workflow`, `memory_governance`, or `task_evaluation`.
+            - `route.task_type`: coarse task class such as `scaffold_prompt_workflow`, `release_distribution`, `memory_governance`, `workflow_state`, `eval_workflow`, or `general`.
+            - `route.risk_tags`: task risks such as `user_owned_docs`, `managed_prompt_block`, `release_distribution`, `ci_workflow`, `memory_governance`, `workflow_state`, or `task_evaluation`.
             - `route.changed_paths`: path signals supplied by the caller or inferred from `git status --short`.
             - `context_budget`: target word and document limits for the packet.
+            - `work_context`: matching work-ledger items from `ai-wiki/_toolkit/work/state.json`, when available.
             - `must_load`: user-owned AI wiki docs the agent should consult first.
             - `maybe_load`: lower-confidence docs that may help if the task needs more context.
             - `must_follow`: source-cited rules extracted from authoritative user-owned docs.
@@ -633,6 +673,70 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             ## Default Validity
 
             Assume pasted information is active unless the user says it is old, deprecated, historical, or the repo/wiki clearly conflicts with it.
+            """
+        ).strip()
+        + "\n",
+        "schema/work-v1.md": dedent(
+            """
+            # Work Ledger Schema v1
+
+            The work ledger records todos, active or processing work, blocked items, review items, completed work, and epics as append-only events.
+
+            ## Source Of Truth
+
+            User-owned work events live in `ai-wiki/work/events/<handle>.jsonl`.
+
+            Package-managed generated views live under `ai-wiki/_toolkit/work/`:
+
+            - `state.json`
+            - `report.md`
+
+            Generated views are local snapshots. Regenerate them with `aiwiki-toolkit work report` or `aiwiki-toolkit refresh-metrics`.
+
+            ## Event Fields
+
+            Each JSONL event may include:
+
+            - `schema_version`: currently `work-v1`
+            - `event_id`
+            - `event_type`: `captured` or `status_changed`
+            - `occurred_at`
+            - `author_handle`
+            - `item_type`: `task` or `epic`
+            - `work_id`
+            - `title`
+            - `status`
+            - `epic_id`
+            - `source`
+            - `links`
+            - `agent_name`
+            - `model`
+            - `notes`
+
+            ## Statuses
+
+            Use:
+
+            - `inbox`
+            - `proposed`
+            - `todo`
+            - `planned`
+            - `active`
+            - `processing`
+            - `blocked`
+            - `review`
+            - `done`
+            - `archived`
+            - `dropped`
+
+            ## Lifecycle Rules
+
+            1. Capture conversation todos with `aiwiki-toolkit work capture`.
+            2. Move work through lifecycle states with `aiwiki-toolkit work status`.
+            3. Prefer append-only events over rewriting shared work files.
+            4. Treat `_toolkit/work/*` as generated views, not canonical memory.
+            5. Do not automatically archive or drop a large epic without human confirmation.
+            6. Route packets may use active, processing, or matching work items as routing hints, but work events are not knowledge-reuse evidence by themselves.
             """
         ).strip()
         + "\n",

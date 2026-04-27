@@ -28,6 +28,7 @@ from ai_wiki_toolkit.wiki_schema import (
     render_repo_catalog,
     render_task_stats,
 )
+from ai_wiki_toolkit.work_ledger import render_work_report, render_work_state_json
 
 
 @dataclass
@@ -130,10 +131,13 @@ def install_workspace(start: Path | None = None, handle: str | None = None) -> I
         paths.repo_wiki_dir / "metrics",
         paths.repo_wiki_dir / "metrics" / "reuse-events",
         paths.repo_wiki_dir / "metrics" / "task-checks",
+        paths.repo_wiki_dir / "work",
+        paths.repo_wiki_dir / "work" / "events",
         paths.repo_wiki_dir / "trails",
         paths.review_patterns_dir,
         paths.people_dir / resolved_handle / "drafts",
         paths.repo_toolkit_dir,
+        paths.repo_toolkit_dir / "work",
         paths.system_dir,
         paths.system_dir / "playbooks",
         paths.system_dir / "templates",
@@ -159,6 +163,16 @@ def install_workspace(start: Path | None = None, handle: str | None = None) -> I
     _write_managed(
         paths.repo_toolkit_dir / "metrics" / "task-stats.json",
         render_task_stats(paths.repo_wiki_dir),
+        result,
+    )
+    _write_managed(
+        paths.repo_toolkit_dir / "work" / "state.json",
+        render_work_state_json(paths.repo_wiki_dir),
+        result,
+    )
+    _write_managed(
+        paths.repo_toolkit_dir / "work" / "report.md",
+        render_work_report(paths.repo_wiki_dir),
         result,
     )
 
@@ -212,6 +226,16 @@ def refresh_managed_metrics(start: Path | None = None) -> RefreshMetricsResult:
     _write_refreshed_managed(
         paths.repo_toolkit_dir / "metrics" / "task-stats.json",
         render_task_stats(paths.repo_wiki_dir),
+        result.refreshed_files,
+    )
+    _write_refreshed_managed(
+        paths.repo_toolkit_dir / "work" / "state.json",
+        render_work_state_json(paths.repo_wiki_dir),
+        result.refreshed_files,
+    )
+    _write_refreshed_managed(
+        paths.repo_toolkit_dir / "work" / "report.md",
+        render_work_report(paths.repo_wiki_dir),
         result.refreshed_files,
     )
     return result

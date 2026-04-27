@@ -97,6 +97,63 @@ def test_route_text_packet_is_agent_readable(repo_env: dict[str, Path]) -> None:
     assert "## Trust Model" in result.output
 
 
+def test_route_packet_includes_matching_work_context(repo_env: dict[str, Path]) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "alice"])
+    assert install_result.exit_code == 0
+    capture_result = runner.invoke(
+        app,
+        [
+            "work",
+            "capture",
+            "--work-id",
+            "framework-ledger",
+            "--title",
+            "Build routeable work ledger",
+            "--status",
+            "processing",
+            "--link",
+            "ai-wiki/people/alice/drafts/framework-roadmap.md",
+            "--occurred-at",
+            "2026-04-27T10:00:00+10:00",
+            "--handle",
+            "alice",
+        ],
+    )
+    assert capture_result.exit_code == 0
+
+    result = runner.invoke(
+        app,
+        [
+            "route",
+            "--task",
+            "Continue the framework ledger work.",
+            "--format",
+            "json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    packet = json.loads(result.output)
+    assert packet["work_context"]["source"] == "ai-wiki/_toolkit/work/state.json"
+    assert packet["work_context"]["items"][0]["work_id"] == "framework-ledger"
+    assert packet["work_context"]["items"][0]["status"] == "processing"
+    assert packet["work_context"]["items"][0]["links"] == [
+        "ai-wiki/people/alice/drafts/framework-roadmap.md"
+    ]
+
+    text_result = runner.invoke(
+        app,
+        [
+            "route",
+            "--task",
+            "Continue the framework ledger work.",
+        ],
+    )
+    assert text_result.exit_code == 0
+    assert "## Work Context" in text_result.output
+    assert "`framework-ledger`" in text_result.output
+
+
 def test_route_requires_initialized_repo_wiki(repo_env: dict[str, Path]) -> None:
     result = runner.invoke(
         app,

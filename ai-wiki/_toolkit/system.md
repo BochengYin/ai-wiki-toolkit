@@ -16,13 +16,14 @@ This file is managed by ai-wiki-toolkit. Future package versions may update it.
 10. Read `ai-wiki/features/index.md` when task-specific requirements, assumptions, or acceptance criteria matter.
 11. Read `ai-wiki/workflows.md` for repo-specific workflows that extend the managed baseline.
 12. Read `ai-wiki/trails/index.md` when debugging chronology or dead ends may help.
-13. Read `ai-wiki/people/<handle>/index.md` when continuing draft work.
-14. Read `ai-wiki/_toolkit/index.md` when you need package-managed schema, metrics, or directory guidance beyond this workflow.
-15. Use `ai-wiki/index.md` as a repo-owned map when you need a quick overview of local AI wiki areas.
-16. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
-17. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
-18. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
-19. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them to produce end-of-task AI wiki evidence and write-back outcomes.
+13. Read `ai-wiki/_toolkit/work/report.md` when the route packet reports relevant active, processing, blocked, or planned work.
+14. Read `ai-wiki/people/<handle>/index.md` when continuing draft work.
+15. Read `ai-wiki/_toolkit/index.md` when you need package-managed schema, metrics, work views, or directory guidance beyond this workflow.
+16. Use `ai-wiki/index.md` as a repo-owned map when you need a quick overview of local AI wiki areas.
+17. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
+18. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
+19. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
+20. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them to produce end-of-task AI wiki evidence and write-back outcomes.
 
 ## AI Wiki Reuse Evidence
 

@@ -10,10 +10,11 @@ remain the source of truth.
 - `schema_version`: currently `route-v1`.
 - `task_id`: stable task id, either supplied by the caller or derived from the task text.
 - `task`: current user request text, when supplied by the agent.
-- `route.task_type`: coarse task class such as `scaffold_prompt_workflow`, `release_distribution`, `memory_governance`, `eval_workflow`, or `general`.
-- `route.risk_tags`: task risks such as `user_owned_docs`, `managed_prompt_block`, `release_distribution`, `ci_workflow`, `memory_governance`, or `task_evaluation`.
+- `route.task_type`: coarse task class such as `scaffold_prompt_workflow`, `release_distribution`, `memory_governance`, `workflow_state`, `eval_workflow`, or `general`.
+- `route.risk_tags`: task risks such as `user_owned_docs`, `managed_prompt_block`, `release_distribution`, `ci_workflow`, `memory_governance`, `workflow_state`, or `task_evaluation`.
 - `route.changed_paths`: path signals supplied by the caller or inferred from `git status --short`.
 - `context_budget`: target word and document limits for the packet.
+- `work_context`: matching work-ledger items from `ai-wiki/_toolkit/work/state.json`, when available.
 - `must_load`: user-owned AI wiki docs the agent should consult first.
 - `maybe_load`: lower-confidence docs that may help if the task needs more context.
 - `must_follow`: source-cited rules extracted from authoritative user-owned docs.

@@ -72,7 +72,11 @@ def test_init_empty_repo_creates_expected_tree(repo_env: dict[str, Path]) -> Non
         "ai-wiki/_toolkit/schema/reuse-v1.md",
         "ai-wiki/_toolkit/schema/route-v1.md",
         "ai-wiki/_toolkit/schema/team-memory-v1.md",
+        "ai-wiki/_toolkit/schema/work-v1.md",
         "ai-wiki/_toolkit/system.md",
+        "ai-wiki/_toolkit/work/",
+        "ai-wiki/_toolkit/work/report.md",
+        "ai-wiki/_toolkit/work/state.json",
         "ai-wiki/_toolkit/workflows.md",
         "ai-wiki/constraints.md",
         "ai-wiki/conventions/",
@@ -95,6 +99,9 @@ def test_init_empty_repo_creates_expected_tree(repo_env: dict[str, Path]) -> Non
         "ai-wiki/review-patterns/index.md",
         "ai-wiki/trails/",
         "ai-wiki/trails/index.md",
+        "ai-wiki/work/",
+        "ai-wiki/work/events/",
+        "ai-wiki/work/index.md",
         "ai-wiki/workflows.md",
     ]
     assert snapshot_tree(repo_env["home_dir"]) == [
@@ -179,6 +186,7 @@ def test_init_writes_expected_repo_index_snapshot(repo_env: dict[str, Path]) -> 
         - `features/index.md` maps feature-specific working memory, clarified requirements, and accepted assumptions.
         - `workflows.md` maps repo-specific workflows that extend the managed baseline.
         - `trails/index.md` maps task-specific chronology, dead ends, and release trails.
+        - `work/index.md` maps the append-only work ledger for todos, active tasks, and epics.
         - `people/<handle>/index.md` maps handle-local draft notes and working history.
         - `metrics/` contains user-owned evidence logs such as `reuse-events/<handle>.jsonl` and `task-checks/<handle>.jsonl`.
         """
@@ -231,6 +239,7 @@ def test_init_writes_expected_gitignore_snapshot(repo_env: dict[str, Path]) -> N
         ai-wiki/metrics/reuse-events/
         ai-wiki/metrics/task-checks/
         ai-wiki/_toolkit/metrics/
+        ai-wiki/_toolkit/work/
         ai-wiki/_toolkit/catalog.json
         # <!-- aiwiki-toolkit:end -->
         """
@@ -254,15 +263,16 @@ def test_init_writes_expected_toolkit_managed_files(repo_env: dict[str, Path]) -
         1. Read `system.md` for package-managed collaboration rules.
         2. Read `workflows.md` for package-managed baseline workflows.
         3. Read `schema/route-v1.md` when task-aware context packets or routing trust boundaries matter.
-        4. Read `schema/team-memory-v1.md` when note shapes, memory types, or source pointers matter.
-        5. Read `schema/reuse-v1.md` only when reuse metrics, logging, or schema questions matter.
+        4. Read `schema/work-v1.md` when work-ledger events, task lifecycle state, or generated work reports matter.
+        5. Read `schema/team-memory-v1.md` when note shapes, memory types, or source pointers matter.
+        6. Read `schema/reuse-v1.md` only when reuse metrics, logging, or schema questions matter.
 
         ## Generated Outputs
 
-        - `catalog.json` and `metrics/*.json` are generated outputs, not guidance docs.
+        - `catalog.json`, `metrics/*.json`, and `work/*` are generated outputs, not guidance docs.
         - `aiwiki-toolkit route` emits transient context packets to stdout; packets are derived from source docs and should be regenerated rather than treated as canonical memory.
         - The installer ignores those generated outputs in `.gitignore` so routine telemetry updates stay local.
-        - Regenerate those outputs with `aiwiki-toolkit refresh-metrics` whenever you need a fresh local snapshot.
+        - Regenerate catalog, metrics, and work views with `aiwiki-toolkit refresh-metrics` whenever you need a fresh local snapshot.
         """
     )
     assert (
@@ -287,13 +297,14 @@ def test_init_writes_expected_toolkit_managed_files(repo_env: dict[str, Path]) -
         10. Read `ai-wiki/features/index.md` when task-specific requirements, assumptions, or acceptance criteria matter.
         11. Read `ai-wiki/workflows.md` for repo-specific workflows that extend the managed baseline.
         12. Read `ai-wiki/trails/index.md` when debugging chronology or dead ends may help.
-        13. Read `ai-wiki/people/<handle>/index.md` when continuing draft work.
-        14. Read `ai-wiki/_toolkit/index.md` when you need package-managed schema, metrics, or directory guidance beyond this workflow.
-        15. Use `ai-wiki/index.md` as a repo-owned map when you need a quick overview of local AI wiki areas.
-        16. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
-        17. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
-        18. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
-        19. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them to produce end-of-task AI wiki evidence and write-back outcomes.
+        13. Read `ai-wiki/_toolkit/work/report.md` when the route packet reports relevant active, processing, blocked, or planned work.
+        14. Read `ai-wiki/people/<handle>/index.md` when continuing draft work.
+        15. Read `ai-wiki/_toolkit/index.md` when you need package-managed schema, metrics, work views, or directory guidance beyond this workflow.
+        16. Use `ai-wiki/index.md` as a repo-owned map when you need a quick overview of local AI wiki areas.
+        17. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
+        18. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
+        19. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
+        20. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them to produce end-of-task AI wiki evidence and write-back outcomes.
 
         ## AI Wiki Reuse Evidence
 
@@ -406,7 +417,7 @@ def test_init_writes_expected_toolkit_managed_files(repo_env: dict[str, Path]) -
         6. Do not log managed `_toolkit/**` docs with `record-reuse`; if they changed the plan or behavior, cite their paths in a progress update or the final note instead.
         7. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
         8. Treat the footer as the user-facing evidence surface; telemetry and generated aggregates are the local machine-readable record behind it.
-        9. The installer manages a `.gitignore` block that ignores `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/metrics/`, and `ai-wiki/_toolkit/catalog.json` so telemetry stays local by default.
+        9. The installer manages a `.gitignore` block that ignores `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/metrics/`, `ai-wiki/_toolkit/work/`, and `ai-wiki/_toolkit/catalog.json` so telemetry and generated views stay local by default.
         10. If those telemetry paths were tracked before you upgraded, run `aiwiki-toolkit doctor` and follow the suggested `git rm --cached` fix once to untrack them.
         11. Produce one AI wiki write-back outcome at the end of every completed task, even when the result is `None`.
         12. Before returning `None`, run memory candidate detection for problem-solution memory, feature clarification memory, convention candidates, missed relevant memory, and conflict or supersession.
@@ -418,8 +429,9 @@ def test_init_writes_expected_toolkit_managed_files(repo_env: dict[str, Path]) -
         18. Put reusable problem-solution memories in `ai-wiki/problems/`.
         19. Put feature clarifications in `ai-wiki/features/`.
         20. Put task-specific chronology and dead ends in `ai-wiki/trails/`.
-        21. Put raw personal draft notes in `ai-wiki/people/<handle>/drafts/`.
-        22. Promote only stable, reviewable rules into shared patterns or conventions.
+        21. Put todo, active, processing, blocked, review, done, and archived work state in `ai-wiki/work/events/<handle>.jsonl` via `aiwiki-toolkit work`.
+        22. Put raw personal draft notes in `ai-wiki/people/<handle>/drafts/`.
+        23. Promote only stable, reviewable rules into shared patterns or conventions.
         """
     )
     assert (
@@ -428,6 +440,9 @@ def test_init_writes_expected_toolkit_managed_files(repo_env: dict[str, Path]) -
     assert (
         repo_env["repo"] / "ai-wiki" / "_toolkit" / "schema" / "team-memory-v1.md"
     ).read_text(encoding="utf-8").startswith("# Team Memory Schema v1")
+    assert (
+        repo_env["repo"] / "ai-wiki" / "_toolkit" / "schema" / "work-v1.md"
+    ).read_text(encoding="utf-8").startswith("# Work Ledger Schema v1")
     assert (
         repo_env["home_dir"] / "system" / "_toolkit" / "system.md"
     ).read_text(encoding="utf-8") == strip_margin(
@@ -502,12 +517,14 @@ def test_init_does_not_overwrite_existing_user_owned_indexes(repo_env: dict[str,
     (repo_wiki / "problems").mkdir(parents=True)
     (repo_wiki / "review-patterns").mkdir(parents=True)
     (repo_wiki / "metrics").mkdir(parents=True)
+    (repo_wiki / "work").mkdir(parents=True)
     (repo_wiki / "people" / "alice").mkdir(parents=True)
     (repo_wiki / "conventions" / "index.md").write_text("# Custom conventions index\n", encoding="utf-8")
     (repo_wiki / "features" / "index.md").write_text("# Custom features index\n", encoding="utf-8")
     (repo_wiki / "problems" / "index.md").write_text("# Custom problems index\n", encoding="utf-8")
     (repo_wiki / "review-patterns" / "index.md").write_text("# Custom review index\n", encoding="utf-8")
     (repo_wiki / "metrics" / "index.md").write_text("# Custom metrics index\n", encoding="utf-8")
+    (repo_wiki / "work" / "index.md").write_text("# Custom work index\n", encoding="utf-8")
     (repo_wiki / "people" / "alice" / "index.md").write_text("# Custom person index\n", encoding="utf-8")
 
     result = runner.invoke(app, ["init", "--handle", "alice"])
@@ -528,6 +545,9 @@ def test_init_does_not_overwrite_existing_user_owned_indexes(repo_env: dict[str,
     assert (repo_wiki / "metrics" / "index.md").read_text(encoding="utf-8") == (
         "# Custom metrics index\n"
     )
+    assert (repo_wiki / "work" / "index.md").read_text(encoding="utf-8") == (
+        "# Custom work index\n"
+    )
     assert (repo_wiki / "people" / "alice" / "index.md").read_text(encoding="utf-8") == (
         "# Custom person index\n"
     )
@@ -543,6 +563,7 @@ def test_init_writes_catalog_and_empty_stats(repo_env: dict[str, Path]) -> None:
     assert '"doc_id": "problems/index"' in catalog
     assert '"doc_id": "features/index"' in catalog
     assert '"doc_id": "review-patterns/index"' in catalog
+    assert '"doc_id": "work/index"' in catalog
     assert '"doc_id": "people/alice/index"' in catalog
 
     document_stats = (

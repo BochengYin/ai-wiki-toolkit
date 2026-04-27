@@ -145,6 +145,7 @@ def test_install_upserts_gitignore_block_without_overwriting_user_entries(
         "ai-wiki/metrics/reuse-events/\n"
         "ai-wiki/metrics/task-checks/\n"
         "ai-wiki/_toolkit/metrics/\n"
+        "ai-wiki/_toolkit/work/\n"
         "ai-wiki/_toolkit/catalog.json\n"
         "# <!-- aiwiki-toolkit:end -->\n"
     )
@@ -173,6 +174,7 @@ def test_install_refreshes_stale_gitignore_block_in_place(repo_env: dict[str, Pa
         "ai-wiki/metrics/reuse-events/\n"
         "ai-wiki/metrics/task-checks/\n"
         "ai-wiki/_toolkit/metrics/\n"
+        "ai-wiki/_toolkit/work/\n"
         "ai-wiki/_toolkit/catalog.json\n"
         "# <!-- aiwiki-toolkit:end -->\n"
     )
@@ -414,14 +416,17 @@ def test_refresh_metrics_regenerates_managed_catalog_and_stats(repo_env: dict[st
     repo = repo_env["repo"]
     stale_catalog = repo / "ai-wiki" / "_toolkit" / "catalog.json"
     stale_task_stats = repo / "ai-wiki" / "_toolkit" / "metrics" / "task-stats.json"
+    stale_work_state = repo / "ai-wiki" / "_toolkit" / "work" / "state.json"
     stale_catalog.write_text("{}", encoding="utf-8")
     stale_task_stats.write_text("{}", encoding="utf-8")
+    stale_work_state.write_text("{}", encoding="utf-8")
 
     result = runner.invoke(app, ["refresh-metrics"])
 
     assert result.exit_code == 0
     assert stale_catalog.read_text(encoding="utf-8") != "{}"
     assert stale_task_stats.read_text(encoding="utf-8") != "{}"
+    assert stale_work_state.read_text(encoding="utf-8") != "{}"
     assert "Refreshed files:" in result.output
 
 

@@ -193,7 +193,12 @@ def _collect_repo_rule_docs(paths: ToolkitPaths) -> list[RuleDoc]:
 
     for path in sorted(paths.repo_toolkit_dir.rglob("*.md")):
         relative = path.relative_to(paths.repo_toolkit_dir).as_posix()
-        if relative == "index.md" or relative.startswith("schema/") or relative.startswith("metrics/"):
+        if (
+            relative == "index.md"
+            or relative.startswith("schema/")
+            or relative.startswith("metrics/")
+            or relative.startswith("work/")
+        ):
             continue
         family = "workflow" if relative == "workflows.md" else (
             "managed_system" if relative == "system.md" else f"managed_rule:{relative.removesuffix('.md')}"
@@ -602,6 +607,7 @@ def _tracked_telemetry_paths(repo_root: Path) -> list[str] | None:
                 "ai-wiki/metrics/reuse-events",
                 "ai-wiki/metrics/task-checks",
                 "ai-wiki/_toolkit/metrics",
+                "ai-wiki/_toolkit/work",
                 "ai-wiki/_toolkit/catalog.json",
             ],
             cwd=repo_root,
@@ -732,6 +738,11 @@ def run_doctor(start: Path | None = None, handle: str | None = None) -> DoctorRe
     _check_required_managed_doc(result, relative_path="workflows.md", description="baseline workflows")
     _check_required_managed_doc(
         result,
+        relative_path="schema/work-v1.md",
+        description="work ledger schema",
+    )
+    _check_required_managed_doc(
+        result,
         relative_path="schema/team-memory-v1.md",
         description="team memory schema",
     )
@@ -774,6 +785,12 @@ def run_doctor(start: Path | None = None, handle: str | None = None) -> DoctorRe
         relative_path=f"people/{resolved_handle}/index.md",
         starter_content=starters[f"people/{resolved_handle}/index.md"],
         description=f"personal index for handle `{resolved_handle}`",
+    )
+    _check_child_index(
+        result,
+        relative_path="work/index.md",
+        starter_content=starters["work/index.md"],
+        description="work ledger",
     )
     _check_child_index(
         result,

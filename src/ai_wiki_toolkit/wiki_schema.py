@@ -38,6 +38,10 @@ def infer_doc_kind(relative_path: str) -> str:
         return "workflows"
     if relative_path == "decisions.md":
         return "decisions"
+    if relative_path == "work/index.md":
+        return "work_index"
+    if parts[0] == "work":
+        return "work"
     if relative_path == "metrics/index.md":
         return "metrics_index"
     if parts[0] == "conventions":
