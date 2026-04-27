@@ -173,6 +173,13 @@ The Homebrew formula and npm distribution both consume the same versioned GitHub
 
 The npm package is a thin meta package that installs the matching platform-specific binary package for the current machine. It does not fetch release assets during `postinstall`.
 
+Enterprise/security notes for npm installs:
+
+- the root npm package does not define `preinstall`, `install`, `postinstall`, `prepare`, or other lifecycle scripts
+- the platform binary packages are installed through normal npm package resolution instead of an install-time downloader
+- `npm install -g ai-wiki-toolkit --ignore-scripts` is compatible with the package topology because install scripts are not required
+- global installation adds the `aiwiki-toolkit` command, but repo files are modified only when a user explicitly runs `aiwiki-toolkit install` inside a git repository
+
 2. Enter the target git repository and initialize the wiki scaffolding:
 
 ```bash
