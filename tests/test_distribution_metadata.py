@@ -73,3 +73,15 @@ def test_publish_npm_workflow_downloads_release_archives_by_prefix() -> None:
     )
 
     assert '--pattern "ai-wiki-toolkit-${version}-*"' in workflow
+
+
+def test_publish_npm_workflow_can_force_trusted_auth_for_recovery() -> None:
+    workflow = (ROOT / ".github" / "workflows" / "publish-npm.yml").read_text(
+        encoding="utf-8"
+    )
+
+    assert "npm_auth_mode:" in workflow
+    assert "Unsupported npm_auth_mode" in workflow
+    assert "npm_auth_mode=token requires NPM_PUBLISH_TOKEN." in workflow
+    assert "unset NODE_AUTH_TOKEN" in workflow
+    assert "sed -i '/_authToken/d;/always-auth/d'" in workflow
