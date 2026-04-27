@@ -4,21 +4,25 @@ This file is managed by ai-wiki-toolkit. Future package versions may update it.
 
 ## Start Of Task
 
-1. Read `ai-wiki/constraints.md` for hard constraints and non-negotiables.
-2. Read `ai-wiki/conventions/index.md` for shared team conventions that should guide implementation.
-3. Read `ai-wiki/decisions.md` for durable project decisions and tradeoffs.
-4. Read `ai-wiki/review-patterns/index.md` for reusable review rules and reviewer expectations.
-5. Read `ai-wiki/problems/index.md` before implementing or testing similar behavior.
-6. Read `ai-wiki/features/index.md` when task-specific requirements, assumptions, or acceptance criteria matter.
-7. Read `ai-wiki/workflows.md` for repo-specific workflows that extend the managed baseline.
-8. Read `ai-wiki/trails/index.md` when debugging chronology or dead ends may help.
-9. Read `ai-wiki/people/<handle>/index.md` when continuing draft work.
-10. Read `ai-wiki/_toolkit/index.md` when you need package-managed schema, metrics, or directory guidance beyond this workflow.
-11. Use `ai-wiki/index.md` as a repo-owned map when you need a quick overview of local AI wiki areas.
-12. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
-13. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
-14. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
-15. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them to produce end-of-task AI wiki evidence and write-back outcomes.
+1. Run `aiwiki-toolkit route --task "<current user request>"` when available to generate a task-aware AI Wiki Context Packet.
+2. Use the packet's `must_load`, `must_follow`, `context_notes`, and `skip` sections as the first-pass routing layer for the task.
+3. Treat the packet as a generated view with cited sources, not as canonical memory; the Markdown files under `ai-wiki/` remain the source of truth.
+4. If routing is unavailable, fails, or looks insufficient, continue with the baseline read order below.
+5. Read `ai-wiki/constraints.md` for hard constraints and non-negotiables.
+6. Read `ai-wiki/conventions/index.md` for shared team conventions that should guide implementation.
+7. Read `ai-wiki/decisions.md` for durable project decisions and tradeoffs.
+8. Read `ai-wiki/review-patterns/index.md` for reusable review rules and reviewer expectations.
+9. Read `ai-wiki/problems/index.md` before implementing or testing similar behavior.
+10. Read `ai-wiki/features/index.md` when task-specific requirements, assumptions, or acceptance criteria matter.
+11. Read `ai-wiki/workflows.md` for repo-specific workflows that extend the managed baseline.
+12. Read `ai-wiki/trails/index.md` when debugging chronology or dead ends may help.
+13. Read `ai-wiki/people/<handle>/index.md` when continuing draft work.
+14. Read `ai-wiki/_toolkit/index.md` when you need package-managed schema, metrics, or directory guidance beyond this workflow.
+15. Use `ai-wiki/index.md` as a repo-owned map when you need a quick overview of local AI wiki areas.
+16. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
+17. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
+18. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
+19. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them to produce end-of-task AI wiki evidence and write-back outcomes.
 
 ## AI Wiki Reuse Evidence
 

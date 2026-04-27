@@ -1,0 +1,30 @@
+# Route Schema v1
+
+`aiwiki-toolkit route` generates a transient AI Wiki Context Packet for the current task.
+
+The packet is a derived view, not canonical memory. Markdown files under `ai-wiki/`
+remain the source of truth.
+
+## Packet Fields
+
+- `schema_version`: currently `route-v1`.
+- `task_id`: stable task id, either supplied by the caller or derived from the task text.
+- `task`: current user request text, when supplied by the agent.
+- `route.task_type`: coarse task class such as `scaffold_prompt_workflow`, `release_distribution`, `memory_governance`, `eval_workflow`, or `general`.
+- `route.risk_tags`: task risks such as `user_owned_docs`, `managed_prompt_block`, `release_distribution`, `ci_workflow`, `memory_governance`, or `task_evaluation`.
+- `route.changed_paths`: path signals supplied by the caller or inferred from `git status --short`.
+- `context_budget`: target word and document limits for the packet.
+- `must_load`: user-owned AI wiki docs the agent should consult first.
+- `maybe_load`: lower-confidence docs that may help if the task needs more context.
+- `must_follow`: source-cited rules extracted from authoritative user-owned docs.
+- `context_notes`: source-cited notes from exploratory docs such as drafts.
+- `skip`: docs intentionally not loaded because the route found no strong signal.
+- `trust_model`: reminders about provenance and source-of-truth boundaries.
+
+## Trust Rules
+
+1. Every `must_follow` rule must cite a user-owned source path.
+2. Drafts and trails may provide `context_notes`, but they should not become authoritative rules unless promoted by the existing human-confirmed workflow.
+3. Managed `_toolkit/**` docs can guide routing behavior, but they should not be recorded as user-owned reuse events.
+4. If the packet looks wrong or incomplete, agents should fall back to the baseline read order in `ai-wiki/_toolkit/system.md`.
+5. Record reuse only for user-owned docs actually consulted or materially used, not for every packet candidate.

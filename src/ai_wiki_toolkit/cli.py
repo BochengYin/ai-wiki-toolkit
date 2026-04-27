@@ -2,11 +2,19 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import typer
 
 from ai_wiki_toolkit import __version__
 from ai_wiki_toolkit.doctor import run_doctor
 from ai_wiki_toolkit.paths import RepoRootNotFoundError
+from ai_wiki_toolkit.route import (
+    generate_route_packet,
+    render_route_packet_json,
+    render_route_packet_text,
+)
 from ai_wiki_toolkit.reuse_events import (
     EVIDENCE_MODES,
     RETRIEVAL_MODES,
@@ -123,6 +131,89 @@ def _echo_doctor_result(result, *, suggest_index_upgrade: bool, strict: bool) ->
 
     if strict and actionable_findings:
         raise typer.Exit(code=1)
+
+
+@app.command("route")
+def route(
+    task: str | None = typer.Option(
+        None,
+        "--task",
+        help="Current task request. Agents should pass the user's task text here.",
+    ),
+    task_file: Path | None = typer.Option(
+        None,
+        "--task-file",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="Read the current task request from a file instead of --task.",
+    ),
+    task_id: str | None = typer.Option(
+        None,
+        "--task-id",
+        help="Optional stable task id. Defaults to a slug derived from --task.",
+    ),
+    changed_paths: list[str] | None = typer.Option(
+        None,
+        "--changed-path",
+        help="Optional path signal. Repeat to add multiple paths. Defaults to git status paths.",
+    ),
+    budget_words: int = typer.Option(
+        900,
+        "--budget-words",
+        min=100,
+        help="Target packet context budget in words.",
+    ),
+    max_docs: int = typer.Option(
+        6,
+        "--max-docs",
+        min=1,
+        max=20,
+        help="Maximum number of must-load documents to include.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+) -> None:
+    """Generate a task-aware AI wiki context packet."""
+    if task and task_file:
+        typer.echo("Use either --task or --task-file, not both.", err=True)
+        raise typer.Exit(code=1)
+
+    task_text = task
+    if task_file:
+        task_text = task_file.read_text(encoding="utf-8")
+
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = generate_route_packet(
+            task=task_text,
+            task_id=task_id,
+            changed_paths=changed_paths or [],
+            budget_words=budget_words,
+            max_docs=max_docs,
+        )
+    except RepoRootNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except RepoWikiNotInitializedError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read AI wiki routing data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    if normalized_format == "json":
+        typer.echo(render_route_packet_json(result.packet), nl=False)
+    else:
+        typer.echo(render_route_packet_text(result.packet), nl=False)
 
 
 @app.command("install")
