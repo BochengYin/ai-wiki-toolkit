@@ -140,6 +140,7 @@ def test_route_packet_includes_matching_work_context(repo_env: dict[str, Path]) 
     assert packet["work_context"]["items"][0]["work_id"] == "framework-ledger"
     assert packet["work_context"]["items"][0]["status"] == "processing"
     assert packet["work_context"]["items"][0]["assignee_handles"] == ["alice"]
+    assert packet["work_context"]["items"][0]["actor_relation"] == "assignee"
     assert packet["work_context"]["items"][0]["links"] == [
         "ai-wiki/people/alice/drafts/framework-roadmap.md"
     ]
@@ -155,6 +156,130 @@ def test_route_packet_includes_matching_work_context(repo_env: dict[str, Path]) 
     assert text_result.exit_code == 0
     assert "## Work Context" in text_result.output
     assert "`framework-ledger`" in text_result.output
+    assert "relation `assignee`" in text_result.output
+
+
+def test_route_packet_auto_includes_current_actor_work(repo_env: dict[str, Path]) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "bob"])
+    assert install_result.exit_code == 0
+    capture_result = runner.invoke(
+        app,
+        [
+            "work",
+            "capture",
+            "--work-id",
+            "bob-active-task",
+            "--title",
+            "Build Bob's assigned implementation",
+            "--status",
+            "active",
+            "--assignee",
+            "bob",
+            "--handle",
+            "bob",
+        ],
+    )
+    assert capture_result.exit_code == 0
+
+    result = runner.invoke(
+        app,
+        [
+            "route",
+            "--task",
+            "What should I work on next?",
+            "--format",
+            "json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    packet = json.loads(result.output)
+    assert packet["actor"]["handle"] == "bob"
+    assert packet["work_context"]["actor_handle"] == "bob"
+    assert packet["work_context"]["items"][0]["work_id"] == "bob-active-task"
+    assert packet["work_context"]["items"][0]["actor_relation"] == "assignee"
+
+
+def test_route_packet_does_not_auto_include_other_assignees_work(repo_env: dict[str, Path]) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "bob"])
+    assert install_result.exit_code == 0
+    capture_result = runner.invoke(
+        app,
+        [
+            "work",
+            "capture",
+            "--work-id",
+            "alice-active-task",
+            "--title",
+            "Build Alice's assigned implementation",
+            "--status",
+            "active",
+            "--assignee",
+            "alice",
+            "--handle",
+            "alice",
+        ],
+    )
+    assert capture_result.exit_code == 0
+
+    result = runner.invoke(
+        app,
+        [
+            "route",
+            "--task",
+            "What should I work on next?",
+            "--format",
+            "json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    packet = json.loads(result.output)
+    assert packet["actor"]["handle"] == "bob"
+    assert packet["work_context"]["items"] == []
+
+
+def test_route_packet_can_show_directly_requested_other_assignees_work(
+    repo_env: dict[str, Path],
+) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "bob"])
+    assert install_result.exit_code == 0
+    capture_result = runner.invoke(
+        app,
+        [
+            "work",
+            "capture",
+            "--work-id",
+            "alice-active-task",
+            "--title",
+            "Build Alice's assigned implementation",
+            "--status",
+            "active",
+            "--assignee",
+            "alice",
+            "--handle",
+            "alice",
+        ],
+    )
+    assert capture_result.exit_code == 0
+
+    result = runner.invoke(
+        app,
+        [
+            "route",
+            "--task",
+            "Inspect alice-active-task before planning team handoff.",
+            "--format",
+            "json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    packet = json.loads(result.output)
+    assert packet["actor"]["handle"] == "bob"
+    assert packet["work_context"]["items"][0]["work_id"] == "alice-active-task"
+    assert packet["work_context"]["items"][0]["actor_relation"] == "none"
+    assert "assigned to another handle" in packet["work_context"]["items"][0]["reason"]
 
 
 def test_route_requires_initialized_repo_wiki(repo_env: dict[str, Path]) -> None:

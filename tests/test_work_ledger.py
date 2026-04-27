@@ -65,6 +65,18 @@ def test_work_capture_records_event_and_generated_views(repo_env: dict[str, Path
     assert "Build routeable work ledger" in report
     assert "`framework-ledger-mvp`" in report
 
+    by_assignee = (
+        repo_wiki / "_toolkit" / "work" / "by-assignee" / "alice.md"
+    ).read_text(encoding="utf-8")
+    assert "# Assigned Work: alice" in by_assignee
+    assert "`framework-ledger-mvp`" in by_assignee
+
+    by_reporter = (
+        repo_wiki / "_toolkit" / "work" / "by-reporter" / "alice.md"
+    ).read_text(encoding="utf-8")
+    assert "# Reported Work: alice" in by_reporter
+    assert "`framework-ledger-mvp`" in by_reporter
+
 
 def test_work_status_updates_current_state_without_rewriting_events(repo_env: dict[str, Path]) -> None:
     install_result = runner.invoke(app, ["install", "--handle", "alice"])
@@ -173,6 +185,134 @@ def test_work_capture_accepts_reporter_and_assignee_overrides(repo_env: dict[str
     assert payload["author_handle"] == "alice"
     assert payload["reporter_handle"] == "alice"
     assert payload["assignee_handles"] == ["bob", "carol"]
+
+
+def test_work_mine_uses_local_actor_and_excludes_closed_tasks(repo_env: dict[str, Path]) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "bob"])
+    assert install_result.exit_code == 0
+
+    alice_result = runner.invoke(
+        app,
+        [
+            "work",
+            "capture",
+            "--work-id",
+            "alice-task",
+            "--title",
+            "Alice owns this task",
+            "--assignee",
+            "alice",
+            "--handle",
+            "alice",
+        ],
+    )
+    assert alice_result.exit_code == 0
+
+    bob_result = runner.invoke(
+        app,
+        [
+            "work",
+            "capture",
+            "--work-id",
+            "bob-task",
+            "--title",
+            "Bob owns this task",
+            "--assignee",
+            "bob",
+            "--handle",
+            "bob",
+        ],
+    )
+    assert bob_result.exit_code == 0
+
+    closed_result = runner.invoke(
+        app,
+        [
+            "work",
+            "capture",
+            "--work-id",
+            "bob-done-task",
+            "--title",
+            "Bob already finished this task",
+            "--status",
+            "done",
+            "--assignee",
+            "bob",
+            "--handle",
+            "bob",
+        ],
+    )
+    assert closed_result.exit_code == 0
+
+    result = runner.invoke(app, ["work", "mine"])
+
+    assert result.exit_code == 0
+    assert "# My Work: bob" in result.output
+    assert "`bob-task`" in result.output
+    assert "`alice-task`" not in result.output
+    assert "`bob-done-task`" not in result.output
+
+    include_closed_result = runner.invoke(app, ["work", "mine", "--include-closed"])
+
+    assert include_closed_result.exit_code == 0
+    assert "`bob-task`" in include_closed_result.output
+    assert "`bob-done-task`" in include_closed_result.output
+
+
+def test_work_list_filters_by_assignee_and_reporter(repo_env: dict[str, Path]) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "alice"])
+    assert install_result.exit_code == 0
+
+    first_result = runner.invoke(
+        app,
+        [
+            "work",
+            "capture",
+            "--work-id",
+            "delegated-work",
+            "--title",
+            "Bob owns delegated work",
+            "--reporter",
+            "alice",
+            "--assignee",
+            "bob",
+            "--handle",
+            "alice",
+        ],
+    )
+    assert first_result.exit_code == 0
+
+    second_result = runner.invoke(
+        app,
+        [
+            "work",
+            "capture",
+            "--work-id",
+            "alice-work",
+            "--title",
+            "Alice owns local work",
+            "--reporter",
+            "alice",
+            "--assignee",
+            "alice",
+            "--handle",
+            "alice",
+        ],
+    )
+    assert second_result.exit_code == 0
+
+    assignee_result = runner.invoke(app, ["work", "list", "--assignee", "bob"])
+
+    assert assignee_result.exit_code == 0
+    assert "# Work assignee=bob" in assignee_result.output
+    assert "`delegated-work`" in assignee_result.output
+    assert "`alice-work`" not in assignee_result.output
+
+    reporter_result = runner.invoke(app, ["work", "list", "--reporter", "alice"])
+
+    assert reporter_result.exit_code == 0
+    assert "`delegated-work`" in reporter_result.output
+    assert "`alice-work`" in reporter_result.output
 
 
 def test_work_report_requires_initialized_repo_wiki(repo_env: dict[str, Path]) -> None:

@@ -32,7 +32,11 @@ from ai_wiki_toolkit.wiki_schema import (
     render_repo_catalog,
     render_task_stats,
 )
-from ai_wiki_toolkit.work_ledger import render_work_report, render_work_state_json
+from ai_wiki_toolkit.work_ledger import (
+    refresh_work_views,
+    render_work_report,
+    render_work_state_json,
+)
 
 
 @dataclass
@@ -190,6 +194,7 @@ def install_workspace(start: Path | None = None, handle: str | None = None) -> I
         render_work_report(paths.repo_wiki_dir),
         result,
     )
+    refresh_work_views(paths.repo_wiki_dir)
 
     for relative_path, content in managed_home_toolkit_files().items():
         _write_managed(paths.home_toolkit_dir / relative_path, content, result)
@@ -253,6 +258,7 @@ def refresh_managed_metrics(start: Path | None = None) -> RefreshMetricsResult:
         render_work_report(paths.repo_wiki_dir),
         result.refreshed_files,
     )
+    refresh_work_views(paths.repo_wiki_dir)
     return result
 
 

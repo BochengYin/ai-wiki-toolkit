@@ -15,7 +15,8 @@ remain the source of truth.
 - `route.changed_paths`: path signals supplied by the caller or inferred from `git status --short`.
 - `actor`: resolved local actor handle from CLI/environment, `.env.aiwiki`, git config, or fallback.
 - `context_budget`: target word and document limits for the packet.
-- `work_context`: matching work-ledger items from `ai-wiki/_toolkit/work/state.json`, when available.
+- `work_context`: actor-scoped matching work-ledger items from `ai-wiki/_toolkit/work/state.json`, when available.
+  Work items include `actor_relation` so agents can distinguish assigned, reported, unassigned, and other matched work.
 - `must_load`: user-owned AI wiki docs the agent should consult first.
 - `maybe_load`: lower-confidence docs that may help if the task needs more context.
 - `must_follow`: source-cited rules extracted from authoritative user-owned docs.
@@ -30,3 +31,4 @@ remain the source of truth.
 3. Managed `_toolkit/**` docs can guide routing behavior, but they should not be recorded as user-owned reuse events.
 4. If the packet looks wrong or incomplete, agents should fall back to the baseline read order in `ai-wiki/_toolkit/system.md`.
 5. Record reuse only for user-owned docs actually consulted or materially used, not for every packet candidate.
+6. Treat `work_context` items with `actor_relation=assignee` as actionable for the current actor. Treat other matched work as context unless the user explicitly asks to work on it.

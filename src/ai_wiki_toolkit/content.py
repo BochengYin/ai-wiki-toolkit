@@ -242,6 +242,9 @@ def repo_starter_files(handle: str) -> dict[str, str]:
 
             The default machine-readable event log lives under `work/events/<handle>.jsonl`.
 
+            Keep canonical work items in this central ledger, not inside `people/<handle>/`.
+            Link work to people with `author_handle`, `reporter_handle`, and `assignee_handles`.
+
             ## Statuses
 
             Work items may move through:
@@ -263,8 +266,11 @@ def repo_starter_files(handle: str) -> dict[str, str]:
             - Resolve current local actor identity from `.env.aiwiki` when no explicit handle is supplied.
             - Capture conversation todos with `aiwiki-toolkit work capture`.
             - Update status with `aiwiki-toolkit work status`.
+            - Use `aiwiki-toolkit work mine` to inspect open work assigned to the current local actor.
+            - Use `aiwiki-toolkit work list --assignee <handle>` or `--reporter <handle>` for team views.
             - Regenerate local managed views with `aiwiki-toolkit work report`.
             - Treat generated files under `_toolkit/work/` as views, not canonical work memory.
+            - Route packets should treat work assigned to the current actor as actionable by default. Work assigned to other handles should appear only when directly matched by the user's request.
             """
         ).strip()
         + "\n",
@@ -537,7 +543,8 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             - `route.changed_paths`: path signals supplied by the caller or inferred from `git status --short`.
             - `actor`: resolved local actor handle from CLI/environment, `.env.aiwiki`, git config, or fallback.
             - `context_budget`: target word and document limits for the packet.
-            - `work_context`: matching work-ledger items from `ai-wiki/_toolkit/work/state.json`, when available.
+            - `work_context`: actor-scoped matching work-ledger items from `ai-wiki/_toolkit/work/state.json`, when available.
+              Work items include `actor_relation` so agents can distinguish assigned, reported, unassigned, and other matched work.
             - `must_load`: user-owned AI wiki docs the agent should consult first.
             - `maybe_load`: lower-confidence docs that may help if the task needs more context.
             - `must_follow`: source-cited rules extracted from authoritative user-owned docs.
@@ -552,6 +559,7 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             3. Managed `_toolkit/**` docs can guide routing behavior, but they should not be recorded as user-owned reuse events.
             4. If the packet looks wrong or incomplete, agents should fall back to the baseline read order in `ai-wiki/_toolkit/system.md`.
             5. Record reuse only for user-owned docs actually consulted or materially used, not for every packet candidate.
+            6. Treat `work_context` items with `actor_relation=assignee` as actionable for the current actor. Treat other matched work as context unless the user explicitly asks to work on it.
             """
         ).strip()
         + "\n",
@@ -696,8 +704,13 @@ def managed_repo_toolkit_files() -> dict[str, str]:
 
             - `state.json`
             - `report.md`
+            - `by-assignee/<handle>.md`
+            - `by-reporter/<handle>.md`
 
             Generated views are local snapshots. Regenerate them with `aiwiki-toolkit work report` or `aiwiki-toolkit refresh-metrics`.
+
+            Keep canonical work state in `ai-wiki/work/events/<handle>.jsonl`, not in `ai-wiki/people/<handle>/`.
+            The people namespace is for personal drafts and preferences. Work links to people through event fields.
 
             ## Event Fields
 
@@ -746,7 +759,9 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             5. Prefer append-only events over rewriting shared work files.
             6. Treat `_toolkit/work/*` as generated views, not canonical memory.
             7. Do not automatically archive or drop a large epic without human confirmation.
-            8. Route packets may use active, processing, or matching work items as routing hints, but work events are not knowledge-reuse evidence by themselves.
+            8. Route packets may use work assigned to the current actor as actionable context by default.
+            9. Route packets may show work assigned to other handles only when the current task directly matches that work.
+            10. Work events are not knowledge-reuse evidence by themselves.
             """
         ).strip()
         + "\n",

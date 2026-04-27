@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import json
 from pathlib import Path
+import shutil
 from typing import Any, Iterable, Sequence
 from uuid import uuid4
 
@@ -285,6 +286,19 @@ def _clean_item(item: dict[str, Any]) -> dict[str, Any]:
     return cleaned
 
 
+def _sort_work_items(items: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
+    return sorted(
+        items,
+        key=lambda item: (
+            STATUS_REPORT_ORDER.index(item["status"])
+            if item["status"] in STATUS_REPORT_ORDER
+            else len(STATUS_REPORT_ORDER),
+            item.get("updated_at") or "",
+            item["work_id"],
+        ),
+    )
+
+
 def build_work_state(repo_wiki_dir: Path) -> dict[str, Any]:
     events, skipped_lines = load_work_events(repo_wiki_dir / "work" / "events")
     events.sort(
@@ -375,22 +389,64 @@ def _render_group(title: str, items: list[dict[str, Any]]) -> list[str]:
     return lines
 
 
+def filter_work_items(
+    state: dict[str, Any],
+    *,
+    assignee_handle: str | None = None,
+    reporter_handle: str | None = None,
+    statuses: Iterable[str] | None = None,
+    include_closed: bool = False,
+) -> list[dict[str, Any]]:
+    normalized_assignee = _normalize_handle(assignee_handle, "assignee_handle") if assignee_handle else None
+    normalized_reporter = _normalize_handle(reporter_handle, "reporter_handle") if reporter_handle else None
+    normalized_statuses = (
+        {_normalize_choice(status, WORK_STATUSES, "work status") for status in statuses}
+        if statuses
+        else None
+    )
+
+    tasks = state.get("tasks", {})
+    if not isinstance(tasks, dict):
+        return []
+
+    selected: list[dict[str, Any]] = []
+    for item in tasks.values():
+        if not isinstance(item, dict):
+            continue
+        status = item.get("status")
+        if not isinstance(status, str):
+            continue
+        if normalized_statuses and status not in normalized_statuses:
+            continue
+        if not normalized_statuses and not include_closed and status not in OPEN_WORK_STATUSES:
+            continue
+        if normalized_assignee:
+            assignees = item.get("assignee_handles")
+            if not isinstance(assignees, list) or normalized_assignee not in assignees:
+                continue
+        if normalized_reporter and item.get("reporter_handle") != normalized_reporter:
+            continue
+        selected.append(item)
+    return _sort_work_items(selected)
+
+
+def render_work_items_report(title: str, items: list[dict[str, Any]]) -> str:
+    lines = [f"# {title}", ""]
+    if not items:
+        lines.append("- None.")
+        return "\n".join(lines) + "\n"
+    for item in items:
+        lines.append(_format_item_line(item))
+    return "\n".join(lines) + "\n"
+
+
 def render_work_report(repo_wiki_dir: Path) -> str:
     state = build_work_state(repo_wiki_dir)
     tasks = list(state["tasks"].values())
     epics = list(state["epics"].values())
 
     def by_status(statuses: set[str], values: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        return sorted(
-            [item for item in values if item["status"] in statuses],
-            key=lambda item: (
-                STATUS_REPORT_ORDER.index(item["status"])
-                if item["status"] in STATUS_REPORT_ORDER
-                else len(STATUS_REPORT_ORDER),
-                item.get("updated_at") or "",
-                item["work_id"],
-            ),
-        )
+        return _sort_work_items([item for item in values if item["status"] in statuses])
 
     summary = state["summary"]
     lines: list[str] = [
@@ -398,6 +454,7 @@ def render_work_report(repo_wiki_dir: Path) -> str:
         "",
         "This generated report is derived from `ai-wiki/work/events/*.jsonl`.",
         "Regenerate it with `aiwiki-toolkit work report`.",
+        "Per-person generated views live under `by-assignee/` and `by-reporter/`.",
         "",
         "## Summary",
         f"- Open epics: {summary['open_epic_count']} / {summary['epic_count']}",
@@ -419,13 +476,66 @@ def render_work_report(repo_wiki_dir: Path) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _handles_for_field(items: Iterable[dict[str, Any]], field: str) -> list[str]:
+    handles: set[str] = set()
+    for item in items:
+        value = item.get(field)
+        if isinstance(value, str) and value:
+            handles.add(value)
+        elif isinstance(value, list):
+            handles.update(handle for handle in value if isinstance(handle, str) and handle)
+    return sorted(handles)
+
+
+def _reset_generated_view_dir(path: Path) -> None:
+    if path.is_dir():
+        shutil.rmtree(path)
+    elif path.exists():
+        path.unlink()
+    path.mkdir(parents=True, exist_ok=True)
+
+
+def _write_person_work_views(work_dir: Path, state: dict[str, Any]) -> list[Path]:
+    tasks = list(state.get("tasks", {}).values()) if isinstance(state.get("tasks"), dict) else []
+    written_paths: list[Path] = []
+    view_specs = (
+        ("by-assignee", "assignee_handles", "Assigned Work"),
+        ("by-reporter", "reporter_handle", "Reported Work"),
+    )
+    for dir_name, field, title_prefix in view_specs:
+        view_dir = work_dir / dir_name
+        handles = _handles_for_field(tasks, field)
+        if not handles:
+            if view_dir.is_dir():
+                shutil.rmtree(view_dir)
+            elif view_dir.exists():
+                view_dir.unlink()
+            continue
+        _reset_generated_view_dir(view_dir)
+        for handle in handles:
+            items = filter_work_items(
+                state,
+                assignee_handle=handle if field == "assignee_handles" else None,
+                reporter_handle=handle if field == "reporter_handle" else None,
+            )
+            path = view_dir / f"{handle}.md"
+            path.write_text(
+                render_work_items_report(f"{title_prefix}: {handle}", items),
+                encoding="utf-8",
+            )
+            written_paths.append(path)
+    return written_paths
+
+
 def refresh_work_views(repo_wiki_dir: Path) -> tuple[Path, Path]:
     work_dir = repo_wiki_dir / "_toolkit" / "work"
     work_dir.mkdir(parents=True, exist_ok=True)
     state_path = work_dir / "state.json"
     report_path = work_dir / "report.md"
-    state_path.write_text(render_work_state_json(repo_wiki_dir), encoding="utf-8")
+    state = build_work_state(repo_wiki_dir)
+    state_path.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     report_path.write_text(render_work_report(repo_wiki_dir), encoding="utf-8")
+    _write_person_work_views(work_dir, state)
     return state_path, report_path
 
 

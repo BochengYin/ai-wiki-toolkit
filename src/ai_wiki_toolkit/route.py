@@ -611,6 +611,7 @@ def _select_work_context(
     *,
     work_state: dict[str, Any],
     task_tokens: set[str],
+    actor_handle: str | None,
     max_items: int = 5,
 ) -> list[dict[str, Any]]:
     status_weights = {
@@ -639,27 +640,68 @@ def _select_work_context(
             status = item.get("status")
             if not isinstance(work_id, str) or not isinstance(title, str) or not isinstance(status, str):
                 continue
-            text_parts = [
+            reporter_handle = (
+                item.get("reporter_handle")
+                if isinstance(item.get("reporter_handle"), str)
+                else None
+            )
+            assignee_handles = (
+                item.get("assignee_handles", [])
+                if isinstance(item.get("assignee_handles"), list)
+                else []
+            )
+            assignee_handles = [
+                handle for handle in assignee_handles if isinstance(handle, str) and handle
+            ]
+            normalized_actor = actor_handle if actor_handle else None
+            actor_relation = "none"
+            if normalized_actor and normalized_actor in assignee_handles:
+                actor_relation = "assignee"
+            elif normalized_actor and reporter_handle == normalized_actor:
+                actor_relation = "reporter"
+            elif not assignee_handles:
+                actor_relation = "unassigned"
+            match_text_parts = [
                 work_id,
                 title,
-                status,
                 item.get("epic_id") if isinstance(item.get("epic_id"), str) else "",
-                item.get("reporter_handle") if isinstance(item.get("reporter_handle"), str) else "",
-                " ".join(
-                    handle
-                    for handle in item.get("assignee_handles", [])
-                    if isinstance(handle, str)
-                ),
                 " ".join(link for link in item.get("links", []) if isinstance(link, str)),
             ]
-            work_tokens = _tokenize(" ".join(text_parts))
+            work_tokens = _tokenize(" ".join(match_text_parts))
             matches = sorted(task_tokens & work_tokens)
+            directly_requested = bool(matches)
+            assigned_to_actor = actor_relation == "assignee"
+            unassigned_open_epic = (
+                actor_relation == "unassigned"
+                and item_type == "epic"
+                and status in OPEN_WORK_STATUSES
+            )
+            if not directly_requested and status not in OPEN_WORK_STATUSES:
+                continue
+            if not directly_requested and not assigned_to_actor and not unassigned_open_epic:
+                continue
             score = min(len(matches) * 4, 16) + status_weights.get(status, 0)
+            if assigned_to_actor:
+                score += 8
+            elif actor_relation == "reporter" and directly_requested:
+                score += 2
+            elif actor_relation == "unassigned":
+                score += 1
+            elif directly_requested and assignee_handles:
+                score -= 2
             if item_type == "epic" and status in OPEN_WORK_STATUSES:
                 score += 1
             if score < 5:
                 continue
             reasons: list[str] = []
+            if actor_relation == "assignee":
+                reasons.append("assigned to current actor")
+            elif actor_relation == "reporter":
+                reasons.append("reported by current actor")
+            elif actor_relation == "unassigned":
+                reasons.append("unassigned shared work")
+            elif assignee_handles:
+                reasons.append("matched requested work but is assigned to another handle")
             if matches:
                 reasons.append(f"matched work terms: {', '.join(matches[:6])}")
             if status in {"active", "processing", "blocked", "review"}:
@@ -675,12 +717,9 @@ def _select_work_context(
                     "title": title,
                     "status": status,
                     "epic_id": item.get("epic_id") if isinstance(item.get("epic_id"), str) else None,
-                    "reporter_handle": item.get("reporter_handle")
-                    if isinstance(item.get("reporter_handle"), str)
-                    else None,
-                    "assignee_handles": item.get("assignee_handles", [])
-                    if isinstance(item.get("assignee_handles"), list)
-                    else [],
+                    "reporter_handle": reporter_handle,
+                    "assignee_handles": assignee_handles,
+                    "actor_relation": actor_relation,
                     "links": item.get("links", []) if isinstance(item.get("links"), list) else [],
                     "source_paths": item.get("source_paths", [])
                     if isinstance(item.get("source_paths"), list)
@@ -730,6 +769,7 @@ def generate_route_packet(
     work_context_items = _select_work_context(
         work_state=work_state,
         task_tokens=task_tokens,
+        actor_handle=actor_handle,
     )
 
     scored = [
@@ -800,6 +840,7 @@ def generate_route_packet(
         },
         "work_context": {
             "source": "ai-wiki/_toolkit/work/state.json",
+            "actor_handle": actor_handle,
             "items": work_context_items,
         },
         "must_load": _packet_docs(selected),
@@ -855,10 +896,12 @@ def render_route_packet_text(packet: dict[str, Any]) -> str:
                 if assignees
                 else ""
             )
+            actor_relation = item.get("actor_relation")
+            relation_text = f", relation `{actor_relation}`" if actor_relation else ""
             sources = item.get("source_paths") or [work_context.get("source", "ai-wiki/_toolkit/work/state.json")]
             source_text = ", ".join(f"`{source}`" for source in sources[:2])
             lines.append(
-                f"- `{item['work_id']}` ({item['item_type']}, {item['status']}{epic}{assignee_text}): "
+                f"- `{item['work_id']}` ({item['item_type']}, {item['status']}{epic}{assignee_text}{relation_text}): "
                 f"{item['title']} - {item['reason']} Source: {source_text}"
             )
     lines.extend(["", "## Must Load"])

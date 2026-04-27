@@ -12,8 +12,13 @@ Package-managed generated views live under `ai-wiki/_toolkit/work/`:
 
 - `state.json`
 - `report.md`
+- `by-assignee/<handle>.md`
+- `by-reporter/<handle>.md`
 
 Generated views are local snapshots. Regenerate them with `aiwiki-toolkit work report` or `aiwiki-toolkit refresh-metrics`.
+
+Keep canonical work state in `ai-wiki/work/events/<handle>.jsonl`, not in `ai-wiki/people/<handle>/`.
+The people namespace is for personal drafts and preferences. Work links to people through event fields.
 
 ## Event Fields
 
@@ -62,4 +67,6 @@ Use:
 5. Prefer append-only events over rewriting shared work files.
 6. Treat `_toolkit/work/*` as generated views, not canonical memory.
 7. Do not automatically archive or drop a large epic without human confirmation.
-8. Route packets may use active, processing, or matching work items as routing hints, but work events are not knowledge-reuse evidence by themselves.
+8. Route packets may use work assigned to the current actor as actionable context by default.
+9. Route packets may show work assigned to other handles only when the current task directly matches that work.
+10. Work events are not knowledge-reuse evidence by themselves.

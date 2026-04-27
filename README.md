@@ -349,6 +349,16 @@ aiwiki-toolkit work status \
 
 By default, `work capture` resolves the current actor from explicit CLI input, environment, `.env.aiwiki`, git config, then fallback. It uses that actor as `author_handle`, `reporter_handle`, and the default assignee. This appends to `ai-wiki/work/events/<handle>.jsonl` and regenerates local package-managed views under `ai-wiki/_toolkit/work/`. Route packets can then surface matching active, processing, blocked, planned, or todo work items before an agent starts acting. Work events are not knowledge-reuse evidence by themselves, so they are kept separate from `record-reuse`.
 
+For team use, canonical work stays in the central `ai-wiki/work/events/` ledger. People are linked through `reporter_handle` and `assignee_handles`; work is not stored inside `people/<handle>/`. Use these views when you need owner-scoped state:
+
+```bash
+aiwiki-toolkit work mine
+aiwiki-toolkit work list --assignee your-handle
+aiwiki-toolkit work list --reporter your-handle --include-closed
+```
+
+Generated local views are also written under `ai-wiki/_toolkit/work/by-assignee/` and `ai-wiki/_toolkit/work/by-reporter/`. Route packets treat work assigned to the current `.env.aiwiki` actor as actionable by default; another person's work appears only when directly matched by the current task request.
+
 To record that a completed task was checked for AI wiki reuse, even when no wiki docs were needed:
 
 ```bash

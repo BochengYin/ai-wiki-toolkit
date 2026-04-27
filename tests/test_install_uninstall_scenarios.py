@@ -416,14 +416,32 @@ def test_install_reuses_existing_person_tree_when_two_inputs_resolve_to_same_han
 def test_refresh_metrics_regenerates_managed_catalog_and_stats(repo_env: dict[str, Path]) -> None:
     install_result = runner.invoke(app, ["install", "--handle", "alice"])
     assert install_result.exit_code == 0
+    capture_result = runner.invoke(
+        app,
+        [
+            "work",
+            "capture",
+            "--work-id",
+            "refresh-view-task",
+            "--title",
+            "Regenerate owner-scoped work views",
+            "--assignee",
+            "alice",
+            "--handle",
+            "alice",
+        ],
+    )
+    assert capture_result.exit_code == 0
 
     repo = repo_env["repo"]
     stale_catalog = repo / "ai-wiki" / "_toolkit" / "catalog.json"
     stale_task_stats = repo / "ai-wiki" / "_toolkit" / "metrics" / "task-stats.json"
     stale_work_state = repo / "ai-wiki" / "_toolkit" / "work" / "state.json"
+    by_assignee = repo / "ai-wiki" / "_toolkit" / "work" / "by-assignee" / "alice.md"
     stale_catalog.write_text("{}", encoding="utf-8")
     stale_task_stats.write_text("{}", encoding="utf-8")
     stale_work_state.write_text("{}", encoding="utf-8")
+    by_assignee.unlink()
 
     result = runner.invoke(app, ["refresh-metrics"])
 
@@ -431,6 +449,7 @@ def test_refresh_metrics_regenerates_managed_catalog_and_stats(repo_env: dict[st
     assert stale_catalog.read_text(encoding="utf-8") != "{}"
     assert stale_task_stats.read_text(encoding="utf-8") != "{}"
     assert stale_work_state.read_text(encoding="utf-8") != "{}"
+    assert "`refresh-view-task`" in by_assignee.read_text(encoding="utf-8")
     assert "Refreshed files:" in result.output
 
 
