@@ -399,6 +399,24 @@ If you need a fresh local telemetry and work snapshot, regenerate package-manage
 aiwiki-toolkit refresh-metrics
 ```
 
+To inspect memory quality from local reuse and task-check evidence:
+
+```bash
+aiwiki-toolkit diagnose memory
+aiwiki-toolkit diagnose memory --since 14d --handle your-handle
+```
+
+This writes regenerated local reports under `ai-wiki/_toolkit/diagnostics/` and prints the report to stdout. The report highlights high-ROI memory, noisy memory, stale or missing docs, conflict notes, missed-memory signals, and coverage gaps such as document reuse events that were never paired with a task-level reuse check. It does not edit user-owned AI wiki docs.
+
+To turn diagnostics and handle-local drafts into a human-reviewable consolidation queue:
+
+```bash
+aiwiki-toolkit consolidate queue
+aiwiki-toolkit consolidate queue --since 14d --handle your-handle
+```
+
+This writes regenerated local reports under `ai-wiki/_toolkit/consolidation/` and prints the queue to stdout. The queue suggests one action per draft cluster: keep, refine, promotion candidate, conflict, or supersession. It does not edit user-owned AI wiki docs or create shared conventions, review patterns, problems, features, or decisions; those still require human confirmation.
+
 To diagnose missing starter pointers, stale managed prompt blocks, or rule drift and print copy-paste upgrade starters:
 
 ```bash
@@ -452,7 +470,7 @@ Even with `--purge-user-docs --yes`, the shared home wiki under `~/ai-wiki/syste
 - `ai-wiki/index.md` is a repo-owned map and is not treated as a starter-drift upgrade target by `doctor`.
 - `ai-wiki/workflows.md` remains user-owned; package-managed workflow updates land in `ai-wiki/_toolkit/workflows.md` instead of rewriting the repo-owned file.
 - `.env.aiwiki` stores the current local actor identity in a managed block. It is gitignored and should not be committed.
-- `ai-wiki/metrics/reuse-events/<handle>.jsonl` and `ai-wiki/metrics/task-checks/<handle>.jsonl` are user-owned evidence data. `ai-wiki/work/events/<handle>.jsonl` is user-owned work state. Package-managed aggregate views are regenerated under `ai-wiki/_toolkit/metrics/` and `ai-wiki/_toolkit/work/`, and the installer ignores those generated paths by default in `.gitignore`.
+- `ai-wiki/metrics/reuse-events/<handle>.jsonl` and `ai-wiki/metrics/task-checks/<handle>.jsonl` are user-owned evidence data. `ai-wiki/work/events/<handle>.jsonl` is user-owned work state. Package-managed aggregate views are regenerated under `ai-wiki/_toolkit/metrics/` and `ai-wiki/_toolkit/work/`; memory diagnostics are generated under `ai-wiki/_toolkit/diagnostics/`; consolidation queues are generated under `ai-wiki/_toolkit/consolidation/`. The installer ignores those generated paths by default in `.gitignore`.
 - Legacy flat files such as `ai-wiki/metrics/reuse-events.jsonl` and `ai-wiki/metrics/task-checks.jsonl` are still read for compatibility, but new writes should use the handle-sharded layout.
 - `aiwiki-toolkit doctor --suggest-index-upgrade` prints suggested replacements for missing repo starter docs and repo-owned companion docs such as `ai-wiki/workflows.md`, but it does not overwrite them automatically.
 - Package-owned `.agents/skills/ai-wiki-reuse-check/**`, `.agents/skills/ai-wiki-update-check/**`, `.agents/skills/ai-wiki-clarify-before-code/**`, `.agents/skills/ai-wiki-capture-review-learning/**`, and `.agents/skills/ai-wiki-consolidate-drafts/**` are refreshed by `install` so package workflow updates reach existing repos.

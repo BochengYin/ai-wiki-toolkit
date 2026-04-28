@@ -210,6 +210,8 @@ def test_init_writes_expected_gitignore_snapshot(repo_env: dict[str, Path]) -> N
         .env.aiwiki
         ai-wiki/metrics/reuse-events/
         ai-wiki/metrics/task-checks/
+        ai-wiki/_toolkit/consolidation/
+        ai-wiki/_toolkit/diagnostics/
         ai-wiki/_toolkit/metrics/
         ai-wiki/_toolkit/work/
         ai-wiki/_toolkit/catalog.json
@@ -251,10 +253,12 @@ def test_init_writes_expected_toolkit_managed_files(repo_env: dict[str, Path]) -
 
         ## Generated Outputs
 
-        - `catalog.json`, `metrics/*.json`, and `work/*` are generated outputs, not guidance docs.
+        - `catalog.json`, `consolidation/*`, `diagnostics/*`, `metrics/*.json`, and `work/*` are generated outputs, not guidance docs.
         - `aiwiki-toolkit route` emits transient context packets to stdout; packets are derived from source docs and should be regenerated rather than treated as canonical memory.
         - The installer ignores local identity and generated outputs in `.gitignore` so routine agent use stays local.
         - Regenerate catalog, metrics, and work views with `aiwiki-toolkit refresh-metrics` whenever you need a fresh local snapshot.
+        - Generate local memory quality diagnostics with `aiwiki-toolkit diagnose memory` when you need to inspect missed, stale, noisy, conflicting, or high-ROI memory.
+        - Generate a local draft consolidation and promotion review queue with `aiwiki-toolkit consolidate queue`.
         """
     )
     assert (
@@ -399,7 +403,7 @@ def test_init_writes_expected_toolkit_managed_files(repo_env: dict[str, Path]) -
         6. Do not log managed `_toolkit/**` docs with `record-reuse`; if they changed the plan or behavior, cite their paths in a progress update or the final note instead.
         7. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
         8. Treat the footer as the user-facing evidence surface; telemetry and generated aggregates are the local machine-readable record behind it.
-        9. The installer manages a `.gitignore` block that ignores `.env.aiwiki`, `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/metrics/`, `ai-wiki/_toolkit/work/`, and `ai-wiki/_toolkit/catalog.json` so local identity, telemetry, and generated views stay local by default.
+        9. The installer manages a `.gitignore` block that ignores `.env.aiwiki`, `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/consolidation/`, `ai-wiki/_toolkit/diagnostics/`, `ai-wiki/_toolkit/metrics/`, `ai-wiki/_toolkit/work/`, and `ai-wiki/_toolkit/catalog.json` so local identity, telemetry, and generated views stay local by default.
         10. If those local-state paths were tracked before you upgraded, run `aiwiki-toolkit doctor` and follow the suggested `git rm --cached` fix once to untrack them.
         11. Produce one AI wiki write-back outcome at the end of every completed task, even when the result is `None`.
         12. Before returning `None`, run memory candidate detection for problem-solution memory, feature clarification memory, convention candidates, missed relevant memory, and conflict or supersession.

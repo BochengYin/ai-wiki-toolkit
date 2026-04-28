@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ai-wiki-toolkit"
-version = "0.1.24"
+version = "0.1.25"
 description = "Repository-native AI wiki memory harness for coding agents."
 readme = "README.md"
 license = "MIT"

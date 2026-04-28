@@ -9,6 +9,16 @@ from pathlib import Path
 import typer
 
 from ai_wiki_toolkit import __version__
+from ai_wiki_toolkit.consolidation import (
+    DEFAULT_CONSOLIDATION_MAX_ITEMS,
+    generate_consolidation_queue,
+)
+from ai_wiki_toolkit.diagnostics import (
+    DEFAULT_DIAGNOSTICS_MAX_ITEMS,
+    DEFAULT_HIGH_ROI_MIN_EVENTS,
+    DEFAULT_NOISY_MIN_EVENTS,
+    generate_memory_diagnostics,
+)
 from ai_wiki_toolkit.doctor import run_doctor
 from ai_wiki_toolkit.paths import (
     RepoRootNotFoundError,
@@ -49,7 +59,11 @@ from ai_wiki_toolkit.work_ledger import (
 
 app = typer.Typer(help="Initialize and maintain ai-wiki-toolkit scaffolds.")
 work_app = typer.Typer(help="Record and report AI wiki work ledger state.")
+diagnose_app = typer.Typer(help="Generate AI wiki diagnostic reports.")
+consolidate_app = typer.Typer(help="Generate AI wiki draft consolidation queues.")
 app.add_typer(work_app, name="work")
+app.add_typer(diagnose_app, name="diagnose")
+app.add_typer(consolidate_app, name="consolidate")
 
 PROMPTED_IDENTITY_SOURCE = "prompted-handle"
 
@@ -379,6 +393,169 @@ def refresh_metrics() -> None:
     typer.echo(f"Refreshed files: {len(result.refreshed_files)}")
     for path in result.refreshed_files:
         typer.echo(f"Refreshed file: {path}")
+
+
+@diagnose_app.command("memory")
+def diagnose_memory(
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional author handle filter for local evidence logs.",
+    ),
+    since: str | None = typer.Option(
+        None,
+        "--since",
+        help="Optional ISO timestamp or duration such as 14d.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    write: bool = typer.Option(
+        True,
+        "--write/--no-write",
+        help="Write generated reports under ai-wiki/_toolkit/diagnostics/.",
+    ),
+    max_items: int = typer.Option(
+        DEFAULT_DIAGNOSTICS_MAX_ITEMS,
+        "--max-items",
+        min=1,
+        help="Maximum items per diagnostics section.",
+    ),
+    high_roi_min_events: int = typer.Option(
+        DEFAULT_HIGH_ROI_MIN_EVENTS,
+        "--high-roi-min-events",
+        min=1,
+        help="Resolved reuse event threshold for high-ROI memory.",
+    ),
+    noisy_min_events: int = typer.Option(
+        DEFAULT_NOISY_MIN_EVENTS,
+        "--noisy-min-events",
+        min=1,
+        help="Total event threshold for noisy memory candidates.",
+    ),
+) -> None:
+    """Diagnose AI wiki memory quality from local reuse and task-check evidence."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        paths = build_paths()
+        if not paths.repo_wiki_dir.exists():
+            raise RepoWikiNotInitializedError(
+                "Repo AI wiki is not initialized. Run `aiwiki-toolkit install` first."
+            )
+        result = generate_memory_diagnostics(
+            paths.repo_wiki_dir,
+            handle=handle,
+            since=since,
+            max_items=max_items,
+            high_roi_min_events=high_roi_min_events,
+            noisy_min_events=noisy_min_events,
+            write=write,
+        )
+    except RepoRootNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except RepoWikiNotInitializedError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read AI wiki diagnostics data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    if normalized_format == "json":
+        typer.echo(result.json_text, nl=False)
+    else:
+        typer.echo(result.markdown, nl=False)
+
+
+@consolidate_app.command("queue")
+def consolidate_queue(
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional author handle whose people/<handle>/drafts/ queue should be reviewed.",
+    ),
+    since: str | None = typer.Option(
+        None,
+        "--since",
+        help="Optional ISO timestamp or duration such as 14d for diagnostics evidence.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    write: bool = typer.Option(
+        True,
+        "--write/--no-write",
+        help="Write generated reports under ai-wiki/_toolkit/consolidation/.",
+    ),
+    max_items: int = typer.Option(
+        DEFAULT_CONSOLIDATION_MAX_ITEMS,
+        "--max-items",
+        min=1,
+        help="Maximum draft clusters in the queue.",
+    ),
+    high_roi_min_events: int = typer.Option(
+        DEFAULT_HIGH_ROI_MIN_EVENTS,
+        "--high-roi-min-events",
+        min=1,
+        help="Resolved reuse event threshold for high-ROI memory signals.",
+    ),
+    noisy_min_events: int = typer.Option(
+        DEFAULT_NOISY_MIN_EVENTS,
+        "--noisy-min-events",
+        min=1,
+        help="Total event threshold for noisy memory signals.",
+    ),
+) -> None:
+    """Generate a human-reviewable draft consolidation and promotion queue."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        paths = build_paths()
+        if not paths.repo_wiki_dir.exists():
+            raise RepoWikiNotInitializedError(
+                "Repo AI wiki is not initialized. Run `aiwiki-toolkit install` first."
+            )
+        resolved_handle = resolve_user_handle(paths.repo_root, explicit_handle=handle)
+        result = generate_consolidation_queue(
+            paths.repo_wiki_dir,
+            handle=resolved_handle,
+            since=since,
+            max_items=max_items,
+            high_roi_min_events=high_roi_min_events,
+            noisy_min_events=noisy_min_events,
+            write=write,
+        )
+    except RepoRootNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except RepoWikiNotInitializedError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read AI wiki consolidation data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    if normalized_format == "json":
+        typer.echo(result.json_text, nl=False)
+    else:
+        typer.echo(result.markdown, nl=False)
 
 
 @app.command("record-reuse")

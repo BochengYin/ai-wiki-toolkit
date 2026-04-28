@@ -280,4 +280,4 @@ def test_doctor_warns_when_telemetry_paths_are_still_tracked(repo_env: dict[str,
     assert result.exit_code == 1
     assert "WARN  .gitignore Git still tracks AI wiki local-state paths despite the ignore rules." in result.output
     assert "Untrack legacy local-state paths once:" in result.output
-    assert "git rm -r --cached --ignore-unmatch .env.aiwiki ai-wiki/metrics/reuse-events ai-wiki/metrics/task-checks ai-wiki/_toolkit/metrics ai-wiki/_toolkit/work ai-wiki/_toolkit/catalog.json" in result.output
+    assert "git rm -r --cached --ignore-unmatch .env.aiwiki ai-wiki/metrics/reuse-events ai-wiki/metrics/task-checks ai-wiki/_toolkit/consolidation ai-wiki/_toolkit/diagnostics ai-wiki/_toolkit/metrics ai-wiki/_toolkit/work ai-wiki/_toolkit/catalog.json" in result.output
