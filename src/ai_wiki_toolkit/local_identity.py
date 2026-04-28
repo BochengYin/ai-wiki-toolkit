@@ -67,13 +67,12 @@ def upsert_local_identity_file(
     actor_handle: str,
     explicit_handle: str | None = None,
     env_handle: str | None = None,
+    identity_source: str | None = None,
 ) -> LocalIdentityResult:
     body = render_local_identity_body(
         actor_handle=actor_handle,
-        identity_source=_identity_source(
-            explicit_handle=explicit_handle,
-            env_handle=env_handle,
-        ),
+        identity_source=identity_source
+        or _identity_source(explicit_handle=explicit_handle, env_handle=env_handle),
     )
     path = repo_local_env_path(repo_root)
     updated = upsert_managed_block_file(

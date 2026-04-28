@@ -33,7 +33,9 @@ def test_init_updates_only_existing_prompt_files(
     for filename in expected_files:
         text = (repo / filename).read_text(encoding="utf-8")
         assert PROMPT_BLOCK_START in text
+        assert "If this repository contains `ai-wiki/`" in text
         assert "ai-wiki/_toolkit/system.md" in text
+        assert "Before starting work:" not in text
 
     for filename in {"AGENTS.md", "AGENT.md", "CLAUDE.md"} - set(expected_files):
         assert not (repo / filename).exists()
@@ -73,6 +75,7 @@ def test_init_appends_managed_block_when_prompt_file_has_no_managed_section(
     text = claude.read_text(encoding="utf-8")
     assert text.startswith("# Existing Claude prompt\n\n")
     assert PROMPT_BLOCK_START in text
+    assert "If this repository contains `ai-wiki/`" in text
     assert "ai-wiki/_toolkit/system.md" in text
 
 

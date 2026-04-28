@@ -129,7 +129,11 @@ def _write_refreshed_managed(path: Path, content: str, refreshed_files: list[Pat
     refreshed_files.append(path)
 
 
-def install_workspace(start: Path | None = None, handle: str | None = None) -> InitResult:
+def install_workspace(
+    start: Path | None = None,
+    handle: str | None = None,
+    identity_source: str | None = None,
+) -> InitResult:
     paths = build_paths(start)
     resolved_handle = resolve_user_handle(paths.repo_root, explicit_handle=handle)
     result = InitResult(paths=paths, resolved_handle=resolved_handle)
@@ -141,6 +145,7 @@ def install_workspace(start: Path | None = None, handle: str | None = None) -> I
         actor_handle=resolved_handle,
         explicit_handle=handle,
         env_handle=os.getenv(HANDLE_OVERRIDE_ENV),
+        identity_source=identity_source,
     )
     if local_identity_result.updated and not local_identity_existed:
         result.created_files.append(local_identity_result.path)
@@ -221,8 +226,16 @@ def install_workspace(start: Path | None = None, handle: str | None = None) -> I
     return result
 
 
-def init_workspace(start: Path | None = None, handle: str | None = None) -> InitResult:
-    return install_workspace(start=start, handle=handle)
+def init_workspace(
+    start: Path | None = None,
+    handle: str | None = None,
+    identity_source: str | None = None,
+) -> InitResult:
+    return install_workspace(
+        start=start,
+        handle=handle,
+        identity_source=identity_source,
+    )
 
 
 def refresh_managed_metrics(start: Path | None = None) -> RefreshMetricsResult:

@@ -3,13 +3,20 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import typer
 
 from ai_wiki_toolkit import __version__
 from ai_wiki_toolkit.doctor import run_doctor
-from ai_wiki_toolkit.paths import RepoRootNotFoundError, build_paths, resolve_user_handle
+from ai_wiki_toolkit.paths import (
+    RepoRootNotFoundError,
+    build_paths,
+    resolve_user_handle,
+    resolve_user_handle_candidate,
+    usable_user_handle,
+)
 from ai_wiki_toolkit.route import (
     DEFAULT_ROUTE_SAFETY_CAP_WORDS,
     generate_route_packet,
@@ -43,6 +50,8 @@ from ai_wiki_toolkit.work_ledger import (
 app = typer.Typer(help="Initialize and maintain ai-wiki-toolkit scaffolds.")
 work_app = typer.Typer(help="Record and report AI wiki work ledger state.")
 app.add_typer(work_app, name="work")
+
+PROMPTED_IDENTITY_SOURCE = "prompted-handle"
 
 
 def _version_callback(value: bool) -> None:
@@ -80,6 +89,58 @@ def _echo_install_result(result) -> None:
     )
     for path in result.updated_skill_files:
         typer.echo(f"Updated skill file: {path}")
+
+
+def _can_prompt_for_team_id() -> bool:
+    return sys.stdin.isatty()
+
+
+def _prompt_for_team_id() -> str:
+    typer.echo("Could not detect a git user.name or user.email.")
+    typer.echo("")
+    typer.echo("AI wiki needs a stable local ID for your team identity.")
+    while True:
+        value = typer.prompt(
+            "What ID would you prefer to use in this team?",
+            default="",
+            show_default=False,
+            prompt_suffix=" ",
+        )
+        handle = usable_user_handle(value)
+        if handle:
+            typer.echo("")
+            typer.echo(f"Using AI wiki ID: {handle}")
+            typer.echo("")
+            typer.echo(
+                "This ID will be stored in .env.aiwiki and used for "
+                f"ai-wiki/people/{handle}/. AI wiki workflows can also use it as "
+                "your branch-name component."
+            )
+            return handle
+        typer.echo(
+            "Please enter a team ID, for example: alice, alice-reviewer, or byin."
+        )
+
+
+def _resolve_install_handle(handle: str | None) -> tuple[str | None, str | None]:
+    paths = build_paths()
+    resolved = resolve_user_handle_candidate(paths.repo_root, explicit_handle=handle)
+    if resolved:
+        if resolved.source == "explicit-handle":
+            return handle, None
+        return None, None
+
+    if not _can_prompt_for_team_id():
+        typer.echo(
+            "Could not detect an AI wiki ID and this shell is non-interactive.\n"
+            "Run `aiwiki-toolkit install --handle your-name` or set "
+            "`AIWIKI_TOOLKIT_HANDLE`.",
+            err=True,
+        )
+        raise typer.Exit(code=1)
+
+    prompted_handle = _prompt_for_team_id()
+    return prompted_handle, PROMPTED_IDENTITY_SOURCE
 
 
 def _echo_doctor_result(result, *, suggest_index_upgrade: bool, strict: bool) -> None:
@@ -238,7 +299,11 @@ def install(
 ) -> None:
     """Install or refresh the repo and home AI wiki toolkit scaffolds."""
     try:
-        result = install_workspace(handle=handle)
+        install_handle, identity_source = _resolve_install_handle(handle)
+        result = install_workspace(
+            handle=install_handle,
+            identity_source=identity_source,
+        )
     except RepoRootNotFoundError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=1) from exc

@@ -1843,37 +1843,7 @@ def prompt_block_body() -> str:
         """
         ## AI Wiki Toolkit
 
-        Before starting work:
-
-        1. Run `aiwiki-toolkit route --task "<current user request>"` when available, and use the generated AI Wiki Context Packet as the first-pass routing layer.
-        2. Read `ai-wiki/_toolkit/system.md`.
-        3. Use `ai-wiki/index.md` as a repo-owned map when you need a quick overview of local AI wiki areas.
-        4. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
-        5. Keep project-specific notes in `ai-wiki/`.
-        6. Keep cross-project reusable notes in `<home>/ai-wiki/system/`.
-        7. Only suggest promotion from a draft to a shared pattern or convention when the two-signal gate is satisfied.
-        8. Agents may suggest promotion candidates, but humans confirm shared patterns and team conventions.
-        9. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
-        10. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
-        11. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them to produce the end-of-task AI wiki evidence footer and write-back outcome.
-
-        ## End Of Task
-
-        1. Produce one AI wiki reuse footer for every completed task.
-        2. First classify the task as `relevant`, `optional`, or `not_relevant` for AI wiki use; pure operational tasks such as pushing a PR or running an already-decided command are `not_relevant`.
-        3. If any user-owned AI wiki docs were consulted, record one `aiwiki-toolkit record-reuse` event per consulted doc.
-        4. If a managed `_toolkit/**` doc materially changed the plan or behavior, cite its path in a progress update or final note, but do not log it with `record-reuse`.
-        5. If a user-owned AI wiki doc materially changed the plan or behavior, cite its path in a progress update or final note.
-        6. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
-        7. Produce one AI wiki write-back outcome for every completed task, even if the result is `None`.
-        8. Before returning `None`, check for convention candidates, reusable PR review learning, feature clarification memory, durable decisions, problem-solution memory, missed relevant memory, conflict or supersession, or a person preference that should stay personal for now.
-        9. Choose exactly one result: `None`, `Draft`, or `PromotionCandidate`.
-        10. If the result is `Draft`, record the lesson under `ai-wiki/people/<handle>/drafts/` and print `AI Wiki Write-Back Path: <path>`.
-        11. If the result is `PromotionCandidate`, mark or update the draft as a promotion candidate, print `AI Wiki Write-Back Path: <path>`, and ask for human confirmation before creating `ai-wiki/review-patterns/*.md` or `ai-wiki/conventions/*.md`.
-        12. Always print exactly one final status line:
-           - `AI Wiki Write-Back: none`
-           - `AI Wiki Write-Back: draft recorded`
-           - `AI Wiki Write-Back: promotion candidate`
+        If this repository contains `ai-wiki/`, read `ai-wiki/_toolkit/system.md` before starting work and follow its end-of-task workflow. Use `ai-wiki/index.md` as the repo-owned map when you need navigation.
         """
     ).strip()
 

@@ -291,15 +291,29 @@ aiwiki-toolkit init
 - generate package-managed `_toolkit/index.md`, `_toolkit/workflows.md`, `_toolkit/catalog.json`, `_toolkit/schema/reuse-v1.md`, `_toolkit/schema/team-memory-v1.md`, `_toolkit/schema/work-v1.md`, `_toolkit/metrics/*.json`, and `_toolkit/work/*`
 - upsert a managed `.gitignore` block that ignores `.env.aiwiki`, AI wiki telemetry, and generated aggregate snapshots so routine agent use does not dirty `git status`
 - create or refresh package-owned `.agents/skills/ai-wiki-reuse-check/`, `.agents/skills/ai-wiki-update-check/`, `.agents/skills/ai-wiki-clarify-before-code/`, `.agents/skills/ai-wiki-capture-review-learning/`, and `.agents/skills/ai-wiki-consolidate-drafts/`
-- update `AGENT.md`, `AGENTS.md`, and/or `CLAUDE.md` with a managed instruction block that reads `ai-wiki/_toolkit/system.md`
+- update `AGENT.md`, `AGENTS.md`, and/or `CLAUDE.md` with a short managed instruction block that points agents to `ai-wiki/_toolkit/system.md` when the repo contains `ai-wiki/`
 
 If no supported prompt file exists, it creates `AGENT.md`.
 
 If `--handle` is not passed, the tool resolves a handle from:
 
 1. `AIWIKI_TOOLKIT_HANDLE`
-2. local or global git config
-3. `unknown`
+2. the repo-local `.env.aiwiki`
+3. local or global git config
+4. an interactive team ID prompt
+
+The prompt appears only when no usable handle can be resolved:
+
+```text
+Could not detect a git user.name or user.email.
+
+AI wiki needs a stable local ID for your team identity.
+What ID would you prefer to use in this team?
+```
+
+The entered ID is normalized into a path- and branch-safe handle, stored in
+`.env.aiwiki`, and used for paths such as `ai-wiki/people/<handle>/`. In
+non-interactive shells, pass `--handle your-name` or set `AIWIKI_TOOLKIT_HANDLE`.
 
 The tool works best when `git user.name` and `git user.email` are configured first.
 
