@@ -29,6 +29,7 @@ HOST_MODEL_ENV_VARS = (
     "AI_MODEL",
 )
 PROMPT_FILENAMES = ("AGENTS.md", "AGENT.md", "CLAUDE.md")
+UNRESOLVED_HANDLE_VALUES = frozenset({"unknown", "undefined", "undefine"})
 _NON_ALNUM_RE = re.compile(r"[^a-z0-9]+")
 _GITHUB_NOREPLY_RE = re.compile(
     r"^(?:\d+\+)?(?P<username>[^@+]+)@users\.noreply\.github\.com$", re.IGNORECASE
@@ -49,6 +50,12 @@ class ToolkitPaths:
     system_dir: Path
     repo_toolkit_dir: Path
     home_toolkit_dir: Path
+
+
+@dataclass(frozen=True)
+class ResolvedUserHandle:
+    handle: str
+    source: str
 
 
 def resolve_repo_root(start: Path | None = None) -> Path:
@@ -97,6 +104,18 @@ def slugify(value: str) -> str:
     lowered = value.strip().lower()
     slug = _NON_ALNUM_RE.sub("-", lowered).strip("-")
     return slug or "unknown"
+
+
+def is_unresolved_handle(value: str | None) -> bool:
+    if not value:
+        return True
+    return slugify(value) in UNRESOLVED_HANDLE_VALUES
+
+
+def usable_user_handle(value: str | None) -> str | None:
+    if is_unresolved_handle(value):
+        return None
+    return slugify(value or "")
 
 
 def _parse_dotenv_value(value: str) -> str:
@@ -243,17 +262,37 @@ def resolve_user_handle(
     git_email: str | None = None,
     git_name: str | None = None,
 ) -> str:
+    resolved = resolve_user_handle_candidate(
+        repo_root,
+        explicit_handle=explicit_handle,
+        env=env,
+        git_email=git_email,
+        git_name=git_name,
+    )
+    return resolved.handle if resolved else "unknown"
+
+
+def resolve_user_handle_candidate(
+    repo_root: Path,
+    explicit_handle: str | None = None,
+    env: Mapping[str, str] | None = None,
+    git_email: str | None = None,
+    git_name: str | None = None,
+) -> ResolvedUserHandle | None:
     env = env or os.environ
-    if explicit_handle:
-        return slugify(explicit_handle)
+    explicit = usable_user_handle(explicit_handle)
+    if explicit:
+        return ResolvedUserHandle(handle=explicit, source="explicit-handle")
 
-    env_handle = env.get(HANDLE_OVERRIDE_ENV)
+    env_handle = usable_user_handle(env.get(HANDLE_OVERRIDE_ENV))
     if env_handle:
-        return slugify(env_handle)
+        return ResolvedUserHandle(handle=env_handle, source=HANDLE_OVERRIDE_ENV)
 
-    local_handle = read_repo_local_env(repo_root).get(LOCAL_ACTOR_HANDLE_ENV)
+    local_handle = usable_user_handle(
+        read_repo_local_env(repo_root).get(LOCAL_ACTOR_HANDLE_ENV)
+    )
     if local_handle:
-        return slugify(local_handle)
+        return ResolvedUserHandle(handle=local_handle, source=LOCAL_ENV_FILENAME)
 
     if git_email is None or git_name is None:
         resolved_email, resolved_name = git_identity(repo_root)
@@ -266,7 +305,10 @@ def resolve_user_handle(
         git_email=git_email,
         git_name=git_name,
     )
-    return derived or "unknown"
+    git_handle = usable_user_handle(derived)
+    if git_handle:
+        return ResolvedUserHandle(handle=git_handle, source="git-config")
+    return None
 
 
 def resolve_model_name(

@@ -99,13 +99,9 @@ def _add_suggestion(
 
 def _prompt_managed_system_tokens() -> tuple[str, ...]:
     return (
+        "If this repository contains `ai-wiki/`",
         "ai-wiki/_toolkit/system.md",
-        "<home>/ai-wiki/system/_toolkit/system.md",
-        "<home>/ai-wiki/system/index.md",
-        "ai-wiki-clarify-before-code",
-        "ai-wiki-capture-review-learning",
-        "ai-wiki-reuse-check",
-        "ai-wiki-update-check",
+        "ai-wiki/index.md",
     )
 
 
