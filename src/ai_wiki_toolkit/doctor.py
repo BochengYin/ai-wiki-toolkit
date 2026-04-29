@@ -8,7 +8,14 @@ from pathlib import Path
 import re
 import subprocess
 
-from ai_wiki_toolkit.content import PROMPT_BLOCK_END, PROMPT_BLOCK_START, repo_starter_files
+from ai_wiki_toolkit.content import (
+    AI_WIKI_REUSE_SKILL_DIR,
+    AI_WIKI_UPDATE_SKILL_DIR,
+    PROMPT_BLOCK_END,
+    PROMPT_BLOCK_START,
+    TOOLKIT_SKILLS_DIR,
+    repo_starter_files,
+)
 from ai_wiki_toolkit.frontmatter import parse_frontmatter
 from ai_wiki_toolkit.gitignore import (
     gitignore_has_current_telemetry_block,
@@ -102,6 +109,15 @@ def _prompt_managed_system_tokens() -> tuple[str, ...]:
         "If this repository contains `ai-wiki/`",
         "ai-wiki/_toolkit/system.md",
         "ai-wiki/index.md",
+    )
+
+
+def _runtime_skill_fallback_tokens() -> tuple[str, ...]:
+    return (
+        "## Runtime Skill Fallback",
+        ".agents/skills/<skill-name>/SKILL.md",
+        f"{AI_WIKI_REUSE_SKILL_DIR}/references/output-contract.md",
+        f"{AI_WIKI_UPDATE_SKILL_DIR}/references/output-contract.md",
     )
 
 
@@ -559,6 +575,73 @@ def _check_required_managed_doc(
     )
 
 
+def _check_managed_system_runtime_skill_fallback(result: DoctorResult) -> None:
+    system_path = result.paths.repo_toolkit_dir / "system.md"
+    display_path = "ai-wiki/_toolkit/system.md"
+    if not system_path.exists():
+        return
+
+    text = system_path.read_text(encoding="utf-8")
+    missing_tokens = [token for token in _runtime_skill_fallback_tokens() if token not in text]
+    if missing_tokens:
+        _add_finding(
+            result,
+            severity="WARN",
+            code="managed_system_missing_runtime_skill_fallback",
+            path=display_path,
+            message=(
+                "`ai-wiki/_toolkit/system.md` is missing runtime skill fallback guidance for runtimes "
+                "that do not expose repo-local AI wiki skills."
+            ),
+            suggested_fix="Run `aiwiki-toolkit install` to refresh managed system rules.",
+        )
+        return
+
+    _add_finding(
+        result,
+        severity="OK",
+        code="managed_system_runtime_skill_fallback_current",
+        path=display_path,
+        message="`ai-wiki/_toolkit/system.md` includes runtime skill fallback guidance.",
+    )
+
+
+def _repo_local_aiwiki_skill_dirs(result: DoctorResult) -> list[Path]:
+    skills_dir = result.paths.repo_root / TOOLKIT_SKILLS_DIR
+    if not skills_dir.exists():
+        return []
+    return sorted(
+        path
+        for path in skills_dir.glob("ai-wiki-*")
+        if path.is_dir() and (path / "SKILL.md").exists()
+    )
+
+
+def _check_repo_local_aiwiki_skill_runtime_exposure(result: DoctorResult) -> None:
+    skill_dirs = _repo_local_aiwiki_skill_dirs(result)
+    if not skill_dirs:
+        return
+
+    sample = ", ".join(path.name for path in skill_dirs[:3])
+    if len(skill_dirs) > 3:
+        sample += f", and {len(skill_dirs) - 3} more"
+    _add_finding(
+        result,
+        severity="INFO",
+        code="repo_local_aiwiki_skills_runtime_exposure",
+        path=TOOLKIT_SKILLS_DIR,
+        message=(
+            f"Repo-local AI wiki skills are installed ({sample}). Some runtimes may discover these "
+            "files on disk but not expose them through the active skill tool; the managed system rules "
+            "include manual fallback paths."
+        ),
+        suggested_fix=(
+            "If a runtime reports no available skills, read `.agents/skills/<skill-name>/SKILL.md` "
+            "and relevant `references/` files manually."
+        ),
+    )
+
+
 def _check_gitignore(result: DoctorResult) -> None:
     gitignore_path = result.paths.repo_root / ".gitignore"
     if not gitignore_path.exists():
@@ -734,6 +817,8 @@ def run_doctor(start: Path | None = None, handle: str | None = None) -> DoctorRe
     starters = repo_starter_files(resolved_handle)
     _check_required_managed_doc(result, relative_path="index.md", description="toolkit index")
     _check_required_managed_doc(result, relative_path="system.md", description="system rules")
+    _check_managed_system_runtime_skill_fallback(result)
+    _check_repo_local_aiwiki_skill_runtime_exposure(result)
     _check_required_managed_doc(result, relative_path="workflows.md", description="baseline workflows")
     _check_required_managed_doc(
         result,

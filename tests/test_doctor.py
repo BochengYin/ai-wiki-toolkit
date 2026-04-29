@@ -22,9 +22,11 @@ def test_doctor_is_clean_for_latest_navigation_and_rule_structure(
 
     assert result.exit_code == 0
     assert "OK    ai-wiki/_toolkit/index.md `ai-wiki/_toolkit/index.md` exists." in result.output
+    assert "OK    ai-wiki/_toolkit/system.md `ai-wiki/_toolkit/system.md` includes runtime skill fallback guidance." in result.output
     assert "OK    ai-wiki/_toolkit/workflows.md `ai-wiki/_toolkit/workflows.md` exists." in result.output
     assert "OK    ai-wiki/_toolkit/schema/work-v1.md `ai-wiki/_toolkit/schema/work-v1.md` exists." in result.output
     assert "OK    ai-wiki/_toolkit/schema/team-memory-v1.md `ai-wiki/_toolkit/schema/team-memory-v1.md` exists." in result.output
+    assert "INFO  .agents/skills Repo-local AI wiki skills are installed" in result.output
     assert "OK    .gitignore `.gitignore` already contains the current managed local-state ignore block." in result.output
     assert "OK    ai-wiki/index.md `ai-wiki/index.md` exists. It is repo-owned and is not compared against starter navigation drift." in result.output
     assert "OK    ai-wiki/workflows.md `ai-wiki/workflows.md` points to the managed baseline workflow doc." in result.output
@@ -74,6 +76,7 @@ def test_doctor_suggests_starter_updates_for_repo_docs(repo_env: dict[str, Path]
 
     assert result.exit_code == 0
     assert "WARN  ai-wiki/_toolkit/index.md `ai-wiki/_toolkit/index.md` is missing." in result.output
+    assert "WARN  ai-wiki/_toolkit/system.md `ai-wiki/_toolkit/system.md` is missing runtime skill fallback guidance for runtimes that do not expose repo-local AI wiki skills." in result.output
     assert "WARN  ai-wiki/_toolkit/workflows.md `ai-wiki/_toolkit/workflows.md` is missing." in result.output
     assert "WARN  ai-wiki/_toolkit/schema/work-v1.md `ai-wiki/_toolkit/schema/work-v1.md` is missing." in result.output
     assert "WARN  ai-wiki/_toolkit/schema/team-memory-v1.md `ai-wiki/_toolkit/schema/team-memory-v1.md` is missing." in result.output

@@ -81,6 +81,11 @@ That is why the installer manages both wiki files and prompt wiring together:
 - `.agents/skills/ai-wiki-reuse-check/` and `.agents/skills/ai-wiki-update-check/` provide repeatable end-of-task checks for Codex-style agent runs
 - `.agents/skills/ai-wiki-clarify-before-code/` and `.agents/skills/ai-wiki-capture-review-learning/` help agents clarify ambiguous requests and preserve reusable review feedback
 
+Some runtimes can discover repo-local `.agents/skills/` files on disk but still not expose those
+skills to the active model session. The managed `ai-wiki/_toolkit/system.md` includes fallback
+paths so agents can manually read the relevant `SKILL.md` and `references/` files when runtime skill
+exposure is missing.
+
 The toolkit does not replace coding agents. It gives them a shared repo-local memory layer so they can avoid repeating the same review issues, misunderstanding the same requirements, or rediscovering the same fixes.
 
 ## Task-Aware Context Routing
@@ -244,6 +249,7 @@ npm install -g ai-wiki-toolkit@latest
   after install. That is intentional: they are placeholders for rules and decisions your team has
   actually made, not generic package defaults.
 - `ai-wiki/_toolkit/system.md` is the managed entrypoint for package-managed repo guidance and evolving read order.
+- `ai-wiki/_toolkit/system.md` also includes runtime skill fallback guidance for agents whose active session does not expose repo-local `.agents/skills/`.
 - `ai-wiki/index.md` is a repo-owned map, not a package upgrade surface.
 - `ai-wiki/_toolkit/workflows.md` carries the managed baseline workflows that package upgrades can refresh.
 - Agents should extend user-owned workflow docs instead of editing `_toolkit/**`.
@@ -435,7 +441,7 @@ This command does not rewrite user-owned repo docs. It prints which paths need a
 - `ai-wiki/people/<handle>/index.md`
 - `ai-wiki/metrics/index.md`
 
-It also checks whether the managed `.gitignore` block is present and whether local identity, telemetry, or generated-view paths are still tracked in the git index from older versions. If those paths are still tracked, `doctor` prints a one-time `git rm --cached` command to untrack them.
+It also checks whether the managed `.gitignore` block is present, whether local identity, telemetry, or generated-view paths are still tracked in the git index from older versions, and whether managed system rules include the runtime skill fallback used when repo-local AI wiki skills are present but not exposed by the active agent runtime. If local-state paths are still tracked, `doctor` prints a one-time `git rm --cached` command to untrack them.
 
 To remove the managed layer while keeping your user-owned wiki documents:
 

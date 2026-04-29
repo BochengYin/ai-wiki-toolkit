@@ -25,6 +25,14 @@ This file is managed by ai-wiki-toolkit. Future package versions may update it.
 19. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
 20. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them to produce end-of-task AI wiki evidence and write-back outcomes.
 
+## Runtime Skill Fallback
+
+1. Repo-local AI wiki skills live under `.agents/skills/<skill-name>/`.
+2. Runtime skill discovery can differ from files on disk. If a needed AI wiki skill is not exposed by the active runtime, manually read `.agents/skills/<skill-name>/SKILL.md` and relevant files under `.agents/skills/<skill-name>/references/`.
+3. For end-of-task reuse evidence, if `ai-wiki-reuse-check` is unavailable, read `.agents/skills/ai-wiki-reuse-check/SKILL.md` and `.agents/skills/ai-wiki-reuse-check/references/output-contract.md`.
+4. For end-of-task write-back, if `ai-wiki-update-check` is unavailable, read `.agents/skills/ai-wiki-update-check/SKILL.md` and `.agents/skills/ai-wiki-update-check/references/output-contract.md`.
+5. Do not skip the required AI wiki footer just because the runtime reports no available skills.
+
 ## AI Wiki Reuse Evidence
 
 1. Produce one AI wiki reuse evidence footer at the end of every completed task.

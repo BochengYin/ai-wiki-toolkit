@@ -292,6 +292,14 @@ def test_init_writes_expected_toolkit_managed_files(repo_env: dict[str, Path]) -
         19. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
         20. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them to produce end-of-task AI wiki evidence and write-back outcomes.
 
+        ## Runtime Skill Fallback
+
+        1. Repo-local AI wiki skills live under `.agents/skills/<skill-name>/`.
+        2. Runtime skill discovery can differ from files on disk. If a needed AI wiki skill is not exposed by the active runtime, manually read `.agents/skills/<skill-name>/SKILL.md` and relevant files under `.agents/skills/<skill-name>/references/`.
+        3. For end-of-task reuse evidence, if `ai-wiki-reuse-check` is unavailable, read `.agents/skills/ai-wiki-reuse-check/SKILL.md` and `.agents/skills/ai-wiki-reuse-check/references/output-contract.md`.
+        4. For end-of-task write-back, if `ai-wiki-update-check` is unavailable, read `.agents/skills/ai-wiki-update-check/SKILL.md` and `.agents/skills/ai-wiki-update-check/references/output-contract.md`.
+        5. Do not skip the required AI wiki footer just because the runtime reports no available skills.
+
         ## AI Wiki Reuse Evidence
 
         1. Produce one AI wiki reuse evidence footer at the end of every completed task.
@@ -406,18 +414,19 @@ def test_init_writes_expected_toolkit_managed_files(repo_env: dict[str, Path]) -
         9. The installer manages a `.gitignore` block that ignores `.env.aiwiki`, `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/consolidation/`, `ai-wiki/_toolkit/diagnostics/`, `ai-wiki/_toolkit/metrics/`, `ai-wiki/_toolkit/work/`, and `ai-wiki/_toolkit/catalog.json` so local identity, telemetry, and generated views stay local by default.
         10. If those local-state paths were tracked before you upgraded, run `aiwiki-toolkit doctor` and follow the suggested `git rm --cached` fix once to untrack them.
         11. Produce one AI wiki write-back outcome at the end of every completed task, even when the result is `None`.
-        12. Before returning `None`, run memory candidate detection for problem-solution memory, feature clarification memory, convention candidates, missed relevant memory, and conflict or supersession.
-        13. Always end with exactly one status line: `AI Wiki Write-Back: none`, `draft recorded`, or `promotion candidate`.
-        14. If the result is `Draft` or `PromotionCandidate`, also print `AI Wiki Write-Back Path: <path>`.
-        15. Do not write every task summary into the wiki; capture only durable memory.
-        16. Put shared team conventions in `ai-wiki/conventions/`.
-        17. Put reusable repo-specific review lessons in `ai-wiki/review-patterns/`.
-        18. Put reusable problem-solution memories in `ai-wiki/problems/`.
-        19. Put feature clarifications in `ai-wiki/features/`.
-        20. Put task-specific chronology and dead ends in `ai-wiki/trails/`.
-        21. Put todo, active, processing, blocked, review, done, and archived work state in `ai-wiki/work/events/<handle>.jsonl` via `aiwiki-toolkit work`.
-        22. Put raw personal draft notes in `ai-wiki/people/<handle>/drafts/`.
-        23. Promote only stable, reviewable rules into shared patterns or conventions.
+        12. If runtime skill exposure is missing, follow the Runtime Skill Fallback section in `system.md` and manually read the relevant repo-local skill files under `.agents/skills/`.
+        13. Before returning `None`, run memory candidate detection for problem-solution memory, feature clarification memory, convention candidates, missed relevant memory, and conflict or supersession.
+        14. Always end with exactly one status line: `AI Wiki Write-Back: none`, `draft recorded`, or `promotion candidate`.
+        15. If the result is `Draft` or `PromotionCandidate`, also print `AI Wiki Write-Back Path: <path>`.
+        16. Do not write every task summary into the wiki; capture only durable memory.
+        17. Put shared team conventions in `ai-wiki/conventions/`.
+        18. Put reusable repo-specific review lessons in `ai-wiki/review-patterns/`.
+        19. Put reusable problem-solution memories in `ai-wiki/problems/`.
+        20. Put feature clarifications in `ai-wiki/features/`.
+        21. Put task-specific chronology and dead ends in `ai-wiki/trails/`.
+        22. Put todo, active, processing, blocked, review, done, and archived work state in `ai-wiki/work/events/<handle>.jsonl` via `aiwiki-toolkit work`.
+        23. Put raw personal draft notes in `ai-wiki/people/<handle>/drafts/`.
+        24. Promote only stable, reviewable rules into shared patterns or conventions.
         """
     )
     assert (

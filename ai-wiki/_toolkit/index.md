@@ -13,7 +13,9 @@ This directory is managed by ai-wiki-toolkit. Future package versions may update
 
 ## Generated Outputs
 
-- `catalog.json`, `metrics/*.json`, and `work/*` are generated outputs, not guidance docs.
+- `catalog.json`, `consolidation/*`, `diagnostics/*`, `metrics/*.json`, and `work/*` are generated outputs, not guidance docs.
 - `aiwiki-toolkit route` emits transient context packets to stdout; packets are derived from source docs and should be regenerated rather than treated as canonical memory.
 - The installer ignores local identity and generated outputs in `.gitignore` so routine agent use stays local.
 - Regenerate catalog, metrics, and work views with `aiwiki-toolkit refresh-metrics` whenever you need a fresh local snapshot.
+- Generate local memory quality diagnostics with `aiwiki-toolkit diagnose memory` when you need to inspect missed, stale, noisy, conflicting, or high-ROI memory.
+- Generate a local draft consolidation and promotion review queue with `aiwiki-toolkit consolidate queue`.
