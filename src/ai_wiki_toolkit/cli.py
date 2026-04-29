@@ -20,6 +20,11 @@ from ai_wiki_toolkit.diagnostics import (
     generate_memory_diagnostics,
 )
 from ai_wiki_toolkit.doctor import run_doctor
+from ai_wiki_toolkit.impact_eval import (
+    generate_impact_eval_report,
+    render_impact_eval_report,
+    render_impact_eval_report_json,
+)
 from ai_wiki_toolkit.paths import (
     RepoRootNotFoundError,
     build_paths,
@@ -61,9 +66,13 @@ app = typer.Typer(help="Initialize and maintain ai-wiki-toolkit scaffolds.")
 work_app = typer.Typer(help="Record and report AI wiki work ledger state.")
 diagnose_app = typer.Typer(help="Generate AI wiki diagnostic reports.")
 consolidate_app = typer.Typer(help="Generate AI wiki draft consolidation queues.")
+eval_app = typer.Typer(help="Report AI wiki impact eval results.")
+impact_eval_app = typer.Typer(help="Summarize first-attempt impact eval metrics.")
 app.add_typer(work_app, name="work")
 app.add_typer(diagnose_app, name="diagnose")
 app.add_typer(consolidate_app, name="consolidate")
+app.add_typer(eval_app, name="eval")
+eval_app.add_typer(impact_eval_app, name="impact")
 
 PROMPTED_IDENTITY_SOURCE = "prompted-handle"
 
@@ -556,6 +565,56 @@ def consolidate_queue(
         typer.echo(result.json_text, nl=False)
     else:
         typer.echo(result.markdown, nl=False)
+
+
+@impact_eval_app.command("report")
+def eval_impact_report(
+    run_dir: Path = typer.Option(
+        ...,
+        "--run-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Impact eval run directory containing metadata.json and captured result artifacts.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Summarize first-attempt impact eval metrics from a captured run."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        report = generate_impact_eval_report(run_dir)
+    except FileNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read impact eval data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_impact_eval_report_json(report)
+        if normalized_format == "json"
+        else render_impact_eval_report(report)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
 
 
 @app.command("record-reuse")

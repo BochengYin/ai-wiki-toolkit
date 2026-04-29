@@ -373,6 +373,36 @@ uv run python evals/impact/scripts/score_run.py \
   --evidence s02/original/first_pass/workspace_diff.patch,s02/original/first_pass/result.json
 ```
 
+Summarize the captured run as a product-facing first-attempt report:
+
+```bash
+uv run aiwiki-toolkit eval impact report \
+  --run-dir /private/tmp/aiwiki_first_round/ownership_boundary/runs/run_20260422-120000
+```
+
+For downstream tooling, emit the same report as JSON:
+
+```bash
+uv run aiwiki-toolkit eval impact report \
+  --run-dir /private/tmp/aiwiki_first_round/ownership_boundary/runs/run_20260422-120000 \
+  --format json
+```
+
+This report treats `first_pass` result captures as the product metric and keeps `final` repair
+captures diagnostic. The default primary comparison is `no_aiwiki_workflow` versus
+`aiwiki_ambient_memory_workflow`, or the first two variants listed in `metadata.json`
+`primary_comparison`.
+
+After publishing a release, verify that the installed package manager binary exposes the same
+product report surface and can read a real captured run:
+
+```bash
+python evals/impact/scripts/smoke_eval_report_release.py \
+  --binary aiwiki-toolkit \
+  --run-dir /private/tmp/aiwiki_first_round/ownership_boundary/runs/run_20260422-120000 \
+  --output-dir /tmp/aiwiki-impact-release-smoke
+```
+
 ## Current Scope
 
 The current setup script prepares the benchmark families registered in

@@ -423,6 +423,21 @@ aiwiki-toolkit consolidate queue --since 14d --handle your-handle
 
 This writes regenerated local reports under `ai-wiki/_toolkit/consolidation/` and prints the queue to stdout. The queue suggests one action per draft cluster: keep, refine, promotion candidate, conflict, or supersession. It does not edit user-owned AI wiki docs or create shared conventions, review patterns, problems, features, or decisions; those still require human confirmation.
 
+To summarize first-attempt product impact from a captured eval run:
+
+```bash
+aiwiki-toolkit eval impact report --run-dir /path/to/eval-run
+aiwiki-toolkit eval impact report --run-dir /path/to/eval-run --format json
+```
+
+This reads an existing run directory with `metadata.json`, result captures, optional
+`score.json` files, and optional `confounds.json`. It compares the run's primary variants,
+normally `no_aiwiki_workflow` versus `aiwiki_ambient_memory_workflow`, using first-attempt
+metrics only: `first_pass` captures count toward the signal, while `final` repair captures
+stay diagnostic. The command reports first-attempt success rate, average score, attempts, human
+nudges, changed files, untracked files, and whether the run is ready for shareable causal claims.
+It does not run agents or mutate eval artifacts.
+
 To diagnose missing starter pointers, stale managed prompt blocks, or rule drift and print copy-paste upgrade starters:
 
 ```bash

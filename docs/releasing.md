@@ -86,7 +86,18 @@ The archive contains a single executable:
    - after `Release Binaries`, it downloads `windows-arm64.zip` on `windows-11-arm` and runs `aiwiki-toolkit.exe --version`
    - after `Publish npm Package`, it installs `ai-wiki-toolkit@<version>` on `windows-11-arm` and runs `aiwiki-toolkit --version`
    - you can also run it manually with `workflow_dispatch` for any existing release tag
-10. If tap sync is enabled, verify that the tap repository received the updated `Formula/aiwiki-toolkit.rb`.
+10. For eval-product releases, install the published npm package locally and smoke-test the shipped
+    `eval impact report` command against a captured run:
+
+    ```bash
+    npm install -g ai-wiki-toolkit@latest
+    python evals/impact/scripts/smoke_eval_report_release.py \
+      --binary aiwiki-toolkit \
+      --run-dir /private/tmp/aiwiki_first_round/<experiment>/runs/<run-label> \
+      --output-dir /tmp/aiwiki-impact-release-smoke
+    ```
+
+11. If tap sync is enabled, verify that the tap repository received the updated `Formula/aiwiki-toolkit.rb`.
 
 ## Local Dry Run
 
