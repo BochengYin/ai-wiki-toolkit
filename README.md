@@ -410,9 +410,16 @@ To inspect memory quality from local reuse and task-check evidence:
 ```bash
 aiwiki-toolkit diagnose memory
 aiwiki-toolkit diagnose memory --since 14d --handle your-handle
+aiwiki-toolkit diagnose memory --focus trial-error
 ```
 
 This writes regenerated local reports under `ai-wiki/_toolkit/diagnostics/` and prints the report to stdout. The report highlights high-ROI memory, noisy memory, stale or missing docs, conflict notes, missed-memory signals, and coverage gaps such as document reuse events that were never paired with a task-level reuse check. It does not edit user-owned AI wiki docs.
+
+Use `--focus trial-error` to generate a focused trial/error reduction report from existing
+AI wiki evidence. It summarizes material effects such as `avoided_retry`,
+`blocked_wrong_path`, `changed_plan`, and `faster_resolution`, separates missed or repeated issue
+signals from unproven wiki use, and lists replay candidates that still need source incident
+artifacts before becoming formal impact-eval families.
 
 To turn diagnostics and handle-local drafts into a human-reviewable consolidation queue:
 
@@ -428,6 +435,8 @@ To summarize first-attempt product impact from a captured eval run:
 ```bash
 aiwiki-toolkit eval impact report --run-dir /path/to/eval-run
 aiwiki-toolkit eval impact report --run-dir /path/to/eval-run --format json
+aiwiki-toolkit eval impact summarize --run-dir /path/to/eval-run --run-dir /path/to/another-run
+aiwiki-toolkit eval impact summarize --runs-file evals/impact/runs.json
 ```
 
 This reads an existing run directory with `metadata.json`, result captures, optional
@@ -435,8 +444,13 @@ This reads an existing run directory with `metadata.json`, result captures, opti
 normally `no_aiwiki_workflow` versus `aiwiki_ambient_memory_workflow`, using first-attempt
 metrics only: `first_pass` captures count toward the signal, while `final` repair captures
 stay diagnostic. The command reports first-attempt success rate, average score, attempts, human
-nudges, changed files, untracked files, and whether the run is ready for shareable causal claims.
+nudges, changed files, untracked files, change-profile splits for project files versus AI wiki
+telemetry and user-owned wiki churn, and whether the run is ready for shareable causal claims.
 It does not run agents or mutate eval artifacts.
+
+Use `eval impact summarize` to aggregate multiple captured runs into a product-level dashboard.
+It reports each family's primary outcome, product signal, shareability, success and score deltas,
+and change-profile deltas so neutral success-rate runs can still surface quality or churn signals.
 
 To diagnose missing starter pointers, stale managed prompt blocks, or rule drift and print copy-paste upgrade starters:
 

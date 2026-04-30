@@ -35,6 +35,7 @@ The current documented benchmark families are:
 - `windows_arm_smoke_cli_output`
 - `release_runtime_compatibility`
 - `scaffold_prompt_workflow_compliance`
+- `postinstall_archive_staging`
 
 ## Manual v2: Workflow-Primary Framing
 
@@ -391,7 +392,26 @@ uv run aiwiki-toolkit eval impact report \
 This report treats `first_pass` result captures as the product metric and keeps `final` repair
 captures diagnostic. The default primary comparison is `no_aiwiki_workflow` versus
 `aiwiki_ambient_memory_workflow`, or the first two variants listed in `metadata.json`
-`primary_comparison`.
+`primary_comparison`. It also splits changed-file counts into project files, managed AI wiki
+telemetry, and user-owned AI wiki files so neutral success-rate runs can still expose extra churn
+or broader implementation surface.
+
+Summarize multiple captured runs as a product-level dashboard:
+
+```bash
+uv run aiwiki-toolkit eval impact summarize \
+  --run-dir /private/tmp/aiwiki_first_round/ownership_boundary/runs/run_20260422-120000 \
+  --run-dir /private/tmp/aiwiki_first_round/postinstall_archive_staging/runs/cli-original-postinstall-20260430-0903
+```
+
+The same command accepts a JSON manifest:
+
+```bash
+uv run aiwiki-toolkit eval impact summarize --runs-file evals/impact/runs.json --format json
+```
+
+`runs.json` can be a JSON list of run directories, `{"run_dirs": [...]}`, or
+`{"runs": [{"run_dir": "..."}]}`.
 
 After publishing a release, verify that the installed package manager binary exposes the same
 product report surface and can read a real captured run:
@@ -410,6 +430,10 @@ The current setup script prepares the benchmark families registered in
 
 - `ownership_boundary`
 - `release_distribution_integrity`
+- `windows_arm_smoke_cli_output`
+- `release_runtime_compatibility`
+- `scaffold_prompt_workflow_compliance`
+- `postinstall_archive_staging`
 
 Add new benchmark families only after deciding which raw draft cluster and which consolidated
 target should be compared.

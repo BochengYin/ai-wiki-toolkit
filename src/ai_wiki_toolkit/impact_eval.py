@@ -11,6 +11,8 @@ CAPTURE_PHASES = {"first_pass", "final"}
 PRIMARY_NO_AIWIKI_VARIANT = "no_aiwiki_workflow"
 PRIMARY_AIWIKI_VARIANT = "aiwiki_ambient_memory_workflow"
 SCORE_VALUES = {"success": 1.0, "partial": 0.5, "fail": 0.0}
+AI_WIKI_PREFIX = "ai-wiki/"
+MANAGED_AI_WIKI_PREFIXES = ("ai-wiki/_toolkit/", "ai-wiki/metrics/")
 
 
 @dataclass(frozen=True)
@@ -49,6 +51,22 @@ class ImpactEvalRecord:
             return None
         return SCORE_VALUES.get(self.score_label)
 
+    @property
+    def project_changed_files(self) -> tuple[str, ...]:
+        return tuple(path for path in self.changed_files if not _is_ai_wiki_path(path))
+
+    @property
+    def managed_wiki_changed_files(self) -> tuple[str, ...]:
+        return tuple(path for path in self.changed_files if _is_managed_ai_wiki_path(path))
+
+    @property
+    def user_wiki_changed_files(self) -> tuple[str, ...]:
+        return tuple(path for path in self.changed_files if _is_user_ai_wiki_path(path))
+
+    @property
+    def user_wiki_untracked_files(self) -> tuple[str, ...]:
+        return tuple(path for path in self.untracked_files if _is_user_ai_wiki_path(path))
+
 
 @dataclass(frozen=True)
 class ImpactVariantSummary:
@@ -67,6 +85,10 @@ class ImpactVariantSummary:
     avg_human_nudges: float | None
     avg_changed_files: float | None
     avg_untracked_files: float | None
+    avg_project_changed_files: float | None
+    avg_managed_wiki_changed_files: float | None
+    avg_user_wiki_changed_files: float | None
+    avg_user_wiki_untracked_files: float | None
 
     @property
     def known_first_attempt_results(self) -> int:
@@ -106,6 +128,36 @@ class ImpactEvalReport:
         return bool(self.confounds.get("shareable_for_causal_claims"))
 
 
+@dataclass(frozen=True)
+class ImpactEvalRunSummary:
+    run_dir: Path
+    experiment: str
+    outcome: str
+    product_signal: str
+    shareable_for_causal_claims: bool | None
+    critical_confounds: int
+    first_attempt_success_delta: float | None
+    avg_score_delta: float | None
+    avg_project_changed_files_delta: float | None
+    avg_managed_wiki_changed_files_delta: float | None
+    avg_user_wiki_changed_files_delta: float | None
+    diagnostic_avg_project_changed_files: float | None
+    diagnostic_avg_user_wiki_changed_files: float | None
+
+
+@dataclass(frozen=True)
+class ImpactEvalSummaryReport:
+    run_summaries: tuple[ImpactEvalRunSummary, ...]
+
+    @property
+    def total_runs(self) -> int:
+        return len(self.run_summaries)
+
+    @property
+    def shareable_runs(self) -> int:
+        return sum(summary.shareable_for_causal_claims is True for summary in self.run_summaries)
+
+
 def _read_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -128,6 +180,26 @@ def _int_or_zero(value: object) -> int:
         return int(value or 0)
     except (TypeError, ValueError):
         return 0
+
+
+def _is_ai_wiki_path(path: str) -> bool:
+    return path == "ai-wiki" or path.startswith(AI_WIKI_PREFIX)
+
+
+def _is_managed_ai_wiki_path(path: str) -> bool:
+    return any(path.startswith(prefix) for prefix in MANAGED_AI_WIKI_PREFIXES)
+
+
+def _is_user_ai_wiki_path(path: str) -> bool:
+    return _is_ai_wiki_path(path) and not _is_managed_ai_wiki_path(path)
+
+
+def _avg_int(values: list[int]) -> float | None:
+    return sum(values) / len(values) if values else None
+
+
+def _avg_float(values: list[float]) -> float | None:
+    return sum(values) / len(values) if values else None
 
 
 def _assignment_variant_map(metadata: dict) -> dict[str, str]:
@@ -220,6 +292,18 @@ def summarize_variants(records: tuple[ImpactEvalRecord, ...]) -> tuple[ImpactVar
         nudges = [record.human_nudges for record in first_attempt_records]
         changed_files = [len(record.changed_files) for record in first_attempt_records]
         untracked_files = [len(record.untracked_files) for record in first_attempt_records]
+        project_changed_files = [
+            len(record.project_changed_files) for record in first_attempt_records
+        ]
+        managed_wiki_changed_files = [
+            len(record.managed_wiki_changed_files) for record in first_attempt_records
+        ]
+        user_wiki_changed_files = [
+            len(record.user_wiki_changed_files) for record in first_attempt_records
+        ]
+        user_wiki_untracked_files = [
+            len(record.user_wiki_untracked_files) for record in first_attempt_records
+        ]
         labels = [record.score_label for record in first_attempt_records]
         summaries.append(
             ImpactVariantSummary(
@@ -234,14 +318,14 @@ def summarize_variants(records: tuple[ImpactEvalRecord, ...]) -> tuple[ImpactVar
                 score_failures=sum(label == "fail" for label in labels),
                 score_pending=sum(label is None for label in labels),
                 avg_score=(sum(score_values) / len(score_values) if score_values else None),
-                avg_attempts=(sum(attempts) / len(attempts) if attempts else None),
-                avg_human_nudges=(sum(nudges) / len(nudges) if nudges else None),
-                avg_changed_files=(
-                    sum(changed_files) / len(changed_files) if changed_files else None
-                ),
-                avg_untracked_files=(
-                    sum(untracked_files) / len(untracked_files) if untracked_files else None
-                ),
+                avg_attempts=_avg_int(attempts),
+                avg_human_nudges=_avg_int(nudges),
+                avg_changed_files=_avg_int(changed_files),
+                avg_untracked_files=_avg_int(untracked_files),
+                avg_project_changed_files=_avg_int(project_changed_files),
+                avg_managed_wiki_changed_files=_avg_int(managed_wiki_changed_files),
+                avg_user_wiki_changed_files=_avg_int(user_wiki_changed_files),
+                avg_user_wiki_untracked_files=_avg_int(user_wiki_untracked_files),
             )
         )
     return tuple(summaries)
@@ -341,6 +425,152 @@ def generate_impact_eval_report(run_dir: Path) -> ImpactEvalReport:
     )
 
 
+def _summary_value_delta(
+    no_aiwiki: ImpactVariantSummary | None,
+    aiwiki: ImpactVariantSummary | None,
+    field_name: str,
+) -> float | None:
+    if no_aiwiki is None or aiwiki is None:
+        return None
+    no_value = getattr(no_aiwiki, field_name)
+    aiwiki_value = getattr(aiwiki, field_name)
+    if no_value is None or aiwiki_value is None:
+        return None
+    return aiwiki_value - no_value
+
+
+def _diagnostic_variant_names(report: ImpactEvalReport) -> tuple[str, ...]:
+    diagnostic_variants = report.metadata.get("diagnostic_variants")
+    if isinstance(diagnostic_variants, list):
+        return tuple(str(item) for item in diagnostic_variants if str(item))
+    primary_variants = report.metadata.get("primary_comparison")
+    if not isinstance(primary_variants, list):
+        primary_variants = [PRIMARY_NO_AIWIKI_VARIANT, PRIMARY_AIWIKI_VARIANT]
+    primary = {str(item) for item in primary_variants}
+    return tuple(
+        summary.variant for summary in report.variant_summaries if summary.variant not in primary
+    )
+
+
+def _diagnostic_avg(report: ImpactEvalReport, field_name: str) -> float | None:
+    diagnostic_variants = set(_diagnostic_variant_names(report))
+    values = [
+        getattr(summary, field_name)
+        for summary in report.variant_summaries
+        if summary.variant in diagnostic_variants and getattr(summary, field_name) is not None
+    ]
+    return _avg_float(values)
+
+
+def _critical_confound_count(report: ImpactEvalReport) -> int:
+    if report.confounds is None:
+        return 0
+    critical_confounds = report.confounds.get("critical_confounds", [])
+    if not isinstance(critical_confounds, list):
+        return 0
+    return len(critical_confounds)
+
+
+def _product_signal(
+    report: ImpactEvalReport,
+    *,
+    project_changed_files_delta: float | None,
+    user_wiki_changed_files_delta: float | None,
+    diagnostic_user_wiki_changed_files: float | None,
+) -> str:
+    outcome = report.primary_comparison.outcome
+    if outcome == "positive_signal":
+        return "success_uplift"
+    if outcome == "regression_signal":
+        return "success_regression"
+    if outcome == "incomplete":
+        return "incomplete"
+    if (project_changed_files_delta is not None and project_changed_files_delta < 0) or (
+        user_wiki_changed_files_delta is not None and user_wiki_changed_files_delta < 0
+    ):
+        return "quality_uplift"
+    if diagnostic_user_wiki_changed_files is not None and diagnostic_user_wiki_changed_files > 0:
+        return "diagnostic_quality_signal"
+    return "neutral"
+
+
+def summarize_impact_eval_report(report: ImpactEvalReport) -> ImpactEvalRunSummary:
+    comparison = report.primary_comparison
+    project_delta = _summary_value_delta(
+        comparison.no_aiwiki,
+        comparison.aiwiki,
+        "avg_project_changed_files",
+    )
+    managed_wiki_delta = _summary_value_delta(
+        comparison.no_aiwiki,
+        comparison.aiwiki,
+        "avg_managed_wiki_changed_files",
+    )
+    user_wiki_delta = _summary_value_delta(
+        comparison.no_aiwiki,
+        comparison.aiwiki,
+        "avg_user_wiki_changed_files",
+    )
+    diagnostic_project = _diagnostic_avg(report, "avg_project_changed_files")
+    diagnostic_user_wiki = _diagnostic_avg(report, "avg_user_wiki_changed_files")
+    return ImpactEvalRunSummary(
+        run_dir=report.run_dir,
+        experiment=str(report.metadata.get("experiment", "unknown")),
+        outcome=comparison.outcome,
+        product_signal=_product_signal(
+            report,
+            project_changed_files_delta=project_delta,
+            user_wiki_changed_files_delta=user_wiki_delta,
+            diagnostic_user_wiki_changed_files=diagnostic_user_wiki,
+        ),
+        shareable_for_causal_claims=report.shareable_for_causal_claims,
+        critical_confounds=_critical_confound_count(report),
+        first_attempt_success_delta=comparison.first_attempt_success_delta,
+        avg_score_delta=comparison.avg_score_delta,
+        avg_project_changed_files_delta=project_delta,
+        avg_managed_wiki_changed_files_delta=managed_wiki_delta,
+        avg_user_wiki_changed_files_delta=user_wiki_delta,
+        diagnostic_avg_project_changed_files=diagnostic_project,
+        diagnostic_avg_user_wiki_changed_files=diagnostic_user_wiki,
+    )
+
+
+def generate_impact_eval_summary(run_dirs: list[Path] | tuple[Path, ...]) -> ImpactEvalSummaryReport:
+    summaries = [
+        summarize_impact_eval_report(generate_impact_eval_report(run_dir))
+        for run_dir in run_dirs
+    ]
+    return ImpactEvalSummaryReport(run_summaries=tuple(summaries))
+
+
+def load_impact_eval_run_dirs_from_file(path: Path) -> tuple[Path, ...]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if isinstance(payload, list):
+        values = payload
+    elif isinstance(payload, dict):
+        if isinstance(payload.get("run_dirs"), list):
+            values = payload["run_dirs"]
+        elif isinstance(payload.get("runs"), list):
+            values = [
+                item.get("run_dir") if isinstance(item, dict) else item
+                for item in payload["runs"]
+            ]
+        else:
+            raise ValueError("Runs file must contain `run_dirs` or `runs`.")
+    else:
+        raise ValueError("Runs file must be a JSON list or object.")
+
+    run_dirs: list[Path] = []
+    for value in values:
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError("Run directory entries must be non-empty strings.")
+        run_path = Path(value)
+        if not run_path.is_absolute():
+            run_path = path.parent / run_path
+        run_dirs.append(run_path)
+    return tuple(run_dirs)
+
+
 def _format_rate(summary: ImpactVariantSummary | None) -> str:
     if summary is None:
         return "-"
@@ -370,6 +600,34 @@ def _format_bool(value: bool | None) -> str:
     if value is False:
         return "no"
     return "pending"
+
+
+def _summary_delta(
+    no_aiwiki: ImpactVariantSummary | None,
+    aiwiki: ImpactVariantSummary | None,
+    field_name: str,
+) -> float | None:
+    if no_aiwiki is None or aiwiki is None:
+        return None
+    no_value = getattr(no_aiwiki, field_name)
+    aiwiki_value = getattr(aiwiki, field_name)
+    if no_value is None or aiwiki_value is None:
+        return None
+    return aiwiki_value - no_value
+
+
+def _signal_counts(summaries: tuple[ImpactEvalRunSummary, ...], field_name: str) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for summary in summaries:
+        value = str(getattr(summary, field_name))
+        counts[value] = counts.get(value, 0) + 1
+    return dict(sorted(counts.items()))
+
+
+def _format_counts(counts: dict[str, int]) -> str:
+    if not counts:
+        return "-"
+    return ", ".join(f"{key}={value}" for key, value in counts.items())
 
 
 def _markdown_table(headers: list[str], rows: list[list[str]]) -> str:
@@ -412,7 +670,27 @@ def render_impact_eval_report(report: ImpactEvalReport) -> str:
             "avg_human_nudges",
             _format_float(no_aiwiki.avg_human_nudges if no_aiwiki else None),
             _format_float(aiwiki.avg_human_nudges if aiwiki else None),
-            "-",
+            _format_delta(_summary_delta(no_aiwiki, aiwiki, "avg_human_nudges")),
+        ],
+        [
+            "avg_project_changed_files",
+            _format_float(no_aiwiki.avg_project_changed_files if no_aiwiki else None),
+            _format_float(aiwiki.avg_project_changed_files if aiwiki else None),
+            _format_delta(_summary_delta(no_aiwiki, aiwiki, "avg_project_changed_files")),
+        ],
+        [
+            "avg_managed_wiki_changed_files",
+            _format_float(no_aiwiki.avg_managed_wiki_changed_files if no_aiwiki else None),
+            _format_float(aiwiki.avg_managed_wiki_changed_files if aiwiki else None),
+            _format_delta(
+                _summary_delta(no_aiwiki, aiwiki, "avg_managed_wiki_changed_files")
+            ),
+        ],
+        [
+            "avg_user_wiki_changed_files",
+            _format_float(no_aiwiki.avg_user_wiki_changed_files if no_aiwiki else None),
+            _format_float(aiwiki.avg_user_wiki_changed_files if aiwiki else None),
+            _format_delta(_summary_delta(no_aiwiki, aiwiki, "avg_user_wiki_changed_files")),
         ],
     ]
     summary_rows = [
@@ -427,6 +705,10 @@ def render_impact_eval_report(report: ImpactEvalReport) -> str:
             _format_float(summary.avg_human_nudges),
             _format_float(summary.avg_changed_files),
             _format_float(summary.avg_untracked_files),
+            _format_float(summary.avg_project_changed_files),
+            _format_float(summary.avg_managed_wiki_changed_files),
+            _format_float(summary.avg_user_wiki_changed_files),
+            _format_float(summary.avg_user_wiki_untracked_files),
         ]
         for summary in report.variant_summaries
     ]
@@ -442,6 +724,9 @@ def render_impact_eval_report(report: ImpactEvalReport) -> str:
             str(record.human_nudges),
             str(len(record.changed_files)),
             str(len(record.untracked_files)),
+            str(len(record.project_changed_files)),
+            str(len(record.managed_wiki_changed_files)),
+            str(len(record.user_wiki_changed_files)),
             _format_bool(record.final_message_present),
         ]
         for record in report.records
@@ -486,6 +771,10 @@ def render_impact_eval_report(report: ImpactEvalReport) -> str:
                 "avg_human_nudges",
                 "avg_changed_files",
                 "avg_untracked_files",
+                "avg_project_changed_files",
+                "avg_managed_wiki_changed_files",
+                "avg_user_wiki_changed_files",
+                "avg_user_wiki_untracked_files",
             ],
             summary_rows,
         ),
@@ -504,6 +793,9 @@ def render_impact_eval_report(report: ImpactEvalReport) -> str:
                 "human_nudges",
                 "changed_files",
                 "untracked_files",
+                "project_changed_files",
+                "managed_wiki_changed_files",
+                "user_wiki_changed_files",
                 "final_message",
             ],
             record_rows,
@@ -551,6 +843,10 @@ def impact_eval_report_to_dict(report: ImpactEvalReport) -> dict:
                 "avg_human_nudges": summary.avg_human_nudges,
                 "avg_changed_files": summary.avg_changed_files,
                 "avg_untracked_files": summary.avg_untracked_files,
+                "avg_project_changed_files": summary.avg_project_changed_files,
+                "avg_managed_wiki_changed_files": summary.avg_managed_wiki_changed_files,
+                "avg_user_wiki_changed_files": summary.avg_user_wiki_changed_files,
+                "avg_user_wiki_untracked_files": summary.avg_user_wiki_untracked_files,
             }
             for summary in report.variant_summaries
         ],
@@ -567,6 +863,10 @@ def impact_eval_report_to_dict(report: ImpactEvalReport) -> dict:
                 "human_nudges": record.human_nudges,
                 "changed_file_count": len(record.changed_files),
                 "untracked_file_count": len(record.untracked_files),
+                "project_changed_file_count": len(record.project_changed_files),
+                "managed_wiki_changed_file_count": len(record.managed_wiki_changed_files),
+                "user_wiki_changed_file_count": len(record.user_wiki_changed_files),
+                "user_wiki_untracked_file_count": len(record.user_wiki_untracked_files),
                 "final_message_present": record.final_message_present,
                 "result_path": str(record.result_path),
             }
@@ -578,3 +878,100 @@ def impact_eval_report_to_dict(report: ImpactEvalReport) -> dict:
 
 def render_impact_eval_report_json(report: ImpactEvalReport) -> str:
     return json.dumps(impact_eval_report_to_dict(report), indent=2) + "\n"
+
+
+def render_impact_eval_summary(report: ImpactEvalSummaryReport) -> str:
+    rows = [
+        [
+            summary.experiment,
+            summary.outcome,
+            summary.product_signal,
+            _format_bool(summary.shareable_for_causal_claims),
+            str(summary.critical_confounds),
+            _format_delta(summary.first_attempt_success_delta, percent=True),
+            _format_delta(summary.avg_score_delta),
+            _format_delta(summary.avg_project_changed_files_delta),
+            _format_delta(summary.avg_user_wiki_changed_files_delta),
+            _format_delta(summary.avg_managed_wiki_changed_files_delta),
+            _format_float(summary.diagnostic_avg_user_wiki_changed_files),
+        ]
+        for summary in report.run_summaries
+    ]
+    outcome_counts = _signal_counts(report.run_summaries, "outcome")
+    product_signal_counts = _signal_counts(report.run_summaries, "product_signal")
+    lines = [
+        "# AI Wiki Impact Eval Cross-Run Summary",
+        "",
+        f"- Runs: `{report.total_runs}`",
+        f"- Causal-claim-ready runs: `{report.shareable_runs}/{report.total_runs}`",
+        f"- Primary outcomes: `{_format_counts(outcome_counts)}`",
+        f"- Product signals: `{_format_counts(product_signal_counts)}`",
+        "",
+        "## Runs",
+        "",
+        _markdown_table(
+            [
+                "experiment",
+                "primary_outcome",
+                "product_signal",
+                "shareable",
+                "critical_confounds",
+                "success_delta",
+                "score_delta",
+                "project_files_delta",
+                "user_wiki_delta",
+                "managed_wiki_delta",
+                "diagnostic_user_wiki_avg",
+            ],
+            rows,
+        ),
+        "",
+        "## Interpretation",
+        "",
+        "- `success_uplift` means the ambient AI wiki primary treatment beat the no-AI-wiki primary control.",
+        "- `diagnostic_quality_signal` means primary success was neutral, but diagnostic variants exposed quality or wiki-churn differences.",
+        "- Change-profile deltas are ambient AI wiki minus no-AI-wiki for the primary comparison.",
+        "- Managed wiki telemetry is reported separately from user-owned AI wiki churn.",
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def impact_eval_summary_to_dict(report: ImpactEvalSummaryReport) -> dict:
+    return {
+        "schema_version": "impact-eval-cross-run-summary-v1",
+        "total_runs": report.total_runs,
+        "shareable_runs": report.shareable_runs,
+        "outcome_counts": _signal_counts(report.run_summaries, "outcome"),
+        "product_signal_counts": _signal_counts(report.run_summaries, "product_signal"),
+        "runs": [
+            {
+                "run_dir": str(summary.run_dir),
+                "experiment": summary.experiment,
+                "primary_outcome": summary.outcome,
+                "product_signal": summary.product_signal,
+                "shareable_for_causal_claims": summary.shareable_for_causal_claims,
+                "critical_confounds": summary.critical_confounds,
+                "first_attempt_success_delta": summary.first_attempt_success_delta,
+                "avg_score_delta": summary.avg_score_delta,
+                "avg_project_changed_files_delta": summary.avg_project_changed_files_delta,
+                "avg_managed_wiki_changed_files_delta": (
+                    summary.avg_managed_wiki_changed_files_delta
+                ),
+                "avg_user_wiki_changed_files_delta": (
+                    summary.avg_user_wiki_changed_files_delta
+                ),
+                "diagnostic_avg_project_changed_files": (
+                    summary.diagnostic_avg_project_changed_files
+                ),
+                "diagnostic_avg_user_wiki_changed_files": (
+                    summary.diagnostic_avg_user_wiki_changed_files
+                ),
+            }
+            for summary in report.run_summaries
+        ],
+    }
+
+
+def render_impact_eval_summary_json(report: ImpactEvalSummaryReport) -> str:
+    return json.dumps(impact_eval_summary_to_dict(report), indent=2) + "\n"
