@@ -116,7 +116,7 @@ Treat this as a replication study, not as part of the current 2026-04-25 formal 
 | `release_distribution_integrity` | `done` | repeated-problem / coordinated multi-surface change | when a public distribution target changes, does memory help the agent keep workflows, asset names, npm metadata, archive handling, docs, and smoke checks aligned? | `ai-wiki/conventions/distribution-target-matrix-must-match-published-assets.md`, source draft, related release-fix drafts |
 | `windows_arm_smoke_cli_output` | `done` | narrow repeated-problem benchmark | does memory help the agent fix the exact Windows ARM smoke assertion by comparing against full CLI output instead of the bare version? | `ai-wiki/problems/windows-arm-smoke-version-checks-need-full-cli-output.md` |
 | `release_runtime_compatibility` | `done` | repeated-problem / release-runtime verification | does memory help the agent choose an older glibc baseline and add runtime verification instead of stopping at build or install success? | `linux-release-binaries-need-runtime-checks-against-an-older-glibc-baseline.md` |
-| `postinstall_archive_staging` | `planned` | repeated-problem / packaging | does memory help the agent avoid self-deleting npm postinstall staging paths? | `npm-postinstall-must-not-delete-its-own-download-archive.md` |
+| `postinstall_archive_staging` | `done` | repeated-problem / packaging | does memory help the agent avoid self-deleting npm postinstall staging paths? | `npm-postinstall-must-not-delete-its-own-download-archive.md` |
 | `scaffold_prompt_workflow_compliance` | `done` | workflow-compliance | when changing scaffold or prompt behavior, does memory help the agent update tests, rerun install, and avoid prompt churn? | `ai-wiki/workflows.md`, `shared-prompt-files-must-be-user-agnostic.md`, prompt-churn drafts |
 | `aiwiki_evidence_integrity` | `planned` | telemetry / end-of-task workflow | does memory help the agent preserve the distinction between document-level reuse events and task-level checks, and always run update checks? | `ai-wiki-usefulness-metrics-need-task-level-checks-plus-doc-events.md`, `end-of-task-ai-wiki-update-check-must-always-run.md`, `ai-wiki-reuse-metrics-should-exclude-managed-docs-and-shard-by-handle.md` |
 | `capture_vs_consolidation` | `needs-more-signals` | consolidation-design benchmark | when consolidation exists, does it improve reuse without creating shared-doc churn or overwriting end-of-task capture? | `consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn.md` |
@@ -186,12 +186,26 @@ Current defended takeaway:
 
 ### postinstall_archive_staging
 
-This is another good narrow repeated-problem family.
+Run and documented.
 
-The benchmark would likely test whether the agent:
+Artifacts:
 
-- keeps transient downloads outside disposable target directories
-- fixes the staging layout rather than misdiagnosing the remote asset
+- `evals/impact/notes/manual_v2_cli_original_postinstall_archive_20260430_findings.md`
+- `/private/tmp/aiwiki_first_round/postinstall_archive_staging/runs/cli-original-postinstall-20260430-0903/report.md`
+- `/private/tmp/aiwiki_first_round/postinstall_archive_staging/runs/cli-original-postinstall-20260430-0903/report-with-change-profile.md`
+
+Scaffolded assets:
+
+- `evals/impact/families/postinstall_archive_staging/spec.toml`
+- `evals/impact/prompts/postinstall_archive_staging/TASK.md`
+- `evals/impact/prompts/postinstall_archive_staging/original.md`
+
+Current defended takeaway:
+
+- all six slots succeeded, so the family is neutral on first-attempt success
+- the no-AI-wiki primary control solved the task cleanly, so the target memory was not necessary for success
+- exact target memory still reduced quality costs: the ambient/raw-memory slots avoided user-owned wiki draft churn while several no-target/no-adjacent diagnostics wrote new drafts
+- change-profile metrics are the useful product signal for this family: project-file footprint, managed telemetry, and user-owned wiki churn
 
 ### scaffold_prompt_workflow_compliance
 
@@ -230,10 +244,6 @@ It is still more of a design hypothesis than a benchmark with a clean direct tas
 Promote it later if more concrete consolidation tasks appear.
 
 ## Suggested Next Session Starts
-
-If you want the closest follow-on to the current release family:
-
-1. `postinstall_archive_staging`
 
 If you want the next broader release/verification benchmark:
 

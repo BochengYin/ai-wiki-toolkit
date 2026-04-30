@@ -293,6 +293,36 @@ def test_load_release_experiment_spec_includes_strict_scaffold_exclusions() -> N
     ) in spec.strict_scaffold_index_tokens
 
 
+def test_load_postinstall_archive_staging_spec_targets_source_memory() -> None:
+    module = _load_prepare_variants_module()
+    repo_root = Path(__file__).resolve().parents[1]
+    spec_path = (
+        repo_root
+        / "evals"
+        / "impact"
+        / "families"
+        / "postinstall_archive_staging"
+        / "spec.toml"
+    )
+
+    spec = module.load_experiment_spec(spec_path)
+    experiments = module.available_experiments(repo_root)
+
+    assert experiments["postinstall_archive_staging"] == spec
+    assert spec.name == "postinstall_archive_staging"
+    assert spec.prompt_family == "postinstall_archive_staging"
+    assert spec.baseline_ref == "408ff40^"
+    assert spec.consolidated_docs == ()
+    assert spec.raw_docs == (
+        "ai-wiki/people/bochengyin/drafts/npm-postinstall-must-not-delete-its-own-download-archive.md",
+    )
+    adjacent_npm_memory = (
+        "ai-wiki/people/bochengyin/drafts/"
+        "package-manager-distributed-cli-should-use-the-package-manager-for-updates.md"
+    )
+    assert adjacent_npm_memory in spec.strict_scaffold_exclude_paths
+
+
 def test_prepare_variants_can_write_workflow_primary_neutral_slots(tmp_path: Path) -> None:
     module = _load_prepare_variants_module()
     source = tmp_path / "source"

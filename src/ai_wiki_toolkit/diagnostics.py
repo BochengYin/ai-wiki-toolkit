@@ -21,6 +21,7 @@ DIAGNOSTICS_SCHEMA_VERSION = "diagnostics-v1"
 DEFAULT_DIAGNOSTICS_MAX_ITEMS = 10
 DEFAULT_HIGH_ROI_MIN_EVENTS = 2
 DEFAULT_NOISY_MIN_EVENTS = 2
+DIAGNOSTIC_FOCUSES = {"all", "trial-error"}
 HIGH_VALUE_REUSE_EFFECTS = {
     "avoided_retry",
     "avoided_search",
@@ -29,6 +30,12 @@ HIGH_VALUE_REUSE_EFFECTS = {
     "release_safety",
     "verified_release_matrix",
 }
+TRIAL_ERROR_REUSE_EFFECTS = {
+    "avoided_retry",
+    "blocked_wrong_path",
+    "changed_plan",
+    "faster_resolution",
+}
 STALE_KEYWORDS = ("stale", "outdated", "obsolete", "superseded")
 CONFLICT_KEYWORDS = ("conflict", "conflicting", "contradict", "inconsistent")
 MISSED_MEMORY_KEYWORDS = (
@@ -36,6 +43,15 @@ MISSED_MEMORY_KEYWORDS = (
     "missed relevant memory",
     "should have used",
     "should have read",
+)
+TRIAL_ERROR_NOTE_KEYWORDS = (
+    "extra iteration",
+    "failed attempt",
+    "repeated error",
+    "repeated mistake",
+    "retry",
+    "wrong path",
+    "wrong plan",
 )
 
 
@@ -298,6 +314,7 @@ def _aggregate_tasks(
                 "total_events": 0,
                 "resolved_events": 0,
                 "doc_ids": set(),
+                "reuse_effects": Counter(),
                 "notes": [],
             },
         )
@@ -323,6 +340,7 @@ def _aggregate_tasks(
                 "total_events": 0,
                 "resolved_events": 0,
                 "doc_ids": set(),
+                "reuse_effects": Counter(),
                 "notes": [],
             },
         )
@@ -332,6 +350,11 @@ def _aggregate_tasks(
         doc_id = event.get("doc_id")
         if isinstance(doc_id, str) and doc_id:
             stats["doc_ids"].add(doc_id)
+        reuse_effects = event.get("reuse_effects")
+        if isinstance(reuse_effects, list):
+            for effect in reuse_effects:
+                if isinstance(effect, str) and effect.strip():
+                    stats["reuse_effects"][effect.strip()] += 1
         notes = _note_text(event)
         if notes:
             stats["notes"].append(notes)
@@ -370,6 +393,40 @@ def _coverage_gap_item(stats: dict[str, Any], reason: str) -> dict[str, Any]:
         "resolved_events": stats["resolved_events"],
         "task_id": stats["task_id"],
         "total_events": stats["total_events"],
+    }
+
+
+def _trial_error_effects(effects: Counter[str] | dict[str, int]) -> dict[str, int]:
+    return {
+        effect: count
+        for effect, count in sorted(effects.items())
+        if effect in TRIAL_ERROR_REUSE_EFFECTS and count > 0
+    }
+
+
+def _trial_error_signal_count(effects: Counter[str] | dict[str, int]) -> int:
+    return sum(_trial_error_effects(effects).values())
+
+
+def _trial_error_doc_item(stats: dict[str, Any], reason: str) -> dict[str, Any]:
+    item = _doc_item(stats, reason)
+    item["trial_error_effects"] = _trial_error_effects(stats["reuse_effects"])
+    item["trial_error_signal_count"] = _trial_error_signal_count(stats["reuse_effects"])
+    return item
+
+
+def _trial_error_task_item(stats: dict[str, Any], reason: str) -> dict[str, Any]:
+    effects = _trial_error_effects(stats["reuse_effects"])
+    return {
+        "doc_ids": sorted(stats["doc_ids"]),
+        "last_check_outcome": stats["last_check_outcome"],
+        "last_checked_at": stats["last_checked_at"],
+        "reason": reason,
+        "resolved_events": stats["resolved_events"],
+        "task_id": stats["task_id"],
+        "total_events": stats["total_events"],
+        "trial_error_effects": effects,
+        "trial_error_signal_count": sum(effects.values()),
     }
 
 
@@ -476,17 +533,132 @@ def _build_coverage_gap_items(
     return sorted(items, key=lambda item: item["task_id"])[:max_items]
 
 
+def _build_trial_error_positive_items(
+    documents: dict[str, dict[str, Any]], *, max_items: int
+) -> list[dict[str, Any]]:
+    items: list[tuple[int, str, dict[str, Any]]] = []
+    for doc_id, stats in documents.items():
+        signal_count = _trial_error_signal_count(stats["reuse_effects"])
+        if signal_count == 0:
+            continue
+        score = signal_count * 4 + stats["resolved_events"] * 2 + stats["partial_events"]
+        reason = "trial/error reduction effect recorded"
+        items.append((score, doc_id, _trial_error_doc_item(stats, reason)))
+    return [item for _, _, item in sorted(items, key=lambda row: (-row[0], row[1]))[:max_items]]
+
+
+def _build_trial_error_missed_items(
+    documents: dict[str, dict[str, Any]], tasks: dict[str, dict[str, Any]], *, max_items: int
+) -> list[dict[str, Any]]:
+    items: list[tuple[int, str, dict[str, Any]]] = []
+    for task_id, stats in tasks.items():
+        notes = " ".join(stats["notes"])
+        has_missed_signal = _contains_any_keyword(notes, MISSED_MEMORY_KEYWORDS)
+        has_unresolved_trial_error_signal = (
+            _contains_any_keyword(notes, TRIAL_ERROR_NOTE_KEYWORDS)
+            and _trial_error_signal_count(stats["reuse_effects"]) == 0
+        )
+        if not (has_missed_signal or has_unresolved_trial_error_signal):
+            continue
+        score = stats["resolved_events"] + stats["total_events"]
+        reason = "task notes mention missed memory or trial/error failure signals"
+        items.append((score, task_id, _trial_error_task_item(stats, reason)))
+    for doc_id, stats in documents.items():
+        notes_score = stats["missed_note_count"]
+        if notes_score == 0:
+            continue
+        reason = "reuse notes mention missed memory or should-have-read signals"
+        items.append((notes_score, doc_id, _trial_error_doc_item(stats, reason)))
+    return [item for _, _, item in sorted(items, key=lambda row: (-row[0], row[1]))[:max_items]]
+
+
+def _build_trial_error_unproven_items(
+    tasks: dict[str, dict[str, Any]], *, max_items: int
+) -> list[dict[str, Any]]:
+    items: list[tuple[int, str, dict[str, Any]]] = []
+    for task_id, stats in tasks.items():
+        if stats["last_check_outcome"] != "wiki_used":
+            continue
+        if stats["total_events"] == 0:
+            continue
+        if _trial_error_signal_count(stats["reuse_effects"]) > 0:
+            continue
+        score = stats["total_events"] - stats["resolved_events"]
+        reason = "AI wiki use recorded without a trial/error reduction effect"
+        items.append((score, task_id, _trial_error_task_item(stats, reason)))
+    return [item for _, _, item in sorted(items, key=lambda row: (-row[0], row[1]))[:max_items]]
+
+
+def _build_trial_error_replay_candidates(
+    documents: dict[str, dict[str, Any]], *, max_items: int
+) -> list[dict[str, Any]]:
+    items: list[tuple[int, str, dict[str, Any]]] = []
+    for doc_id, stats in documents.items():
+        effects = _trial_error_effects(stats["reuse_effects"])
+        direct_retry_signals = effects.get("avoided_retry", 0) + effects.get(
+            "blocked_wrong_path", 0
+        )
+        if direct_retry_signals == 0:
+            continue
+        score = direct_retry_signals * 5 + stats["resolved_events"]
+        reason = (
+            "direct retry or wrong-path avoidance signal; candidate for formal replay "
+            "if a concrete source incident exists"
+        )
+        items.append((score, doc_id, _trial_error_doc_item(stats, reason)))
+    return [item for _, _, item in sorted(items, key=lambda row: (-row[0], row[1]))[:max_items]]
+
+
+def _build_trial_error_section(
+    documents: dict[str, dict[str, Any]], tasks: dict[str, dict[str, Any]], *, max_items: int
+) -> dict[str, Any]:
+    positive = _build_trial_error_positive_items(documents, max_items=max_items)
+    missed = _build_trial_error_missed_items(documents, tasks, max_items=max_items)
+    unproven = _build_trial_error_unproven_items(tasks, max_items=max_items)
+    replay_candidates = _build_trial_error_replay_candidates(documents, max_items=max_items)
+    tasks_with_trial_error_effect = {
+        stats["task_id"]
+        for stats in tasks.values()
+        if _trial_error_signal_count(stats["reuse_effects"]) > 0
+    }
+    return {
+        "summary": {
+            "missed_or_repeated_issue_count": len(missed),
+            "positive_evidence_count": len(positive),
+            "replay_candidate_count": len(replay_candidates),
+            "tasks_with_trial_error_effect": len(tasks_with_trial_error_effect),
+            "trial_error_signal_count": sum(
+                item["trial_error_signal_count"] for item in positive
+            ),
+            "unproven_wiki_use_count": len(unproven),
+        },
+        "positive_evidence": positive,
+        "missed_or_repeated_issue_signals": missed,
+        "unproven_wiki_use": unproven,
+        "replay_candidates": replay_candidates,
+        "interpretation": [
+            "Positive evidence means local telemetry recorded a material effect such as avoided_retry or blocked_wrong_path.",
+            "Unproven wiki use means AI wiki was used but no trial/error reduction effect was recorded for that task.",
+            "Replay candidates still need source incident artifacts before they become formal impact-eval families.",
+        ],
+    }
+
+
 def build_memory_diagnostics_report(
     repo_wiki_dir: Path,
     *,
     handle: str | None = None,
     since: str | None = None,
+    focus: str = "all",
     max_items: int = DEFAULT_DIAGNOSTICS_MAX_ITEMS,
     high_roi_min_events: int = DEFAULT_HIGH_ROI_MIN_EVENTS,
     noisy_min_events: int = DEFAULT_NOISY_MIN_EVENTS,
     generated_at: str | None = None,
 ) -> dict[str, Any]:
     """Build a deterministic memory diagnostics report from local evidence logs."""
+    normalized_focus = focus.strip().lower()
+    if normalized_focus not in DIAGNOSTIC_FOCUSES:
+        raise ValueError("Invalid --focus. Expected one of: all, trial-error.")
     since_cutoff = _parse_since(since)
     all_events, skipped_event_lines = _load_repo_reuse_events(repo_wiki_dir)
     all_checks, skipped_check_lines = _load_repo_task_checks(repo_wiki_dir)
@@ -509,6 +681,7 @@ def build_memory_diagnostics_report(
         "schema_version": DIAGNOSTICS_SCHEMA_VERSION,
         "generated_at": generated_at or datetime.now().astimezone().isoformat(timespec="seconds"),
         "filters": {
+            "focus": normalized_focus,
             "handle": _normalize_handle_filter(handle),
             "since": since,
             "since_cutoff": since_cutoff.isoformat() if since_cutoff else None,
@@ -544,6 +717,11 @@ def build_memory_diagnostics_report(
         "conflicting_memory": _build_conflict_items(documents, max_items=max_items),
         "missed_memory": _build_missed_memory_items(documents, tasks, max_items=max_items),
         "coverage_gaps": _build_coverage_gap_items(tasks, max_items=max_items),
+        "trial_error_reduction": _build_trial_error_section(
+            documents,
+            tasks,
+            max_items=max_items,
+        ),
         "diagnostic_notes": [
             "Route selection traces are not recorded yet; missed and noisy route diagnosis is limited to reuse/check evidence and notes.",
             "This report is generated from local evidence logs and should be regenerated rather than edited as canonical memory.",
@@ -613,6 +791,69 @@ def _render_coverage_section(items: list[dict[str, Any]]) -> list[str]:
     return lines
 
 
+def _render_trial_error_item(item: dict[str, Any]) -> list[str]:
+    lines = [f"- {_item_label(item)}", f"  - Reason: {item['reason']}"]
+    effects = item.get("trial_error_effects")
+    if isinstance(effects, dict) and effects:
+        rendered_effects = ", ".join(f"{effect}={count}" for effect, count in effects.items())
+        lines.append(f"  - Trial/error effects: {rendered_effects}")
+    if "total_events" in item:
+        lines.append(
+            "  - Evidence: "
+            f"{item.get('resolved_events', 0)} resolved / {item.get('total_events', 0)} total events."
+        )
+    tasks = item.get("tasks")
+    if isinstance(tasks, list) and tasks:
+        lines.append(f"  - Tasks: {', '.join(f'`{task}`' for task in tasks[:5])}")
+    doc_ids = item.get("doc_ids")
+    if isinstance(doc_ids, list) and doc_ids:
+        lines.append(f"  - Docs: {', '.join(f'`{doc_id}`' for doc_id in doc_ids[:5])}")
+    path = item.get("path")
+    if isinstance(path, str) and path:
+        lines.append(f"  - Source: `{path}`")
+    return lines
+
+
+def _render_trial_error_subsection(title: str, items: list[dict[str, Any]]) -> list[str]:
+    lines = [f"### {title}", ""]
+    if not items:
+        lines.extend(["- None detected.", ""])
+        return lines
+    for item in items:
+        lines.extend(_render_trial_error_item(item))
+    lines.append("")
+    return lines
+
+
+def _render_trial_error_section(section: dict[str, Any]) -> list[str]:
+    summary = section["summary"]
+    lines = [
+        "## Trial/Error Reduction",
+        "",
+        f"- Positive evidence items: {summary['positive_evidence_count']}",
+        f"- Tasks with trial/error effects: {summary['tasks_with_trial_error_effect']}",
+        f"- Trial/error effect signals: {summary['trial_error_signal_count']}",
+        f"- Missed or repeated issue signals: {summary['missed_or_repeated_issue_count']}",
+        f"- Unproven wiki-use tasks: {summary['unproven_wiki_use_count']}",
+        f"- Replay candidates: {summary['replay_candidate_count']}",
+        "",
+    ]
+    lines.extend(_render_trial_error_subsection("Positive Evidence", section["positive_evidence"]))
+    lines.extend(
+        _render_trial_error_subsection(
+            "Missed Or Repeated Issue Signals",
+            section["missed_or_repeated_issue_signals"],
+        )
+    )
+    lines.extend(_render_trial_error_subsection("Unproven Wiki Use", section["unproven_wiki_use"]))
+    lines.extend(_render_trial_error_subsection("Replay Candidates", section["replay_candidates"]))
+    lines.extend(["### Interpretation", ""])
+    for note in section["interpretation"]:
+        lines.append(f"- {note}")
+    lines.append("")
+    return lines
+
+
 def render_memory_diagnostics_markdown(
     report: dict[str, Any],
     *,
@@ -622,13 +863,20 @@ def render_memory_diagnostics_markdown(
     """Render memory diagnostics as Markdown."""
     summary = report["summary"]
     filters = report["filters"]
+    focus = filters.get("focus") or "all"
+    title = (
+        "AI Wiki Trial/Error Reduction Diagnostics"
+        if focus == "trial-error"
+        else "AI Wiki Memory Diagnostics"
+    )
     lines = [
-        "# AI Wiki Memory Diagnostics",
+        f"# {title}",
         "",
         f"Generated at: `{report['generated_at']}`",
         "",
         "## Filters",
         "",
+        f"- Focus: `{focus}`",
         f"- Handle: `{filters['handle'] or 'all'}`",
         f"- Since: `{filters['since'] or 'all'}`",
         "",
@@ -654,12 +902,16 @@ def render_memory_diagnostics_markdown(
             "",
         ]
     )
-    lines.extend(_render_doc_section("High-ROI Memory", report["high_roi_memory"]))
-    lines.extend(_render_doc_section("Noisy Memory", report["noisy_memory"]))
-    lines.extend(_render_doc_section("Stale Memory", report["stale_memory"]))
-    lines.extend(_render_doc_section("Conflicting Memory", report["conflicting_memory"]))
-    lines.extend(_render_doc_section("Missed Memory Signals", report["missed_memory"]))
-    lines.extend(_render_coverage_section(report["coverage_gaps"]))
+    if focus == "trial-error":
+        lines.extend(_render_trial_error_section(report["trial_error_reduction"]))
+    else:
+        lines.extend(_render_doc_section("High-ROI Memory", report["high_roi_memory"]))
+        lines.extend(_render_doc_section("Noisy Memory", report["noisy_memory"]))
+        lines.extend(_render_doc_section("Stale Memory", report["stale_memory"]))
+        lines.extend(_render_doc_section("Conflicting Memory", report["conflicting_memory"]))
+        lines.extend(_render_doc_section("Missed Memory Signals", report["missed_memory"]))
+        lines.extend(_render_coverage_section(report["coverage_gaps"]))
+        lines.extend(_render_trial_error_section(report["trial_error_reduction"]))
     lines.extend(["## Diagnostic Notes", ""])
     for note in report["diagnostic_notes"]:
         lines.append(f"- {note}")
@@ -672,6 +924,7 @@ def generate_memory_diagnostics(
     *,
     handle: str | None = None,
     since: str | None = None,
+    focus: str = "all",
     max_items: int = DEFAULT_DIAGNOSTICS_MAX_ITEMS,
     high_roi_min_events: int = DEFAULT_HIGH_ROI_MIN_EVENTS,
     noisy_min_events: int = DEFAULT_NOISY_MIN_EVENTS,
@@ -682,15 +935,17 @@ def generate_memory_diagnostics(
         repo_wiki_dir,
         handle=handle,
         since=since,
+        focus=focus,
         max_items=max_items,
         high_roi_min_events=high_roi_min_events,
         noisy_min_events=noisy_min_events,
     )
     diagnostics_dir = repo_wiki_dir / "_toolkit" / "diagnostics"
-    markdown_path = diagnostics_dir / "memory-report.md" if write else None
-    json_path = diagnostics_dir / "memory-report.json" if write else None
-    display_markdown_path = Path("ai-wiki/_toolkit/diagnostics/memory-report.md") if write else None
-    display_json_path = Path("ai-wiki/_toolkit/diagnostics/memory-report.json") if write else None
+    report_stem = "trial-error-report" if report["filters"]["focus"] == "trial-error" else "memory-report"
+    markdown_path = diagnostics_dir / f"{report_stem}.md" if write else None
+    json_path = diagnostics_dir / f"{report_stem}.json" if write else None
+    display_markdown_path = Path(f"ai-wiki/_toolkit/diagnostics/{report_stem}.md") if write else None
+    display_json_path = Path(f"ai-wiki/_toolkit/diagnostics/{report_stem}.json") if write else None
     markdown = render_memory_diagnostics_markdown(
         report,
         markdown_path=display_markdown_path,

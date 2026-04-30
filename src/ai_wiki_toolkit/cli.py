@@ -17,13 +17,18 @@ from ai_wiki_toolkit.diagnostics import (
     DEFAULT_DIAGNOSTICS_MAX_ITEMS,
     DEFAULT_HIGH_ROI_MIN_EVENTS,
     DEFAULT_NOISY_MIN_EVENTS,
+    DIAGNOSTIC_FOCUSES,
     generate_memory_diagnostics,
 )
 from ai_wiki_toolkit.doctor import run_doctor
 from ai_wiki_toolkit.impact_eval import (
     generate_impact_eval_report,
+    generate_impact_eval_summary,
+    load_impact_eval_run_dirs_from_file,
     render_impact_eval_report,
     render_impact_eval_report_json,
+    render_impact_eval_summary,
+    render_impact_eval_summary_json,
 )
 from ai_wiki_toolkit.paths import (
     RepoRootNotFoundError,
@@ -416,6 +421,11 @@ def diagnose_memory(
         "--since",
         help="Optional ISO timestamp or duration such as 14d.",
     ),
+    focus: str = typer.Option(
+        "all",
+        "--focus",
+        help="Diagnostics focus. Choices: all, trial-error.",
+    ),
     output_format: str = typer.Option(
         "text",
         "--format",
@@ -450,6 +460,10 @@ def diagnose_memory(
     if normalized_format not in {"text", "json"}:
         typer.echo("Invalid --format. Expected one of: text, json.", err=True)
         raise typer.Exit(code=1)
+    normalized_focus = focus.strip().lower()
+    if normalized_focus not in DIAGNOSTIC_FOCUSES:
+        typer.echo("Invalid --focus. Expected one of: all, trial-error.", err=True)
+        raise typer.Exit(code=1)
 
     try:
         paths = build_paths()
@@ -461,6 +475,7 @@ def diagnose_memory(
             paths.repo_wiki_dir,
             handle=handle,
             since=since,
+            focus=normalized_focus,
             max_items=max_items,
             high_roi_min_events=high_roi_min_events,
             noisy_min_events=noisy_min_events,
@@ -608,6 +623,71 @@ def eval_impact_report(
         render_impact_eval_report_json(report)
         if normalized_format == "json"
         else render_impact_eval_report(report)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_app.command("summarize")
+def eval_impact_summarize(
+    run_dirs: list[Path] | None = typer.Option(
+        None,
+        "--run-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Impact eval run directory. Repeat to summarize multiple runs.",
+    ),
+    runs_file: Path | None = typer.Option(
+        None,
+        "--runs-file",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="JSON file containing run directories as a list, `run_dirs`, or `runs[].run_dir`.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Summarize product-level impact across multiple captured eval runs."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    selected_run_dirs: list[Path] = list(run_dirs or [])
+    try:
+        if runs_file is not None:
+            selected_run_dirs.extend(load_impact_eval_run_dirs_from_file(runs_file))
+        if not selected_run_dirs:
+            typer.echo("Provide at least one --run-dir or --runs-file.", err=True)
+            raise typer.Exit(code=1)
+        summary = generate_impact_eval_summary(tuple(selected_run_dirs))
+    except (FileNotFoundError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read impact eval data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_impact_eval_summary_json(summary)
+        if normalized_format == "json"
+        else render_impact_eval_summary(summary)
     )
     if output is not None:
         output.parent.mkdir(parents=True, exist_ok=True)

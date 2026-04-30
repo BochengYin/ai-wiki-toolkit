@@ -275,6 +275,115 @@ def test_diagnose_memory_json_no_write_filters_handle_and_since(
     assert not (repo_wiki / "_toolkit" / "diagnostics" / "memory-report.json").exists()
 
 
+def test_diagnose_memory_trial_error_focus_reports_existing_evidence(
+    repo_env: dict[str, Path],
+) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "alice"])
+    assert install_result.exit_code == 0
+
+    repo_wiki = repo_env["repo"] / "ai-wiki"
+    _write_doc(repo_wiki / "problems" / "retry-loop.md", "# Retry Loop\n")
+    _write_doc(repo_wiki / "conventions" / "plain-style.md", "# Plain Style\n")
+    _write_jsonl(
+        repo_wiki / "metrics" / "reuse-events" / "alice.jsonl",
+        [
+            {
+                "author_handle": "alice",
+                "doc_id": "problems/retry-loop",
+                "doc_kind": "problem",
+                "event_id": "evt_retry",
+                "evidence_mode": "explicit",
+                "notes": "Used existing memory to avoid repeating the failed attempt.",
+                "observed_at": "2026-04-20T10:00:00+00:00",
+                "retrieval_mode": "lookup",
+                "reuse_effects": ["avoided_retry", "blocked_wrong_path"],
+                "reuse_outcome": "resolved",
+                "schema_version": "reuse-v1",
+                "task_id": "task-avoided-retry",
+            },
+            {
+                "author_handle": "alice",
+                "doc_id": "conventions/plain-style",
+                "doc_kind": "convention",
+                "event_id": "evt_unproven",
+                "evidence_mode": "explicit",
+                "observed_at": "2026-04-21T10:00:00+00:00",
+                "retrieval_mode": "lookup",
+                "reuse_effects": ["reused_convention"],
+                "reuse_outcome": "resolved",
+                "schema_version": "reuse-v1",
+                "task_id": "task-used-wiki",
+            },
+        ],
+    )
+    _write_jsonl(
+        repo_wiki / "metrics" / "task-checks" / "alice.jsonl",
+        [
+            {
+                "author_handle": "alice",
+                "check_id": "chk_retry",
+                "check_outcome": "wiki_used",
+                "checked_at": "2026-04-20T11:00:00+00:00",
+                "schema_version": "reuse-v1",
+                "task_id": "task-avoided-retry",
+            },
+            {
+                "author_handle": "alice",
+                "check_id": "chk_used",
+                "check_outcome": "wiki_used",
+                "checked_at": "2026-04-21T11:00:00+00:00",
+                "schema_version": "reuse-v1",
+                "task_id": "task-used-wiki",
+            },
+            {
+                "author_handle": "alice",
+                "check_id": "chk_missed",
+                "check_outcome": "no_wiki_use",
+                "checked_at": "2026-04-22T11:00:00+00:00",
+                "notes": "Missed relevant memory caused a repeated error and extra iteration.",
+                "schema_version": "reuse-v1",
+                "task_id": "task-missed-memory",
+            },
+        ],
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "diagnose",
+            "memory",
+            "--handle",
+            "alice",
+            "--focus",
+            "trial-error",
+            "--format",
+            "json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    report = json.loads(result.output)
+    section = report["trial_error_reduction"]
+    assert report["filters"]["focus"] == "trial-error"
+    assert section["summary"]["tasks_with_trial_error_effect"] == 1
+    assert section["positive_evidence"][0]["doc_id"] == "problems/retry-loop"
+    assert section["positive_evidence"][0]["trial_error_effects"] == {
+        "avoided_retry": 1,
+        "blocked_wrong_path": 1,
+    }
+    assert section["replay_candidates"][0]["doc_id"] == "problems/retry-loop"
+    assert section["unproven_wiki_use"][0]["task_id"] == "task-used-wiki"
+    assert section["missed_or_repeated_issue_signals"][0]["task_id"] == "task-missed-memory"
+
+    markdown_path = repo_wiki / "_toolkit" / "diagnostics" / "trial-error-report.md"
+    json_path = repo_wiki / "_toolkit" / "diagnostics" / "trial-error-report.json"
+    assert markdown_path.exists()
+    assert json_path.exists()
+    assert "AI Wiki Trial/Error Reduction Diagnostics" in markdown_path.read_text(
+        encoding="utf-8"
+    )
+
+
 def test_diagnose_memory_requires_initialized_repo_wiki(repo_env: dict[str, Path]) -> None:
     result = runner.invoke(app, ["diagnose", "memory"])
 

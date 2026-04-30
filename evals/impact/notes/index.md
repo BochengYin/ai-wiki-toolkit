@@ -20,19 +20,21 @@ synthesizes across notes.
    The clean formal CLI-first scaffold/prompt workflow-compliance run.
 7. `evals/impact/notes/manual_v2_cli_original_windows_arm_20260425_findings.md`
    The clean formal CLI-first Windows ARM smoke-output run.
-8. `evals/impact/notes/manual_v2_original_10_repo_findings.md`
+8. `evals/impact/notes/manual_v2_cli_original_postinstall_archive_20260430_findings.md`
+   The clean formal CLI-first postinstall archive-staging run.
+9. `evals/impact/notes/manual_v2_original_10_repo_findings.md`
    The earlier 10-repo original-prompt transition run across both benchmark families.
-9. `evals/impact/runbooks/ownership_boundary.md`
+10. `evals/impact/runbooks/ownership_boundary.md`
    Reproduction spec and rubric for the ownership-boundary family.
-10. `evals/impact/runbooks/release_distribution_integrity.md`
+11. `evals/impact/runbooks/release_distribution_integrity.md`
    Reproduction spec and rubric for the release-distribution family.
-11. `evals/impact/notes/round1_process_lessons.md`
+12. `evals/impact/notes/round1_process_lessons.md`
    Historical round1 process lessons and why v2 changed the harness.
-12. `evals/impact/notes/ownership_boundary_round1_findings.md`
+13. `evals/impact/notes/ownership_boundary_round1_findings.md`
    Historical ownership-boundary short/medium results.
-13. `evals/impact/notes/release_distribution_integrity_round1_findings.md`
+14. `evals/impact/notes/release_distribution_integrity_round1_findings.md`
    Historical release-distribution short results.
-14. `evals/impact/notes/ownership_boundary_v0_failure.md`
+15. `evals/impact/notes/ownership_boundary_v0_failure.md`
    Original failed benchmark design and prompt leakage.
 
 ## Run Chronology
@@ -49,6 +51,7 @@ synthesizes across notes.
 | 8 | `manual_v2_cli_original_windows_arm_20260425_findings.md` | current formal run | narrow Windows ARM smoke-output benchmark |
 | 9 | `manual_v2_cli_original_release_runtime_20260425_findings.md` | current formal run | release-runtime compatibility primary comparison and diagnostics |
 | 10 | `manual_v2_cli_original_scaffold_prompt_workflow_20260425_findings.md` | current formal run | scaffold/prompt workflow-compliance primary comparison and diagnostics |
+| 11 | `manual_v2_cli_original_postinstall_archive_20260430_findings.md` | current formal run | postinstall archive-staging primary comparison and diagnostics |
 
 ## Documentation Roles
 
