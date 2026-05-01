@@ -118,7 +118,7 @@ Treat this as a replication study, not as part of the current 2026-04-25 formal 
 | `release_runtime_compatibility` | `done` | repeated-problem / release-runtime verification | does memory help the agent choose an older glibc baseline and add runtime verification instead of stopping at build or install success? | `linux-release-binaries-need-runtime-checks-against-an-older-glibc-baseline.md` |
 | `postinstall_archive_staging` | `done` | repeated-problem / packaging | does memory help the agent avoid self-deleting npm postinstall staging paths? | `npm-postinstall-must-not-delete-its-own-download-archive.md` |
 | `scaffold_prompt_workflow_compliance` | `done` | workflow-compliance | when changing scaffold or prompt behavior, does memory help the agent update tests, rerun install, and avoid prompt churn? | `ai-wiki/workflows.md`, `shared-prompt-files-must-be-user-agnostic.md`, prompt-churn drafts |
-| `aiwiki_evidence_integrity` | `planned` | telemetry / end-of-task workflow | does memory help the agent preserve the distinction between document-level reuse events and task-level checks, and always run update checks? | `ai-wiki-usefulness-metrics-need-task-level-checks-plus-doc-events.md`, `end-of-task-ai-wiki-update-check-must-always-run.md`, `ai-wiki-reuse-metrics-should-exclude-managed-docs-and-shard-by-handle.md` |
+| `aiwiki_evidence_integrity` | `done` | telemetry / end-of-task workflow | does memory help the agent preserve the distinction between document-level reuse events and task-level checks, exclude managed docs, shard evidence, and always run update checks? | `ai-wiki-usefulness-metrics-need-task-level-checks-plus-doc-events.md`, `end-of-task-ai-wiki-update-check-must-always-run.md`, `ai-wiki-reuse-metrics-should-exclude-managed-docs-and-shard-by-handle.md` |
 | `capture_vs_consolidation` | `needs-more-signals` | consolidation-design benchmark | when consolidation exists, does it improve reuse without creating shared-doc churn or overwriting end-of-task capture? | `consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn.md` |
 
 ## Notes Per Family
@@ -224,16 +224,26 @@ Current defended takeaway:
 
 ### aiwiki_evidence_integrity
 
-This family is less about code placement and more about end-of-task workflow correctness.
+Run and documented.
 
-It would likely test whether the agent:
+Artifacts:
 
-- records task-level checks
-- separates document events from denominator coverage
-- avoids counting managed `_toolkit/**` docs as reuse evidence
-- always emits an update outcome
+- `evals/impact/families/aiwiki_evidence_integrity/spec.toml`
+- `evals/impact/prompts/aiwiki_evidence_integrity/TASK.md`
+- `evals/impact/prompts/aiwiki_evidence_integrity/original.md`
+- `evals/impact/notes/manual_v2_cli_original_aiwiki_evidence_20260501_findings.md`
+- `/private/tmp/aiwiki_first_round/aiwiki_evidence_integrity/runs/cli-original-aiwiki-evidence-20260501-1725/report.md`
+- `/private/tmp/aiwiki_first_round/aiwiki_evidence_integrity/runs/cli-original-aiwiki-evidence-20260501-1725/product_report.md`
 
-This family may need a slightly different scoring rubric from `ownership_boundary`.
+Current defended takeaway:
+
+- the no-AI-wiki primary control was partial: it found the task-level denominator idea but used
+  flat shared evidence files and did not land the intended per-handle reuse-check shape
+- the ambient AI wiki primary treatment succeeded with per-handle document/task-check shards,
+  managed-doc exclusion, explicit write-back evidence, docs, scaffold updates, and tests
+- raw and consolidated target-memory diagnostics also succeeded
+- strict no-adjacent scaffold context was partial, which keeps the claim focused on evidence
+  quality rather than bare task solvability
 
 ### capture_vs_consolidation
 
@@ -247,7 +257,8 @@ Promote it later if more concrete consolidation tasks appear.
 
 If you want the next broader release/verification benchmark:
 
-1. `aiwiki_evidence_integrity`
+1. rerun or replicate `aiwiki_evidence_integrity` with additional seeds if you want a stronger
+   evidence-integrity claim
 
 If you want the next workflow-style benchmark:
 

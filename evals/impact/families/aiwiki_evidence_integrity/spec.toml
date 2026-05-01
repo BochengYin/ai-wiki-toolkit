@@ -1,0 +1,51 @@
+name = "aiwiki_evidence_integrity"
+prompt_family = "aiwiki_evidence_integrity"
+baseline_ref = "8228ba6^"
+historical_issue = "AI wiki evidence could log document-level reuse without task-level coverage, count managed toolkit docs as knowledge reuse, and omit mandatory end-of-task update outcomes."
+
+raw_docs = [
+  "ai-wiki/people/bochengyin/drafts/ai-wiki-usefulness-metrics-need-task-level-checks-plus-doc-events.md",
+  "ai-wiki/people/bochengyin/drafts/ai-wiki-reuse-metrics-should-exclude-managed-docs-and-shard-by-handle.md",
+  "ai-wiki/people/bochengyin/drafts/end-of-task-ai-wiki-update-check-must-always-run.md",
+]
+
+consolidated_docs = [
+  "ai-wiki/metrics/index.md",
+  "ai-wiki/conventions/package-managed-vs-user-owned-docs.md",
+]
+
+ambient_exclude_paths = [
+  "ai-wiki/people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history.md",
+  "ai-wiki/people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files.md",
+  "ai-wiki/people/bochengyin/drafts/impact-eval-no-target-aiwiki-slots-must-exclude-task-specific-workflow-memory.md",
+  "ai-wiki/people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff.md",
+  "ai-wiki/people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes.md",
+  "ai-wiki/people/bochengyin/drafts/adjacent-consolidated-guidance-can-underperform-task-specific-raw-drafts-in-impact-evals.md",
+]
+
+strict_scaffold_exclude_paths = [
+  ".agents/skills/ai-wiki-reuse-check",
+  ".agents/skills/ai-wiki-update-check",
+  "ai-wiki/_toolkit/index.md",
+  "ai-wiki/_toolkit/schema/reuse-v1.md",
+  "ai-wiki/_toolkit/workflows.md",
+  "ai-wiki/people/bochengyin/drafts/ai-wiki-footer-should-use-user-facing-evidence-language.md",
+  "ai-wiki/people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn.md",
+  "ai-wiki/people/bochengyin/drafts/managed-toolkit-workflows-need-a-toc-and-scope-aware-conflict-checks.md",
+]
+
+[[consolidated_index_entries]]
+path = "ai-wiki/index.md"
+entry = "- `metrics/` contains user-owned evidence logs such as `reuse-events/<handle>.jsonl` and `task-checks/<handle>.jsonl`."
+
+[[consolidated_index_entries]]
+path = "ai-wiki/conventions/index.md"
+entry = "- [Package-managed vs user-owned AI wiki docs](package-managed-vs-user-owned-docs.md): keep evolving package-controlled guidance in `_toolkit/**` and keep repo-owned AI wiki docs stable unless a contributor intentionally edits them."
+
+[[strict_scaffold_index_tokens]]
+path = "ai-wiki/index.md"
+token = "task-checks/"
+
+[[strict_scaffold_index_tokens]]
+path = "ai-wiki/conventions/index.md"
+token = "package-managed-vs-user-owned-docs.md"

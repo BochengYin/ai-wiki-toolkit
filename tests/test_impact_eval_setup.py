@@ -323,6 +323,44 @@ def test_load_postinstall_archive_staging_spec_targets_source_memory() -> None:
     assert adjacent_npm_memory in spec.strict_scaffold_exclude_paths
 
 
+def test_load_aiwiki_evidence_integrity_spec_targets_evidence_memory() -> None:
+    module = _load_prepare_variants_module()
+    repo_root = Path(__file__).resolve().parents[1]
+    spec_path = (
+        repo_root
+        / "evals"
+        / "impact"
+        / "families"
+        / "aiwiki_evidence_integrity"
+        / "spec.toml"
+    )
+
+    spec = module.load_experiment_spec(spec_path)
+    experiments = module.available_experiments(repo_root)
+
+    assert experiments["aiwiki_evidence_integrity"] == spec
+    assert spec.name == "aiwiki_evidence_integrity"
+    assert spec.prompt_family == "aiwiki_evidence_integrity"
+    assert spec.baseline_ref == "8228ba6^"
+    assert spec.raw_docs == (
+        "ai-wiki/people/bochengyin/drafts/"
+        "ai-wiki-usefulness-metrics-need-task-level-checks-plus-doc-events.md",
+        "ai-wiki/people/bochengyin/drafts/"
+        "ai-wiki-reuse-metrics-should-exclude-managed-docs-and-shard-by-handle.md",
+        "ai-wiki/people/bochengyin/drafts/"
+        "end-of-task-ai-wiki-update-check-must-always-run.md",
+    )
+    assert spec.consolidated_docs == (
+        "ai-wiki/metrics/index.md",
+        "ai-wiki/conventions/package-managed-vs-user-owned-docs.md",
+    )
+    assert ".agents/skills/ai-wiki-reuse-check" in spec.strict_scaffold_exclude_paths
+    assert ".agents/skills/ai-wiki-update-check" in spec.strict_scaffold_exclude_paths
+    assert "ai-wiki/_toolkit/schema/reuse-v1.md" in spec.strict_scaffold_exclude_paths
+    assert "ai-wiki/_toolkit/workflows.md" in spec.strict_scaffold_exclude_paths
+    assert ("ai-wiki/index.md", "task-checks/") in spec.strict_scaffold_index_tokens
+
+
 def test_prepare_variants_can_write_workflow_primary_neutral_slots(tmp_path: Path) -> None:
     module = _load_prepare_variants_module()
     source = tmp_path / "source"
