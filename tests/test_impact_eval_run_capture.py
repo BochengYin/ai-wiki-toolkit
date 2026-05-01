@@ -721,6 +721,75 @@ def test_score_and_report_separate_workflow_and_diagnostic_results(tmp_path: Pat
     assert "semantic_path_leak" in report_text
 
 
+def test_report_runs_infers_first_pass_success_from_score_when_capture_is_pending(
+    tmp_path: Path,
+) -> None:
+    report_module = _load_script("report_runs.py")
+    score_module = _load_script("score_run.py")
+    run_dir = tmp_path / "runs" / "run_001"
+    run_dir.mkdir(parents=True)
+    metadata = {
+        "experiment": "aiwiki_evidence_integrity",
+        "workspace_root": "/tmp/workspaces",
+        "variants": ["s01", "s02", "s03"],
+        "prompt_levels": ["original"],
+        "created_at": "2026-05-01T10:00:00",
+        "primary_comparison": ["no_aiwiki_workflow", "aiwiki_ambient_memory_workflow"],
+        "diagnostic_variants": ["aiwiki_scaffold_no_adjacent_memory"],
+        "assignment": {
+            "slots": [
+                {"slot": "s01", "variant": "no_aiwiki_workflow"},
+                {"slot": "s02", "variant": "aiwiki_ambient_memory_workflow"},
+                {"slot": "s03", "variant": "aiwiki_scaffold_no_adjacent_memory"},
+            ]
+        },
+    }
+    (run_dir / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
+    for slot, variant in (
+        ("s01", "no_aiwiki_workflow"),
+        ("s02", "aiwiki_ambient_memory_workflow"),
+        ("s03", "aiwiki_scaffold_no_adjacent_memory"),
+    ):
+        result_dir = run_dir / slot / "original" / "first_pass"
+        result_dir.mkdir(parents=True)
+        (result_dir / "result.json").write_text(
+            json.dumps(
+                {
+                    "slot": slot,
+                    "variant": variant,
+                    "prompt_level": "original",
+                    "phase": "first_pass",
+                    "attempt": 1,
+                    "human_nudges": 0,
+                    "first_pass_success": None,
+                    "changed_files": ["scripts/example.py"],
+                    "untracked_files": [],
+                    "notes": "",
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+    for slot, label in (("s01", "partial"), ("s02", "success"), ("s03", "fail")):
+        score_module.write_score(run_dir, slot=slot, prompt_level="original", label=label)
+
+    results = report_module.collect_results(run_dir)
+    assert [report_module.effective_first_pass_success(result) for result in results] == [
+        False,
+        True,
+        False,
+    ]
+
+    report_text = report_module.render_report(run_dir, metadata, results)
+
+    assert "| no_aiwiki_workflow | 1 | 0 | 1 | 0 | 1.00 | 0.00 |" in report_text
+    assert "| aiwiki_ambient_memory_workflow | 1 | 1 | 0 | 0 | 1.00 | 0.00 |" in report_text
+    assert "| s01 | no_aiwiki_workflow | original | first_pass | partial | no |" in report_text
+    assert "| s02 | aiwiki_ambient_memory_workflow | original | first_pass | success | yes |" in report_text
+    assert "| s03 | aiwiki_scaffold_no_adjacent_memory | original | first_pass | fail | no |" in report_text
+
+
 def test_export_codex_sessions_exports_latest_visible_session_per_variant(tmp_path: Path) -> None:
     module = _load_script("export_codex_sessions.py")
     workspace_root = tmp_path / "workspaces" / "20260424-182219"

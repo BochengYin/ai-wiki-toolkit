@@ -109,8 +109,9 @@ Remaining threats:
 - The prompt already described the evidence gap in detail, so a strong model could infer much of
   the intended design without task-specific memory.
 - Slots ran sequentially, so time/order effects are not ruled out.
-- `report_runs.py` still displays `first_pass_success` as `pending` because the capture artifact
-  does not encode that field; the product report derives first-attempt success from manual scores.
+- The script-level report should be regenerated with the follow-up `report_runs.py` behavior when
+  readers need first-pass success in that table; the product report remains the source for product
+  metrics.
 - Some successful slots recorded local AI wiki telemetry inside the slot worktree. That is expected
   dogfooding evidence, but it increases changed-file counts.
 

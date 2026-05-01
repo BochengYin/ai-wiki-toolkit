@@ -7,6 +7,11 @@ import json
 from pathlib import Path
 
 CAPTURE_PHASES = {"first_pass", "final"}
+SCORE_FIRST_PASS_SUCCESS = {
+    "success": True,
+    "partial": False,
+    "fail": False,
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -35,6 +40,18 @@ def format_first_pass(value: bool | None) -> str:
     if value is False:
         return "no"
     return "pending"
+
+
+def effective_first_pass_success(result: dict) -> bool | None:
+    explicit = result.get("first_pass_success")
+    if explicit is True or explicit is False:
+        return explicit
+    if result.get("phase") == "final":
+        return None
+    score = result.get("score")
+    if not isinstance(score, dict):
+        return None
+    return SCORE_FIRST_PASS_SUCCESS.get(score.get("label"))
 
 
 def format_paths(paths: list[str]) -> str:
@@ -112,9 +129,10 @@ def summarize_by_variant(results: list[dict]) -> list[dict]:
             },
         )
         bucket["recorded_slots"] += 1
-        if result.get("first_pass_success") is True:
+        first_pass_success = effective_first_pass_success(result)
+        if first_pass_success is True:
             bucket["first_pass_successes"] += 1
-        elif result.get("first_pass_success") is False:
+        elif first_pass_success is False:
             bucket["first_pass_failures"] += 1
         else:
             bucket["first_pass_pending"] += 1
@@ -176,7 +194,7 @@ def render_report(run_dir: Path, metadata: dict, results: list[dict]) -> str:
             result["prompt_level"],
             result.get("phase", ""),
             result.get("score", {}).get("label", "-") if result.get("score") else "-",
-            format_first_pass(result.get("first_pass_success")),
+            format_first_pass(effective_first_pass_success(result)),
             str(result.get("attempt", "")),
             str(result.get("human_nudges", "")),
             str(len(result.get("changed_files", []))),
@@ -193,7 +211,7 @@ def render_report(run_dir: Path, metadata: dict, results: list[dict]) -> str:
             result["variant"],
             result["prompt_level"],
             result.get("score", {}).get("label", "-") if result.get("score") else "-",
-            format_first_pass(result.get("first_pass_success")),
+            format_first_pass(effective_first_pass_success(result)),
             str(len(result.get("changed_files", []))),
         ]
         for result in results
@@ -205,7 +223,7 @@ def render_report(run_dir: Path, metadata: dict, results: list[dict]) -> str:
             result["variant"],
             result["prompt_level"],
             result.get("score", {}).get("label", "-") if result.get("score") else "-",
-            format_first_pass(result.get("first_pass_success")),
+            format_first_pass(effective_first_pass_success(result)),
             str(len(result.get("changed_files", []))),
         ]
         for result in results
