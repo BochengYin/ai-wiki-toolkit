@@ -36,6 +36,7 @@ The current documented benchmark families are:
 - `release_runtime_compatibility`
 - `scaffold_prompt_workflow_compliance`
 - `postinstall_archive_staging`
+- `aiwiki_evidence_integrity`
 
 ## Manual v2: Workflow-Primary Framing
 
@@ -99,6 +100,15 @@ agent keeps a public release/distribution matrix aligned across:
 - archive handling
 - docs
 - release-facing checks
+
+`aiwiki_evidence_integrity` has a first formal CLI-first result. It measures whether different AI
+wiki memory states help an agent preserve trustworthy usefulness evidence across document-level
+reuse events, task-level checks, managed-doc exclusion, per-handle evidence logs, and mandatory
+end-of-task update outcomes. The first run is documented in:
+
+```text
+evals/impact/notes/manual_v2_cli_original_aiwiki_evidence_20260501_findings.md
+```
 
 The original version of this benchmark leaked too much of the intended answer. That failure is
 documented in:

@@ -5,7 +5,7 @@ lives in `evals/impact/notes/`.
 
 ## Current Status
 
-The benchmark now has five completed six-slot CLI-first families:
+The benchmark now has seven completed six-slot CLI-first families:
 
 - `ownership_boundary`: tests whether AI wiki workflow helps keep contributor-only behavior out of
   package code.
@@ -17,6 +17,11 @@ The benchmark now has five completed six-slot CLI-first families:
   release and npm publishing.
 - `scaffold_prompt_workflow_compliance`: tests whether agents keep scaffold, prompt guidance, docs,
   and tests aligned with repo memory and ownership boundaries.
+- `postinstall_archive_staging`: tests whether agents preserve a downloaded npm wrapper archive long
+  enough for extraction instead of deleting it with the target directory.
+- `aiwiki_evidence_integrity`: tests whether agents preserve auditable usefulness evidence across
+  document reuse, task-level checks, managed-doc exclusion, per-handle evidence logs, and explicit
+  write-back outcomes.
 
 Latest report-worthy notes:
 
@@ -25,8 +30,10 @@ Latest report-worthy notes:
 - `evals/impact/notes/manual_v2_cli_original_windows_arm_20260425_findings.md`
 - `evals/impact/notes/manual_v2_cli_original_release_runtime_20260425_findings.md`
 - `evals/impact/notes/manual_v2_cli_original_scaffold_prompt_workflow_20260425_findings.md`
+- `evals/impact/notes/manual_v2_cli_original_postinstall_archive_20260430_findings.md`
+- `evals/impact/notes/manual_v2_cli_original_aiwiki_evidence_20260501_findings.md`
 
-All five current formal families used independent persisted Codex CLI sessions, `gpt-5.5`, `xhigh`,
+All seven current formal families used independent persisted Codex CLI sessions, `gpt-5.5`, `xhigh`,
 the `original.md` prompt, complete session exports, and `validate_run.py` outputs with no critical
 confounds.
 
@@ -101,6 +108,34 @@ The scaffold/prompt family gives a workflow-discipline positive primary comparis
 Diagnostics also succeeded, so the family is best interpreted as evidence that AI wiki can improve
 workflow consistency and naming/routing discipline, not that target memory is necessary.
 
+### Postinstall Archive Staging
+
+The postinstall archive family is neutral on first-attempt success.
+
+- No AI wiki (`s01`): success. It diagnosed that extraction deleted the downloaded archive and staged
+  the archive outside the target directory.
+- Realistic AI wiki workflow (`s05`): success. It used ambient target memory, staged in `os.tmpdir()`,
+  and avoided new user-owned wiki churn.
+- All diagnostic variants succeeded.
+
+The useful signal is change quality: exact target memory helped reduce user-owned wiki churn and
+kept the implementation tighter, but the task was direct enough that every condition solved it.
+
+### AI Wiki Evidence Integrity
+
+The evidence-integrity family gives a positive quality signal for the primary comparison.
+
+- No AI wiki (`s01`): partial. It found the task-level denominator idea and added tests/docs, but
+  kept flat shared evidence files and did not land the intended per-handle reuse-check shape.
+- Realistic AI wiki workflow (`s05`): success. It added per-handle document/task-check shards,
+  `record-reuse-check`, `refresh-metrics`, managed-doc exclusion, separate coverage semantics,
+  explicit write-back workflow text, README/docs/scaffold updates, and tests.
+
+Diagnostics narrow the claim. Raw and consolidated target-memory slots succeeded, while the strict
+no-adjacent scaffold slot was partial. The best claim is therefore that reachable AI wiki memory
+improved evidence completeness and workflow auditability, not that the core idea was impossible
+without memory.
+
 ## Current Claim Boundaries
 
 Reasonable to claim:
@@ -111,7 +146,12 @@ Reasonable to claim:
   completeness, known-hazard avoidance, and release-process quality.
 - The scaffold/prompt run supports a workflow-discipline claim: AI wiki context helped the agent keep
   names, routing, docs, and tests aligned.
+- The evidence-integrity run supports a workflow-auditability claim: AI wiki context helped the
+  agent preserve the full document-event versus task-check distinction, per-handle evidence
+  sharding, managed-doc exclusion, and explicit write-back outcome.
 - The Windows ARM smoke run is a good deterministic harness check, but neutral on AI wiki usefulness.
+- The postinstall archive run is also neutral on success, but useful for change-profile and
+  user-owned wiki churn analysis.
 - Original prompts and complete session exports are now the right baseline for interpreting these
   workflow-primary runs.
 
@@ -120,17 +160,18 @@ Not yet reasonable to claim:
 - a clean quantitative causal estimate of AI wiki impact
 - a seed-controlled benchmark result
 - a final model comparison
-- proof that AI wiki is necessary for release-distribution, release-runtime, scaffold, or Windows ARM
-  success; several diagnostic variants solved those tasks
+- proof that AI wiki is necessary for release-distribution, release-runtime, scaffold,
+  postinstall, evidence-integrity, or Windows ARM success; several diagnostic variants solved those
+  tasks
 - a formal claim from the 2026-04-25 transition batch
 
 ## Next Formal Work
 
 Remaining untested or immature families:
 
-1. `postinstall_archive_staging`
-2. `aiwiki_evidence_integrity`
-3. `capture_vs_consolidation`, after more concrete signals exist
+1. `capture_vs_consolidation`, after more concrete signals exist
+2. additional seeds or replications for `aiwiki_evidence_integrity` if a stronger
+   evidence-integrity claim is needed
 
 The next replication work should keep the now-default protocol:
 

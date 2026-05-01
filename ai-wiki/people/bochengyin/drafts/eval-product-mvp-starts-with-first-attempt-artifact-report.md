@@ -5,7 +5,7 @@ model: "gpt-5.5"
 source_kind: "task"
 status: "draft"
 created_at: "2026-04-29T21:47:41+1000"
-updated_at: "2026-04-29T22:09:31+1000"
+updated_at: "2026-05-01T20:14:22+1000"
 promotion_candidate: false
 promotion_basis: "none"
 ---
@@ -32,6 +32,18 @@ The first product slice should be an artifact-driven report over existing captur
   required duration/source-incident fields
 
 This keeps the MVP product surface useful without hiding eval assumptions inside runtime behavior.
+
+## 2026-05-01 Refinement
+
+In the first formal `aiwiki_evidence_integrity` run, `report_runs.py` remained useful as a raw
+artifact inventory, but it displayed `first_pass_success` as `pending` because `save_result.py` did
+not encode that field. The product command `aiwiki-toolkit eval impact report` correctly derived
+first-attempt success from `score.json`.
+
+When a run uses `save_result.py`, `score_run.py`, and `report_runs.py`, treat the product report as
+the source for first-attempt success metrics unless capture artifacts have been upgraded to carry an
+explicit first-pass success field. Keep the script-level report for audit paths, changed files, and
+confound visibility.
 
 ## Implementation Follow-Up
 
