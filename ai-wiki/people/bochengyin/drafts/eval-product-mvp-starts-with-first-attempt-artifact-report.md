@@ -36,14 +36,14 @@ This keeps the MVP product surface useful without hiding eval assumptions inside
 ## 2026-05-01 Refinement
 
 In the first formal `aiwiki_evidence_integrity` run, `report_runs.py` remained useful as a raw
-artifact inventory, but it displayed `first_pass_success` as `pending` because `save_result.py` did
-not encode that field. The product command `aiwiki-toolkit eval impact report` correctly derived
-first-attempt success from `score.json`.
+artifact inventory, but it initially displayed `first_pass_success` as `pending` because
+`save_result.py` did not encode that field. The product command `aiwiki-toolkit eval impact report`
+correctly derived first-attempt success from `score.json`.
 
-When a run uses `save_result.py`, `score_run.py`, and `report_runs.py`, treat the product report as
-the source for first-attempt success metrics unless capture artifacts have been upgraded to carry an
-explicit first-pass success field. Keep the script-level report for audit paths, changed files, and
-confound visibility.
+When a run uses `save_result.py`, `score_run.py`, and `report_runs.py`, let script-level reports
+infer first-pass success from `score.json` when the capture field is missing or null. The product
+report remains the source for product metrics; keep the script-level report focused on audit paths,
+changed files, and confound visibility.
 
 ## Implementation Follow-Up
 
