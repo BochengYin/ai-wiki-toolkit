@@ -72,6 +72,24 @@ def test_route_generates_context_packet_with_cited_sources(repo_env: dict[str, P
         and rule["source"] == "ai-wiki/conventions/package-managed-vs-user-owned-docs.md"
         for rule in rules
     )
+    success_items = packet["success_criteria"]["items"]
+    assert packet["success_criteria"]["source"] == "generated_from_task_signals"
+    assert any(
+        item["criterion"] == (
+            "Managed prompt, scaffold, or toolkit changes stay inside package-owned surfaces."
+        )
+        for item in success_items
+    )
+    assert any(
+        "conventions/package-managed-vs-user-owned-docs" in item["verification"]
+        for item in success_items
+    )
+    assert any(
+        item["criterion"] == (
+            "User-owned AI wiki content is not rewritten as a package side effect."
+        )
+        for item in success_items
+    )
 
 
 def test_route_packet_includes_index_cards_for_runtime_references(
@@ -147,6 +165,9 @@ def test_route_classifies_simple_pr_tasks_as_low_effort(repo_env: dict[str, Path
     packet = json.loads(result.output)
     assert packet["route"]["effort"] == "low"
     assert packet["context_budget"]["effective_max_docs"] <= 3
+    assert packet["success_criteria"]["items"][0]["criterion"] == (
+        "The requested operation completes without pulling in unrelated work."
+    )
 
 
 def test_route_text_packet_is_agent_readable(repo_env: dict[str, Path]) -> None:
@@ -170,6 +191,8 @@ def test_route_text_packet_is_agent_readable(repo_env: dict[str, Path]) -> None:
     assert "# AI Wiki Context Packet" in result.output
     assert "Task Type: `release_distribution`" in result.output
     assert "## Index Cards" in result.output
+    assert "## Success Criteria" in result.output
+    assert "Release and distribution behavior stays aligned across published targets." in result.output
     assert "Context Safety Cap:" in result.output
     assert "Actor: `alice`" in result.output
     assert "## Must Load" in result.output

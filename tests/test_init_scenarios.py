@@ -272,7 +272,7 @@ def test_init_writes_expected_toolkit_managed_files(repo_env: dict[str, Path]) -
         ## Start Of Task
 
         1. Run `aiwiki-toolkit route --task "<current user request>"` when available to generate a task-aware AI Wiki Context Packet.
-        2. Use the packet's `must_load`, `must_follow`, `context_notes`, and `skip` sections as the first-pass routing layer for the task.
+        2. Use the packet's `success_criteria`, `must_load`, `must_follow`, `context_notes`, and `skip` sections as the first-pass routing layer for the task.
         3. Treat the packet as a generated view with cited sources, not as canonical memory; the Markdown files under `ai-wiki/` remain the source of truth.
         4. If routing is unavailable, fails, or looks insufficient, continue with the baseline read order below.
         5. Read `ai-wiki/constraints.md` for hard constraints and non-negotiables.
@@ -404,7 +404,7 @@ def test_init_writes_expected_toolkit_managed_files(repo_env: dict[str, Path]) -
         ## AI Wiki Maintenance
 
         1. Start each non-trivial task by running `aiwiki-toolkit route --task "<current user request>"` when available.
-        2. Use the route packet to decide which user-owned docs to consult first, but record reuse only for docs actually consulted or materially used.
+        2. Use the route packet to decide success criteria and which user-owned docs to consult first, but record reuse only for docs actually consulted or materially used.
         3. Produce one AI wiki reuse evidence footer at the end of every completed task.
         4. First classify the task as `relevant`, `optional`, or `not_relevant` for AI wiki use.
         5. Record one `aiwiki-toolkit record-reuse` event per consulted user-owned AI wiki doc.

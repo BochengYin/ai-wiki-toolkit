@@ -5,7 +5,7 @@ This file is managed by ai-wiki-toolkit. Future package versions may update it.
 ## Start Of Task
 
 1. Run `aiwiki-toolkit route --task "<current user request>"` when available to generate a task-aware AI Wiki Context Packet.
-2. Use the packet's `must_load`, `must_follow`, `context_notes`, and `skip` sections as the first-pass routing layer for the task.
+2. Use the packet's `success_criteria`, `must_load`, `must_follow`, `context_notes`, and `skip` sections as the first-pass routing layer for the task.
 3. Treat the packet as a generated view with cited sources, not as canonical memory; the Markdown files under `ai-wiki/` remain the source of truth.
 4. If routing is unavailable, fails, or looks insufficient, continue with the baseline read order below.
 5. Read `ai-wiki/constraints.md` for hard constraints and non-negotiables.

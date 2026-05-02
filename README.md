@@ -100,6 +100,7 @@ The command emits a transient AI Wiki Context Packet with:
 
 - a coarse task type and risk tags
 - an effort level so simple operational tasks can stay lightweight
+- generated success criteria and verification checks so non-trivial tasks start with a clear finish line
 - index cards with short descriptions and reference links for relevant memory
 - `must_load` docs to consult first when direct context is required
 - source-cited `must_follow` rules extracted from authoritative user-owned docs

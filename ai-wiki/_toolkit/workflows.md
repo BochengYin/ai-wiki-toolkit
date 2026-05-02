@@ -5,7 +5,7 @@ This file is managed by ai-wiki-toolkit. Future package versions may update it.
 ## AI Wiki Maintenance
 
 1. Start each non-trivial task by running `aiwiki-toolkit route --task "<current user request>"` when available.
-2. Use the route packet to decide which user-owned docs to consult first, but record reuse only for docs actually consulted or materially used.
+2. Use the route packet to decide success criteria and which user-owned docs to consult first, but record reuse only for docs actually consulted or materially used.
 3. Produce one AI wiki reuse evidence footer at the end of every completed task.
 4. First classify the task as `relevant`, `optional`, or `not_relevant` for AI wiki use.
 5. Record one `aiwiki-toolkit record-reuse` event per consulted user-owned AI wiki doc.

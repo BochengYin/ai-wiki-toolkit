@@ -19,6 +19,7 @@ remain the source of truth.
 - `routing_strategy`: how the packet expects agents to use direct context versus runtime references.
 - `work_context`: actor-scoped matching work-ledger items from `ai-wiki/_toolkit/work/state.json`, when available.
   Work items include `actor_relation` so agents can distinguish assigned, reported, unassigned, and other matched work.
+- `success_criteria`: generated task guidance with criteria and verification checks. These items are derived from task signals and are not canonical memory.
 - `index_cards`: short name/description/reference cards for selected docs and runtime references.
 - `must_load`: authoritative user-owned AI wiki docs the agent should consult directly when required.
 - `maybe_load`: lower-confidence docs that may help if the task needs more context.
@@ -36,3 +37,4 @@ remain the source of truth.
 5. Record reuse only for user-owned docs actually consulted or materially used, not for every packet candidate.
 6. Treat `work_context` items with `actor_relation=assignee` as actionable for the current actor. Treat other matched work as context unless the user explicitly asks to work on it.
 7. Prefer index cards and runtime references over loading broad full documents. Simple operational tasks should follow the specific workflow they need instead of pulling in broad memory.
+8. Treat `success_criteria` as generated planning help. Agents may refine it, but should not cite it as a source of truth.

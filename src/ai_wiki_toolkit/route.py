@@ -397,6 +397,72 @@ _AUTHORITATIVE_KINDS = {
     "workflows",
 }
 
+_SUCCESS_CRITERIA_BY_TASK_TYPE: dict[str, list[dict[str, str]]] = {
+    "release_distribution": [
+        {
+            "criterion": "Release and distribution behavior stays aligned across published targets.",
+            "verification": "Run the targeted release, distribution, or smoke tests that cover the changed target matrix.",
+            "reason": "release_distribution task",
+        },
+    ],
+    "scaffold_prompt_workflow": [
+        {
+            "criterion": "Managed prompt, scaffold, or toolkit changes stay inside package-owned surfaces.",
+            "verification": "Review the diff for user-owned AI wiki docs and run targeted scaffold, prompt, or doctor tests.",
+            "reason": "scaffold_prompt_workflow task",
+        },
+    ],
+    "eval_workflow": [
+        {
+            "criterion": "Eval output is reproducible and exposes the primary product signal.",
+            "verification": "Run the targeted eval/report command and confirm baseline, treatment, score, and first-pass fields are present.",
+            "reason": "eval_workflow task",
+        },
+    ],
+    "memory_governance": [
+        {
+            "criterion": "Stable Markdown remains the source of truth for memory behavior.",
+            "verification": "Confirm generated packets or assets cite source paths and no shared user-owned docs were rewritten automatically.",
+            "reason": "memory_governance task",
+        },
+    ],
+    "workflow_state": [
+        {
+            "criterion": "Work state transitions are captured in the append-only ledger.",
+            "verification": "Run or inspect the work report/state refresh and confirm the item status, assignee, and source are correct.",
+            "reason": "workflow_state task",
+        },
+    ],
+    "review_feedback": [
+        {
+            "criterion": "Actionable review feedback is addressed with a clear comment-to-diff trace.",
+            "verification": "Check each changed line against the review request and run targeted tests for behavior changes.",
+            "reason": "review_feedback task",
+        },
+    ],
+    "docs_positioning": [
+        {
+            "criterion": "Documentation claims match the implemented product surface.",
+            "verification": "Review changed docs for unsupported promises and run any docs or README-related smoke checks.",
+            "reason": "docs_positioning task",
+        },
+    ],
+    "bug_fix": [
+        {
+            "criterion": "The reported bug is reproduced or its failure mode is explicitly identified.",
+            "verification": "Add or run a focused regression test that fails before the fix or documents the existing failing path, then confirm it passes.",
+            "reason": "bug_fix task",
+        },
+    ],
+    "general": [
+        {
+            "criterion": "The requested outcome is complete without widening scope.",
+            "verification": "Review the final diff or command result against the user request and note any deliberate omissions.",
+            "reason": "general task",
+        },
+    ],
+}
+
 
 @dataclass(frozen=True)
 class RouteResult:
@@ -700,6 +766,108 @@ def _packet_index_cards(
     return cards
 
 
+def _success_criterion_key(item: dict[str, str]) -> tuple[str, str]:
+    return (item["criterion"], item["verification"])
+
+
+def _build_success_criteria(
+    *,
+    task_type: str,
+    effort: str,
+    risk_tags: list[str],
+    required_docs: list[dict[str, Any]],
+    work_context_items: list[dict[str, Any]],
+) -> dict[str, Any]:
+    items: list[dict[str, str]] = []
+
+    if effort == "low":
+        items.append(
+            {
+                "criterion": "The requested operation completes without pulling in unrelated work.",
+                "verification": "Run the intended command or check, then inspect the resulting repo state if files or branches changed.",
+                "reason": "low-effort operational task",
+            }
+        )
+    else:
+        items.append(
+            {
+                "criterion": "The requested outcome is complete without widening scope.",
+                "verification": "Review the final diff or command result against the user request and note any deliberate omissions.",
+                "reason": "baseline scope control",
+            }
+        )
+
+    items.extend(
+        _SUCCESS_CRITERIA_BY_TASK_TYPE.get(
+            task_type,
+            _SUCCESS_CRITERIA_BY_TASK_TYPE["general"],
+        )
+    )
+
+    if required_docs:
+        doc_ids = ", ".join(f"`{doc['doc_id']}`" for doc in required_docs[:3])
+        items.append(
+            {
+                "criterion": "Required AI wiki context is either consulted or explicitly found not applicable.",
+                "verification": f"Read or intentionally skip {doc_ids}; record reuse only for user-owned docs actually consulted or materially used.",
+                "reason": "route selected must_load docs",
+            }
+        )
+
+    if work_context_items:
+        work_ids = ", ".join(f"`{item['work_id']}`" for item in work_context_items[:3])
+        items.append(
+            {
+                "criterion": "Relevant work-ledger context is reflected in the implementation plan.",
+                "verification": f"Check {work_ids} before acting, especially any item assigned to the current actor.",
+                "reason": "route matched work_context",
+            }
+        )
+
+    if "memory_governance" in risk_tags and task_type != "memory_governance":
+        items.append(
+            {
+                "criterion": "Memory-related changes remain governed and auditable.",
+                "verification": "Confirm generated memory artifacts are cited, disposable, and do not replace source Markdown.",
+                "reason": "memory_governance risk tag",
+            }
+        )
+
+    if "user_owned_docs" in risk_tags:
+        items.append(
+            {
+                "criterion": "User-owned AI wiki content is not rewritten as a package side effect.",
+                "verification": "Inspect the diff for `ai-wiki/**` changes outside managed `_toolkit/**` or explicitly requested draft paths.",
+                "reason": "user_owned_docs risk tag",
+            }
+        )
+
+    items.append(
+        {
+            "criterion": "Verification evidence is available before the task is closed.",
+            "verification": "Run the most focused relevant tests or commands, or state why they could not be run.",
+            "reason": "end-of-task verification",
+        }
+    )
+
+    deduped: list[dict[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for item in items:
+        key = _success_criterion_key(item)
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(item)
+        if len(deduped) >= 5:
+            break
+
+    return {
+        "source": "generated_from_task_signals",
+        "trust_level": "generated_guidance",
+        "items": deduped,
+    }
+
+
 def _select_work_context(
     *,
     work_state: dict[str, Any],
@@ -924,6 +1092,13 @@ def generate_route_packet(
         for candidate in selected
         if _reference_mode(candidate, selected_ids) == "required_context"
     ]
+    success_criteria = _build_success_criteria(
+        task_type=task_type,
+        effort=effort,
+        risk_tags=risk_tags,
+        required_docs=required_docs,
+        work_context_items=work_context_items,
+    )
     packet: dict[str, Any] = {
         "schema_version": ROUTE_SCHEMA_VERSION,
         "task_id": task_id.strip() if task_id and task_id.strip() else _task_id_from_task(task_text),
@@ -959,6 +1134,7 @@ def generate_route_packet(
             "actor_handle": actor_handle,
             "items": work_context_items,
         },
+        "success_criteria": success_criteria,
         "index_cards": _packet_index_cards(index_card_candidates, selected_ids=selected_ids),
         "must_load": _packet_docs(required_docs),
         "maybe_load": _packet_docs(maybe),
@@ -970,6 +1146,7 @@ def generate_route_packet(
             "Markdown files under ai-wiki/ remain the source of truth.",
             "Every must_follow rule is copied or compressed from a cited user-owned source path.",
             "Exploratory drafts can appear as context_notes, not uncited rules.",
+            "Success criteria are generated task guidance, not canonical memory.",
             "Regenerate packets instead of editing them as canonical memory.",
         ],
     }
@@ -1036,6 +1213,18 @@ def render_route_packet_text(packet: dict[str, Any]) -> str:
                 f"- `{item['work_id']}` ({item['item_type']}, {item['status']}{epic}{assignee_text}{relation_text}): "
                 f"{item['title']} - {item['reason']} Source: {source_text}"
             )
+    success_criteria = packet.get("success_criteria") or {}
+    success_items = (
+        success_criteria.get("items")
+        if isinstance(success_criteria, dict)
+        else []
+    )
+    if success_items:
+        lines.extend(["", "## Success Criteria"])
+        for item in success_items:
+            lines.append(
+                f"- {item['criterion']} Verify: {item['verification']}"
+            )
     index_cards = packet.get("index_cards") or []
     if index_cards:
         lines.extend(["", "## Index Cards"])
@@ -1091,6 +1280,7 @@ def render_route_packet_text(packet: dict[str, Any]) -> str:
             "## Trust Model",
             "- Markdown files under `ai-wiki/` remain the source of truth.",
             "- Treat uncited claims as non-authoritative.",
+            "- Treat success criteria as generated task guidance, not canonical memory.",
             "- Record reuse only for user-owned docs you actually consult or materially use.",
         ]
     )
