@@ -384,7 +384,7 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             ## Start Of Task
 
             1. Run `aiwiki-toolkit route --task "<current user request>"` when available to generate a task-aware AI Wiki Context Packet.
-            2. Use the packet's `must_load`, `must_follow`, `context_notes`, and `skip` sections as the first-pass routing layer for the task.
+            2. Use the packet's `success_criteria`, `must_load`, `must_follow`, `context_notes`, and `skip` sections as the first-pass routing layer for the task.
             3. Treat the packet as a generated view with cited sources, not as canonical memory; the Markdown files under `ai-wiki/` remain the source of truth.
             4. If routing is unavailable, fails, or looks insufficient, continue with the baseline read order below.
             5. Read `ai-wiki/constraints.md` for hard constraints and non-negotiables.
@@ -515,7 +515,7 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             ## AI Wiki Maintenance
 
             1. Start each non-trivial task by running `aiwiki-toolkit route --task "<current user request>"` when available.
-            2. Use the route packet to decide which user-owned docs to consult first, but record reuse only for docs actually consulted or materially used.
+            2. Use the route packet to decide success criteria and which user-owned docs to consult first, but record reuse only for docs actually consulted or materially used.
             3. Produce one AI wiki reuse evidence footer at the end of every completed task.
             4. First classify the task as `relevant`, `optional`, or `not_relevant` for AI wiki use.
             5. Record one `aiwiki-toolkit record-reuse` event per consulted user-owned AI wiki doc.
@@ -564,6 +564,7 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             - `routing_strategy`: how the packet expects agents to use direct context versus runtime references.
             - `work_context`: actor-scoped matching work-ledger items from `ai-wiki/_toolkit/work/state.json`, when available.
               Work items include `actor_relation` so agents can distinguish assigned, reported, unassigned, and other matched work.
+            - `success_criteria`: generated task guidance with criteria and verification checks. These items are derived from task signals and are not canonical memory.
             - `index_cards`: short name/description/reference cards for selected docs and runtime references.
             - `must_load`: authoritative user-owned AI wiki docs the agent should consult directly when required.
             - `maybe_load`: lower-confidence docs that may help if the task needs more context.
@@ -581,6 +582,7 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             5. Record reuse only for user-owned docs actually consulted or materially used, not for every packet candidate.
             6. Treat `work_context` items with `actor_relation=assignee` as actionable for the current actor. Treat other matched work as context unless the user explicitly asks to work on it.
             7. Prefer index cards and runtime references over loading broad full documents. Simple operational tasks should follow the specific workflow they need instead of pulling in broad memory.
+            8. Treat `success_criteria` as generated planning help. Agents may refine it, but should not cite it as a source of truth.
             """
         ).strip()
         + "\n",
