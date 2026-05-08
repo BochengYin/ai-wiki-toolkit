@@ -1862,15 +1862,20 @@ def prompt_block_body() -> str:
         """
         ## AI Wiki Local Workflow Gate
 
+        **CRITICAL: This MUST be the FIRST action in EVERY new session before responding to any user request.**
+
+        **BLOCKING REQUIREMENT: Do NOT respond to the user's first question until you complete this check.**
+
         This repository may have an AI Wiki only in some local checkouts. `ai-wiki/` may be intentionally gitignored, so do not use Git tracking status to decide whether it exists.
 
-        At the start of the first task in this repository, perform exactly one cheap local filesystem check for `ai-wiki/_toolkit/system.md`.
+        **BEFORE responding to the user's first request**, perform exactly one cheap local filesystem check for `ai-wiki/_toolkit/system.md`.
 
         If `ai-wiki/_toolkit/system.md` exists:
 
-        - Read `ai-wiki/_toolkit/system.md` immediately.
+        - **Read `ai-wiki/_toolkit/system.md` immediately BEFORE proceeding with any other work.**
         - Follow its start-of-task routing, required reads, reuse evidence, and write-back workflow for this session.
         - If a toolkit command is unavailable, use the fallback instructions in that file.
+        - **All subsequent responses in this session MUST follow the AI Wiki workflow.**
 
         If `ai-wiki/_toolkit/system.md` does not exist:
 

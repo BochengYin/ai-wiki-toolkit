@@ -107,8 +107,11 @@ def _add_suggestion(
 def _prompt_managed_system_tokens() -> tuple[str, ...]:
     return (
         "## AI Wiki Local Workflow Gate",
+        "CRITICAL: This MUST be the FIRST action",
+        "BLOCKING REQUIREMENT",
         "exactly one cheap local filesystem check",
         "ai-wiki/_toolkit/system.md",
+        "All subsequent responses in this session MUST follow the AI Wiki workflow.",
         "Treat AI Wiki as disabled for this local checkout.",
     )
 
