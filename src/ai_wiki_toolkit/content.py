@@ -1860,9 +1860,27 @@ def repo_skill_starter_files() -> dict[str, str]:
 def prompt_block_body() -> str:
     return dedent(
         """
-        ## AI Wiki Toolkit
+        ## AI Wiki Local Workflow Gate
 
-        If this repository contains `ai-wiki/`, read `ai-wiki/_toolkit/system.md` before starting work and follow its end-of-task workflow. Use `ai-wiki/index.md` as the repo-owned map when you need navigation.
+        This repository may have an AI Wiki only in some local checkouts. `ai-wiki/` may be intentionally gitignored, so do not use Git tracking status to decide whether it exists.
+
+        At the start of the first task in this repository, perform exactly one cheap local filesystem check for `ai-wiki/_toolkit/system.md`.
+
+        If `ai-wiki/_toolkit/system.md` exists:
+
+        - Read `ai-wiki/_toolkit/system.md` immediately.
+        - Follow its start-of-task routing, required reads, reuse evidence, and write-back workflow for this session.
+        - If a toolkit command is unavailable, use the fallback instructions in that file.
+
+        If `ai-wiki/_toolkit/system.md` does not exist:
+
+        - Treat AI Wiki as disabled for this local checkout.
+        - Do not run `aiwiki-toolkit`.
+        - Do not search or read `ai-wiki/**`.
+        - Do not mention missing AI Wiki setup unless the user asks.
+        - Cache this disabled state for the current session.
+
+        Re-check only if the working directory changes, the user says AI Wiki was installed or enabled, or this session creates `ai-wiki/_toolkit/system.md`.
         """
     ).strip()
 

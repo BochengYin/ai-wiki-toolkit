@@ -106,9 +106,10 @@ def _add_suggestion(
 
 def _prompt_managed_system_tokens() -> tuple[str, ...]:
     return (
-        "If this repository contains `ai-wiki/`",
+        "## AI Wiki Local Workflow Gate",
+        "exactly one cheap local filesystem check",
         "ai-wiki/_toolkit/system.md",
-        "ai-wiki/index.md",
+        "Treat AI Wiki as disabled for this local checkout.",
     )
 
 
