@@ -34,8 +34,11 @@ def test_init_updates_only_existing_prompt_files(
         text = (repo / filename).read_text(encoding="utf-8")
         assert PROMPT_BLOCK_START in text
         assert "## AI Wiki Local Workflow Gate" in text
+        assert "CRITICAL: This MUST be the FIRST action" in text
+        assert "BLOCKING REQUIREMENT" in text
         assert "exactly one cheap local filesystem check" in text
         assert "ai-wiki/_toolkit/system.md" in text
+        assert "All subsequent responses in this session MUST follow the AI Wiki workflow." in text
         assert "Treat AI Wiki as disabled for this local checkout." in text
         assert "Before starting work:" not in text
 
@@ -65,21 +68,48 @@ def test_init_replaces_existing_managed_block_and_preserves_surrounding_text(
     assert updated.count(PROMPT_BLOCK_END) == 1
 
 
-def test_init_appends_managed_block_when_prompt_file_has_no_managed_section(
+def test_init_inserts_managed_block_after_prompt_intro(
     repo_env: dict[str, Path],
 ) -> None:
     claude = repo_env["repo"] / "CLAUDE.md"
-    claude.write_text("# Existing Claude prompt\n", encoding="utf-8")
+    claude.write_text(
+        "# CLAUDE.md\n\n"
+        "This file provides guidance to Claude Code when working with code in this repository.\n\n"
+        "## Commands\n\n"
+        "Run tests with `uv run pytest`.\n",
+        encoding="utf-8",
+    )
 
     result = runner.invoke(app, ["init", "--handle", "alice"])
 
     assert result.exit_code == 0
     text = claude.read_text(encoding="utf-8")
-    assert text.startswith("# Existing Claude prompt\n\n")
+    assert text.startswith(
+        "# CLAUDE.md\n\n"
+        "This file provides guidance to Claude Code when working with code in this repository.\n\n"
+        f"{PROMPT_BLOCK_START}\n"
+    )
+    assert f"{PROMPT_BLOCK_END}\n\n## Commands" in text
     assert PROMPT_BLOCK_START in text
     assert "## AI Wiki Local Workflow Gate" in text
+    assert "BLOCKING REQUIREMENT" in text
     assert "exactly one cheap local filesystem check" in text
     assert "ai-wiki/_toolkit/system.md" in text
+
+
+def test_init_appends_managed_block_when_prompt_file_has_no_intro_heading(
+    repo_env: dict[str, Path],
+) -> None:
+    claude = repo_env["repo"] / "CLAUDE.md"
+    claude.write_text("Existing Claude prompt\n", encoding="utf-8")
+
+    result = runner.invoke(app, ["init", "--handle", "alice"])
+
+    assert result.exit_code == 0
+    text = claude.read_text(encoding="utf-8")
+    assert text.startswith("Existing Claude prompt\n\n")
+    assert PROMPT_BLOCK_START in text
+    assert "## AI Wiki Local Workflow Gate" in text
 
 
 def test_init_creates_agent_when_no_prompt_files_exist(

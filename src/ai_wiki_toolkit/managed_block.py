@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 import re
 
@@ -17,7 +18,12 @@ def render_managed_block(*, body: str, start_marker: str, end_marker: str) -> st
 
 
 def upsert_managed_block(
-    text: str, *, body: str, start_marker: str, end_marker: str
+    text: str,
+    *,
+    body: str,
+    start_marker: str,
+    end_marker: str,
+    insert_block: Callable[[str, str], str] | None = None,
 ) -> str:
     block = render_managed_block(body=body, start_marker=start_marker, end_marker=end_marker)
     pattern = _managed_block_re(start_marker, end_marker)
@@ -29,12 +35,19 @@ def upsert_managed_block(
 
     stripped = text.rstrip()
     if stripped:
+        if insert_block is not None:
+            return insert_block(stripped, block)
         return f"{stripped}\n\n{block}\n"
     return f"{block}\n"
 
 
 def upsert_managed_block_file(
-    path: Path, *, body: str, start_marker: str, end_marker: str
+    path: Path,
+    *,
+    body: str,
+    start_marker: str,
+    end_marker: str,
+    insert_block: Callable[[str, str], str] | None = None,
 ) -> bool:
     current = path.read_text(encoding="utf-8") if path.exists() else ""
     updated = upsert_managed_block(
@@ -42,6 +55,7 @@ def upsert_managed_block_file(
         body=body,
         start_marker=start_marker,
         end_marker=end_marker,
+        insert_block=insert_block,
     )
     if current == updated:
         return False
