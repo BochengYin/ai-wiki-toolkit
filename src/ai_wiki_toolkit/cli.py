@@ -43,6 +43,7 @@ from ai_wiki_toolkit.route import (
     render_route_packet_json,
     render_route_packet_text,
 )
+from ai_wiki_toolkit.route_traces import record_route_trace
 from ai_wiki_toolkit.reuse_events import (
     EVIDENCE_MODES,
     RETRIEVAL_MODES,
@@ -278,6 +279,11 @@ def route(
         "--format",
         help="Output format. Choices: text, json.",
     ),
+    record_trace: bool = typer.Option(
+        True,
+        "--record-trace/--no-record-trace",
+        help="Append a local route-trace telemetry event under ai-wiki/metrics/route-traces/.",
+    ),
 ) -> None:
     """Generate a task-aware AI wiki context packet."""
     if task and task_file:
@@ -311,10 +317,11 @@ def route(
         typer.echo(f"Could not read AI wiki routing data: {exc}", err=True)
         raise typer.Exit(code=1) from exc
 
-    if normalized_format == "json":
-        typer.echo(render_route_packet_json(result.packet), nl=False)
-    else:
-        typer.echo(render_route_packet_text(result.packet), nl=False)
+    text_packet = render_route_packet_text(result.packet)
+    rendered_output = render_route_packet_json(result.packet) if normalized_format == "json" else text_packet
+    if record_trace:
+        record_route_trace(packet=result.packet, rendered_packet=text_packet)
+    typer.echo(rendered_output, nl=False)
 
 
 @app.command("install")
@@ -424,7 +431,7 @@ def diagnose_memory(
     focus: str = typer.Option(
         "all",
         "--focus",
-        help="Diagnostics focus. Choices: all, trial-error.",
+        help="Diagnostics focus. Choices: all, route, trial-error.",
     ),
     output_format: str = typer.Option(
         "text",
@@ -462,7 +469,7 @@ def diagnose_memory(
         raise typer.Exit(code=1)
     normalized_focus = focus.strip().lower()
     if normalized_focus not in DIAGNOSTIC_FOCUSES:
-        typer.echo("Invalid --focus. Expected one of: all, trial-error.", err=True)
+        typer.echo("Invalid --focus. Expected one of: all, route, trial-error.", err=True)
         raise typer.Exit(code=1)
 
     try:

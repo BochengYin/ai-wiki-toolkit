@@ -761,6 +761,7 @@ def _packet_index_cards(
                 "routing_hint": candidate.get("routing_hint"),
                 "load_mode": _reference_mode(candidate, selected_ids),
                 "reason": candidate["reason"],
+                "score": candidate["score"],
             }
         )
     return cards

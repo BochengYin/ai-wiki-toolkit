@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from ai_wiki_toolkit.frontmatter import parse_frontmatter
+from ai_wiki_toolkit.route_traces import load_route_traces
 from ai_wiki_toolkit.wiki_schema import (
     doc_id_for_relative_path,
     infer_doc_kind,
@@ -21,7 +22,7 @@ DIAGNOSTICS_SCHEMA_VERSION = "diagnostics-v1"
 DEFAULT_DIAGNOSTICS_MAX_ITEMS = 10
 DEFAULT_HIGH_ROI_MIN_EVENTS = 2
 DEFAULT_NOISY_MIN_EVENTS = 2
-DIAGNOSTIC_FOCUSES = {"all", "trial-error"}
+DIAGNOSTIC_FOCUSES = {"all", "route", "trial-error"}
 HIGH_VALUE_REUSE_EFFECTS = {
     "avoided_retry",
     "avoided_search",
@@ -116,6 +117,12 @@ def _load_repo_task_checks(repo_wiki_dir: Path) -> tuple[list[dict[str, Any]], i
     return legacy_checks + sharded_checks, legacy_skipped + sharded_skipped
 
 
+def _load_repo_route_traces(repo_wiki_dir: Path) -> tuple[list[dict[str, Any]], int]:
+    legacy_traces, legacy_skipped = load_route_traces(repo_wiki_dir / "metrics" / "route-traces.jsonl")
+    sharded_traces, sharded_skipped = load_route_traces(repo_wiki_dir / "metrics" / "route-traces")
+    return legacy_traces + sharded_traces, legacy_skipped + sharded_skipped
+
+
 def _document_title(metadata: dict[str, Any], body: str, path: Path) -> str:
     title = metadata.get("title")
     if isinstance(title, str) and title.strip():
@@ -193,6 +200,22 @@ def _filter_task_checks(
         task_id = check.get("task_id")
         if isinstance(task_id, str) and task_id:
             filtered.append(check)
+    return filtered
+
+
+def _filter_route_traces(
+    traces: list[dict[str, Any]], *, handle: str | None, since: datetime | None
+) -> list[dict[str, Any]]:
+    normalized_handle = _normalize_handle_filter(handle)
+    filtered: list[dict[str, Any]] = []
+    for trace in traces:
+        if normalized_handle and trace.get("author_handle") != normalized_handle:
+            continue
+        if not _timestamp_matches(trace, "routed_at", since):
+            continue
+        task_id = trace.get("task_id")
+        if isinstance(task_id, str) and task_id:
+            filtered.append(trace)
     return filtered
 
 
@@ -644,6 +667,151 @@ def _build_trial_error_section(
     }
 
 
+def _string_list(value: object) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, str) and item]
+
+
+def _rate(numerator: int, denominator: int) -> float | None:
+    if denominator == 0:
+        return None
+    return numerator / denominator
+
+
+def _build_route_diagnostics_section(
+    traces: list[dict[str, Any]],
+    events: list[dict[str, Any]],
+    *,
+    max_items: int,
+    skipped_trace_lines: int,
+) -> dict[str, Any]:
+    events_by_task: dict[str, list[dict[str, Any]]] = {}
+    for event in events:
+        task_id = event.get("task_id")
+        if isinstance(task_id, str) and task_id:
+            events_by_task.setdefault(task_id, []).append(event)
+
+    items: list[dict[str, Any]] = []
+    total_selected = 0
+    total_useful = 0
+    total_selected_useful = 0
+    total_noisy_selected = 0
+    total_missed = 0
+    total_extra_lookups = 0
+    total_packet_words = 0
+    outcome_effects: Counter[str] = Counter()
+
+    for trace in traces:
+        task_id = str(trace.get("task_id", ""))
+        selected = set(_string_list(trace.get("selected_doc_ids")))
+        task_events = events_by_task.get(task_id, [])
+        event_doc_ids = {
+            doc_id
+            for event in task_events
+            if isinstance((doc_id := event.get("doc_id")), str) and doc_id
+        }
+        useful_events = [
+            event
+            for event in task_events
+            if event.get("reuse_outcome") in {"resolved", "partial"}
+            and isinstance(event.get("doc_id"), str)
+        ]
+        useful_doc_ids = {str(event["doc_id"]) for event in useful_events}
+        selected_useful = selected & useful_doc_ids
+        noisy_selected = selected - selected_useful
+        missed_useful = sorted(
+            {
+                str(event["doc_id"])
+                for event in useful_events
+                if event.get("retrieval_mode") == "lookup" and str(event["doc_id"]) not in selected
+            }
+        )
+        extra_lookup_count = len(missed_useful)
+        effects = Counter()
+        for event in useful_events:
+            reuse_effects = event.get("reuse_effects")
+            if isinstance(reuse_effects, list):
+                effects.update(str(effect) for effect in reuse_effects if str(effect))
+
+        selected_count = len(selected)
+        useful_count = len(useful_doc_ids)
+        selected_useful_count = len(selected_useful)
+        noisy_selected_count = len(noisy_selected)
+        packet_words = trace.get("packet_words")
+        packet_words = packet_words if isinstance(packet_words, int) else 0
+
+        total_selected += selected_count
+        total_useful += useful_count
+        total_selected_useful += selected_useful_count
+        total_noisy_selected += noisy_selected_count
+        total_missed += len(missed_useful)
+        total_extra_lookups += extra_lookup_count
+        total_packet_words += packet_words
+        outcome_effects.update(effects)
+
+        items.append(
+            {
+                "trace_id": trace.get("trace_id"),
+                "task_id": task_id,
+                "routed_at": trace.get("routed_at"),
+                "task_type": trace.get("task_type"),
+                "selected_doc_count": selected_count,
+                "useful_doc_count": useful_count,
+                "selected_useful_doc_count": selected_useful_count,
+                "noisy_selected_doc_count": noisy_selected_count,
+                "route_precision": _rate(selected_useful_count, selected_count),
+                "route_recall_proxy": _rate(selected_useful_count, useful_count),
+                "route_noise_rate": _rate(noisy_selected_count, selected_count),
+                "missed_useful_doc_ids": missed_useful,
+                "extra_lookup_count": extra_lookup_count,
+                "packet_words": packet_words,
+                "index_card_count": trace.get("index_card_count", 0),
+                "maybe_load_count": trace.get("maybe_load_count", 0),
+                "selected_doc_ids": sorted(selected),
+                "useful_doc_ids": sorted(useful_doc_ids),
+                "selected_without_reuse_doc_ids": sorted(selected - event_doc_ids),
+                "outcome_effects": dict(sorted(effects.items())),
+            }
+        )
+
+    items.sort(
+        key=lambda item: (
+            -len(item["missed_useful_doc_ids"]),
+            -(item["route_noise_rate"] or 0),
+            item["task_id"],
+        )
+    )
+    return {
+        "summary": {
+            "route_trace_count": len(traces),
+            "selected_doc_count": total_selected,
+            "useful_doc_count": total_useful,
+            "useful_selected_doc_count": total_selected_useful,
+            "noisy_selected_doc_count": total_noisy_selected,
+            "missed_useful_doc_count": total_missed,
+            "extra_lookup_count": total_extra_lookups,
+            "avg_packet_words": _rate(total_packet_words, len(traces)),
+            "avg_selected_docs": _rate(total_selected, len(traces)),
+            "route_precision": _rate(total_selected_useful, total_selected),
+            "route_recall_proxy": _rate(total_selected_useful, total_useful),
+            "route_noise_rate": _rate(total_noisy_selected, total_selected),
+            "skipped_trace_lines": skipped_trace_lines,
+            "traces_with_missed_useful_docs": sum(
+                1 for item in items if item["missed_useful_doc_ids"]
+            ),
+        },
+        "items": items[:max_items],
+        "outcome_effects": dict(sorted(outcome_effects.items())),
+        "interpretation": [
+            "Route precision counts selected docs that later had resolved or partial reuse.",
+            "Route recall proxy counts useful docs for the task that were selected by route; it is a proxy because useful-but-unlooked-up docs remain unknown.",
+            "Route noise counts selected docs with no useful reuse evidence yet, including docs with no reuse event or only not_helpful outcomes.",
+            "Missed useful docs are useful lookup docs that were not in the route-selected set.",
+        ],
+    }
+
+
 def build_memory_diagnostics_report(
     repo_wiki_dir: Path,
     *,
@@ -658,12 +826,14 @@ def build_memory_diagnostics_report(
     """Build a deterministic memory diagnostics report from local evidence logs."""
     normalized_focus = focus.strip().lower()
     if normalized_focus not in DIAGNOSTIC_FOCUSES:
-        raise ValueError("Invalid --focus. Expected one of: all, trial-error.")
+        raise ValueError("Invalid --focus. Expected one of: all, route, trial-error.")
     since_cutoff = _parse_since(since)
     all_events, skipped_event_lines = _load_repo_reuse_events(repo_wiki_dir)
     all_checks, skipped_check_lines = _load_repo_task_checks(repo_wiki_dir)
+    all_traces, skipped_trace_lines = _load_repo_route_traces(repo_wiki_dir)
     events = _filter_reuse_events(all_events, handle=handle, since=since_cutoff)
     checks = _filter_task_checks(all_checks, handle=handle, since=since_cutoff)
+    traces = _filter_route_traces(all_traces, handle=handle, since=since_cutoff)
     document_metadata = _load_document_metadata(repo_wiki_dir)
     documents = _aggregate_documents(events, document_metadata)
     tasks = _aggregate_tasks(events, checks)
@@ -698,10 +868,12 @@ def build_memory_diagnostics_report(
             "reuse_events": len(events),
             "skipped_check_lines": skipped_check_lines,
             "skipped_event_lines": skipped_event_lines,
+            "skipped_trace_lines": skipped_trace_lines,
             "task_checks": len(checks),
             "tasks_with_wiki_use": tasks_with_wiki_use,
             "tasks_without_wiki_use": tasks_without_wiki_use,
             "total_tasks_seen": len(tasks),
+            "route_traces": len(traces),
         },
         "high_roi_memory": _build_high_roi_items(
             documents,
@@ -722,8 +894,18 @@ def build_memory_diagnostics_report(
             tasks,
             max_items=max_items,
         ),
+        "route_diagnostics": _build_route_diagnostics_section(
+            traces,
+            events,
+            max_items=max_items,
+            skipped_trace_lines=skipped_trace_lines,
+        ),
         "diagnostic_notes": [
-            "Route selection traces are not recorded yet; missed and noisy route diagnosis is limited to reuse/check evidence and notes.",
+            (
+                "Route diagnostics join route traces with reuse events by task_id; route recall remains a proxy because useful-but-unlooked-up docs are unknown."
+                if traces
+                else "No route traces are recorded for this filter; route precision and recall proxy are unavailable."
+            ),
             "This report is generated from local evidence logs and should be regenerated rather than edited as canonical memory.",
         ],
     }
@@ -854,6 +1036,70 @@ def _render_trial_error_section(section: dict[str, Any]) -> list[str]:
     return lines
 
 
+def _format_metric(value: float | None) -> str:
+    if value is None:
+        return "-"
+    return f"{value:.2f}"
+
+
+def _render_route_diagnostics_section(section: dict[str, Any]) -> list[str]:
+    summary = section["summary"]
+    lines = [
+        "## Route Diagnostics",
+        "",
+        f"- Route traces: {summary['route_trace_count']}",
+        f"- Selected docs: {summary['selected_doc_count']}",
+        f"- Useful selected docs: {summary['useful_selected_doc_count']}",
+        f"- Missed useful docs: {summary['missed_useful_doc_count']}",
+        f"- Extra lookup docs: {summary['extra_lookup_count']}",
+        f"- Route precision: `{_format_metric(summary['route_precision'])}`",
+        f"- Route recall proxy: `{_format_metric(summary['route_recall_proxy'])}`",
+        f"- Route noise rate: `{_format_metric(summary['route_noise_rate'])}`",
+        f"- Average packet words: `{_format_metric(summary['avg_packet_words'])}`",
+        f"- Average selected docs: `{_format_metric(summary['avg_selected_docs'])}`",
+        f"- Skipped trace lines: {summary['skipped_trace_lines']}",
+        "",
+    ]
+    effects = section.get("outcome_effects")
+    if isinstance(effects, dict) and effects:
+        rendered_effects = ", ".join(f"{effect}={count}" for effect, count in effects.items())
+        lines.extend(["### Outcome Effects", "", f"- {rendered_effects}", ""])
+
+    items = section.get("items") if isinstance(section.get("items"), list) else []
+    lines.extend(["### Route Trace Items", ""])
+    if not items:
+        lines.extend(["- None detected.", ""])
+    else:
+        for item in items:
+            lines.append(f"- `{item['task_id']}`")
+            lines.append(
+                "  - Metrics: "
+                f"precision={_format_metric(item['route_precision'])}, "
+                f"recall_proxy={_format_metric(item['route_recall_proxy'])}, "
+                f"noise={_format_metric(item['route_noise_rate'])}."
+            )
+            lines.append(
+                "  - Context cost: "
+                f"{item['packet_words']} packet words, "
+                f"{item['selected_doc_count']} selected docs, "
+                f"{item['extra_lookup_count']} extra lookup docs."
+            )
+            missed = item.get("missed_useful_doc_ids")
+            if isinstance(missed, list) and missed:
+                lines.append(f"  - Missed useful docs: {', '.join(f'`{doc_id}`' for doc_id in missed)}")
+            selected_without_reuse = item.get("selected_without_reuse_doc_ids")
+            if isinstance(selected_without_reuse, list) and selected_without_reuse:
+                lines.append(
+                    "  - Selected without reuse: "
+                    f"{', '.join(f'`{doc_id}`' for doc_id in selected_without_reuse[:5])}"
+                )
+    lines.extend(["### Interpretation", ""])
+    for note in section["interpretation"]:
+        lines.append(f"- {note}")
+    lines.append("")
+    return lines
+
+
 def render_memory_diagnostics_markdown(
     report: dict[str, Any],
     *,
@@ -864,11 +1110,11 @@ def render_memory_diagnostics_markdown(
     summary = report["summary"]
     filters = report["filters"]
     focus = filters.get("focus") or "all"
-    title = (
-        "AI Wiki Trial/Error Reduction Diagnostics"
-        if focus == "trial-error"
-        else "AI Wiki Memory Diagnostics"
-    )
+    title = "AI Wiki Memory Diagnostics"
+    if focus == "trial-error":
+        title = "AI Wiki Trial/Error Reduction Diagnostics"
+    elif focus == "route":
+        title = "AI Wiki Route Diagnostics"
     lines = [
         f"# {title}",
         "",
@@ -894,16 +1140,20 @@ def render_memory_diagnostics_markdown(
             "",
             f"- Reuse events: {summary['reuse_events']}",
             f"- Task checks: {summary['task_checks']}",
+            f"- Route traces: {summary['route_traces']}",
             f"- Checked tasks: {summary['checked_tasks']}",
             f"- Documents with reuse: {summary['documents_with_reuse']}",
             f"- Coverage gaps: {summary['coverage_gap_count']}",
             f"- Skipped event lines: {summary['skipped_event_lines']}",
             f"- Skipped check lines: {summary['skipped_check_lines']}",
+            f"- Skipped trace lines: {summary['skipped_trace_lines']}",
             "",
         ]
     )
     if focus == "trial-error":
         lines.extend(_render_trial_error_section(report["trial_error_reduction"]))
+    elif focus == "route":
+        lines.extend(_render_route_diagnostics_section(report["route_diagnostics"]))
     else:
         lines.extend(_render_doc_section("High-ROI Memory", report["high_roi_memory"]))
         lines.extend(_render_doc_section("Noisy Memory", report["noisy_memory"]))
@@ -911,6 +1161,7 @@ def render_memory_diagnostics_markdown(
         lines.extend(_render_doc_section("Conflicting Memory", report["conflicting_memory"]))
         lines.extend(_render_doc_section("Missed Memory Signals", report["missed_memory"]))
         lines.extend(_render_coverage_section(report["coverage_gaps"]))
+        lines.extend(_render_route_diagnostics_section(report["route_diagnostics"]))
         lines.extend(_render_trial_error_section(report["trial_error_reduction"]))
     lines.extend(["## Diagnostic Notes", ""])
     for note in report["diagnostic_notes"]:
@@ -941,7 +1192,11 @@ def generate_memory_diagnostics(
         noisy_min_events=noisy_min_events,
     )
     diagnostics_dir = repo_wiki_dir / "_toolkit" / "diagnostics"
-    report_stem = "trial-error-report" if report["filters"]["focus"] == "trial-error" else "memory-report"
+    report_stem = "memory-report"
+    if report["filters"]["focus"] == "trial-error":
+        report_stem = "trial-error-report"
+    elif report["filters"]["focus"] == "route":
+        report_stem = "route-report"
     markdown_path = diagnostics_dir / f"{report_stem}.md" if write else None
     json_path = diagnostics_dir / f"{report_stem}.json" if write else None
     display_markdown_path = Path(f"ai-wiki/_toolkit/diagnostics/{report_stem}.md") if write else None
