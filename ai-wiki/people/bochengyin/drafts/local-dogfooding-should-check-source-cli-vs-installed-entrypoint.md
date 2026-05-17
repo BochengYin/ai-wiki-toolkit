@@ -5,9 +5,9 @@ model: "gpt-5"
 source_kind: "tooling"
 status: "draft"
 created_at: "2026-05-17T00:10:00+10:00"
-updated_at: "2026-05-17T00:10:00+10:00"
-promotion_candidate: false
-promotion_basis: "single local dogfooding signal"
+updated_at: "2026-05-17T21:57:59+10:00"
+promotion_candidate: true
+promotion_basis: "repeated local dogfooding signal after v0.1.31 release"
 ---
 # Draft
 
@@ -35,3 +35,9 @@ If they differ, evaluate source behavior with `python -m ai_wiki_toolkit.cli ...
 ## Reuse Assessment
 
 This can prevent future agents from incorrectly concluding that newer toolkit features are missing when the local source tree already contains them.
+
+## Follow-Up Observation
+
+On 2026-05-17 after releasing `v0.1.31`, the repo source CLI reported `ai-wiki-toolkit 0.1.31` and GitHub/npm latest were also `0.1.31`, but the PATH executable at `/Users/by/.local/bin/aiwiki-toolkit` still reported `ai-wiki-toolkit 0.1.22`.
+
+The executable was a uv tool shim pointing at `/Users/by/.local/share/uv/tools/ai-wiki-toolkit/bin/aiwiki-toolkit`, so checking only the repo source would have missed the stale installed entrypoint.

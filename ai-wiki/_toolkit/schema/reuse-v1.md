@@ -13,6 +13,8 @@ This document describes the first machine-readable schema for measuring whether 
 
 User-owned reuse observations live in `ai-wiki/metrics/reuse-events/<handle>.jsonl`.
 
+User-owned route selection traces live in `ai-wiki/metrics/route-traces/<handle>.jsonl`.
+
 User-owned reuse checks live in `ai-wiki/metrics/task-checks/<handle>.jsonl`.
 
 Package-managed aggregate files are regenerated under `ai-wiki/_toolkit/metrics/`.
