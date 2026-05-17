@@ -11,6 +11,7 @@ release-assets/
 *.spec
 uv.lock
 npm/vendor/
+~$*.pptx
 
 # <!-- aiwiki-toolkit:start -->
 # Ignore AI wiki local state so normal agent use does not dirty git status.
