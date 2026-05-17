@@ -11,6 +11,7 @@ release-assets/
 *.spec
 uv.lock
 npm/vendor/
+.DS_Store
 ~$*.pptx
 
 # <!-- aiwiki-toolkit:start -->
