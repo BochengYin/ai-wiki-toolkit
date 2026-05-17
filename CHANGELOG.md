@@ -4,6 +4,21 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+## v0.1.31
+
+### Added
+
+- Added route trace telemetry under per-handle AI wiki metric logs and enabled `route`
+  to record traces by default.
+- Added `diagnose memory --focus route` metrics for route precision, recall proxy,
+  noise rate, missed useful docs, context cost, and outcome effects.
+- Added local AI wiki drafts and the AI wiki toolkit showcase presentation artifact.
+
+### Changed
+
+- Extended scaffold, managed `.gitignore`, doctor checks, and tests for the new route trace
+  telemetry shard.
+
 ## v0.1.22
 
 ### Added
