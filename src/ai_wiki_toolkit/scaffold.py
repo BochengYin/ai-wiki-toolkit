@@ -154,6 +154,7 @@ def install_workspace(
         paths.repo_wiki_dir,
         paths.repo_wiki_dir / "metrics",
         paths.repo_wiki_dir / "metrics" / "reuse-events",
+        paths.repo_wiki_dir / "metrics" / "route-traces",
         paths.repo_wiki_dir / "metrics" / "task-checks",
         paths.repo_wiki_dir / "work",
         paths.repo_wiki_dir / "work" / "events",

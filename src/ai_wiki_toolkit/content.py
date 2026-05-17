@@ -19,6 +19,7 @@ AI_WIKI_REUSE_SKILL_DIR = ".agents/skills/ai-wiki-reuse-check"
 TELEMETRY_IGNORE_PATHS = (
     ".env.aiwiki",
     "ai-wiki/metrics/reuse-events/",
+    "ai-wiki/metrics/route-traces/",
     "ai-wiki/metrics/task-checks/",
     "ai-wiki/_toolkit/consolidation/",
     "ai-wiki/_toolkit/diagnostics/",
@@ -34,6 +35,7 @@ def gitignore_block_body() -> str:
         # Ignore AI wiki local state so normal agent use does not dirty git status.
         .env.aiwiki
         ai-wiki/metrics/reuse-events/
+        ai-wiki/metrics/route-traces/
         ai-wiki/metrics/task-checks/
         ai-wiki/_toolkit/consolidation/
         ai-wiki/_toolkit/diagnostics/
@@ -70,7 +72,7 @@ def repo_starter_files(handle: str) -> dict[str, str]:
             - `trails/index.md` maps task-specific chronology, dead ends, and release trails.
             - `work/index.md` maps the append-only work ledger for todos, active tasks, and epics.
             - `people/<handle>/index.md` maps handle-local draft notes and working history.
-            - `metrics/` contains user-owned evidence logs such as `reuse-events/<handle>.jsonl` and `task-checks/<handle>.jsonl`.
+            - `metrics/` contains user-owned evidence logs such as `reuse-events/<handle>.jsonl`, `route-traces/<handle>.jsonl`, and `task-checks/<handle>.jsonl`.
             """
         ).strip()
         + "\n",
@@ -306,6 +308,7 @@ def repo_starter_files(handle: str) -> dict[str, str]:
             ## Files
 
             - `reuse-events/<handle>.jsonl` stores per-handle document-level AI wiki reuse observations.
+            - `route-traces/<handle>.jsonl` stores per-handle route packet selection traces.
             - `task-checks/<handle>.jsonl` stores per-handle task-level AI wiki reuse checks.
             - `aiwiki-toolkit record-reuse ...` appends one document-level observation for the current handle and refreshes managed aggregates.
             - `aiwiki-toolkit record-reuse-check ...` appends one task-level reuse check for the current handle and refreshes managed aggregates.
@@ -522,7 +525,7 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             6. Do not log managed `_toolkit/**` docs with `record-reuse`; if they changed the plan or behavior, cite their paths in a progress update or the final note instead.
             7. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
             8. Treat the footer as the user-facing evidence surface; telemetry and generated aggregates are the local machine-readable record behind it.
-            9. The installer manages a `.gitignore` block that ignores `.env.aiwiki`, `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/consolidation/`, `ai-wiki/_toolkit/diagnostics/`, `ai-wiki/_toolkit/metrics/`, `ai-wiki/_toolkit/work/`, and `ai-wiki/_toolkit/catalog.json` so local identity, telemetry, and generated views stay local by default.
+            9. The installer manages a `.gitignore` block that ignores `.env.aiwiki`, `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/route-traces/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/consolidation/`, `ai-wiki/_toolkit/diagnostics/`, `ai-wiki/_toolkit/metrics/`, `ai-wiki/_toolkit/work/`, and `ai-wiki/_toolkit/catalog.json` so local identity, telemetry, and generated views stay local by default.
             10. If those local-state paths were tracked before you upgraded, run `aiwiki-toolkit doctor` and follow the suggested `git rm --cached` fix once to untrack them.
             11. Produce one AI wiki write-back outcome at the end of every completed task, even when the result is `None`.
             12. If runtime skill exposure is missing, follow the Runtime Skill Fallback section in `system.md` and manually read the relevant repo-local skill files under `.agents/skills/`.
@@ -804,6 +807,8 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             ## Source Of Truth
 
             User-owned reuse observations live in `ai-wiki/metrics/reuse-events/<handle>.jsonl`.
+
+            User-owned route selection traces live in `ai-wiki/metrics/route-traces/<handle>.jsonl`.
 
             User-owned reuse checks live in `ai-wiki/metrics/task-checks/<handle>.jsonl`.
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
 from typer.testing import CliRunner
 
 from ai_wiki_toolkit.cli import app
@@ -382,6 +383,133 @@ def test_diagnose_memory_trial_error_focus_reports_existing_evidence(
     assert "AI Wiki Trial/Error Reduction Diagnostics" in markdown_path.read_text(
         encoding="utf-8"
     )
+
+
+def test_diagnose_memory_route_focus_joins_traces_with_reuse_events(
+    repo_env: dict[str, Path],
+) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "alice"])
+    assert install_result.exit_code == 0
+
+    repo_wiki = repo_env["repo"] / "ai-wiki"
+    _write_jsonl(
+        repo_wiki / "metrics" / "route-traces" / "alice.jsonl",
+        [
+            {
+                "author_handle": "alice",
+                "changed_paths": ["src/ai_wiki_toolkit/route.py"],
+                "index_card_doc_ids": [
+                    "review-patterns/selected",
+                    "review-patterns/noisy",
+                    "review-patterns/unused",
+                ],
+                "maybe_load_doc_ids": [],
+                "must_load_doc_ids": ["review-patterns/selected"],
+                "packet_words": 120,
+                "routed_at": "2026-04-20T10:00:00+00:00",
+                "schema_version": "route-trace-v1",
+                "selected_doc_count": 3,
+                "selected_doc_ids": [
+                    "review-patterns/selected",
+                    "review-patterns/noisy",
+                    "review-patterns/unused",
+                ],
+                "skipped_doc_ids": [],
+                "task_id": "task-route-quality",
+                "task_type": "scaffold_prompt_workflow",
+                "trace_id": "rt_123",
+            }
+        ],
+    )
+    _write_jsonl(
+        repo_wiki / "metrics" / "reuse-events" / "alice.jsonl",
+        [
+            {
+                "author_handle": "alice",
+                "doc_id": "review-patterns/selected",
+                "doc_kind": "review_pattern",
+                "event_id": "evt_selected",
+                "evidence_mode": "explicit",
+                "observed_at": "2026-04-20T10:01:00+00:00",
+                "retrieval_mode": "preloaded",
+                "reuse_effects": ["avoided_retry"],
+                "reuse_outcome": "resolved",
+                "schema_version": "reuse-v1",
+                "task_id": "task-route-quality",
+            },
+            {
+                "author_handle": "alice",
+                "doc_id": "review-patterns/noisy",
+                "doc_kind": "review_pattern",
+                "event_id": "evt_noisy",
+                "evidence_mode": "explicit",
+                "observed_at": "2026-04-20T10:02:00+00:00",
+                "retrieval_mode": "preloaded",
+                "reuse_outcome": "not_helpful",
+                "schema_version": "reuse-v1",
+                "task_id": "task-route-quality",
+            },
+            {
+                "author_handle": "alice",
+                "doc_id": "problems/missed",
+                "doc_kind": "problem",
+                "event_id": "evt_missed",
+                "evidence_mode": "explicit",
+                "observed_at": "2026-04-20T10:03:00+00:00",
+                "retrieval_mode": "lookup",
+                "reuse_effects": ["changed_plan"],
+                "reuse_outcome": "resolved",
+                "schema_version": "reuse-v1",
+                "task_id": "task-route-quality",
+            },
+        ],
+    )
+    _write_jsonl(
+        repo_wiki / "metrics" / "task-checks" / "alice.jsonl",
+        [
+            {
+                "author_handle": "alice",
+                "check_id": "chk_route",
+                "check_outcome": "wiki_used",
+                "checked_at": "2026-04-20T10:04:00+00:00",
+                "schema_version": "reuse-v1",
+                "task_id": "task-route-quality",
+            }
+        ],
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "diagnose",
+            "memory",
+            "--handle",
+            "alice",
+            "--focus",
+            "route",
+            "--format",
+            "json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    report = json.loads(result.output)
+    route = report["route_diagnostics"]
+    summary = route["summary"]
+    assert report["filters"]["focus"] == "route"
+    assert summary["route_trace_count"] == 1
+    assert summary["route_precision"] == pytest.approx(1 / 3)
+    assert summary["route_recall_proxy"] == pytest.approx(1 / 2)
+    assert summary["route_noise_rate"] == pytest.approx(2 / 3)
+    assert summary["missed_useful_doc_count"] == 1
+    assert route["outcome_effects"] == {"avoided_retry": 1, "changed_plan": 1}
+    item = route["items"][0]
+    assert item["missed_useful_doc_ids"] == ["problems/missed"]
+    assert item["selected_without_reuse_doc_ids"] == ["review-patterns/unused"]
+
+    markdown_path = repo_wiki / "_toolkit" / "diagnostics" / "route-report.md"
+    assert markdown_path.exists()
+    assert "AI Wiki Route Diagnostics" in markdown_path.read_text(encoding="utf-8")
 
 
 def test_diagnose_memory_requires_initialized_repo_wiki(repo_env: dict[str, Path]) -> None:

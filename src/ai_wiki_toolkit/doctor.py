@@ -689,6 +689,7 @@ def _tracked_telemetry_paths(repo_root: Path) -> list[str] | None:
                 "--",
                 ".env.aiwiki",
                 "ai-wiki/metrics/reuse-events",
+                "ai-wiki/metrics/route-traces",
                 "ai-wiki/metrics/task-checks",
                 "ai-wiki/_toolkit/consolidation",
                 "ai-wiki/_toolkit/diagnostics",
