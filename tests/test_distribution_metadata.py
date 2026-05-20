@@ -56,6 +56,19 @@ def test_release_workflow_passes_license_into_generated_homebrew_formula() -> No
     assert "--license MIT" in workflow
 
 
+def test_release_workflow_uploads_assets_before_optional_homebrew_tap_sync() -> None:
+    workflow = (ROOT / ".github" / "workflows" / "release-binaries.yml").read_text(
+        encoding="utf-8"
+    )
+
+    assert workflow.index("name: Upload release archives") < workflow.index(
+        "name: Check out Homebrew tap repository"
+    )
+    assert "id: checkout_tap" in workflow
+    assert "steps.checkout_tap.outcome == 'success'" in workflow
+    assert "::warning::Homebrew tap sync failed" in workflow
+
+
 def test_release_workflow_installs_binutils_for_linux_musl_builds() -> None:
     workflow = (ROOT / ".github" / "workflows" / "release-binaries.yml").read_text(
         encoding="utf-8"

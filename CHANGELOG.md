@@ -4,6 +4,10 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- Made optional Homebrew tap sync non-blocking after GitHub Release assets are uploaded, so stale tap credentials do not prevent npm publish recovery.
+
 ## v0.1.32
 
 ### Added

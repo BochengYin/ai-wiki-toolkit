@@ -223,6 +223,11 @@ jobs:
           --license MIT
           --output release-assets/aiwiki-toolkit.rb
 
+      - name: Upload release archives
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${GITHUB_REF_NAME}" release-assets/* --clobber
+
       - name: Resolve Homebrew tap repository
         id: tap_repo
         shell: bash
@@ -233,7 +238,9 @@ jobs:
           printf 'repo=%s\n' "$repo" >> "$GITHUB_OUTPUT"
 
       - name: Check out Homebrew tap repository
+        id: checkout_tap
         if: ${{ env.HOMEBREW_TAP_PAT != '' }}
+        continue-on-error: true
         uses: actions/checkout@v4
         with:
           repository: ${{ steps.tap_repo.outputs.repo }}
@@ -241,8 +248,9 @@ jobs:
           path: homebrew-tap
 
       - name: Sync Homebrew formula into tap
-        if: ${{ env.HOMEBREW_TAP_PAT != '' }}
+        if: ${{ env.HOMEBREW_TAP_PAT != '' && steps.checkout_tap.outcome == 'success' }}
         id: sync_tap
+        continue-on-error: true
         run: >
           python scripts/sync_homebrew_tap.py
           --formula release-assets/aiwiki-toolkit.rb
@@ -250,7 +258,9 @@ jobs:
           --version "${{ github.ref_name }}"
 
       - name: Commit and push Homebrew tap update
-        if: ${{ env.HOMEBREW_TAP_PAT != '' }}
+        id: push_tap
+        if: ${{ env.HOMEBREW_TAP_PAT != '' && steps.checkout_tap.outcome == 'success' && steps.sync_tap.outcome == 'success' }}
+        continue-on-error: true
         shell: bash
         run: |
           cd homebrew-tap
@@ -264,7 +274,8 @@ jobs:
           git commit -m "Update aiwiki-toolkit to ${GITHUB_REF_NAME}"
           git push origin HEAD
 
-      - name: Upload release archives
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${GITHUB_REF_NAME}" release-assets/* --clobber
+      - name: Warn when Homebrew tap sync fails
+        if: ${{ env.HOMEBREW_TAP_PAT != '' && (steps.checkout_tap.outcome == 'failure' || steps.sync_tap.outcome == 'failure' || steps.push_tap.outcome == 'failure') }}
+        shell: bash
+        run: |
+          echo "::warning::Homebrew tap sync failed or was skipped after release assets were uploaded. Rotate HOMEBREW_TAP_PAT or inspect the tap repository before the next release."
