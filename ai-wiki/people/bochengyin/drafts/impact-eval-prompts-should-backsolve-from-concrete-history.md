@@ -5,9 +5,10 @@ model: "gpt-5"
 source_kind: "review"
 status: "draft"
 created_at: "2026-04-22T20:40:00+1000"
-updated_at: "2026-04-22T20:40:00+1000"
-promotion_candidate: false
-promotion_basis: "none"
+updated_at: "2026-05-17T23:03:19+1000"
+promotion_candidate: true
+promotion_basis: "Auto-marked from useful resolved reuse threshold; exact evidence is generated under ai-wiki/_toolkit/reports/promotion-candidates/latest.md."
+promotion_report: "ai-wiki/_toolkit/reports/promotion-candidates/latest.md"
 ---
 # Review Draft
 

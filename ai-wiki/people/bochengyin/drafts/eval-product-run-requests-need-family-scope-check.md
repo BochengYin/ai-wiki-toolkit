@@ -5,9 +5,10 @@ model: "gpt-5.5"
 source_kind: "task"
 status: "draft"
 created_at: "2026-04-29T23:03:45+1000"
-updated_at: "2026-04-29T23:21:16+1000"
-promotion_candidate: false
-promotion_basis: "none"
+updated_at: "2026-05-17T23:03:19+1000"
+promotion_candidate: true
+promotion_basis: "Auto-marked from useful resolved reuse threshold; exact evidence is generated under ai-wiki/_toolkit/reports/promotion-candidates/latest.md."
+promotion_report: "ai-wiki/_toolkit/reports/promotion-candidates/latest.md"
 ---
 # Draft
 

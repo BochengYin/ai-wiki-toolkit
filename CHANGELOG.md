@@ -4,6 +4,18 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+## v0.1.32
+
+### Added
+
+- Added AI wiki promotion, usefulness, and weekly report commands with focused tests.
+- Added reuse provenance and usefulness signal fields so resolved, stale, superseded, and not-helpful memory events can be diagnosed.
+
+### Changed
+
+- Changed generated AI wiki reports, diagnostics, consolidation queues, and metrics to prefer handle-scoped paths under `_toolkit/` so team checkouts avoid routine generated-file conflicts.
+- Changed the weekly HTML report into an action-oriented review queue that only surfaces self-involving items.
+
 ## v0.1.31
 
 ### Added

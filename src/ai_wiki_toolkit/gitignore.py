@@ -48,6 +48,7 @@ def telemetry_untrack_command() -> str:
         "ai-wiki/_toolkit/consolidation",
         "ai-wiki/_toolkit/diagnostics",
         "ai-wiki/_toolkit/metrics",
+        "ai-wiki/_toolkit/reports",
         "ai-wiki/_toolkit/work",
         "ai-wiki/_toolkit/catalog.json",
     )

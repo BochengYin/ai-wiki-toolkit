@@ -5,9 +5,10 @@ model: "gpt-5"
 source_kind: "feature_clarification"
 status: "draft"
 created_at: "2026-05-17T18:37:00+10:00"
-updated_at: "2026-05-17T18:37:00+10:00"
-promotion_candidate: false
-promotion_basis: "single route dogfooding signal"
+updated_at: "2026-05-17T23:03:19+1000"
+promotion_candidate: true
+promotion_basis: "Auto-marked from useful resolved reuse threshold; exact evidence is generated under ai-wiki/_toolkit/reports/promotion-candidates/latest.md."
+promotion_report: "ai-wiki/_toolkit/reports/promotion-candidates/latest.md"
 ---
 # Draft
 

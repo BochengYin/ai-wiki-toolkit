@@ -74,9 +74,15 @@ def test_record_reuse_appends_event_and_refreshes_stats(repo_env: dict[str, Path
     assert event["event_id"].startswith("evt_")
 
     document_stats = json.loads(
-        (repo_env["repo"] / "ai-wiki" / "_toolkit" / "metrics" / "document-stats.json").read_text(
-            encoding="utf-8"
-        )
+        (
+            repo_env["repo"]
+            / "ai-wiki"
+            / "_toolkit"
+            / "metrics"
+            / "by-handle"
+            / "alice"
+            / "document-stats.json"
+        ).read_text(encoding="utf-8")
     )
     assert document_stats["documents"] == {
         "review-patterns/shared-prompt-files-must-be-user-agnostic": {
@@ -90,9 +96,15 @@ def test_record_reuse_appends_event_and_refreshes_stats(repo_env: dict[str, Path
     }
 
     task_stats = json.loads(
-        (repo_env["repo"] / "ai-wiki" / "_toolkit" / "metrics" / "task-stats.json").read_text(
-            encoding="utf-8"
-        )
+        (
+            repo_env["repo"]
+            / "ai-wiki"
+            / "_toolkit"
+            / "metrics"
+            / "by-handle"
+            / "alice"
+            / "task-stats.json"
+        ).read_text(encoding="utf-8")
     )
     assert task_stats["tasks"] == {
         "task-release-followup": {
@@ -167,6 +179,60 @@ def test_record_reuse_infers_team_memory_doc_kinds(repo_env: dict[str, Path]) ->
     event = json.loads(event_log_path.read_text(encoding="utf-8").splitlines()[0])
     assert event["doc_id"] == "conventions/python-typing"
     assert event["doc_kind"] == "convention"
+
+
+def test_record_reuse_appends_optional_diagnosis_provenance(
+    repo_env: dict[str, Path],
+) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "alice"])
+    assert install_result.exit_code == 0
+
+    result = runner.invoke(
+        app,
+        [
+            "record-reuse",
+            "--doc-id",
+            "people/alice/drafts/noisy-memory",
+            "--task-id",
+            "task-diagnosis",
+            "--retrieval-mode",
+            "lookup",
+            "--evidence-mode",
+            "inferred",
+            "--reuse-outcome",
+            "not_helpful",
+            "--session-id",
+            "session-reuse",
+            "--source-session-id",
+            "session-source",
+            "--source-task-id",
+            "task-source",
+            "--consulted-order",
+            "2",
+            "--signal-status",
+            "candidate",
+            "--not-helpful-reason",
+            "superseded_by_later_doc",
+            "--resolved-by-doc-id",
+            "problems/better-memory",
+            "--superseded-by-doc-id",
+            "conventions/newer-memory",
+            "--handle",
+            "alice",
+        ],
+    )
+
+    assert result.exit_code == 0
+    event_log_path = repo_env["repo"] / "ai-wiki" / "metrics" / "reuse-events" / "alice.jsonl"
+    event = json.loads(event_log_path.read_text(encoding="utf-8").splitlines()[0])
+    assert event["session_id"] == "session-reuse"
+    assert event["source_session_id"] == "session-source"
+    assert event["source_task_id"] == "task-source"
+    assert event["consulted_order"] == 2
+    assert event["signal_status"] == "candidate"
+    assert event["not_helpful_reason"] == "superseded_by_later_doc"
+    assert event["resolved_by_doc_id"] == "problems/better-memory"
+    assert event["superseded_by_doc_id"] == "conventions/newer-memory"
 
 
 def test_record_reuse_rejects_managed_toolkit_docs(repo_env: dict[str, Path]) -> None:
@@ -260,9 +326,15 @@ def test_record_reuse_check_appends_task_check_and_refreshes_stats(repo_env: dic
     assert check["check_id"].startswith("chk_")
 
     task_stats = json.loads(
-        (repo_env["repo"] / "ai-wiki" / "_toolkit" / "metrics" / "task-stats.json").read_text(
-            encoding="utf-8"
-        )
+        (
+            repo_env["repo"]
+            / "ai-wiki"
+            / "_toolkit"
+            / "metrics"
+            / "by-handle"
+            / "alice"
+            / "task-stats.json"
+        ).read_text(encoding="utf-8")
     )
     assert task_stats["tasks"] == {
         "task-branch-push": {

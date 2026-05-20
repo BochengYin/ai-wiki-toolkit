@@ -191,6 +191,16 @@ def install_workspace(
         result,
     )
     _write_managed(
+        paths.repo_toolkit_dir / "metrics" / "by-handle" / resolved_handle / "document-stats.json",
+        render_document_stats(paths.repo_wiki_dir, handle=resolved_handle),
+        result,
+    )
+    _write_managed(
+        paths.repo_toolkit_dir / "metrics" / "by-handle" / resolved_handle / "task-stats.json",
+        render_task_stats(paths.repo_wiki_dir, handle=resolved_handle),
+        result,
+    )
+    _write_managed(
         paths.repo_toolkit_dir / "work" / "state.json",
         render_work_state_json(paths.repo_wiki_dir),
         result,
@@ -247,6 +257,7 @@ def refresh_managed_metrics(start: Path | None = None) -> RefreshMetricsResult:
         )
 
     result = RefreshMetricsResult(paths=paths)
+    resolved_handle = resolve_user_handle(paths.repo_root)
     _write_refreshed_managed(
         paths.repo_toolkit_dir / "catalog.json",
         render_repo_catalog(paths.repo_wiki_dir),
@@ -260,6 +271,16 @@ def refresh_managed_metrics(start: Path | None = None) -> RefreshMetricsResult:
     _write_refreshed_managed(
         paths.repo_toolkit_dir / "metrics" / "task-stats.json",
         render_task_stats(paths.repo_wiki_dir),
+        result.refreshed_files,
+    )
+    _write_refreshed_managed(
+        paths.repo_toolkit_dir / "metrics" / "by-handle" / resolved_handle / "document-stats.json",
+        render_document_stats(paths.repo_wiki_dir, handle=resolved_handle),
+        result.refreshed_files,
+    )
+    _write_refreshed_managed(
+        paths.repo_toolkit_dir / "metrics" / "by-handle" / resolved_handle / "task-stats.json",
+        render_task_stats(paths.repo_wiki_dir, handle=resolved_handle),
         result.refreshed_files,
     )
     _write_refreshed_managed(

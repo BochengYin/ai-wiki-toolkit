@@ -5,9 +5,10 @@ model: "gpt-5.5"
 source_kind: "task"
 status: "draft"
 created_at: "2026-04-26T11:29:00+1000"
-updated_at: "2026-04-26T18:49:15+1000"
-promotion_candidate: false
-promotion_basis: "none"
+updated_at: "2026-05-18T00:40:00+1000"
+promotion_candidate: true
+promotion_basis: "Auto-marked from useful resolved reuse threshold; exact evidence is generated under ai-wiki/_toolkit/reports/promotion-candidates/latest.md."
+promotion_report: "ai-wiki/_toolkit/reports/promotion-candidates/latest.md"
 ---
 # Draft
 
@@ -78,3 +79,15 @@ For each case study, report:
 - conservative break-even interpretation
 - replay initialization-window check when comparing already-initialized source sessions against fresh replay sessions
 - any Fermi extrapolation assumptions, including per-family frequency, if a team-level estimate is included
+
+## Report Attribution Refinement
+
+When a report joins source-incident saved-time estimates back to referenced Markdown files, keep the saved-time number at the impact-family level.
+
+Do not repeat one family-level saved-time estimate under every raw or consolidated Markdown file in that family. That makes it look like each file independently saved the same amount of time.
+
+Preferred report shape:
+
+- show source, replay, and saved time once per impact family
+- list the referenced Markdown files under that family with their reuse counts and roles
+- label file rows as reference/usefulness evidence, not separate saved-time claims

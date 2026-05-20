@@ -71,8 +71,8 @@ def test_consolidate_queue_writes_generated_review_queue(
     assert "`ai-wiki/review-patterns/prefer-stable-prompt-blocks.md`" in result.output
     assert not (repo_wiki / "review-patterns" / "prefer-stable-prompt-blocks.md").exists()
 
-    markdown_path = repo_wiki / "_toolkit" / "consolidation" / "queue.md"
-    json_path = repo_wiki / "_toolkit" / "consolidation" / "queue.json"
+    markdown_path = repo_wiki / "_toolkit" / "consolidation" / "alice" / "queue.md"
+    json_path = repo_wiki / "_toolkit" / "consolidation" / "alice" / "queue.json"
     assert markdown_path.read_text(encoding="utf-8") == result.output
     report = json.loads(json_path.read_text(encoding="utf-8"))
     assert report["schema_version"] == "consolidation-queue-v1"

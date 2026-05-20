@@ -6,8 +6,9 @@ source_kind: "review"
 status: "draft"
 created_at: "2026-04-18T13:18:00Z"
 updated_at: "2026-04-18T13:18:00Z"
-promotion_candidate: false
-promotion_basis: "none"
+promotion_candidate: true
+promotion_basis: "Auto-marked from useful resolved reuse threshold; exact evidence is generated under ai-wiki/_toolkit/reports/promotion-candidates/latest.md."
+promotion_report: "ai-wiki/_toolkit/reports/promotion-candidates/latest.md"
 ---
 # Review Draft
 

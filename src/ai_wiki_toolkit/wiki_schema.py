@@ -247,11 +247,19 @@ def _numeric_estimate(payload: dict[str, Any], key: str) -> int:
     return value if isinstance(value, int) else 0
 
 
-def build_document_stats(repo_wiki_dir: Path) -> dict[str, Any]:
+def _handle_matches(payload: dict[str, Any], handle: str | None) -> bool:
+    if handle is None:
+        return True
+    return payload.get("author_handle") == handle
+
+
+def build_document_stats(repo_wiki_dir: Path, *, handle: str | None = None) -> dict[str, Any]:
     events, skipped_lines = _load_repo_reuse_events(repo_wiki_dir)
     documents: dict[str, dict[str, Any]] = {}
 
     for event in events:
+        if not _handle_matches(event, handle):
+            continue
         if not _counts_toward_reuse_metrics(event):
             continue
         doc_id = event.get("doc_id")
@@ -282,23 +290,28 @@ def build_document_stats(repo_wiki_dir: Path) -> dict[str, Any]:
             if isinstance(observed_at, str):
                 stats["last_effective_at"] = observed_at
 
-    return {
+    result = {
         "schema_version": REUSE_SCHEMA_VERSION,
         "skipped_event_lines": skipped_lines,
         "documents": documents,
     }
+    if handle is not None:
+        result["filters"] = {"handle": handle}
+    return result
 
 
-def render_document_stats(repo_wiki_dir: Path) -> str:
-    return json.dumps(build_document_stats(repo_wiki_dir), indent=2, sort_keys=True) + "\n"
+def render_document_stats(repo_wiki_dir: Path, *, handle: str | None = None) -> str:
+    return json.dumps(build_document_stats(repo_wiki_dir, handle=handle), indent=2, sort_keys=True) + "\n"
 
 
-def build_task_stats(repo_wiki_dir: Path) -> dict[str, Any]:
+def build_task_stats(repo_wiki_dir: Path, *, handle: str | None = None) -> dict[str, Any]:
     events, skipped_lines = _load_repo_reuse_events(repo_wiki_dir)
     checks, skipped_check_lines = _load_repo_task_checks(repo_wiki_dir)
     tasks: dict[str, dict[str, Any]] = {}
 
     for check in checks:
+        if not _handle_matches(check, handle):
+            continue
         task_id = check.get("task_id")
         if not isinstance(task_id, str) or not task_id:
             continue
@@ -328,6 +341,8 @@ def build_task_stats(repo_wiki_dir: Path) -> dict[str, Any]:
             task_stats["last_check_outcome"] = check_outcome
 
     for event in events:
+        if not _handle_matches(event, handle):
+            continue
         if not _counts_toward_reuse_metrics(event):
             continue
         task_id = event.get("task_id")
@@ -381,7 +396,7 @@ def build_task_stats(repo_wiki_dir: Path) -> dict[str, Any]:
             tasks_with_events_but_no_check += 1
         rendered_tasks[task_id] = payload
 
-    return {
+    result = {
         "schema_version": REUSE_SCHEMA_VERSION,
         "skipped_check_lines": skipped_check_lines,
         "skipped_event_lines": skipped_lines,
@@ -393,7 +408,10 @@ def build_task_stats(repo_wiki_dir: Path) -> dict[str, Any]:
         },
         "tasks": rendered_tasks,
     }
+    if handle is not None:
+        result["filters"] = {"handle": handle}
+    return result
 
 
-def render_task_stats(repo_wiki_dir: Path) -> str:
-    return json.dumps(build_task_stats(repo_wiki_dir), indent=2, sort_keys=True) + "\n"
+def render_task_stats(repo_wiki_dir: Path, *, handle: str | None = None) -> str:
+    return json.dumps(build_task_stats(repo_wiki_dir, handle=handle), indent=2, sort_keys=True) + "\n"
