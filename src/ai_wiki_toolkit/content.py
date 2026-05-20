@@ -24,6 +24,7 @@ TELEMETRY_IGNORE_PATHS = (
     "ai-wiki/_toolkit/consolidation/",
     "ai-wiki/_toolkit/diagnostics/",
     "ai-wiki/_toolkit/metrics/",
+    "ai-wiki/_toolkit/reports/",
     "ai-wiki/_toolkit/work/",
     "ai-wiki/_toolkit/catalog.json",
 )
@@ -40,6 +41,7 @@ def gitignore_block_body() -> str:
         ai-wiki/_toolkit/consolidation/
         ai-wiki/_toolkit/diagnostics/
         ai-wiki/_toolkit/metrics/
+        ai-wiki/_toolkit/reports/
         ai-wiki/_toolkit/work/
         ai-wiki/_toolkit/catalog.json
         """
@@ -310,12 +312,16 @@ def repo_starter_files(handle: str) -> dict[str, str]:
             - `reuse-events/<handle>.jsonl` stores per-handle document-level AI wiki reuse observations.
             - `route-traces/<handle>.jsonl` stores per-handle route packet selection traces.
             - `task-checks/<handle>.jsonl` stores per-handle task-level AI wiki reuse checks.
-            - `aiwiki-toolkit record-reuse ...` appends one document-level observation for the current handle and refreshes managed aggregates.
-            - `aiwiki-toolkit record-reuse-check ...` appends one task-level reuse check for the current handle and refreshes managed aggregates.
-            - The installer manages a `.gitignore` block so `.env.aiwiki`, telemetry logs, and generated `_toolkit/catalog.json`, `_toolkit/metrics/*.json`, `_toolkit/diagnostics/*`, and `_toolkit/consolidation/*` files stay local by default.
+            - `aiwiki-toolkit record-reuse ...` appends one document-level observation for the current handle and refreshes handle-scoped managed metrics.
+            - `aiwiki-toolkit record-reuse-check ...` appends one task-level reuse check for the current handle and refreshes handle-scoped managed metrics.
+            - The installer manages a `.gitignore` block so `.env.aiwiki`, telemetry logs, and generated `_toolkit/catalog.json`, `_toolkit/metrics/*`, `_toolkit/diagnostics/*`, `_toolkit/consolidation/*`, and `_toolkit/reports/*` files stay local by default.
             - `aiwiki-toolkit refresh-metrics` regenerates package-managed aggregate views if you need a fresh local snapshot.
-            - `aiwiki-toolkit diagnose memory` generates local memory quality diagnostics under `_toolkit/diagnostics/`.
-            - `aiwiki-toolkit consolidate queue` generates a local human-review queue for draft consolidation and promotion candidates under `_toolkit/consolidation/`.
+            - `record-reuse` and `record-reuse-check` refresh handle-scoped metrics under `_toolkit/metrics/by-handle/<handle>/`.
+            - `aiwiki-toolkit diagnose memory` generates local memory quality diagnostics under `_toolkit/diagnostics/<handle-or-all>/`.
+            - `aiwiki-toolkit consolidate queue` generates a local human-review queue for draft consolidation and promotion candidates under `_toolkit/consolidation/<handle>/`.
+            - `aiwiki-toolkit promote candidates --apply` marks useful reused drafts as handle-local promotion candidates while exact counts stay under `_toolkit/reports/promotion-candidates/<handle>/`.
+            - `aiwiki-toolkit report usefulness` generates referenced-file and time-impact reports under `_toolkit/reports/usefulness/<handle-or-all>/`.
+            - `aiwiki-toolkit report weekly` generates a weekly HTML human-review queue plus JSON evidence under `_toolkit/reports/weekly/<handle>/`.
             """
         ).strip()
         + "\n",
@@ -369,12 +375,16 @@ def managed_repo_toolkit_files() -> dict[str, str]:
 
             ## Generated Outputs
 
-            - `catalog.json`, `consolidation/*`, `diagnostics/*`, `metrics/*.json`, and `work/*` are generated outputs, not guidance docs.
+            - `catalog.json`, `consolidation/*`, `diagnostics/*`, `metrics/*`, `reports/*`, and `work/*` are generated outputs, not guidance docs.
             - `aiwiki-toolkit route` emits transient context packets to stdout; packets are derived from source docs and should be regenerated rather than treated as canonical memory.
             - The installer ignores local identity and generated outputs in `.gitignore` so routine agent use stays local.
             - Regenerate catalog, metrics, and work views with `aiwiki-toolkit refresh-metrics` whenever you need a fresh local snapshot.
             - Generate local memory quality diagnostics with `aiwiki-toolkit diagnose memory` when you need to inspect missed, stale, noisy, conflicting, or high-ROI memory.
             - Generate a local draft consolidation and promotion review queue with `aiwiki-toolkit consolidate queue`.
+            - Keep generated diagnostics, reports, and per-handle metric views handle-scoped when they depend on a handle.
+            - Mark useful reused drafts as handle-local promotion candidates with `aiwiki-toolkit promote candidates --apply`; exact reuse counts stay in `_toolkit/reports/promotion-candidates/<handle>/`, not in user-owned indexes.
+            - Generate referenced-file and time-impact reports with `aiwiki-toolkit report usefulness`.
+            - Generate weekly local HTML review queues with `aiwiki-toolkit report weekly --if-due`.
             """
         ).strip()
         + "\n",
@@ -525,7 +535,7 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             6. Do not log managed `_toolkit/**` docs with `record-reuse`; if they changed the plan or behavior, cite their paths in a progress update or the final note instead.
             7. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
             8. Treat the footer as the user-facing evidence surface; telemetry and generated aggregates are the local machine-readable record behind it.
-            9. The installer manages a `.gitignore` block that ignores `.env.aiwiki`, `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/route-traces/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/consolidation/`, `ai-wiki/_toolkit/diagnostics/`, `ai-wiki/_toolkit/metrics/`, `ai-wiki/_toolkit/work/`, and `ai-wiki/_toolkit/catalog.json` so local identity, telemetry, and generated views stay local by default.
+            9. The installer manages a `.gitignore` block that ignores `.env.aiwiki`, `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/route-traces/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/consolidation/`, `ai-wiki/_toolkit/diagnostics/`, `ai-wiki/_toolkit/metrics/`, `ai-wiki/_toolkit/reports/`, `ai-wiki/_toolkit/work/`, and `ai-wiki/_toolkit/catalog.json` so local identity, telemetry, and generated views stay local by default.
             10. If those local-state paths were tracked before you upgraded, run `aiwiki-toolkit doctor` and follow the suggested `git rm --cached` fix once to untrack them.
             11. Produce one AI wiki write-back outcome at the end of every completed task, even when the result is `None`.
             12. If runtime skill exposure is missing, follow the Runtime Skill Fallback section in `system.md` and manually read the relevant repo-local skill files under `.agents/skills/`.
@@ -813,6 +823,7 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             User-owned reuse checks live in `ai-wiki/metrics/task-checks/<handle>.jsonl`.
 
             Package-managed aggregate files are regenerated under `ai-wiki/_toolkit/metrics/`.
+            Handle-scoped generated metrics are regenerated under `ai-wiki/_toolkit/metrics/by-handle/<handle>/`.
 
             The installer ignores the telemetry shards and generated aggregate views in `.gitignore` by default
             so routine reuse logging does not dirty git status.
@@ -843,6 +854,14 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             - `model`
             - `notes`
             - `estimated_savings`
+            - `session_id`
+            - `source_session_id`
+            - `source_task_id`
+            - `consulted_order`
+            - `signal_status`
+            - `not_helpful_reason`
+            - `resolved_by_doc_id`
+            - `superseded_by_doc_id`
 
             ## Task Check Fields
 
@@ -874,6 +893,22 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             - `partial`: the wiki helped, but did not fully resolve the task
             - `not_helpful`: the wiki was consulted, but did not help materially
 
+            ## Diagnostic Provenance
+
+            Reuse events may carry optional provenance for post-task diagnosis:
+
+            - `session_id`: the current agent session or run id
+            - `source_session_id`: the session that originally generated the memory
+            - `source_task_id`: the task that originally generated the memory
+            - `consulted_order`: 1-based order in which the document was read
+            - `signal_status`: `candidate` for inferred hints or `confirmed` for human/explicit judgments
+            - `not_helpful_reason`: one of `stale`, `too_generic`, `wrong_scope`, `missing_detail`, `hard_to_find`, `contradicted`, `superseded`, `superseded_by_later_doc`, or `other`
+            - `resolved_by_doc_id`: a later document that resolved the task
+            - `superseded_by_doc_id`: a later document that made this one stale, noisy, or less useful
+
+            Candidate signals are review hints, not promotion blockers by themselves unless the team treats
+            them as confirmed evidence.
+
             ## Managed Docs
 
             Managed control-plane docs under `_toolkit/**` must not be recorded with `aiwiki-toolkit record-reuse`.
@@ -887,6 +922,8 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             - `_toolkit/catalog.json`
             - `_toolkit/metrics/document-stats.json`
             - `_toolkit/metrics/task-stats.json`
+            - `_toolkit/metrics/by-handle/<handle>/document-stats.json`
+            - `_toolkit/metrics/by-handle/<handle>/task-stats.json`
 
             Those generated views are intended as local snapshots. Regenerate them with
             `aiwiki-toolkit refresh-metrics` whenever you need a fresh local view.
@@ -1273,7 +1310,7 @@ def repo_skill_starter_files() -> dict[str, str]:
                - `ai-wiki/problems/index.md`
                - `ai-wiki/features/index.md`
                - relevant files under `ai-wiki/trails/` when chronology matters
-               - `ai-wiki/metrics/` and `_toolkit/metrics/*.json` only as weak signals
+               - `ai-wiki/metrics/` and `_toolkit/metrics/*` only as weak signals
             3. Cluster drafts by durable topic, repeated failure mode, or repeated rule, not by filename alone.
             4. For each cluster, choose one next action using [references/candidate-types.md](references/candidate-types.md).
             5. Use [references/promotion-targets.md](references/promotion-targets.md) to propose the best destination when a cluster is mature enough for shared or repo-level memory.

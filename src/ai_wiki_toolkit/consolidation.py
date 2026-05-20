@@ -576,11 +576,11 @@ def generate_consolidation_queue(
         high_roi_min_events=high_roi_min_events,
         noisy_min_events=noisy_min_events,
     )
-    consolidation_dir = repo_wiki_dir / "_toolkit" / "consolidation"
+    consolidation_dir = repo_wiki_dir / "_toolkit" / "consolidation" / handle
     markdown_path = consolidation_dir / "queue.md" if write else None
     json_path = consolidation_dir / "queue.json" if write else None
-    display_markdown_path = Path("ai-wiki/_toolkit/consolidation/queue.md") if write else None
-    display_json_path = Path("ai-wiki/_toolkit/consolidation/queue.json") if write else None
+    display_markdown_path = Path(f"ai-wiki/_toolkit/consolidation/{handle}/queue.md") if write else None
+    display_json_path = Path(f"ai-wiki/_toolkit/consolidation/{handle}/queue.json") if write else None
     markdown = render_consolidation_queue_markdown(
         report,
         markdown_path=display_markdown_path,

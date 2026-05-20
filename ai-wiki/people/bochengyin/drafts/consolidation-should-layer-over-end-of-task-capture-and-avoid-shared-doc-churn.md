@@ -5,9 +5,10 @@ model: "unknown"
 source_kind: "review"
 status: "draft"
 created_at: "2026-04-20T09:00:17+1000"
-updated_at: "2026-04-20T09:00:17+1000"
-promotion_candidate: false
-promotion_basis: "none"
+updated_at: "2026-05-20T11:20:55+1000"
+promotion_candidate: true
+promotion_basis: "Auto-marked from useful resolved reuse threshold; exact evidence is generated under ai-wiki/_toolkit/reports/promotion-candidates/latest.md."
+promotion_report: "ai-wiki/_toolkit/reports/promotion-candidates/latest.md"
 ---
 # Review Draft
 
@@ -68,3 +69,20 @@ The durable rule is to separate capture from consolidation, and to treat promoti
 ## Promotion Decision
 
 Keep as a draft for now. Promote if the same capture-vs-consolidation boundary matters again in another repository or if a future consolidation command proves this trigger model in practice.
+
+## 2026-05-20 External Confirmation
+
+Karpathy's May 2026 move to Anthropic and Anthropic's April/May 2026 Managed Agents memory work add a strong external confirmation signal for the same boundary.
+
+Publicly verifiable signals:
+
+- Karpathy joined Anthropic's pre-training team and is reported to be starting work on using Claude to accelerate pre-training research.
+- Karpathy's LLM Wiki gist frames persistent Markdown as a compounding artifact that should flag contradictions, stay current, and be linted over time.
+- Anthropic's Managed Agents memory stores memories as files with auditability and API control.
+- Anthropic's "dreaming" process reviews prior sessions and memory stores, extracts patterns, curates memory, and can keep memory high-signal between sessions.
+
+Product implication for `ai-wiki-toolkit`:
+
+- Treat "memory evolution" as the next layer above capture/reuse: freshness, contradiction detection, provenance, confidence, consolidation, and promotion workflow.
+- Keep the repo-native trust model: source Markdown and local evidence remain reviewable, generated consolidation remains disposable, and shared user-owned docs are not rewritten without human confirmation.
+- The near-term product surface should be a human-reviewable memory lifecycle queue, not an opaque always-on memory service.

@@ -182,8 +182,8 @@ def test_diagnose_memory_writes_managed_reports(repo_env: dict[str, Path]) -> No
     assert "`task-conflict`" in result.output
     assert "`task-unchecked`" in result.output
 
-    markdown_path = repo_wiki / "_toolkit" / "diagnostics" / "memory-report.md"
-    json_path = repo_wiki / "_toolkit" / "diagnostics" / "memory-report.json"
+    markdown_path = repo_wiki / "_toolkit" / "diagnostics" / "alice" / "memory-report.md"
+    json_path = repo_wiki / "_toolkit" / "diagnostics" / "alice" / "memory-report.json"
     assert markdown_path.read_text(encoding="utf-8") == result.output
     report = json.loads(json_path.read_text(encoding="utf-8"))
     assert report["schema_version"] == "diagnostics-v1"
@@ -191,6 +191,8 @@ def test_diagnose_memory_writes_managed_reports(repo_env: dict[str, Path]) -> No
     assert report["summary"]["task_checks"] == 2
     assert report["high_roi_memory"][0]["doc_id"] == "review-patterns/high-roi"
     assert report["noisy_memory"][0]["doc_id"] == "review-patterns/noisy"
+    assert report["noisy_memory"][0]["confirmed_not_helpful_events"] == 2
+    assert report["noisy_memory"][0]["candidate_not_helpful_events"] == 0
     assert report["stale_memory"][0]["doc_id"] == "people/alice/drafts/old-guidance"
     assert report["conflicting_memory"][0]["doc_id"] == "review-patterns/conflict"
 
@@ -272,8 +274,8 @@ def test_diagnose_memory_json_no_write_filters_handle_and_since(
     assert report["filters"]["handle"] == "alice"
     assert report["summary"]["reuse_events"] == 1
     assert report["high_roi_memory"][0]["tasks"] == ["new-task"]
-    assert not (repo_wiki / "_toolkit" / "diagnostics" / "memory-report.md").exists()
-    assert not (repo_wiki / "_toolkit" / "diagnostics" / "memory-report.json").exists()
+    assert not (repo_wiki / "_toolkit" / "diagnostics" / "alice" / "memory-report.md").exists()
+    assert not (repo_wiki / "_toolkit" / "diagnostics" / "alice" / "memory-report.json").exists()
 
 
 def test_diagnose_memory_trial_error_focus_reports_existing_evidence(
@@ -376,8 +378,8 @@ def test_diagnose_memory_trial_error_focus_reports_existing_evidence(
     assert section["unproven_wiki_use"][0]["task_id"] == "task-used-wiki"
     assert section["missed_or_repeated_issue_signals"][0]["task_id"] == "task-missed-memory"
 
-    markdown_path = repo_wiki / "_toolkit" / "diagnostics" / "trial-error-report.md"
-    json_path = repo_wiki / "_toolkit" / "diagnostics" / "trial-error-report.json"
+    markdown_path = repo_wiki / "_toolkit" / "diagnostics" / "alice" / "trial-error-report.md"
+    json_path = repo_wiki / "_toolkit" / "diagnostics" / "alice" / "trial-error-report.json"
     assert markdown_path.exists()
     assert json_path.exists()
     assert "AI Wiki Trial/Error Reduction Diagnostics" in markdown_path.read_text(
@@ -507,7 +509,7 @@ def test_diagnose_memory_route_focus_joins_traces_with_reuse_events(
     assert item["missed_useful_doc_ids"] == ["problems/missed"]
     assert item["selected_without_reuse_doc_ids"] == ["review-patterns/unused"]
 
-    markdown_path = repo_wiki / "_toolkit" / "diagnostics" / "route-report.md"
+    markdown_path = repo_wiki / "_toolkit" / "diagnostics" / "alice" / "route-report.md"
     assert markdown_path.exists()
     assert "AI Wiki Route Diagnostics" in markdown_path.read_text(encoding="utf-8")
 

@@ -5,9 +5,10 @@ model: "unknown"
 source_kind: "review"
 status: "draft"
 created_at: "2026-04-19T21:48:57+1000"
-updated_at: "2026-04-19T21:48:57+1000"
-promotion_candidate: false
-promotion_basis: "none"
+updated_at: "2026-05-20T23:31:05+1000"
+promotion_candidate: true
+promotion_basis: "Auto-marked from useful resolved reuse threshold; exact evidence is generated under ai-wiki/_toolkit/reports/promotion-candidates/latest.md."
+promotion_report: "ai-wiki/_toolkit/reports/promotion-candidates/latest.md"
 ---
 # Review Draft
 
@@ -51,6 +52,26 @@ Then regenerate package-managed aggregate views from those shards when branches 
 This pattern should apply to any repo that wants trustworthy AI memory metrics in a collaborative git workflow.
 
 It preserves a cleaner usefulness signal while also reducing conflicts on append-only evidence files.
+
+## 2026-05-20 Generated View Refinement
+
+The same conflict-avoidance rule should apply to generated `_toolkit/**` views when those views depend on a user or agent handle.
+
+Team-facing split:
+
+- shared source-of-truth: repo-owned Markdown, package-managed `_toolkit` control docs, and explicit per-handle source logs such as `ai-wiki/metrics/reuse-events/<handle>.jsonl`, `ai-wiki/metrics/task-checks/<handle>.jsonl`, and `ai-wiki/work/events/<handle>.jsonl`
+- local generated views: reports, diagnostics, promotion evidence, usefulness reports, weekly reports, and handle-filtered metrics
+
+Generated views that depend on a handle should write under handle-scoped paths such as:
+
+- `ai-wiki/_toolkit/metrics/by-handle/<handle>/`
+- `ai-wiki/_toolkit/diagnostics/<handle-or-all>/`
+- `ai-wiki/_toolkit/consolidation/<handle>/`
+- `ai-wiki/_toolkit/reports/promotion-candidates/<handle>/`
+- `ai-wiki/_toolkit/reports/usefulness/<handle-or-all>/`
+- `ai-wiki/_toolkit/reports/weekly/<handle>/`
+
+Global generated aggregates can still exist for explicit local refreshes, but frequent per-task writes should prefer handle-scoped outputs so multiple teammates do not churn the same generated files.
 
 ## Promotion Decision
 

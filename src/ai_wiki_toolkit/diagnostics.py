@@ -231,6 +231,13 @@ def _estimated_savings(event: dict[str, Any]) -> tuple[int, int]:
     )
 
 
+def _optional_string(value: object) -> str | None:
+    if not isinstance(value, str):
+        return None
+    normalized = value.strip()
+    return normalized or None
+
+
 def _note_text(payload: dict[str, Any]) -> str:
     notes = payload.get("notes")
     return notes if isinstance(notes, str) else ""
@@ -265,6 +272,8 @@ def _aggregate_documents(
             {
                 "doc_id": doc_id,
                 "doc_kind": event.get("doc_kind") or metadata.get("doc_kind") or infer_doc_kind(f"{doc_id}.md"),
+                "candidate_not_helpful_events": 0,
+                "confirmed_not_helpful_events": 0,
                 "path": metadata.get("path"),
                 "status": metadata.get("status"),
                 "title": metadata.get("title") or doc_id,
@@ -272,11 +281,17 @@ def _aggregate_documents(
                 "resolved_events": 0,
                 "partial_events": 0,
                 "not_helpful_events": 0,
+                "not_helpful_reasons": Counter(),
                 "lookup_reuse_count": 0,
                 "preloaded_reuse_count": 0,
                 "estimated_token_savings": 0,
                 "estimated_seconds_saved": 0,
                 "reuse_effects": Counter(),
+                "resolved_by_doc_ids": set(),
+                "session_ids": set(),
+                "source_session_ids": set(),
+                "source_task_ids": set(),
+                "superseded_by_doc_ids": set(),
                 "tasks": set(),
                 "last_observed_at": None,
                 "stale_note_count": 0,
@@ -292,6 +307,13 @@ def _aggregate_documents(
             stats["partial_events"] += 1
         elif outcome == "not_helpful":
             stats["not_helpful_events"] += 1
+            if event.get("signal_status") == "candidate":
+                stats["candidate_not_helpful_events"] += 1
+            else:
+                stats["confirmed_not_helpful_events"] += 1
+            reason = _optional_string(event.get("not_helpful_reason"))
+            if reason:
+                stats["not_helpful_reasons"][reason] += 1
         retrieval_mode = event.get("retrieval_mode")
         if retrieval_mode == "lookup":
             stats["lookup_reuse_count"] += 1
@@ -305,6 +327,16 @@ def _aggregate_documents(
             for effect in reuse_effects:
                 if isinstance(effect, str) and effect.strip():
                     stats["reuse_effects"][effect.strip()] += 1
+        for source_key, stats_key in (
+            ("session_id", "session_ids"),
+            ("source_session_id", "source_session_ids"),
+            ("source_task_id", "source_task_ids"),
+            ("resolved_by_doc_id", "resolved_by_doc_ids"),
+            ("superseded_by_doc_id", "superseded_by_doc_ids"),
+        ):
+            value = _optional_string(event.get(source_key))
+            if value:
+                stats[stats_key].add(value)
         task_id = event.get("task_id")
         if isinstance(task_id, str) and task_id:
             stats["tasks"].add(task_id)
@@ -389,18 +421,26 @@ def _doc_item(stats: dict[str, Any], reason: str) -> dict[str, Any]:
     return {
         "doc_id": stats["doc_id"],
         "doc_kind": stats["doc_kind"],
+        "candidate_not_helpful_events": stats["candidate_not_helpful_events"],
+        "confirmed_not_helpful_events": stats["confirmed_not_helpful_events"],
         "estimated_seconds_saved": stats["estimated_seconds_saved"],
         "estimated_token_savings": stats["estimated_token_savings"],
         "last_observed_at": stats["last_observed_at"],
         "lookup_reuse_count": stats["lookup_reuse_count"],
+        "not_helpful_reasons": dict(sorted(stats["not_helpful_reasons"].items())),
         "not_helpful_events": stats["not_helpful_events"],
         "partial_events": stats["partial_events"],
         "path": stats["path"],
         "preloaded_reuse_count": stats["preloaded_reuse_count"],
+        "resolved_by_doc_ids": sorted(stats["resolved_by_doc_ids"]),
         "reason": reason,
         "resolved_events": stats["resolved_events"],
         "reuse_effects": dict(sorted(effects.items())),
+        "session_ids": sorted(stats["session_ids"]),
         "status": stats["status"],
+        "source_session_ids": sorted(stats["source_session_ids"]),
+        "source_task_ids": sorted(stats["source_task_ids"]),
+        "superseded_by_doc_ids": sorted(stats["superseded_by_doc_ids"]),
         "tasks": sorted(stats["tasks"]),
         "title": stats["title"],
         "total_events": stats["total_events"],
@@ -492,8 +532,10 @@ def _build_noisy_items(
             continue
         score = stats["not_helpful_events"] * 3 + stats["partial_events"] - stats["resolved_events"]
         reason = "reused without resolved outcomes"
-        if stats["not_helpful_events"]:
-            reason = f"{stats['not_helpful_events']} not_helpful reuse events"
+        if stats["confirmed_not_helpful_events"]:
+            reason = f"{stats['confirmed_not_helpful_events']} confirmed not_helpful reuse events"
+        elif stats["candidate_not_helpful_events"]:
+            reason = f"{stats['candidate_not_helpful_events']} candidate not_helpful reuse events"
         items.append((score, doc_id, _doc_item(stats, reason)))
     return [item for _, _, item in sorted(items, key=lambda row: (-row[0], row[1]))[:max_items]]
 
@@ -939,6 +981,26 @@ def _render_doc_section(title: str, items: list[dict[str, Any]]) -> list[str]:
                 f"{item.get('resolved_events', 0)} resolved / {item.get('total_events', 0)} total events; "
                 f"{item.get('not_helpful_events', 0)} not_helpful."
             )
+            if item.get("not_helpful_events", 0):
+                lines.append(
+                    "  - Not helpful split: "
+                    f"{item.get('confirmed_not_helpful_events', 0)} confirmed / "
+                    f"{item.get('candidate_not_helpful_events', 0)} candidate."
+                )
+        reasons = item.get("not_helpful_reasons")
+        if isinstance(reasons, dict) and reasons:
+            rendered_reasons = ", ".join(f"{reason}={count}" for reason, count in reasons.items())
+            lines.append(f"  - Not helpful reasons: {rendered_reasons}")
+        source_sessions = item.get("source_session_ids")
+        sessions = item.get("session_ids")
+        if isinstance(source_sessions, list) and source_sessions:
+            lines.append(
+                f"  - Source sessions: {', '.join(f'`{session}`' for session in source_sessions[:5])}"
+            )
+        if isinstance(sessions, list) and sessions:
+            lines.append(
+                f"  - Reuse sessions: {', '.join(f'`{session}`' for session in sessions[:5])}"
+            )
         effects = item.get("reuse_effects")
         if isinstance(effects, dict) and effects:
             rendered_effects = ", ".join(f"{effect}={count}" for effect, count in effects.items())
@@ -1191,7 +1253,8 @@ def generate_memory_diagnostics(
         high_roi_min_events=high_roi_min_events,
         noisy_min_events=noisy_min_events,
     )
-    diagnostics_dir = repo_wiki_dir / "_toolkit" / "diagnostics"
+    handle_scope = report["filters"]["handle"] or "all"
+    diagnostics_dir = repo_wiki_dir / "_toolkit" / "diagnostics" / handle_scope
     report_stem = "memory-report"
     if report["filters"]["focus"] == "trial-error":
         report_stem = "trial-error-report"
@@ -1199,8 +1262,12 @@ def generate_memory_diagnostics(
         report_stem = "route-report"
     markdown_path = diagnostics_dir / f"{report_stem}.md" if write else None
     json_path = diagnostics_dir / f"{report_stem}.json" if write else None
-    display_markdown_path = Path(f"ai-wiki/_toolkit/diagnostics/{report_stem}.md") if write else None
-    display_json_path = Path(f"ai-wiki/_toolkit/diagnostics/{report_stem}.json") if write else None
+    display_markdown_path = (
+        Path(f"ai-wiki/_toolkit/diagnostics/{handle_scope}/{report_stem}.md") if write else None
+    )
+    display_json_path = (
+        Path(f"ai-wiki/_toolkit/diagnostics/{handle_scope}/{report_stem}.json") if write else None
+    )
     markdown = render_memory_diagnostics_markdown(
         report,
         markdown_path=display_markdown_path,

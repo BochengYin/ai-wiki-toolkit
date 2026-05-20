@@ -67,6 +67,10 @@ def test_init_empty_repo_creates_expected_tree(repo_env: dict[str, Path]) -> Non
         "ai-wiki/_toolkit/catalog.json",
         "ai-wiki/_toolkit/index.md",
         "ai-wiki/_toolkit/metrics/",
+        "ai-wiki/_toolkit/metrics/by-handle/",
+        "ai-wiki/_toolkit/metrics/by-handle/by/",
+        "ai-wiki/_toolkit/metrics/by-handle/by/document-stats.json",
+        "ai-wiki/_toolkit/metrics/by-handle/by/task-stats.json",
         "ai-wiki/_toolkit/metrics/document-stats.json",
         "ai-wiki/_toolkit/metrics/task-stats.json",
         "ai-wiki/_toolkit/schema/",
@@ -238,6 +242,7 @@ def test_init_writes_expected_gitignore_snapshot(repo_env: dict[str, Path]) -> N
         ai-wiki/_toolkit/consolidation/
         ai-wiki/_toolkit/diagnostics/
         ai-wiki/_toolkit/metrics/
+        ai-wiki/_toolkit/reports/
         ai-wiki/_toolkit/work/
         ai-wiki/_toolkit/catalog.json
         # <!-- aiwiki-toolkit:end -->
@@ -278,12 +283,16 @@ def test_init_writes_expected_toolkit_managed_files(repo_env: dict[str, Path]) -
 
         ## Generated Outputs
 
-        - `catalog.json`, `consolidation/*`, `diagnostics/*`, `metrics/*.json`, and `work/*` are generated outputs, not guidance docs.
+        - `catalog.json`, `consolidation/*`, `diagnostics/*`, `metrics/*`, `reports/*`, and `work/*` are generated outputs, not guidance docs.
         - `aiwiki-toolkit route` emits transient context packets to stdout; packets are derived from source docs and should be regenerated rather than treated as canonical memory.
         - The installer ignores local identity and generated outputs in `.gitignore` so routine agent use stays local.
         - Regenerate catalog, metrics, and work views with `aiwiki-toolkit refresh-metrics` whenever you need a fresh local snapshot.
         - Generate local memory quality diagnostics with `aiwiki-toolkit diagnose memory` when you need to inspect missed, stale, noisy, conflicting, or high-ROI memory.
         - Generate a local draft consolidation and promotion review queue with `aiwiki-toolkit consolidate queue`.
+        - Keep generated diagnostics, reports, and per-handle metric views handle-scoped when they depend on a handle.
+        - Mark useful reused drafts as handle-local promotion candidates with `aiwiki-toolkit promote candidates --apply`; exact reuse counts stay in `_toolkit/reports/promotion-candidates/<handle>/`, not in user-owned indexes.
+        - Generate referenced-file and time-impact reports with `aiwiki-toolkit report usefulness`.
+        - Generate weekly local HTML review queues with `aiwiki-toolkit report weekly --if-due`.
         """
     )
     assert (
@@ -436,7 +445,7 @@ def test_init_writes_expected_toolkit_managed_files(repo_env: dict[str, Path]) -
         6. Do not log managed `_toolkit/**` docs with `record-reuse`; if they changed the plan or behavior, cite their paths in a progress update or the final note instead.
         7. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
         8. Treat the footer as the user-facing evidence surface; telemetry and generated aggregates are the local machine-readable record behind it.
-        9. The installer manages a `.gitignore` block that ignores `.env.aiwiki`, `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/route-traces/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/consolidation/`, `ai-wiki/_toolkit/diagnostics/`, `ai-wiki/_toolkit/metrics/`, `ai-wiki/_toolkit/work/`, and `ai-wiki/_toolkit/catalog.json` so local identity, telemetry, and generated views stay local by default.
+        9. The installer manages a `.gitignore` block that ignores `.env.aiwiki`, `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/route-traces/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/consolidation/`, `ai-wiki/_toolkit/diagnostics/`, `ai-wiki/_toolkit/metrics/`, `ai-wiki/_toolkit/reports/`, `ai-wiki/_toolkit/work/`, and `ai-wiki/_toolkit/catalog.json` so local identity, telemetry, and generated views stay local by default.
         10. If those local-state paths were tracked before you upgraded, run `aiwiki-toolkit doctor` and follow the suggested `git rm --cached` fix once to untrack them.
         11. Produce one AI wiki write-back outcome at the end of every completed task, even when the result is `None`.
         12. If runtime skill exposure is missing, follow the Runtime Skill Fallback section in `system.md` and manually read the relevant repo-local skill files under `.agents/skills/`.
@@ -592,9 +601,29 @@ def test_init_writes_catalog_and_empty_stats(repo_env: dict[str, Path]) -> None:
     task_stats = (
         repo_env["repo"] / "ai-wiki" / "_toolkit" / "metrics" / "task-stats.json"
     ).read_text(encoding="utf-8")
+    handle_document_stats = (
+        repo_env["repo"]
+        / "ai-wiki"
+        / "_toolkit"
+        / "metrics"
+        / "by-handle"
+        / "alice"
+        / "document-stats.json"
+    ).read_text(encoding="utf-8")
+    handle_task_stats = (
+        repo_env["repo"]
+        / "ai-wiki"
+        / "_toolkit"
+        / "metrics"
+        / "by-handle"
+        / "alice"
+        / "task-stats.json"
+    ).read_text(encoding="utf-8")
     assert '"documents": {}' in document_stats
     assert '"checked_tasks": 0' in task_stats
     assert '"tasks": {}' in task_stats
+    assert '"handle": "alice"' in handle_document_stats
+    assert '"handle": "alice"' in handle_task_stats
 
 
 def test_init_updates_managed_toolkit_files_on_rerun(repo_env: dict[str, Path]) -> None:

@@ -295,7 +295,7 @@ aiwiki-toolkit init
 - create a gitignored `.env.aiwiki` file for the current local actor identity
 - create starter indexes such as `ai-wiki/conventions/index.md`, `ai-wiki/review-patterns/index.md`, `ai-wiki/problems/index.md`, `ai-wiki/features/index.md`, `ai-wiki/trails/index.md`, `ai-wiki/work/index.md`, and `ai-wiki/people/<handle>/index.md`
 - create `ai-wiki/conventions/`, `ai-wiki/review-patterns/`, `ai-wiki/problems/`, `ai-wiki/features/`, `ai-wiki/work/`, `ai-wiki/people/<handle>/drafts/`, `ai-wiki/metrics/`, and repo/home `_toolkit/`
-- generate package-managed `_toolkit/index.md`, `_toolkit/workflows.md`, `_toolkit/catalog.json`, `_toolkit/schema/reuse-v1.md`, `_toolkit/schema/team-memory-v1.md`, `_toolkit/schema/work-v1.md`, `_toolkit/metrics/*.json`, and `_toolkit/work/*`
+- generate package-managed `_toolkit/index.md`, `_toolkit/workflows.md`, `_toolkit/catalog.json`, `_toolkit/schema/reuse-v1.md`, `_toolkit/schema/team-memory-v1.md`, `_toolkit/schema/work-v1.md`, `_toolkit/metrics/*`, and `_toolkit/work/*`
 - upsert a managed `.gitignore` block that ignores `.env.aiwiki`, AI wiki telemetry, and generated aggregate snapshots so routine agent use does not dirty `git status`
 - create or refresh package-owned `.agents/skills/ai-wiki-reuse-check/`, `.agents/skills/ai-wiki-update-check/`, `.agents/skills/ai-wiki-clarify-before-code/`, `.agents/skills/ai-wiki-capture-review-learning/`, and `.agents/skills/ai-wiki-consolidate-drafts/`
 - update `AGENT.md`, `AGENTS.md`, and/or `CLAUDE.md` with a short managed instruction block that points agents to `ai-wiki/_toolkit/system.md` when the repo contains `ai-wiki/`
@@ -328,7 +328,7 @@ If package-owned repo-local skill files already exist under `.agents/skills/ai-w
 
 `init` remains as a backward-compatible alias for `install`. The actual scaffold creation does not happen at package install time; it happens when you run `aiwiki-toolkit install` or `aiwiki-toolkit init` inside a git repository.
 
-To append one explicit knowledge-reuse observation and refresh managed aggregates:
+To append one explicit knowledge-reuse observation and refresh handle-scoped managed metrics:
 
 ```bash
 aiwiki-toolkit record-reuse \
@@ -342,7 +342,9 @@ aiwiki-toolkit record-reuse \
   --saved-seconds 45
 ```
 
-This appends to the user-owned `ai-wiki/metrics/reuse-events/<handle>.jsonl` shard and refreshes the package-managed aggregate views under `ai-wiki/_toolkit/metrics/`. The installer ignores both the shard and the generated aggregate views by default so these telemetry updates stay local.
+This appends to the user-owned `ai-wiki/metrics/reuse-events/<handle>.jsonl` shard and refreshes the handle-scoped generated views under `ai-wiki/_toolkit/metrics/by-handle/<handle>/`. The installer ignores both the shard and the generated aggregate views by default so these telemetry updates stay local.
+
+For post-task diagnosis, reuse events can also carry optional provenance such as `--session-id`, `--source-session-id`, `--source-task-id`, `--consulted-order`, `--signal-status candidate`, `--not-helpful-reason superseded_by_later_doc`, `--resolved-by-doc-id`, and `--superseded-by-doc-id`. Candidate not-helpful signals are review hints; confirmed outcomes still require explicit human or agent judgment.
 
 Only record user-owned AI wiki knowledge docs with `record-reuse`.
 
@@ -391,7 +393,7 @@ aiwiki-toolkit record-reuse-check \
   --check-outcome wiki_used
 ```
 
-This appends to the user-owned `ai-wiki/metrics/task-checks/<handle>.jsonl` shard and refreshes the package-managed aggregate views under `ai-wiki/_toolkit/metrics/`. The installer ignores both the shard and the generated aggregate views by default so these telemetry updates stay local.
+This appends to the user-owned `ai-wiki/metrics/task-checks/<handle>.jsonl` shard and refreshes the handle-scoped generated views under `ai-wiki/_toolkit/metrics/by-handle/<handle>/`. The installer ignores both the shard and the generated aggregate views by default so these telemetry updates stay local.
 
 Both metrics logs are sharded by handle under:
 
@@ -400,7 +402,7 @@ Both metrics logs are sharded by handle under:
 
 These logs are intended as local telemetry by default, not merge-heavy source files.
 
-If you need a fresh local telemetry and work snapshot, regenerate package-managed aggregate views such as `ai-wiki/_toolkit/catalog.json`, `ai-wiki/_toolkit/metrics/*.json`, or `ai-wiki/_toolkit/work/*` with:
+If you need a fresh local telemetry and work snapshot, regenerate package-managed aggregate views such as `ai-wiki/_toolkit/catalog.json`, `ai-wiki/_toolkit/metrics/*`, or `ai-wiki/_toolkit/work/*` with:
 
 ```bash
 aiwiki-toolkit refresh-metrics
@@ -414,7 +416,7 @@ aiwiki-toolkit diagnose memory --since 14d --handle your-handle
 aiwiki-toolkit diagnose memory --focus trial-error
 ```
 
-This writes regenerated local reports under `ai-wiki/_toolkit/diagnostics/` and prints the report to stdout. The report highlights high-ROI memory, noisy memory, stale or missing docs, conflict notes, missed-memory signals, and coverage gaps such as document reuse events that were never paired with a task-level reuse check. It does not edit user-owned AI wiki docs.
+This writes regenerated local reports under `ai-wiki/_toolkit/diagnostics/<handle-or-all>/` and prints the report to stdout. The report highlights high-ROI memory, noisy memory, stale or missing docs, conflict notes, missed-memory signals, and coverage gaps such as document reuse events that were never paired with a task-level reuse check. It does not edit user-owned AI wiki docs.
 
 Use `--focus trial-error` to generate a focused trial/error reduction report from existing
 AI wiki evidence. It summarizes material effects such as `avoided_retry`,
@@ -429,7 +431,34 @@ aiwiki-toolkit consolidate queue
 aiwiki-toolkit consolidate queue --since 14d --handle your-handle
 ```
 
-This writes regenerated local reports under `ai-wiki/_toolkit/consolidation/` and prints the queue to stdout. The queue suggests one action per draft cluster: keep, refine, promotion candidate, conflict, or supersession. It does not edit user-owned AI wiki docs or create shared conventions, review patterns, problems, features, or decisions; those still require human confirmation.
+This writes regenerated local reports under `ai-wiki/_toolkit/consolidation/<handle>/` and prints the queue to stdout. The queue suggests one action per draft cluster: keep, refine, promotion candidate, conflict, or supersession. It does not edit user-owned AI wiki docs or create shared conventions, review patterns, problems, features, or decisions; those still require human confirmation.
+
+To mark handle-local draft promotion candidates from confirmed-useful reuse evidence:
+
+```bash
+aiwiki-toolkit promote candidates --handle your-handle
+aiwiki-toolkit promote candidates --handle your-handle --apply
+```
+
+The default run is report-only. With `--apply`, a draft is marked only when it has more than three distinct resolved task IDs, no `not_helpful` reuse events, and an existing non-stale source draft. The command refreshes stable links in `ai-wiki/people/<handle>/index.md`; exact reuse counts stay in generated reports under `ai-wiki/_toolkit/reports/promotion-candidates/<handle>/`.
+
+To inspect referenced files and estimated time impact from local reuse evidence:
+
+```bash
+aiwiki-toolkit report usefulness --handle your-handle
+aiwiki-toolkit report usefulness --handle your-handle --format json
+```
+
+This writes `ai-wiki/_toolkit/reports/usefulness/<handle-or-all>/latest.md` and `.json`. It lists referenced files and sums resolved-event `estimated_savings`. Baseline/current/remaining durations are reported as `unknown` until task logs include explicit timing evidence.
+
+To generate a weekly local HTML review queue:
+
+```bash
+aiwiki-toolkit report weekly --handle your-handle
+aiwiki-toolkit report weekly --handle your-handle --if-due
+```
+
+This writes a static HTML review queue and JSON payload under `ai-wiki/_toolkit/reports/weekly/<handle>/<iso-week>/`, refreshes `latest.html` and `latest.json`, and records the last generated period in `ai-wiki/_toolkit/reports/weekly/<handle>/state.json`. The HTML page focuses only on items that need human judgment: promotion candidates, personal drafts that may need diagnosis, and not-helpful signals. Coverage, referenced-file, and other raw evidence remains in the JSON payload and supporting reports; saved-time estimates belong in impact-eval reports, not the weekly HTML view. Use `--if-due` from cron, launchd, or an agent workflow so the same ISO week is generated once; use `--force` for local testing before a release.
 
 To summarize first-attempt product impact from a captured eval run:
 
@@ -506,7 +535,7 @@ Even with `--purge-user-docs --yes`, the shared home wiki under `~/ai-wiki/syste
 - `ai-wiki/index.md` is a repo-owned map and is not treated as a starter-drift upgrade target by `doctor`.
 - `ai-wiki/workflows.md` remains user-owned; package-managed workflow updates land in `ai-wiki/_toolkit/workflows.md` instead of rewriting the repo-owned file.
 - `.env.aiwiki` stores the current local actor identity in a managed block. It is gitignored and should not be committed.
-- `ai-wiki/metrics/reuse-events/<handle>.jsonl` and `ai-wiki/metrics/task-checks/<handle>.jsonl` are user-owned evidence data. `ai-wiki/work/events/<handle>.jsonl` is user-owned work state. Package-managed aggregate views are regenerated under `ai-wiki/_toolkit/metrics/` and `ai-wiki/_toolkit/work/`; memory diagnostics are generated under `ai-wiki/_toolkit/diagnostics/`; consolidation queues are generated under `ai-wiki/_toolkit/consolidation/`. The installer ignores those generated paths by default in `.gitignore`.
+- `ai-wiki/metrics/reuse-events/<handle>.jsonl` and `ai-wiki/metrics/task-checks/<handle>.jsonl` are user-owned evidence data. `ai-wiki/work/events/<handle>.jsonl` is user-owned work state. Package-managed aggregate views are regenerated under `ai-wiki/_toolkit/metrics/` and `ai-wiki/_toolkit/work/`; handle-scoped metrics are regenerated under `ai-wiki/_toolkit/metrics/by-handle/<handle>/`; memory diagnostics, consolidation queues, promotion reports, usefulness reports, and weekly reports are written under handle-scoped generated paths where they depend on a handle. The installer ignores those generated paths by default in `.gitignore`.
 - Legacy flat files such as `ai-wiki/metrics/reuse-events.jsonl` and `ai-wiki/metrics/task-checks.jsonl` are still read for compatibility, but new writes should use the handle-sharded layout.
 - `aiwiki-toolkit doctor --suggest-index-upgrade` prints suggested replacements for missing repo starter docs and repo-owned companion docs such as `ai-wiki/workflows.md`, but it does not overwrite them automatically.
 - Package-owned `.agents/skills/ai-wiki-reuse-check/**`, `.agents/skills/ai-wiki-update-check/**`, `.agents/skills/ai-wiki-clarify-before-code/**`, `.agents/skills/ai-wiki-capture-review-learning/**`, and `.agents/skills/ai-wiki-consolidate-drafts/**` are refreshed by `install` so package workflow updates reach existing repos.

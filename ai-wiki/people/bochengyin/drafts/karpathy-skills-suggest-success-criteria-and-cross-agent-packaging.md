@@ -5,7 +5,7 @@ model: "gpt-5"
 source_kind: "external_reference"
 status: "draft"
 created_at: "2026-05-02T22:07:03+1000"
-updated_at: "2026-05-02T22:17:32+1000"
+updated_at: "2026-05-20T16:19:07+1000"
 promotion_candidate: false
 promotion_basis: "none"
 ---
@@ -29,6 +29,19 @@ Two ideas are worth testing for `ai-wiki-toolkit`:
 
 1. Route packets and workflow-state surfaces should make success criteria and verification plans explicit for non-trivial tasks. The current route packet selects relevant memory; it does not yet help the agent turn the task into a verifiable goal.
 2. Memory compilation should target small, provenance-backed runtime assets such as skill templates, Cursor rules, or Claude-style plugin bundles, not only larger context summaries.
+
+## 2026-05-20 HTML Output Signal
+
+Karpathy's support for HTML-style AI outputs is best read as an interface and compilation signal, not as a reason to replace canonical Markdown memory.
+
+For `ai-wiki-toolkit`, the stronger architecture is:
+
+- keep Markdown as the source-of-truth memory because it is diffable, git-friendly, easy for agents to edit, and compatible with existing prompt-file workflows
+- compile selected memory into HTML when humans need dense review, navigation, comparison, dashboards, diagrams, or interactive explanation
+- treat HTML as a disposable generated view with provenance back to source Markdown, not as the canonical knowledge store
+- eval-gate any HTML compilation feature against task outcomes and prompt noise before making it a default workflow
+
+This fits the existing memory-compilation roadmap: stable Markdown can compile into multiple runtime surfaces, and HTML should be one of those surfaces for human-facing cognition, not the only storage format.
 
 ## Implementation Outcome
 

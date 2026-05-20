@@ -46,18 +46,26 @@ from ai_wiki_toolkit.route import (
 from ai_wiki_toolkit.route_traces import record_route_trace
 from ai_wiki_toolkit.reuse_events import (
     EVIDENCE_MODES,
+    NOT_HELPFUL_REASONS,
     RETRIEVAL_MODES,
     REUSE_CHECK_OUTCOMES,
     REUSE_OUTCOMES,
+    SIGNAL_STATUSES,
     RepoWikiNotInitializedError,
     record_reuse_check,
     record_reuse_event,
+)
+from ai_wiki_toolkit.promotion import (
+    DEFAULT_RESOLVED_TASK_THRESHOLD,
+    generate_promotion_candidates,
 )
 from ai_wiki_toolkit.scaffold import (
     refresh_managed_metrics,
     install_workspace,
     uninstall_workspace,
 )
+from ai_wiki_toolkit.usefulness import generate_usefulness_report
+from ai_wiki_toolkit.weekly_report import generate_weekly_report
 from ai_wiki_toolkit.work_ledger import (
     WORK_ITEM_TYPES,
     WORK_STATUSES,
@@ -74,10 +82,14 @@ diagnose_app = typer.Typer(help="Generate AI wiki diagnostic reports.")
 consolidate_app = typer.Typer(help="Generate AI wiki draft consolidation queues.")
 eval_app = typer.Typer(help="Report AI wiki impact eval results.")
 impact_eval_app = typer.Typer(help="Summarize first-attempt impact eval metrics.")
+promote_app = typer.Typer(help="Mark handle-local promotion candidates from useful reuse evidence.")
+report_app = typer.Typer(help="Generate AI wiki local reports.")
 app.add_typer(work_app, name="work")
 app.add_typer(diagnose_app, name="diagnose")
 app.add_typer(consolidate_app, name="consolidate")
 app.add_typer(eval_app, name="eval")
+app.add_typer(promote_app, name="promote")
+app.add_typer(report_app, name="report")
 eval_app.add_typer(impact_eval_app, name="impact")
 
 PROMPTED_IDENTITY_SOURCE = "prompted-handle"
@@ -589,6 +601,229 @@ def consolidate_queue(
         typer.echo(result.markdown, nl=False)
 
 
+@promote_app.command("candidates")
+def promote_candidates(
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Draft owner handle whose people/<handle>/drafts/ evidence should be scanned.",
+    ),
+    since: str | None = typer.Option(
+        None,
+        "--since",
+        help="Optional ISO timestamp or duration such as 14d for reuse evidence.",
+    ),
+    resolved_task_threshold: int = typer.Option(
+        DEFAULT_RESOLVED_TASK_THRESHOLD,
+        "--resolved-task-threshold",
+        "--min-resolved-tasks",
+        min=0,
+        help="Require more than this many distinct resolved task IDs before auto-marking.",
+    ),
+    apply_changes: bool = typer.Option(
+        False,
+        "--apply/--no-apply",
+        help="Mark qualifying drafts and refresh people/<handle>/index.md links.",
+    ),
+    update_index: bool = typer.Option(
+        True,
+        "--update-index/--no-update-index",
+        help="When applying, refresh the stable Promotion Candidates section in people/<handle>/index.md.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    write: bool = typer.Option(
+        True,
+        "--write/--no-write",
+        help="Write generated reports under ai-wiki/_toolkit/reports/promotion-candidates/.",
+    ),
+) -> None:
+    """Find useful reused drafts and optionally mark them as promotion candidates."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        paths = build_paths()
+        if not paths.repo_wiki_dir.exists():
+            raise RepoWikiNotInitializedError(
+                "Repo AI wiki is not initialized. Run `aiwiki-toolkit install` first."
+            )
+        resolved_handle = resolve_user_handle(paths.repo_root, explicit_handle=handle)
+        result = generate_promotion_candidates(
+            paths.repo_wiki_dir,
+            handle=resolved_handle,
+            since=since,
+            resolved_task_threshold=resolved_task_threshold,
+            apply=apply_changes,
+            update_index=update_index,
+            write=write,
+        )
+    except RepoRootNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except RepoWikiNotInitializedError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read AI wiki promotion data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    if normalized_format == "json":
+        typer.echo(result.json_text, nl=False)
+    else:
+        typer.echo(result.markdown, nl=False)
+
+
+@report_app.command("usefulness")
+def report_usefulness(
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional event author handle to filter local reuse evidence.",
+    ),
+    since: str | None = typer.Option(
+        None,
+        "--since",
+        help="Optional ISO timestamp or duration such as 14d for reuse evidence.",
+    ),
+    until: str | None = typer.Option(
+        None,
+        "--until",
+        help="Optional exclusive ISO timestamp upper bound for reuse evidence.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    write: bool = typer.Option(
+        True,
+        "--write/--no-write",
+        help="Write generated reports under ai-wiki/_toolkit/reports/usefulness/.",
+    ),
+) -> None:
+    """Generate a local report of referenced files and estimated time impact."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        paths = build_paths()
+        if not paths.repo_wiki_dir.exists():
+            raise RepoWikiNotInitializedError(
+                "Repo AI wiki is not initialized. Run `aiwiki-toolkit install` first."
+            )
+        result = generate_usefulness_report(
+            paths.repo_wiki_dir,
+            handle=handle,
+            since=since,
+            until=until,
+            write=write,
+        )
+    except RepoRootNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except RepoWikiNotInitializedError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read AI wiki report data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    if normalized_format == "json":
+        typer.echo(result.json_text, nl=False)
+    else:
+        typer.echo(result.markdown, nl=False)
+
+
+@report_app.command("weekly")
+def report_weekly(
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional actor handle. Defaults to the resolved local AI wiki handle.",
+    ),
+    if_due: bool = typer.Option(
+        False,
+        "--if-due",
+        help="Skip generation when the current ISO week already has a report.",
+    ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        help="Generate even when --if-due would skip the current ISO week.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    max_documents: int = typer.Option(
+        30,
+        "--max-documents",
+        min=1,
+        help="Maximum referenced documents to render in the HTML table.",
+    ),
+) -> None:
+    """Generate a weekly local HTML report with last-run state."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        paths = build_paths()
+        if not paths.repo_wiki_dir.exists():
+            raise RepoWikiNotInitializedError(
+                "Repo AI wiki is not initialized. Run `aiwiki-toolkit install` first."
+            )
+        resolved_handle = resolve_user_handle(paths.repo_root, explicit_handle=handle)
+        result = generate_weekly_report(
+            paths.repo_wiki_dir,
+            handle=resolved_handle,
+            if_due=if_due,
+            force=force,
+            max_documents=max_documents,
+        )
+    except RepoRootNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except RepoWikiNotInitializedError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read AI wiki weekly report data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    if normalized_format == "json":
+        typer.echo(result.json_text, nl=False)
+        return
+
+    outputs = result.report["outputs"]
+    if result.report["status"] == "skipped":
+        typer.echo(f"Weekly report skipped: {result.report['reason']}")
+    else:
+        typer.echo("Weekly report generated.")
+    typer.echo(f"HTML: {outputs.get('html') or outputs.get('latest_html')}")
+    typer.echo(f"JSON: {outputs.get('json') or outputs.get('latest_json')}")
+    typer.echo(f"State: {outputs['state']}")
+
+
 @impact_eval_app.command("report")
 def eval_impact_report(
     run_dir: Path = typer.Option(
@@ -773,6 +1008,47 @@ def record_reuse(
         "--observed-at",
         help="Optional explicit timestamp. Defaults to the current local time in ISO-8601 format.",
     ),
+    session_id: str | None = typer.Option(
+        None,
+        "--session-id",
+        help="Optional run/session identifier for this reuse observation.",
+    ),
+    source_session_id: str | None = typer.Option(
+        None,
+        "--source-session-id",
+        help="Optional session identifier for the run that created the reused memory.",
+    ),
+    source_task_id: str | None = typer.Option(
+        None,
+        "--source-task-id",
+        help="Optional task identifier for the run that created the reused memory.",
+    ),
+    consulted_order: int | None = typer.Option(
+        None,
+        "--consulted-order",
+        min=1,
+        help="Optional 1-based order in which this document was consulted during the task.",
+    ),
+    signal_status: str | None = typer.Option(
+        None,
+        "--signal-status",
+        help=f"Whether a diagnostic signal is candidate or confirmed. Choices: {', '.join(SIGNAL_STATUSES)}.",
+    ),
+    not_helpful_reason: str | None = typer.Option(
+        None,
+        "--not-helpful-reason",
+        help=f"Structured reason for a not_helpful signal. Choices: {', '.join(NOT_HELPFUL_REASONS)}.",
+    ),
+    resolved_by_doc_id: str | None = typer.Option(
+        None,
+        "--resolved-by-doc-id",
+        help="Optional doc_id that later resolved the task when this document only partially helped.",
+    ),
+    superseded_by_doc_id: str | None = typer.Option(
+        None,
+        "--superseded-by-doc-id",
+        help="Optional doc_id that made this document stale, noisy, or less useful.",
+    ),
     handle: str | None = typer.Option(
         None,
         "--handle",
@@ -795,6 +1071,14 @@ def record_reuse(
             saved_tokens=saved_tokens,
             saved_seconds=saved_seconds,
             observed_at=observed_at,
+            session_id=session_id,
+            source_session_id=source_session_id,
+            source_task_id=source_task_id,
+            consulted_order=consulted_order,
+            signal_status=signal_status,
+            not_helpful_reason=not_helpful_reason,
+            resolved_by_doc_id=resolved_by_doc_id,
+            superseded_by_doc_id=superseded_by_doc_id,
             handle=handle,
         )
     except RepoRootNotFoundError as exc:

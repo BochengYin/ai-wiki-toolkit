@@ -8,6 +8,7 @@ created_at: "2026-04-27T00:00:00+1000"
 updated_at: "2026-04-27T14:03:08+1000"
 promotion_candidate: true
 promotion_basis: "Second confirming signal: a separate agent independently framed ai-wiki-toolkit as a memory and workflow framework rather than an AI wiki folder."
+promotion_report: "ai-wiki/_toolkit/reports/promotion-candidates/latest.md"
 ---
 # Review Draft
 
