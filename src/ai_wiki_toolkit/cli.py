@@ -22,13 +22,72 @@ from ai_wiki_toolkit.diagnostics import (
 )
 from ai_wiki_toolkit.doctor import run_doctor
 from ai_wiki_toolkit.impact_eval import (
+    DEFAULT_PLAN_MODEL,
+    DEFAULT_PLAN_PROMPT_LEVELS,
+    DEFAULT_PLAN_REASONING_EFFORT,
+    DEFAULT_RUN_SCORE_POLICY,
+    DEFAULT_RUN_LABEL,
+    DEFAULT_SOURCE_MODE,
+    RUN_SCORE_POLICIES,
+    SCORE_LABELS,
+    capture_impact_eval_result,
+    draft_impact_eval_family_candidate,
+    discover_impact_eval_families,
+    discover_impact_eval_family_candidates,
+    generate_impact_eval_manifest,
     generate_impact_eval_report,
+    generate_impact_eval_schedule_report,
+    generate_impact_eval_run_plan,
     generate_impact_eval_summary,
+    init_impact_eval_family_from_candidate,
     load_impact_eval_run_dirs_from_file,
+    prepare_impact_eval_run,
+    render_impact_eval_benchmark_result,
+    render_impact_eval_benchmark_result_json,
+    render_impact_eval_candidate_draft_result,
+    render_impact_eval_candidate_draft_result_json,
+    render_impact_eval_candidate_promotion_result,
+    render_impact_eval_candidate_promotion_result_json,
+    render_impact_eval_candidate_queue,
+    render_impact_eval_candidate_queue_json,
+    render_impact_eval_capture_result,
+    render_impact_eval_capture_result_json,
+    render_impact_eval_families,
+    render_impact_eval_families_json,
+    render_impact_eval_family_candidates,
+    render_impact_eval_family_candidates_json,
+    render_impact_eval_family_detail,
+    render_impact_eval_family_detail_json,
+    render_impact_eval_family_init_result,
+    render_impact_eval_family_init_result_json,
+    render_impact_eval_manifest,
+    render_impact_eval_manifest_json,
+    render_impact_eval_prepare_result,
+    render_impact_eval_prepare_result_json,
     render_impact_eval_report,
     render_impact_eval_report_json,
+    render_impact_eval_run_plan,
+    render_impact_eval_run_plan_json,
+    render_impact_eval_run_result,
+    render_impact_eval_run_result_json,
+    render_impact_eval_schedule_report,
+    render_impact_eval_schedule_report_json,
+    render_impact_eval_schedule_run_result,
+    render_impact_eval_schedule_run_result_json,
+    render_impact_eval_score_result,
+    render_impact_eval_score_result_json,
     render_impact_eval_summary,
     render_impact_eval_summary_json,
+    render_impact_eval_validate_result,
+    render_impact_eval_validate_result_json,
+    run_impact_eval_benchmark,
+    run_impact_eval_schedule,
+    run_impact_eval,
+    score_impact_eval_result,
+    show_impact_eval_family,
+    promote_impact_eval_family_candidate,
+    refresh_impact_eval_candidate_queue,
+    validate_impact_eval_run,
 )
 from ai_wiki_toolkit.paths import (
     RepoRootNotFoundError,
@@ -81,7 +140,9 @@ work_app = typer.Typer(help="Record and report AI wiki work ledger state.")
 diagnose_app = typer.Typer(help="Generate AI wiki diagnostic reports.")
 consolidate_app = typer.Typer(help="Generate AI wiki draft consolidation queues.")
 eval_app = typer.Typer(help="Report AI wiki impact eval results.")
-impact_eval_app = typer.Typer(help="Summarize first-attempt impact eval metrics.")
+impact_eval_app = typer.Typer(help="Inspect and summarize impact eval artifacts.")
+impact_eval_family_app = typer.Typer(help="Discover and scaffold impact eval families.")
+impact_eval_schedule_app = typer.Typer(help="Run and report scheduled impact eval loops.")
 promote_app = typer.Typer(help="Mark handle-local promotion candidates from useful reuse evidence.")
 report_app = typer.Typer(help="Generate AI wiki local reports.")
 app.add_typer(work_app, name="work")
@@ -91,6 +152,8 @@ app.add_typer(eval_app, name="eval")
 app.add_typer(promote_app, name="promote")
 app.add_typer(report_app, name="report")
 eval_app.add_typer(impact_eval_app, name="impact")
+impact_eval_app.add_typer(impact_eval_family_app, name="family")
+impact_eval_app.add_typer(impact_eval_schedule_app, name="schedule")
 
 PROMPTED_IDENTITY_SOURCE = "prompted-handle"
 
@@ -824,6 +887,538 @@ def report_weekly(
     typer.echo(f"State: {outputs['state']}")
 
 
+@impact_eval_app.command("families")
+def eval_impact_families(
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root containing evals/impact/. Defaults to the current repo.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """List registered impact eval families and their readiness."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = discover_impact_eval_families(repo_root=repo_root)
+    except (FileNotFoundError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read impact eval family data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_impact_eval_families_json(result)
+        if normalized_format == "json"
+        else render_impact_eval_families(result)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_app.command("discover")
+def eval_impact_discover(
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root containing evals/impact/. Defaults to the current repo.",
+    ),
+    repo_wiki_dir: Path | None = typer.Option(
+        None,
+        "--repo-wiki-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="AI wiki directory to scan. Defaults to <repo-root>/ai-wiki.",
+    ),
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional handle filter for local telemetry.",
+    ),
+    since: str | None = typer.Option(
+        None,
+        "--since",
+        help="Optional ISO timestamp or duration such as 14d.",
+    ),
+    max_items: int = typer.Option(
+        DEFAULT_DIAGNOSTICS_MAX_ITEMS,
+        "--max-items",
+        min=1,
+        help="Maximum candidates to report.",
+    ),
+    include_not_ready: bool = typer.Option(
+        True,
+        "--include-not-ready/--ready-only",
+        help="Include weaker observed signals in the managed queue.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Refresh the managed impact eval candidate queue from trial/error evidence."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = refresh_impact_eval_candidate_queue(
+            repo_root=repo_root,
+            repo_wiki_dir=repo_wiki_dir,
+            handle=handle,
+            since=since,
+            max_items=max_items,
+            include_not_ready=include_not_ready,
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read impact eval discovery data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_impact_eval_candidate_queue_json(result)
+        if normalized_format == "json"
+        else render_impact_eval_candidate_queue(result)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_family_app.command("show")
+def eval_impact_family_show(
+    family: str = typer.Argument(..., help="Impact eval family name."),
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root containing evals/impact/. Defaults to the current repo.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Show one impact eval family's spec, prompts, rubric status, and next commands."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = show_impact_eval_family(family=family, repo_root=repo_root)
+    except (FileNotFoundError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read impact eval family data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_impact_eval_family_detail_json(result)
+        if normalized_format == "json"
+        else render_impact_eval_family_detail(result)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_family_app.command("candidates")
+def eval_impact_family_candidates(
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root containing evals/impact/. Defaults to the current repo.",
+    ),
+    repo_wiki_dir: Path | None = typer.Option(
+        None,
+        "--repo-wiki-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="AI wiki directory to scan. Defaults to <repo-root>/ai-wiki.",
+    ),
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional handle filter for local telemetry.",
+    ),
+    since: str | None = typer.Option(
+        None,
+        "--since",
+        help="Optional ISO timestamp or duration such as 14d.",
+    ),
+    max_items: int = typer.Option(
+        DEFAULT_DIAGNOSTICS_MAX_ITEMS,
+        "--max-items",
+        min=1,
+        help="Maximum candidates to report.",
+    ),
+    include_not_ready: bool = typer.Option(
+        False,
+        "--include-not-ready",
+        help="Include weaker missed/repeated issue signals that are not replay-ready.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Discover trial/error memory signals that may become future eval families."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = discover_impact_eval_family_candidates(
+            repo_root=repo_root,
+            repo_wiki_dir=repo_wiki_dir,
+            handle=handle,
+            since=since,
+            max_items=max_items,
+            include_not_ready=include_not_ready,
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read impact eval family candidate data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_impact_eval_family_candidates_json(result)
+        if normalized_format == "json"
+        else render_impact_eval_family_candidates(result)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_family_app.command("init")
+def eval_impact_family_init(
+    name: str = typer.Option(
+        ...,
+        "--name",
+        help="New impact eval family name.",
+    ),
+    from_candidate: str = typer.Option(
+        ...,
+        "--from-candidate",
+        help="Source candidate doc_id or task_id, such as problems/retry-loop.",
+    ),
+    baseline_ref: str = typer.Option(
+        ...,
+        "--baseline-ref",
+        help="Historical baseline ref to replay from.",
+    ),
+    historical_issue: str | None = typer.Option(
+        None,
+        "--historical-issue",
+        help="Optional historical issue summary for spec.toml.",
+    ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        help="Overwrite existing scaffold files.",
+    ),
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root containing evals/impact/. Defaults to the current repo.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Create a draft impact eval family scaffold from a trial/error candidate."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = init_impact_eval_family_from_candidate(
+            name=name,
+            from_candidate=from_candidate,
+            baseline_ref=baseline_ref,
+            historical_issue=historical_issue,
+            repo_root=repo_root,
+            force=force,
+        )
+    except (FileExistsError, FileNotFoundError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_impact_eval_family_init_result_json(result)
+        if normalized_format == "json"
+        else render_impact_eval_family_init_result(result)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_family_app.command("draft")
+def eval_impact_family_draft(
+    candidate: str = typer.Option(
+        ...,
+        "--candidate",
+        help="Candidate id, doc_id, task_id, or suggested family name from the managed queue.",
+    ),
+    family_name: str | None = typer.Option(
+        None,
+        "--family-name",
+        help="Optional formal family name to use in the managed draft.",
+    ),
+    baseline_ref: str | None = typer.Option(
+        None,
+        "--baseline-ref",
+        help="Optional baseline ref. Omit to leave the draft not ready for promotion.",
+    ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        help="Overwrite existing managed draft files.",
+    ),
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root containing evals/impact/. Defaults to the current repo.",
+    ),
+    repo_wiki_dir: Path | None = typer.Option(
+        None,
+        "--repo-wiki-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="AI wiki directory. Defaults to <repo-root>/ai-wiki.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Generate managed draft files for a candidate family without promoting them."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = draft_impact_eval_family_candidate(
+            candidate_id=candidate,
+            family_name=family_name,
+            baseline_ref=baseline_ref,
+            repo_root=repo_root,
+            repo_wiki_dir=repo_wiki_dir,
+            force=force,
+        )
+    except (FileExistsError, FileNotFoundError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read impact eval family candidate data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_impact_eval_candidate_draft_result_json(result)
+        if normalized_format == "json"
+        else render_impact_eval_candidate_draft_result(result)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_family_app.command("promote")
+def eval_impact_family_promote(
+    candidate: str = typer.Option(
+        ...,
+        "--candidate",
+        help="Candidate id, doc_id, task_id, or suggested family name from the managed queue.",
+    ),
+    family_name: str | None = typer.Option(
+        None,
+        "--family-name",
+        help="Optional formal family name to write.",
+    ),
+    baseline_ref: str | None = typer.Option(
+        None,
+        "--baseline-ref",
+        help="Optional baseline ref override.",
+    ),
+    apply: bool = typer.Option(
+        False,
+        "--apply",
+        help="Actually write formal evals/impact family files. Default is report-only.",
+    ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        help="Overwrite existing formal family files when applying.",
+    ),
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root containing evals/impact/. Defaults to the current repo.",
+    ),
+    repo_wiki_dir: Path | None = typer.Option(
+        None,
+        "--repo-wiki-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="AI wiki directory. Defaults to <repo-root>/ai-wiki.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Check or apply promotion from a managed candidate draft to a formal family."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = promote_impact_eval_family_candidate(
+            candidate_id=candidate,
+            family_name=family_name,
+            baseline_ref=baseline_ref,
+            repo_root=repo_root,
+            repo_wiki_dir=repo_wiki_dir,
+            apply=apply,
+            force=force,
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read impact eval family candidate data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_impact_eval_candidate_promotion_result_json(result)
+        if normalized_format == "json"
+        else render_impact_eval_candidate_promotion_result(result)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
 @impact_eval_app.command("report")
 def eval_impact_report(
     run_dir: Path = typer.Option(
@@ -865,6 +1460,1198 @@ def eval_impact_report(
         render_impact_eval_report_json(report)
         if normalized_format == "json"
         else render_impact_eval_report(report)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_app.command("manifest")
+def eval_impact_manifest(
+    run_dir: Path = typer.Option(
+        ...,
+        "--run-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Impact eval run directory containing metadata.json and captured result artifacts.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Describe a captured impact eval run identity and artifact inventory."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        manifest = generate_impact_eval_manifest(run_dir)
+    except FileNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read impact eval data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_impact_eval_manifest_json(manifest)
+        if normalized_format == "json"
+        else render_impact_eval_manifest(manifest)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_app.command("plan")
+def eval_impact_plan(
+    family: str = typer.Option(
+        ...,
+        "--family",
+        help="Impact eval family name under evals/impact/families/.",
+    ),
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root containing evals/impact/. Defaults to the current repo.",
+    ),
+    prompt_levels: list[str] | None = typer.Option(
+        None,
+        "--prompt-level",
+        help="Prompt level to include. Repeat for multiple levels. Defaults to original.",
+    ),
+    run_label: str = typer.Option(
+        DEFAULT_RUN_LABEL,
+        "--run-label",
+        help="Run label to use in the planned run directory.",
+    ),
+    workspace_root: Path | None = typer.Option(
+        None,
+        "--workspace-root",
+        help="Planned workspace root. Defaults to /private/tmp/aiwiki_first_round/<family>/workspaces/latest.",
+    ),
+    output_root: Path | None = typer.Option(
+        None,
+        "--output-root",
+        help="Planned run output root. Defaults to /private/tmp/aiwiki_first_round/<family>/runs.",
+    ),
+    model_family: str = typer.Option(
+        DEFAULT_PLAN_MODEL,
+        "--model-family",
+        help="Expected model family for the planned run.",
+    ),
+    reasoning_effort: str = typer.Option(
+        DEFAULT_PLAN_REASONING_EFFORT,
+        "--reasoning-effort",
+        help="Expected reasoning effort for the planned run.",
+    ),
+    source_mode: str = typer.Option(
+        DEFAULT_SOURCE_MODE,
+        "--source-mode",
+        help="Workspace source mode. Choices: committed-head, working-tree.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Plan an impact eval run without preparing workspaces or invoking an agent."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        plan = generate_impact_eval_run_plan(
+            family=family,
+            repo_root=repo_root,
+            prompt_levels=tuple(prompt_levels or DEFAULT_PLAN_PROMPT_LEVELS),
+            run_label=run_label,
+            workspace_root=workspace_root,
+            output_root=output_root,
+            model_family=model_family,
+            reasoning_effort=reasoning_effort,
+            source_mode=source_mode,
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_impact_eval_run_plan_json(plan)
+        if normalized_format == "json"
+        else render_impact_eval_run_plan(plan)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_app.command("prepare")
+def eval_impact_prepare(
+    family: str = typer.Option(
+        ...,
+        "--family",
+        help="Impact eval family name under evals/impact/families/.",
+    ),
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root containing evals/impact/. Defaults to the current repo.",
+    ),
+    prompt_levels: list[str] | None = typer.Option(
+        None,
+        "--prompt-level",
+        help="Prompt level to include. Repeat for multiple levels. Defaults to original.",
+    ),
+    run_label: str | None = typer.Option(
+        None,
+        "--run-label",
+        help="Run label to use in the prepared run directory. Defaults to a timestamp.",
+    ),
+    workspace_root: Path | None = typer.Option(
+        None,
+        "--workspace-root",
+        help="Workspace root to create. Defaults to /private/tmp/aiwiki_first_round/<family>/workspaces/<timestamp>.",
+    ),
+    output_root: Path | None = typer.Option(
+        None,
+        "--output-root",
+        help="Run output root. Defaults to /private/tmp/aiwiki_first_round/<family>/runs.",
+    ),
+    model_family: str = typer.Option(
+        DEFAULT_PLAN_MODEL,
+        "--model-family",
+        help="Expected model family for the prepared run.",
+    ),
+    reasoning_effort: str = typer.Option(
+        DEFAULT_PLAN_REASONING_EFFORT,
+        "--reasoning-effort",
+        help="Expected reasoning effort for the prepared run.",
+    ),
+    source_mode: str = typer.Option(
+        DEFAULT_SOURCE_MODE,
+        "--source-mode",
+        help="Workspace source mode. Choices: committed-head, working-tree.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Prepare impact eval workspaces and a run skeleton without invoking an agent."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = prepare_impact_eval_run(
+            family=family,
+            repo_root=repo_root,
+            prompt_levels=tuple(prompt_levels or DEFAULT_PLAN_PROMPT_LEVELS),
+            run_label=run_label,
+            workspace_root=workspace_root,
+            output_root=output_root,
+            model_family=model_family,
+            reasoning_effort=reasoning_effort,
+            source_mode=source_mode,
+        )
+    except (FileNotFoundError, RuntimeError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read impact eval data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_impact_eval_prepare_result_json(result)
+        if normalized_format == "json"
+        else render_impact_eval_prepare_result(result)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_app.command("run")
+def eval_impact_run(
+    run_dir: Path = typer.Option(
+        ...,
+        "--run-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Prepared impact eval run directory containing metadata.json.",
+    ),
+    slots: list[str] | None = typer.Option(
+        None,
+        "--slot",
+        help="Neutral slot to run, such as s01. Repeat for multiple slots.",
+    ),
+    all_slots: bool = typer.Option(
+        False,
+        "--all-slots",
+        help="Run all slots listed in metadata.json.",
+    ),
+    prompt_level: str | None = typer.Option(
+        None,
+        "--prompt-level",
+        help="Prompt level to run. Defaults to metadata prompt level or original.",
+    ),
+    codex_bin: str = typer.Option(
+        "codex",
+        "--codex-bin",
+        help="Codex CLI executable to invoke.",
+    ),
+    sleep_guard: bool = typer.Option(
+        True,
+        "--sleep-guard/--no-sleep-guard",
+        help="Use the run-level caffeinate guard where available.",
+    ),
+    export_sessions: bool = typer.Option(
+        True,
+        "--export-sessions/--skip-export-sessions",
+        help="Export matching Codex visible sessions after running slots.",
+    ),
+    validate_run_flag: bool = typer.Option(
+        True,
+        "--validate/--no-validate",
+        help="Validate exported session evidence and write confounds.json.",
+    ),
+    score_policy: str = typer.Option(
+        DEFAULT_RUN_SCORE_POLICY,
+        "--score-policy",
+        help=f"Automatic scoring policy. Choices: {', '.join(RUN_SCORE_POLICIES)}.",
+    ),
+    rubric_path: Path | None = typer.Option(
+        None,
+        "--rubric",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="Rubric JSON file for --score-policy rubric. Defaults to evals/impact/rubrics/<experiment>.json.",
+    ),
+    report: bool = typer.Option(
+        True,
+        "--report/--no-report",
+        help="Generate report and manifest bundle artifacts after the run.",
+    ),
+    bundle_dir: Path | None = typer.Option(
+        None,
+        "--bundle-dir",
+        help="Output directory for report bundle. Defaults to <run-dir>/report_bundle.",
+    ),
+    sessions_root: Path | None = typer.Option(
+        None,
+        "--sessions-root",
+        help="Codex sessions root. Defaults to ~/.codex/sessions.",
+    ),
+    session_index: Path | None = typer.Option(
+        None,
+        "--session-index",
+        help="Codex session index. Defaults to ~/.codex/session_index.jsonl.",
+    ),
+    match_workspace_root: Path | None = typer.Option(
+        None,
+        "--match-workspace-root",
+        help="Optional workspace root to match against Codex session cwd values.",
+    ),
+    export_all_sessions: bool = typer.Option(
+        False,
+        "--export-all-sessions",
+        help="Export every matching session instead of the latest session per slot.",
+    ),
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root containing evals/impact/. Defaults to the current repo.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Run impact eval slots with Codex CLI, capture artifacts, and produce a bundle."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = run_impact_eval(
+            run_dir=run_dir,
+            slots=tuple(slots or ()),
+            all_slots=all_slots,
+            prompt_level=prompt_level,
+            codex_bin=codex_bin,
+            sleep_guard=sleep_guard,
+            export_sessions=export_sessions,
+            validate=validate_run_flag,
+            score_policy=score_policy,
+            rubric_path=rubric_path,
+            report=report,
+            bundle_dir=bundle_dir,
+            sessions_root=sessions_root,
+            session_index=session_index,
+            match_workspace_root=match_workspace_root,
+            export_all_sessions=export_all_sessions,
+            repo_root=repo_root,
+        )
+    except (FileNotFoundError, RuntimeError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read impact eval data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_impact_eval_run_result_json(result)
+        if normalized_format == "json"
+        else render_impact_eval_run_result(result)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_app.command("benchmark")
+def eval_impact_benchmark(
+    family: str = typer.Option(
+        ...,
+        "--family",
+        help="Impact eval family name under evals/impact/families/.",
+    ),
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root containing evals/impact/. Defaults to the current repo.",
+    ),
+    prompt_levels: list[str] | None = typer.Option(
+        None,
+        "--prompt-level",
+        help="Prompt level to include. Repeat for multiple levels. Defaults to original.",
+    ),
+    run_label: str | None = typer.Option(
+        None,
+        "--run-label",
+        help="Run label to use in the prepared run directory. Defaults to a timestamp.",
+    ),
+    workspace_root: Path | None = typer.Option(
+        None,
+        "--workspace-root",
+        help="Workspace root to create. Defaults to /private/tmp/aiwiki_first_round/<family>/workspaces/<timestamp>.",
+    ),
+    output_root: Path | None = typer.Option(
+        None,
+        "--output-root",
+        help="Run output root. Defaults to /private/tmp/aiwiki_first_round/<family>/runs.",
+    ),
+    model_family: str = typer.Option(
+        DEFAULT_PLAN_MODEL,
+        "--model-family",
+        help="Expected model family for the prepared run.",
+    ),
+    reasoning_effort: str = typer.Option(
+        DEFAULT_PLAN_REASONING_EFFORT,
+        "--reasoning-effort",
+        help="Expected reasoning effort for the prepared run.",
+    ),
+    source_mode: str = typer.Option(
+        DEFAULT_SOURCE_MODE,
+        "--source-mode",
+        help="Workspace source mode. Choices: committed-head, working-tree.",
+    ),
+    codex_bin: str = typer.Option(
+        "codex",
+        "--codex-bin",
+        help="Codex CLI executable to invoke.",
+    ),
+    sleep_guard: bool = typer.Option(
+        True,
+        "--sleep-guard/--no-sleep-guard",
+        help="Use the run-level caffeinate guard where available.",
+    ),
+    export_sessions: bool = typer.Option(
+        True,
+        "--export-sessions/--skip-export-sessions",
+        help="Export matching Codex visible sessions after running slots.",
+    ),
+    validate_run_flag: bool = typer.Option(
+        True,
+        "--validate/--no-validate",
+        help="Validate exported session evidence and write confounds.json.",
+    ),
+    score_policy: str = typer.Option(
+        DEFAULT_RUN_SCORE_POLICY,
+        "--score-policy",
+        help=f"Automatic scoring policy. Choices: {', '.join(RUN_SCORE_POLICIES)}.",
+    ),
+    rubric_path: Path | None = typer.Option(
+        None,
+        "--rubric",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="Rubric JSON file for --score-policy rubric. Defaults to evals/impact/rubrics/<experiment>.json.",
+    ),
+    report: bool = typer.Option(
+        True,
+        "--report/--no-report",
+        help="Generate report and manifest bundle artifacts after the run.",
+    ),
+    bundle_dir: Path | None = typer.Option(
+        None,
+        "--bundle-dir",
+        help="Output directory for report bundle. Defaults to <run-dir>/report_bundle.",
+    ),
+    sessions_root: Path | None = typer.Option(
+        None,
+        "--sessions-root",
+        help="Codex sessions root. Defaults to ~/.codex/sessions.",
+    ),
+    session_index: Path | None = typer.Option(
+        None,
+        "--session-index",
+        help="Codex session index. Defaults to ~/.codex/session_index.jsonl.",
+    ),
+    match_workspace_root: Path | None = typer.Option(
+        None,
+        "--match-workspace-root",
+        help="Optional workspace root to match against Codex session cwd values.",
+    ),
+    export_all_sessions: bool = typer.Option(
+        False,
+        "--export-all-sessions",
+        help="Export every matching session instead of the latest session per slot.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Prepare and run a whole impact eval family in one command."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = run_impact_eval_benchmark(
+            family=family,
+            repo_root=repo_root,
+            prompt_levels=tuple(prompt_levels or DEFAULT_PLAN_PROMPT_LEVELS),
+            run_label=run_label,
+            workspace_root=workspace_root,
+            output_root=output_root,
+            model_family=model_family,
+            reasoning_effort=reasoning_effort,
+            source_mode=source_mode,
+            codex_bin=codex_bin,
+            sleep_guard=sleep_guard,
+            export_sessions=export_sessions,
+            validate=validate_run_flag,
+            score_policy=score_policy,
+            rubric_path=rubric_path,
+            report=report,
+            bundle_dir=bundle_dir,
+            sessions_root=sessions_root,
+            session_index=session_index,
+            match_workspace_root=match_workspace_root,
+            export_all_sessions=export_all_sessions,
+        )
+    except (FileNotFoundError, RuntimeError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read impact eval data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_impact_eval_benchmark_result_json(result)
+        if normalized_format == "json"
+        else render_impact_eval_benchmark_result(result)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_schedule_app.command("report")
+def eval_impact_schedule_report(
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root containing evals/impact/. Defaults to the current repo.",
+    ),
+    repo_wiki_dir: Path | None = typer.Option(
+        None,
+        "--repo-wiki-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="AI wiki directory. Defaults to <repo-root>/ai-wiki.",
+    ),
+    period_id: str | None = typer.Option(
+        None,
+        "--period-id",
+        help="Report period id. Defaults to the current ISO week, such as 2026-W21.",
+    ),
+    refresh_candidates: bool = typer.Option(
+        True,
+        "--refresh-candidates/--no-refresh-candidates",
+        help="Refresh the managed candidate queue before generating the report.",
+    ),
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional handle filter for candidate queue refresh.",
+    ),
+    since: str | None = typer.Option(
+        None,
+        "--since",
+        help="Optional ISO timestamp or duration such as 14d for candidate queue refresh.",
+    ),
+    candidate_max_items: int = typer.Option(
+        DEFAULT_DIAGNOSTICS_MAX_ITEMS,
+        "--candidate-max-items",
+        min=1,
+        help="Maximum candidates to refresh into the managed queue.",
+    ),
+    include_not_ready: bool = typer.Option(
+        True,
+        "--include-not-ready/--ready-only",
+        help="Include weaker observed signals in the refreshed candidate queue.",
+    ),
+    max_recent_runs: int = typer.Option(
+        20,
+        "--max-recent-runs",
+        min=1,
+        help="Maximum indexed benchmark runs to include.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Generate a periodic impact eval report from families, candidates, and run history."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = generate_impact_eval_schedule_report(
+            repo_root=repo_root,
+            repo_wiki_dir=repo_wiki_dir,
+            period_id=period_id,
+            refresh_candidates=refresh_candidates,
+            handle=handle,
+            since=since,
+            candidate_max_items=candidate_max_items,
+            include_not_ready=include_not_ready,
+            max_recent_runs=max_recent_runs,
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read impact eval schedule data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_impact_eval_schedule_report_json(result)
+        if normalized_format == "json"
+        else render_impact_eval_schedule_report(result)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_schedule_app.command("run")
+def eval_impact_schedule_run(
+    families: list[str] | None = typer.Option(
+        None,
+        "--family",
+        help="Runnable family to benchmark. Repeat for multiple families.",
+    ),
+    all_runnable: bool = typer.Option(
+        False,
+        "--all-runnable",
+        help="Benchmark every currently runnable family.",
+    ),
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root containing evals/impact/. Defaults to the current repo.",
+    ),
+    repo_wiki_dir: Path | None = typer.Option(
+        None,
+        "--repo-wiki-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="AI wiki directory. Defaults to <repo-root>/ai-wiki.",
+    ),
+    period_id: str | None = typer.Option(
+        None,
+        "--period-id",
+        help="Schedule period id. Defaults to the current ISO week, such as 2026-W21.",
+    ),
+    if_due: bool = typer.Option(
+        False,
+        "--if-due",
+        help="Skip running if this period already has a completed schedule run.",
+    ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        help="Run even when --if-due would otherwise skip this period.",
+    ),
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional handle filter for the post-run candidate queue refresh.",
+    ),
+    since: str | None = typer.Option(
+        None,
+        "--since",
+        help="Optional ISO timestamp or duration such as 14d for candidate queue refresh.",
+    ),
+    candidate_max_items: int = typer.Option(
+        DEFAULT_DIAGNOSTICS_MAX_ITEMS,
+        "--candidate-max-items",
+        min=1,
+        help="Maximum candidates to refresh into the managed queue after the run.",
+    ),
+    include_not_ready: bool = typer.Option(
+        True,
+        "--include-not-ready/--ready-only",
+        help="Include weaker observed signals in the refreshed candidate queue.",
+    ),
+    prompt_levels: list[str] | None = typer.Option(
+        None,
+        "--prompt-level",
+        help="Prompt level to include. Repeat for multiple levels. Defaults to original.",
+    ),
+    model_family: str = typer.Option(
+        DEFAULT_PLAN_MODEL,
+        "--model-family",
+        help="Expected model family for each prepared run.",
+    ),
+    reasoning_effort: str = typer.Option(
+        DEFAULT_PLAN_REASONING_EFFORT,
+        "--reasoning-effort",
+        help="Expected reasoning effort for each prepared run.",
+    ),
+    source_mode: str = typer.Option(
+        DEFAULT_SOURCE_MODE,
+        "--source-mode",
+        help="Workspace source mode. Choices: committed-head, working-tree.",
+    ),
+    codex_bin: str = typer.Option(
+        "codex",
+        "--codex-bin",
+        help="Codex CLI executable to invoke.",
+    ),
+    sleep_guard: bool = typer.Option(
+        True,
+        "--sleep-guard/--no-sleep-guard",
+        help="Use the run-level caffeinate guard where available.",
+    ),
+    export_sessions: bool = typer.Option(
+        True,
+        "--export-sessions/--skip-export-sessions",
+        help="Export matching Codex visible sessions after running slots.",
+    ),
+    validate_run_flag: bool = typer.Option(
+        True,
+        "--validate/--no-validate",
+        help="Validate exported session evidence and write confounds.json.",
+    ),
+    score_policy: str = typer.Option(
+        DEFAULT_RUN_SCORE_POLICY,
+        "--score-policy",
+        help=f"Automatic scoring policy. Choices: {', '.join(RUN_SCORE_POLICIES)}.",
+    ),
+    rubric_path: Path | None = typer.Option(
+        None,
+        "--rubric",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="Rubric JSON file for --score-policy rubric. Defaults by family when omitted.",
+    ),
+    sessions_root: Path | None = typer.Option(
+        None,
+        "--sessions-root",
+        help="Codex sessions root. Defaults to ~/.codex/sessions.",
+    ),
+    session_index: Path | None = typer.Option(
+        None,
+        "--session-index",
+        help="Codex session index. Defaults to ~/.codex/session_index.jsonl.",
+    ),
+    match_workspace_root: Path | None = typer.Option(
+        None,
+        "--match-workspace-root",
+        help="Optional workspace root to match against Codex session cwd values.",
+    ),
+    export_all_sessions: bool = typer.Option(
+        False,
+        "--export-all-sessions",
+        help="Export every matching session instead of the latest session per slot.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Run scheduled family benchmarks and update the trend/report store."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = run_impact_eval_schedule(
+            repo_root=repo_root,
+            repo_wiki_dir=repo_wiki_dir,
+            families=tuple(families or ()),
+            all_runnable=all_runnable,
+            period_id=period_id,
+            if_due=if_due,
+            force=force,
+            handle=handle,
+            since=since,
+            candidate_max_items=candidate_max_items,
+            include_not_ready=include_not_ready,
+            prompt_levels=tuple(prompt_levels or DEFAULT_PLAN_PROMPT_LEVELS),
+            model_family=model_family,
+            reasoning_effort=reasoning_effort,
+            source_mode=source_mode,
+            codex_bin=codex_bin,
+            sleep_guard=sleep_guard,
+            export_sessions=export_sessions,
+            validate=validate_run_flag,
+            score_policy=score_policy,
+            rubric_path=rubric_path,
+            sessions_root=sessions_root,
+            session_index=session_index,
+            match_workspace_root=match_workspace_root,
+            export_all_sessions=export_all_sessions,
+        )
+    except (FileNotFoundError, RuntimeError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read impact eval schedule data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_impact_eval_schedule_run_result_json(result)
+        if normalized_format == "json"
+        else render_impact_eval_schedule_run_result(result)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_app.command("capture")
+def eval_impact_capture(
+    run_dir: Path = typer.Option(
+        ...,
+        "--run-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Impact eval run directory containing metadata.json.",
+    ),
+    slot: str = typer.Option(
+        ...,
+        "--slot",
+        help="Neutral slot such as s01.",
+    ),
+    prompt_level: str = typer.Option(
+        "original",
+        "--prompt-level",
+        help="Prompt level such as original.",
+    ),
+    workspace: Path | None = typer.Option(
+        None,
+        "--workspace",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Workspace to capture. Defaults to the slot workspace from metadata.json.",
+    ),
+    variant: str | None = typer.Option(
+        None,
+        "--variant",
+        help="Semantic variant name. Defaults to the slot variant from metadata.json.",
+    ),
+    phase: str = typer.Option(
+        "first_pass",
+        "--phase",
+        help="Capture phase. Choices: first_pass, final.",
+    ),
+    final_message: Path | None = typer.Option(
+        None,
+        "--final-message",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="Optional saved final message markdown file to copy into the capture.",
+    ),
+    attempt: int = typer.Option(
+        1,
+        "--attempt",
+        min=1,
+        help="Attempt number for this saved result.",
+    ),
+    human_nudges: int = typer.Option(
+        0,
+        "--human-nudges",
+        min=0,
+        help="How many human nudges were needed.",
+    ),
+    first_pass_success: bool | None = typer.Option(
+        None,
+        "--first-pass-success/--first-pass-failure",
+        help="Mark whether the first attempt succeeded.",
+    ),
+    notes: str = typer.Option(
+        "",
+        "--notes",
+        help="Optional free-form notes for this result.",
+    ),
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root containing evals/impact/. Defaults to the current repo.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Capture first-pass or repaired impact eval artifacts from a local workspace."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = capture_impact_eval_result(
+            run_dir=run_dir,
+            slot=slot,
+            prompt_level=prompt_level,
+            workspace=workspace,
+            variant=variant,
+            phase=phase,
+            final_message=final_message,
+            attempt=attempt,
+            human_nudges=human_nudges,
+            first_pass_success=first_pass_success,
+            notes=notes,
+            repo_root=repo_root,
+        )
+    except (FileNotFoundError, RuntimeError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read impact eval data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_impact_eval_capture_result_json(result)
+        if normalized_format == "json"
+        else render_impact_eval_capture_result(result)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_app.command("validate")
+def eval_impact_validate(
+    run_dir: Path = typer.Option(
+        ...,
+        "--run-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Impact eval run directory containing metadata.json.",
+    ),
+    session_export_root: Path | None = typer.Option(
+        None,
+        "--session-export-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Codex session export root. Defaults to <workspace_root>/codex_sessions.",
+    ),
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root containing evals/impact/. Defaults to the current repo.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Validate session exports and confounds for a captured impact eval run."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = validate_impact_eval_run(
+            run_dir=run_dir,
+            session_export_root=session_export_root,
+            repo_root=repo_root,
+        )
+    except (FileNotFoundError, RuntimeError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read impact eval data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_impact_eval_validate_result_json(result)
+        if normalized_format == "json"
+        else render_impact_eval_validate_result(result)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_app.command("score")
+def eval_impact_score(
+    run_dir: Path = typer.Option(
+        ...,
+        "--run-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Impact eval run directory containing metadata.json.",
+    ),
+    slot: str = typer.Option(
+        ...,
+        "--slot",
+        help="Neutral slot such as s01.",
+    ),
+    prompt_level: str = typer.Option(
+        "original",
+        "--prompt-level",
+        help="Prompt level such as original.",
+    ),
+    label: str = typer.Option(
+        ...,
+        "--label",
+        help=f"Manual score label. Choices: {', '.join(SCORE_LABELS)}.",
+    ),
+    rubric_refs: list[str] | None = typer.Option(
+        None,
+        "--rubric-ref",
+        help="Repeatable rubric reference used for manual scoring.",
+    ),
+    evidence: list[str] | None = typer.Option(
+        None,
+        "--evidence",
+        help="Repeatable evidence artifact path used for scoring.",
+    ),
+    notes: str = typer.Option(
+        "",
+        "--notes",
+        help="Manual scoring notes.",
+    ),
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root containing evals/impact/. Defaults to the current repo.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Write a manual score artifact and refresh the run manifest."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = score_impact_eval_result(
+            run_dir=run_dir,
+            slot=slot,
+            prompt_level=prompt_level,
+            label=label,
+            rubric_refs=tuple(rubric_refs or ()),
+            evidence=tuple(evidence or ()),
+            notes=notes,
+            repo_root=repo_root,
+        )
+    except (FileNotFoundError, RuntimeError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read impact eval data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_impact_eval_score_result_json(result)
+        if normalized_format == "json"
+        else render_impact_eval_score_result(result)
     )
     if output is not None:
         output.parent.mkdir(parents=True, exist_ok=True)
