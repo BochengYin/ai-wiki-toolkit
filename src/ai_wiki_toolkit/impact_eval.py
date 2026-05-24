@@ -8,6 +8,7 @@ import hashlib
 import json
 from pathlib import Path
 import shlex
+import shutil
 import subprocess
 import sys
 import tomllib
@@ -2138,9 +2139,20 @@ def generate_impact_eval_run_plan(
     }
 
 
+def _python_script_executable() -> str:
+    executable_name = Path(sys.executable).name.lower()
+    if executable_name.startswith("python"):
+        return sys.executable
+    for candidate in ("python3", "python"):
+        executable = shutil.which(candidate)
+        if executable:
+            return executable
+    return sys.executable
+
+
 def _script_command(repo_root: Path, script_name: str, *args: object) -> list[str]:
     return [
-        sys.executable,
+        _python_script_executable(),
         str(repo_root / "evals" / "impact" / "scripts" / script_name),
         *(str(arg) for arg in args),
     ]
