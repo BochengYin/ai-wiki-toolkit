@@ -1766,7 +1766,9 @@ def test_capture_impact_eval_result_infers_slot_metadata_and_refreshes_manifest(
     assert result["schema_version"] == "impact-eval-capture-result-v1"
     assert result["variant"] == "no_aiwiki_workflow"
     assert result["workspace"].replace("\\", "/").endswith("/tmp/workspaces/slots/s01")
-    assert result["artifacts"]["result"].endswith("s01/original/first_pass/result.json")
+    assert result["artifacts"]["result"].replace("\\", "/").endswith(
+        "s01/original/first_pass/result.json"
+    )
     assert result["manifest"]["schema_version"] == "impact-eval-run-manifest-v1"
     assert (run_dir / "manifest.json").exists()
     assert calls[0][1].endswith("save_result.py")
