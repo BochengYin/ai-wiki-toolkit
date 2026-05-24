@@ -87,7 +87,12 @@ The archive contains a single executable:
    - after `Publish npm Package`, it installs `ai-wiki-toolkit@<version>` on `windows-11-arm` and runs `aiwiki-toolkit --version`
    - you can also run it manually with `workflow_dispatch` for any existing release tag
 10. For eval-product releases, install the published npm package locally and smoke-test the shipped
-    `eval impact report` command against a captured run:
+    `eval impact families`, `eval impact discover`, `eval impact family show`,
+    `eval impact family candidates`, `eval impact family init`, `eval impact family draft`,
+    `eval impact family promote`, `eval impact plan`, `eval impact prepare`,
+    `eval impact run`, `eval impact benchmark`, `eval impact schedule report`,
+    `eval impact schedule run`, `eval impact capture`, `eval impact validate`,
+    `eval impact score`, `eval impact manifest`, and `eval impact report` surfaces:
 
     ```bash
     npm install -g ai-wiki-toolkit@latest

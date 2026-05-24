@@ -463,20 +463,110 @@ This writes a static HTML review queue and JSON payload under `ai-wiki/_toolkit/
 To summarize first-attempt product impact from a captured eval run:
 
 ```bash
+aiwiki-toolkit eval impact families
+aiwiki-toolkit eval impact families --format json
+aiwiki-toolkit eval impact discover
+aiwiki-toolkit eval impact family show ownership_boundary
+aiwiki-toolkit eval impact family candidates
+aiwiki-toolkit eval impact family init --name retry_loop --from-candidate problems/retry-loop --baseline-ref HEAD^
+aiwiki-toolkit eval impact family draft --candidate problems_retry_loop --baseline-ref HEAD^
+aiwiki-toolkit eval impact family promote --candidate problems_retry_loop
+aiwiki-toolkit eval impact family promote --candidate problems_retry_loop --apply
+aiwiki-toolkit eval impact plan --family ownership_boundary
+aiwiki-toolkit eval impact plan --family ownership_boundary --format json
+aiwiki-toolkit eval impact prepare --family ownership_boundary
+aiwiki-toolkit eval impact prepare --family ownership_boundary --format json
+aiwiki-toolkit eval impact run --run-dir /path/to/eval-run --slot s01
+aiwiki-toolkit eval impact run --run-dir /path/to/eval-run --all-slots --score-policy command-exit
+aiwiki-toolkit eval impact run --run-dir /path/to/eval-run --all-slots --score-policy rubric --rubric evals/impact/rubrics/my-family.json
+aiwiki-toolkit eval impact benchmark --family ownership_boundary --score-policy command-exit
+aiwiki-toolkit eval impact schedule report --handle your-handle --candidate-max-items 25
+aiwiki-toolkit eval impact schedule run --family ownership_boundary --score-policy command-exit
+aiwiki-toolkit eval impact schedule run --all-runnable --if-due --score-policy rubric
+aiwiki-toolkit eval impact capture --run-dir /path/to/eval-run --slot s01 --prompt-level original --first-pass-success
+aiwiki-toolkit eval impact validate --run-dir /path/to/eval-run
+aiwiki-toolkit eval impact score --run-dir /path/to/eval-run --slot s01 --prompt-level original --label success
+aiwiki-toolkit eval impact manifest --run-dir /path/to/eval-run
+aiwiki-toolkit eval impact manifest --run-dir /path/to/eval-run --format json
 aiwiki-toolkit eval impact report --run-dir /path/to/eval-run
 aiwiki-toolkit eval impact report --run-dir /path/to/eval-run --format json
 aiwiki-toolkit eval impact summarize --run-dir /path/to/eval-run --run-dir /path/to/another-run
 aiwiki-toolkit eval impact summarize --runs-file evals/impact/runs.json
 ```
 
-This reads an existing run directory with `metadata.json`, result captures, optional
-`score.json` files, and optional `confounds.json`. It compares the run's primary variants,
-normally `no_aiwiki_workflow` versus `aiwiki_ambient_memory_workflow`, using first-attempt
-metrics only: `first_pass` captures count toward the signal, while `final` repair captures
-stay diagnostic. The command reports first-attempt success rate, average score, attempts, human
-nudges, changed files, untracked files, change-profile splits for project files versus AI wiki
-telemetry and user-owned wiki churn, and whether the run is ready for shareable causal claims.
-It does not run agents or mutate eval artifacts.
+Use `eval impact families` before running benchmarks. It discovers registered families from
+`evals/impact/families/*/spec.toml`, reports readiness, prompt and rubric presence, memory fixture
+counts, baseline refs, historical issues, and next commands. Use `eval impact family show <name>`
+for one family.
+
+Use `eval impact family candidates` to expose trial/error replay candidates from existing AI wiki
+telemetry. It layers over `diagnose memory --focus trial-error` and reports candidate readiness
+without writing user-owned AI wiki docs. Use `eval impact family init --from-candidate ...` only
+after confirming a source incident, baseline ref, prompt shape, and rubric direction; it creates a
+draft family scaffold under `evals/impact/`.
+
+Use `eval impact discover` for the continuous loop. It refreshes the managed candidate queue under
+`ai-wiki/_toolkit/evals/candidates/`, preserves first-seen/last-seen/seen-count state, and prints
+the next draft, promotion, and schedule commands. Use `eval impact family draft` to create managed
+candidate files under `ai-wiki/_toolkit/evals/drafts/<candidate>/` without registering a formal
+family. Use `eval impact family promote` as a report-only gate; add `--apply` only after the draft
+has a real baseline ref, prompt, and rubric and you want to write formal files under
+`evals/impact/`.
+
+Use `eval impact plan` to inspect the next run before creating workspaces or invoking agents. It
+reads `evals/impact/families/<family>/spec.toml` and prompt files, then reports the planned
+baseline ref, prompt hashes, workflow-primary variants, output paths, and script commands. The plan
+command does not mutate eval artifacts or call an agent.
+
+Use `eval impact prepare` to execute the planned setup only: it creates neutral slot workspaces,
+creates the run directory and metadata, and writes initial `manifest.json` and `manifest.md` files.
+It still does not call an agent.
+
+Use `eval impact run` to invoke Codex CLI against one neutral slot or all slots in an already
+prepared run. The command calls the repo-local slot runner, captures first-pass artifacts,
+optionally exports visible Codex sessions, validates confounds, applies an explicit score policy,
+and writes a report bundle under `<run-dir>/report_bundle/`. The default score policy is `none`.
+`--score-policy command-exit` is useful for smoke tests and execution-health automation, but it
+only scores Codex/save-result command completion; use manual or semantic scoring before making
+research-quality correctness claims.
+`--score-policy rubric` reads an `impact-eval-rubric-v1` JSON file, writes
+`rubric_judgment.json` next to each slot score, then writes the normal `score.json` artifact.
+Rubric criteria can inspect captured diffs, final messages, result fields, changed files, and
+untracked files.
+
+Use `eval impact benchmark` when you want one command to prepare a family and immediately run all
+slots. It wraps `prepare` plus `run`, then returns the prepared run directory, run result, validation
+status, scores, and report bundle.
+
+Use `eval impact schedule report` to generate a periodic benchmark dashboard under
+`ai-wiki/_toolkit/evals/reports/<period>/`. It combines registered families, the managed candidate
+queue, and the run index. Pass the same candidate filters you use for discovery, such as `--handle`,
+`--since`, and `--candidate-max-items`, so the scheduled report does not accidentally stale a
+larger queue with a narrower refresh. Use `eval impact schedule run --family <name>` or
+`--all-runnable` to run benchmarks, append `ai-wiki/_toolkit/evals/runs/index.json`, refresh the
+report, and record `ai-wiki/_toolkit/evals/schedule/state.json`. `--if-due` is intended for cron,
+launchd, or an agent workflow that should run at most once per period.
+
+Use `eval impact capture` after a manual first pass or repaired pass to save `result.json`, the
+workspace diff, status, head, and optional final-message artifact. It infers slot variant and
+workspace from `metadata.json` when possible. Use `eval impact validate` after exporting visible
+sessions to write `confounds.json`; missing exports are reported as critical confounds rather than
+silently accepted. Use `eval impact score` to write the manual `score.json` artifact for a slot.
+Each of these commands refreshes `manifest.json` and `manifest.md` so the run inventory stays
+current.
+
+The report and manifest commands read an existing run directory with `metadata.json`, result
+captures, optional `score.json` files, and optional `confounds.json`. The `eval impact report`
+command compares the run's primary variants, normally `no_aiwiki_workflow` versus
+`aiwiki_ambient_memory_workflow`, using first-attempt metrics only: `first_pass` captures count
+toward the signal, while `final` repair captures stay diagnostic. The command reports
+first-attempt success rate, average score, attempts, human nudges, changed files, untracked files,
+change-profile splits for project files versus AI wiki telemetry and user-owned wiki churn, and
+whether the run is ready for shareable causal claims. It does not run agents.
+
+Use `eval impact manifest` to audit run identity before interpreting scores. It reports the
+baseline ref, prompt hashes, model, reasoning effort, execution surface, slot-to-variant mapping,
+session export presence, confounds, and captured artifact paths.
 
 Use `eval impact summarize` to aggregate multiple captured runs into a product-level dashboard.
 It reports each family's primary outcome, product signal, shareability, success and score deltas,
