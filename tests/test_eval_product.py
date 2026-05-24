@@ -1765,7 +1765,7 @@ def test_capture_impact_eval_result_infers_slot_metadata_and_refreshes_manifest(
 
     assert result["schema_version"] == "impact-eval-capture-result-v1"
     assert result["variant"] == "no_aiwiki_workflow"
-    assert result["workspace"] == "/tmp/workspaces/slots/s01"
+    assert result["workspace"].replace("\\", "/").endswith("/tmp/workspaces/slots/s01")
     assert result["artifacts"]["result"].endswith("s01/original/first_pass/result.json")
     assert result["manifest"]["schema_version"] == "impact-eval-run-manifest-v1"
     assert (run_dir / "manifest.json").exists()
@@ -1861,7 +1861,7 @@ def test_score_impact_eval_result_executes_script_and_refreshes_manifest(
 
     assert result["schema_version"] == "impact-eval-score-result-v1"
     assert result["label"] == "partial"
-    assert result["score_path"].endswith("s01/original/score.json")
+    assert Path(result["score_path"]).parts[-3:] == ("s01", "original", "score.json")
     assert result["manifest"]["schema_version"] == "impact-eval-run-manifest-v1"
 
     rendered = render_impact_eval_score_result(result)
