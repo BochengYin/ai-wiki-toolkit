@@ -6,6 +6,7 @@ import subprocess
 
 from typer.testing import CliRunner
 
+import ai_wiki_toolkit.impact_eval as impact_eval
 from ai_wiki_toolkit.cli import app
 from ai_wiki_toolkit.impact_eval import (
     capture_impact_eval_result,
@@ -70,6 +71,29 @@ def _write_jsonl(path: Path, rows: list[dict]) -> None:
         "".join(json.dumps(row) + "\n" for row in rows),
         encoding="utf-8",
     )
+
+
+def test_script_command_uses_python_from_path_when_running_as_packaged_binary(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setattr(
+        impact_eval.sys,
+        "executable",
+        "/opt/homebrew/bin/aiwiki-toolkit",
+    )
+    monkeypatch.setattr(
+        impact_eval.shutil,
+        "which",
+        lambda name: "/usr/bin/python3" if name == "python3" else None,
+    )
+
+    command = impact_eval._script_command(tmp_path, "prepare_variants.py")
+
+    assert command[:2] == [
+        "/usr/bin/python3",
+        str(tmp_path / "evals" / "impact" / "scripts" / "prepare_variants.py"),
+    ]
 
 
 def _write_result(
