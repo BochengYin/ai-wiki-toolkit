@@ -243,6 +243,142 @@ def _note_text(payload: dict[str, Any]) -> str:
     return notes if isinstance(notes, str) else ""
 
 
+def _non_negative_int(value: object) -> int | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int) and value >= 0:
+        return value
+    if isinstance(value, float) and value >= 0:
+        return int(value)
+    return None
+
+
+def _source_incident_key(event: dict[str, Any], source_incident: dict[str, Any]) -> str:
+    source_session_id = _optional_string(event.get("source_session_id")) or _optional_string(
+        source_incident.get("session_id")
+    )
+    source_task_id = _optional_string(event.get("source_task_id"))
+    if source_session_id or source_task_id:
+        return f"{source_session_id or '-'}::{source_task_id or '-'}"
+    event_id = _optional_string(event.get("event_id"))
+    return f"event::{event_id or id(event)}"
+
+
+def _source_incident_item(event: dict[str, Any]) -> tuple[str, dict[str, Any]] | None:
+    source_incident = event.get("source_incident")
+    if not isinstance(source_incident, dict):
+        return None
+    active_seconds = _non_negative_int(source_incident.get("active_seconds"))
+    duration_ms = _non_negative_int(source_incident.get("duration_ms"))
+    if active_seconds is None:
+        if duration_ms is None:
+            return None
+        active_seconds = round(duration_ms / 1000)
+    if duration_ms is None:
+        duration_ms = active_seconds * 1000
+
+    item: dict[str, Any] = {
+        "active_seconds": active_seconds,
+        "duration_ms": duration_ms,
+        "event_ids": set(),
+        "timing_label": _optional_string(source_incident.get("timing_label"))
+        or "source active-turn estimate",
+        "timing_source": _optional_string(source_incident.get("timing_source")) or "unknown",
+    }
+    event_id = _optional_string(event.get("event_id"))
+    if event_id:
+        item["event_ids"].add(event_id)
+    for key in (
+        "source_session_id",
+        "source_task_id",
+    ):
+        value = _optional_string(event.get(key))
+        if value:
+            item[key] = value
+    session_id = _optional_string(source_incident.get("session_id"))
+    if session_id and "source_session_id" not in item:
+        item["source_session_id"] = session_id
+    for key in (
+        "included_events",
+        "note",
+        "session_file",
+        "task_complete_count",
+        "turn_aborted_count",
+    ):
+        value = source_incident.get(key)
+        if value not in (None, "", []):
+            item[key] = value
+    return _source_incident_key(event, source_incident), item
+
+
+def _merge_source_incident_timing(
+    timings: dict[str, dict[str, Any]], event: dict[str, Any]
+) -> None:
+    keyed_item = _source_incident_item(event)
+    if keyed_item is None:
+        return
+    key, item = keyed_item
+    existing = timings.get(key)
+    if existing is None:
+        timings[key] = item
+        return
+    event_ids = existing.setdefault("event_ids", set())
+    if isinstance(event_ids, set) and isinstance(item.get("event_ids"), set):
+        event_ids.update(item["event_ids"])
+    if item["active_seconds"] > existing.get("active_seconds", 0):
+        preserved_event_ids = existing.get("event_ids", set())
+        if isinstance(preserved_event_ids, set) and isinstance(item.get("event_ids"), set):
+            preserved_event_ids.update(item["event_ids"])
+        timings[key] = {**item, "event_ids": preserved_event_ids}
+
+
+def _source_incident_timing_summary(stats: dict[str, Any]) -> dict[str, Any]:
+    raw_sources = stats.get("source_incident_timings")
+    if not isinstance(raw_sources, dict) or not raw_sources:
+        return {
+            "active_seconds": 0,
+            "active_minutes": 0.0,
+            "evidence_count": 0,
+            "event_count": 0,
+            "sources": [],
+            "status": "not_recorded",
+        }
+
+    sources: list[dict[str, Any]] = []
+    for key, source in sorted(raw_sources.items()):
+        if not isinstance(source, dict):
+            continue
+        event_ids = source.get("event_ids")
+        rendered = {
+            name: value
+            for name, value in source.items()
+            if name != "event_ids" and value not in (None, "", [])
+        }
+        rendered["evidence_key"] = str(key)
+        rendered["event_ids"] = sorted(event_ids) if isinstance(event_ids, set) else []
+        sources.append(rendered)
+
+    active_seconds = sum(
+        source.get("active_seconds", 0)
+        for source in sources
+        if isinstance(source.get("active_seconds"), int)
+    )
+    event_ids = {
+        event_id
+        for source in sources
+        for event_id in source.get("event_ids", [])
+        if isinstance(event_id, str)
+    }
+    return {
+        "active_seconds": active_seconds,
+        "active_minutes": round(active_seconds / 60, 2),
+        "evidence_count": len(sources),
+        "event_count": len(event_ids),
+        "sources": sources,
+        "status": "measured" if active_seconds > 0 else "not_recorded",
+    }
+
+
 def _contains_any_keyword(text: str, keywords: tuple[str, ...]) -> bool:
     lowered = text.lower()
     return any(keyword in lowered for keyword in keywords)
@@ -290,6 +426,7 @@ def _aggregate_documents(
                 "resolved_by_doc_ids": set(),
                 "session_ids": set(),
                 "source_session_ids": set(),
+                "source_incident_timings": {},
                 "source_task_ids": set(),
                 "superseded_by_doc_ids": set(),
                 "tasks": set(),
@@ -322,6 +459,7 @@ def _aggregate_documents(
         saved_tokens, saved_seconds = _estimated_savings(event)
         stats["estimated_token_savings"] += saved_tokens
         stats["estimated_seconds_saved"] += saved_seconds
+        _merge_source_incident_timing(stats["source_incident_timings"], event)
         reuse_effects = event.get("reuse_effects")
         if isinstance(reuse_effects, list):
             for effect in reuse_effects:
@@ -439,6 +577,7 @@ def _doc_item(stats: dict[str, Any], reason: str) -> dict[str, Any]:
         "session_ids": sorted(stats["session_ids"]),
         "status": stats["status"],
         "source_session_ids": sorted(stats["source_session_ids"]),
+        "source_incident_timing": _source_incident_timing_summary(stats),
         "source_task_ids": sorted(stats["source_task_ids"]),
         "superseded_by_doc_ids": sorted(stats["superseded_by_doc_ids"]),
         "tasks": sorted(stats["tasks"]),
@@ -691,6 +830,11 @@ def _build_trial_error_section(
             "missed_or_repeated_issue_count": len(missed),
             "positive_evidence_count": len(positive),
             "replay_candidate_count": len(replay_candidates),
+            "replay_candidates_with_source_incident_timing": sum(
+                1
+                for item in replay_candidates
+                if item.get("source_incident_timing", {}).get("status") == "measured"
+            ),
             "tasks_with_trial_error_effect": len(tasks_with_trial_error_effect),
             "trial_error_signal_count": sum(
                 item["trial_error_signal_count"] for item in positive
@@ -967,6 +1111,28 @@ def _item_label(item: dict[str, Any]) -> str:
     return f"`{identifier}`"
 
 
+def _format_active_seconds(seconds: object) -> str:
+    if not isinstance(seconds, int):
+        return "not recorded"
+    minutes = seconds / 60
+    if minutes >= 1:
+        return f"{minutes:.1f} active mins"
+    return f"{seconds} active seconds"
+
+
+def _render_source_incident_timing(item: dict[str, Any]) -> str | None:
+    timing = item.get("source_incident_timing")
+    if not isinstance(timing, dict):
+        return None
+    if timing.get("status") != "measured":
+        return "not recorded"
+    evidence_count = timing.get("evidence_count", 0)
+    return (
+        f"{_format_active_seconds(timing.get('active_seconds'))} "
+        f"({evidence_count} source evidence; source active-turn estimate)"
+    )
+
+
 def _render_doc_section(title: str, items: list[dict[str, Any]]) -> list[str]:
     lines = [f"## {title}", ""]
     if not items:
@@ -1005,6 +1171,9 @@ def _render_doc_section(title: str, items: list[dict[str, Any]]) -> list[str]:
         if isinstance(effects, dict) and effects:
             rendered_effects = ", ".join(f"{effect}={count}" for effect, count in effects.items())
             lines.append(f"  - Effects: {rendered_effects}")
+        source_incident_timing = _render_source_incident_timing(item)
+        if source_incident_timing:
+            lines.append(f"  - Source incident timing: {source_incident_timing}")
         tasks = item.get("tasks")
         if isinstance(tasks, list) and tasks:
             lines.append(f"  - Tasks: {', '.join(f'`{task}`' for task in tasks[:5])}")
@@ -1046,6 +1215,9 @@ def _render_trial_error_item(item: dict[str, Any]) -> list[str]:
             "  - Evidence: "
             f"{item.get('resolved_events', 0)} resolved / {item.get('total_events', 0)} total events."
         )
+    source_incident_timing = _render_source_incident_timing(item)
+    if source_incident_timing:
+        lines.append(f"  - Source incident timing: {source_incident_timing}")
     tasks = item.get("tasks")
     if isinstance(tasks, list) and tasks:
         lines.append(f"  - Tasks: {', '.join(f'`{task}`' for task in tasks[:5])}")
@@ -1080,6 +1252,10 @@ def _render_trial_error_section(section: dict[str, Any]) -> list[str]:
         f"- Missed or repeated issue signals: {summary['missed_or_repeated_issue_count']}",
         f"- Unproven wiki-use tasks: {summary['unproven_wiki_use_count']}",
         f"- Replay candidates: {summary['replay_candidate_count']}",
+        (
+            "- Replay candidates with source incident timing: "
+            f"{summary.get('replay_candidates_with_source_incident_timing', 0)}"
+        ),
         "",
     ]
     lines.extend(_render_trial_error_subsection("Positive Evidence", section["positive_evidence"]))

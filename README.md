@@ -346,6 +346,37 @@ This appends to the user-owned `ai-wiki/metrics/reuse-events/<handle>.jsonl` sha
 
 For post-task diagnosis, reuse events can also carry optional provenance such as `--session-id`, `--source-session-id`, `--source-task-id`, `--consulted-order`, `--signal-status candidate`, `--not-helpful-reason superseded_by_later_doc`, `--resolved-by-doc-id`, and `--superseded-by-doc-id`. Candidate not-helpful signals are review hints; confirmed outcomes still require explicit human or agent judgment.
 
+When a reused memory came from a real earlier incident, record the original trial/error acquisition cost separately from `--saved-seconds`:
+
+```bash
+aiwiki-toolkit record-reuse \
+  --doc-id problems/retry-loop \
+  --task-id followup-using-memory \
+  --retrieval-mode lookup \
+  --evidence-mode explicit \
+  --reuse-outcome resolved \
+  --reuse-effect avoided_retry \
+  --source-task-id original-retry-loop \
+  --source-incident-seconds 780 \
+  --source-incident-source manual \
+  --source-incident-note "Failed attempt plus correction turn."
+```
+
+If the source incident was a local Codex session, `record-reuse` can derive the active-turn estimate from `task_complete.duration_ms` plus timed `turn_aborted.duration_ms` records:
+
+```bash
+aiwiki-toolkit record-reuse \
+  --doc-id problems/retry-loop \
+  --task-id followup-using-memory \
+  --retrieval-mode lookup \
+  --evidence-mode explicit \
+  --reuse-outcome resolved \
+  --source-session-id 019dcf06-example \
+  --source-incident-from-codex-session
+```
+
+Diagnostics and `eval impact discover` report this as `source_incident_timing`. Treat it as source active-turn context for research, not as exact human time saved or a formal no-AI-wiki baseline.
+
 Only record user-owned AI wiki knowledge docs with `record-reuse`.
 
 Managed control-plane docs under `_toolkit/**` should still be cited in user-facing notes when they affect behavior, but they should not be logged as knowledge-reuse events.

@@ -4,6 +4,13 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+## v0.1.37
+
+### Added
+
+- Added source incident timing evidence for trial/error diagnostics and impact-eval candidate discovery.
+- Added `record-reuse` options for manual source incident timing and local Codex session active-turn extraction.
+
 ### Fixed
 
 - Made optional Homebrew tap sync non-blocking after GitHub Release assets are uploaded, so stale tap credentials do not prevent npm publish recovery.
