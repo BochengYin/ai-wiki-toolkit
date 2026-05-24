@@ -659,6 +659,12 @@ def _write_retry_loop_evidence(repo_root: Path, *, handle: str = "alice") -> Pat
                 "reuse_outcome": "resolved",
                 "reuse_effects": ["avoided_retry"],
                 "schema_version": "reuse-v1",
+                "source_incident": {
+                    "active_seconds": 420,
+                    "duration_ms": 420000,
+                    "timing_label": "source active-turn estimate",
+                    "timing_source": "manual",
+                },
                 "source_task_id": "source-task",
                 "task_id": "task-retry",
             }
@@ -773,6 +779,12 @@ def test_discover_impact_eval_family_candidates_uses_trial_error_evidence(
                 "reuse_outcome": "resolved",
                 "reuse_effects": ["avoided_retry"],
                 "schema_version": "reuse-v1",
+                "source_incident": {
+                    "active_seconds": 420,
+                    "duration_ms": 420000,
+                    "timing_label": "source active-turn estimate",
+                    "timing_source": "manual",
+                },
                 "source_task_id": "source-task",
                 "task_id": "task-retry",
             }
@@ -792,8 +804,12 @@ def test_discover_impact_eval_family_candidates_uses_trial_error_evidence(
     assert candidate["status"] == "candidate"
     assert candidate["readiness"]["missing"] == ["baseline_ref", "prompt", "rubric"]
     assert candidate["evidence"]["trial_error_effects"] == {"avoided_retry": 1}
+    assert candidate["evidence"]["source_incident_timing"]["status"] == "measured"
+    assert candidate["evidence"]["source_incident_timing"]["active_seconds"] == 420
     assert "retry_loop" in candidate["candidate_id"]
-    assert "AI Wiki Impact Eval Family Candidates" in render_impact_eval_family_candidates(result)
+    rendered = render_impact_eval_family_candidates(result)
+    assert "AI Wiki Impact Eval Family Candidates" in rendered
+    assert "source_active_mins" in rendered
 
 
 def test_eval_impact_family_candidates_cli_outputs_json(tmp_path: Path) -> None:
@@ -866,6 +882,7 @@ def test_refresh_impact_eval_candidate_queue_accumulates_evidence(
     assert candidate["candidate_id"] == "problems_retry_loop"
     assert candidate["status"] == "candidate"
     assert candidate["seen_count"] == 2
+    assert candidate["evidence"]["source_incident_timing"]["active_seconds"] == 420
     assert candidate["next_commands"]["draft"][:5] == [
         "aiwiki-toolkit",
         "eval",
@@ -875,7 +892,9 @@ def test_refresh_impact_eval_candidate_queue_accumulates_evidence(
     ]
     assert Path(second["outputs"]["latest_json"]).exists()
     assert Path(second["outputs"]["latest_markdown"]).exists()
-    assert "AI Wiki Impact Eval Candidate Queue" in render_impact_eval_candidate_queue(second)
+    rendered = render_impact_eval_candidate_queue(second)
+    assert "AI Wiki Impact Eval Candidate Queue" in rendered
+    assert "source_active_mins" in rendered
 
 
 def test_eval_impact_discover_cli_outputs_managed_queue_json(tmp_path: Path) -> None:

@@ -103,6 +103,7 @@ from ai_wiki_toolkit.route import (
     render_route_packet_text,
 )
 from ai_wiki_toolkit.route_traces import record_route_trace
+from ai_wiki_toolkit.source_incidents import SOURCE_INCIDENT_TIMING_SOURCES
 from ai_wiki_toolkit.reuse_events import (
     EVIDENCE_MODES,
     NOT_HELPFUL_REASONS,
@@ -2790,6 +2791,42 @@ def record_reuse(
         min=0,
         help="Optional estimated seconds saved for this observation.",
     ),
+    source_incident_seconds: int | None = typer.Option(
+        None,
+        "--source-incident-seconds",
+        min=0,
+        help="Optional active seconds spent in the original source incident.",
+    ),
+    source_incident_timing_source: str = typer.Option(
+        "manual",
+        "--source-incident-source",
+        help=(
+            "Source of --source-incident-seconds. "
+            f"Choices: {', '.join(SOURCE_INCIDENT_TIMING_SOURCES)}."
+        ),
+    ),
+    source_incident_note: str | None = typer.Option(
+        None,
+        "--source-incident-note",
+        help="Optional note describing what the source incident timing includes.",
+    ),
+    source_incident_from_codex_session: bool = typer.Option(
+        False,
+        "--source-incident-from-codex-session/--no-source-incident-from-codex-session",
+        help=(
+            "Derive source incident active seconds from --source-session-id in "
+            "~/.codex/sessions."
+        ),
+    ),
+    codex_sessions_root: Path | None = typer.Option(
+        None,
+        "--codex-sessions-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Optional Codex sessions root for --source-incident-from-codex-session.",
+    ),
     observed_at: str | None = typer.Option(
         None,
         "--observed-at",
@@ -2857,6 +2894,11 @@ def record_reuse(
             notes=notes,
             saved_tokens=saved_tokens,
             saved_seconds=saved_seconds,
+            source_incident_seconds=source_incident_seconds,
+            source_incident_timing_source=source_incident_timing_source,
+            source_incident_note=source_incident_note,
+            source_incident_from_session=source_incident_from_codex_session,
+            codex_sessions_root=codex_sessions_root,
             observed_at=observed_at,
             session_id=session_id,
             source_session_id=source_session_id,

@@ -207,6 +207,12 @@ def test_record_reuse_appends_optional_diagnosis_provenance(
             "session-source",
             "--source-task-id",
             "task-source",
+            "--source-incident-seconds",
+            "780",
+            "--source-incident-source",
+            "manual",
+            "--source-incident-note",
+            "Original incident included one failed attempt and the correction turn.",
             "--consulted-order",
             "2",
             "--signal-status",
@@ -228,11 +234,102 @@ def test_record_reuse_appends_optional_diagnosis_provenance(
     assert event["session_id"] == "session-reuse"
     assert event["source_session_id"] == "session-source"
     assert event["source_task_id"] == "task-source"
+    assert event["source_incident"] == {
+        "active_seconds": 780,
+        "duration_ms": 780000,
+        "note": "Original incident included one failed attempt and the correction turn.",
+        "timing_label": "source active-turn estimate",
+        "timing_source": "manual",
+    }
     assert event["consulted_order"] == 2
     assert event["signal_status"] == "candidate"
     assert event["not_helpful_reason"] == "superseded_by_later_doc"
     assert event["resolved_by_doc_id"] == "problems/better-memory"
     assert event["superseded_by_doc_id"] == "conventions/newer-memory"
+
+
+def test_record_reuse_derives_source_incident_timing_from_codex_session(
+    repo_env: dict[str, Path],
+    tmp_path: Path,
+) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "alice"])
+    assert install_result.exit_code == 0
+
+    sessions_root = tmp_path / "codex-sessions"
+    session_dir = sessions_root / "2026" / "05" / "24"
+    session_dir.mkdir(parents=True)
+    session_path = session_dir / "rollout-2026-05-24T10-00-00-source-session.jsonl"
+    session_rows = [
+        {
+            "timestamp": "2026-05-24T00:00:00Z",
+            "type": "session_meta",
+            "payload": {"id": "source-session"},
+        },
+        {
+            "timestamp": "2026-05-24T00:01:00Z",
+            "type": "event_msg",
+            "payload": {
+                "type": "task_complete",
+                "turn_id": "turn-1",
+                "duration_ms": 120000,
+            },
+        },
+        {
+            "timestamp": "2026-05-24T00:03:00Z",
+            "type": "event_msg",
+            "payload": {
+                "type": "turn_aborted",
+                "turn_id": "turn-2",
+                "duration_ms": 30000,
+            },
+        },
+    ]
+    session_path.write_text(
+        "\n".join(json.dumps(row) for row in session_rows) + "\n",
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "record-reuse",
+            "--doc-id",
+            "problems/retry-loop",
+            "--task-id",
+            "task-diagnosis",
+            "--retrieval-mode",
+            "lookup",
+            "--evidence-mode",
+            "explicit",
+            "--reuse-outcome",
+            "resolved",
+            "--source-session-id",
+            "source-session",
+            "--source-incident-from-codex-session",
+            "--codex-sessions-root",
+            str(sessions_root),
+            "--source-incident-note",
+            "Computed from selected source incident turns.",
+            "--handle",
+            "alice",
+        ],
+    )
+
+    assert result.exit_code == 0
+    event_log_path = repo_env["repo"] / "ai-wiki" / "metrics" / "reuse-events" / "alice.jsonl"
+    event = json.loads(event_log_path.read_text(encoding="utf-8").splitlines()[0])
+    assert event["source_incident"] == {
+        "active_seconds": 150,
+        "duration_ms": 150000,
+        "included_events": ["task_complete", "turn_aborted"],
+        "note": "Computed from selected source incident turns.",
+        "session_file": session_path.name,
+        "session_id": "source-session",
+        "task_complete_count": 1,
+        "timing_label": "source active-turn estimate",
+        "timing_source": "codex_session",
+        "turn_aborted_count": 1,
+    }
 
 
 def test_record_reuse_rejects_managed_toolkit_docs(repo_env: dict[str, Path]) -> None:

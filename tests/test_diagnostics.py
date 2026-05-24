@@ -302,6 +302,15 @@ def test_diagnose_memory_trial_error_focus_reports_existing_evidence(
                 "reuse_effects": ["avoided_retry", "blocked_wrong_path"],
                 "reuse_outcome": "resolved",
                 "schema_version": "reuse-v1",
+                "source_incident": {
+                    "active_seconds": 540,
+                    "duration_ms": 540000,
+                    "note": "Original source incident included failed attempt plus fix.",
+                    "timing_label": "source active-turn estimate",
+                    "timing_source": "manual",
+                },
+                "source_session_id": "source-session",
+                "source_task_id": "source-task",
                 "task_id": "task-avoided-retry",
             },
             {
@@ -374,7 +383,13 @@ def test_diagnose_memory_trial_error_focus_reports_existing_evidence(
         "avoided_retry": 1,
         "blocked_wrong_path": 1,
     }
+    assert section["positive_evidence"][0]["source_incident_timing"]["status"] == "measured"
+    assert section["positive_evidence"][0]["source_incident_timing"]["active_seconds"] == 540
+    assert section["summary"]["replay_candidates_with_source_incident_timing"] == 1
     assert section["replay_candidates"][0]["doc_id"] == "problems/retry-loop"
+    assert section["replay_candidates"][0]["source_incident_timing"]["sources"][0][
+        "source_session_id"
+    ] == "source-session"
     assert section["unproven_wiki_use"][0]["task_id"] == "task-used-wiki"
     assert section["missed_or_repeated_issue_signals"][0]["task_id"] == "task-missed-memory"
 
@@ -383,6 +398,9 @@ def test_diagnose_memory_trial_error_focus_reports_existing_evidence(
     assert markdown_path.exists()
     assert json_path.exists()
     assert "AI Wiki Trial/Error Reduction Diagnostics" in markdown_path.read_text(
+        encoding="utf-8"
+    )
+    assert "Source incident timing: 9.0 active mins" in markdown_path.read_text(
         encoding="utf-8"
     )
 

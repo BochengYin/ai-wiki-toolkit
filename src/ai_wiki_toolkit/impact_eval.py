@@ -1252,6 +1252,17 @@ def discover_impact_eval_family_candidates(
                     "tasks": item.get("tasks", []),
                     "source_task_ids": item.get("source_task_ids", []),
                     "source_session_ids": item.get("source_session_ids", []),
+                    "source_incident_timing": item.get(
+                        "source_incident_timing",
+                        {
+                            "active_seconds": 0,
+                            "active_minutes": 0.0,
+                            "evidence_count": 0,
+                            "event_count": 0,
+                            "sources": [],
+                            "status": "not_recorded",
+                        },
+                    ),
                 },
                 "next_commands": {
                     "init": [
@@ -3645,12 +3656,31 @@ def _command_block(command: list[str]) -> str:
     return "```bash\n" + _command_text(command) + "\n```"
 
 
+def _source_incident_active_mins(value: object) -> str:
+    if not isinstance(value, dict):
+        return "not_recorded"
+    if value.get("status") != "measured":
+        return "not_recorded"
+    seconds = value.get("active_seconds")
+    if not isinstance(seconds, int):
+        return "not_recorded"
+    return f"{seconds / 60:.1f}"
+
+
+def _candidate_source_incident_active_mins(candidate: dict) -> str:
+    evidence = candidate.get("evidence")
+    if not isinstance(evidence, dict):
+        return "not_recorded"
+    return _source_incident_active_mins(evidence.get("source_incident_timing"))
+
+
 def render_impact_eval_candidate_queue(result: dict) -> str:
     rows = [
         [
             str(item.get("candidate_id", "")),
             str(item.get("status", "")),
             str(item.get("doc_id") or item.get("task_id") or ""),
+            _candidate_source_incident_active_mins(item),
             str(item.get("seen_count", "")),
             ", ".join(item.get("readiness", {}).get("missing", []))
             if isinstance(item.get("readiness"), dict)
@@ -3668,7 +3698,10 @@ def render_impact_eval_candidate_queue(result: dict) -> str:
         f"- Stale candidates: `{result.get('summary', {}).get('stale_count')}`",
         f"- Status counts: `{result.get('summary', {}).get('status_counts')}`",
         "",
-        _markdown_table(["candidate", "status", "source", "seen_count", "missing"], rows),
+        _markdown_table(
+            ["candidate", "status", "source", "source_active_mins", "seen_count", "missing"],
+            rows,
+        ),
         "",
     ]
     return "\n".join(lines)
@@ -3825,6 +3858,7 @@ def render_impact_eval_family_candidates(result: dict) -> str:
             str(candidate.get("candidate_id", "")),
             str(candidate.get("status", "")),
             str(candidate.get("doc_id") or candidate.get("task_id") or ""),
+            _candidate_source_incident_active_mins(candidate),
             ", ".join(candidate.get("readiness", {}).get("missing", [])),
         ]
         for candidate in result.get("candidates", [])
@@ -3837,7 +3871,10 @@ def render_impact_eval_family_candidates(result: dict) -> str:
         f"- Repo wiki: `{result.get('repo_wiki_dir')}`",
         f"- Candidates: `{result.get('summary', {}).get('candidate_count')}`",
         "",
-        _markdown_table(["candidate", "status", "source", "missing"], rows),
+        _markdown_table(
+            ["candidate", "status", "source", "source_active_mins", "missing"],
+            rows,
+        ),
         "",
         "Candidates are discovery hints. Create formal families only after confirming the source incident, baseline, prompt, and rubric.",
         "",

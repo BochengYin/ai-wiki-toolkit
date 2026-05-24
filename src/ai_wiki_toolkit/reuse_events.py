@@ -15,6 +15,10 @@ from ai_wiki_toolkit.paths import (
     resolve_model_name,
     resolve_user_handle,
 )
+from ai_wiki_toolkit.source_incidents import (
+    source_incident_from_codex_session,
+    source_incident_from_seconds,
+)
 from ai_wiki_toolkit.wiki_schema import (
     REUSE_SCHEMA_VERSION,
     infer_doc_kind,
@@ -130,6 +134,11 @@ def record_reuse_event(
     notes: str | None = None,
     saved_tokens: int | None = None,
     saved_seconds: int | None = None,
+    source_incident_seconds: int | None = None,
+    source_incident_timing_source: str = "manual",
+    source_incident_note: str | None = None,
+    source_incident_from_session: bool = False,
+    codex_sessions_root: Path | None = None,
     observed_at: str | None = None,
     session_id: str | None = None,
     source_session_id: str | None = None,
@@ -156,6 +165,12 @@ def record_reuse_event(
         raise ValueError("task_id must not be empty.")
     if consulted_order is not None and consulted_order < 1:
         raise ValueError("consulted_order must be 1 or greater.")
+    if source_incident_seconds is not None and source_incident_seconds < 0:
+        raise ValueError("source_incident_seconds must be 0 or greater.")
+    if source_incident_seconds is not None and source_incident_from_session:
+        raise ValueError(
+            "Use either source_incident_seconds or source_incident_from_session, not both."
+        )
     _validate_reuse_doc_id(normalized_doc_id)
 
     normalized_retrieval = _normalize_choice(retrieval_mode, RETRIEVAL_MODES, "retrieval mode")
@@ -207,6 +222,23 @@ def record_reuse_event(
         if saved_seconds is not None:
             estimated_savings["saved_seconds"] = saved_seconds
         payload["estimated_savings"] = estimated_savings
+    if source_incident_seconds is not None:
+        payload["source_incident"] = source_incident_from_seconds(
+            active_seconds=source_incident_seconds,
+            timing_source=source_incident_timing_source,
+            note=source_incident_note,
+        )
+    elif source_incident_from_session:
+        normalized_source_session_id = _normalize_optional_text(source_session_id)
+        if normalized_source_session_id is None:
+            raise ValueError(
+                "source_session_id is required when source_incident_from_session is enabled."
+            )
+        payload["source_incident"] = source_incident_from_codex_session(
+            session_id=normalized_source_session_id,
+            sessions_root=codex_sessions_root,
+            note=source_incident_note,
+        )
     if _normalize_optional_text(session_id):
         payload["session_id"] = _normalize_optional_text(session_id)
     if _normalize_optional_text(source_session_id):
