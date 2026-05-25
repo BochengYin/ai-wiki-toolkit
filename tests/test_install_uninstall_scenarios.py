@@ -73,6 +73,11 @@ def test_install_command_matches_init_behavior(repo_env: dict[str, Path]) -> Non
         "Recommendation: configure git user.name and git user.email for stable handle resolution."
         in result.output
     )
+    assert (
+        "Recommendation: if your agent runner supports post-turn hooks, configure it to run "
+        "`aiwiki-toolkit source-incident capture-post-turn --apply`."
+        in result.output
+    )
 
 
 def test_install_tolerates_duplicate_options_in_git_config(

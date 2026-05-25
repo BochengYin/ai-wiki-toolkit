@@ -22,6 +22,7 @@ from ai_wiki_toolkit.gitignore import (
     telemetry_untrack_command,
 )
 from ai_wiki_toolkit.paths import ToolkitPaths, build_paths, existing_prompt_targets, resolve_user_handle
+from ai_wiki_toolkit.source_incidents import load_source_incident_events
 
 _NORMALIZE_TOKEN_RE = re.compile(r"[^a-z0-9]+")
 _LIST_MARKER_RE = re.compile(r"^(?:[-*+]\s+|\d+\.\s+)")
@@ -742,6 +743,62 @@ def _check_tracked_telemetry(result: DoctorResult) -> None:
     )
 
 
+def _check_post_turn_capture_evidence(result: DoctorResult) -> None:
+    display_path = f"ai-wiki/metrics/source-incidents/{result.resolved_handle}.jsonl"
+    event_log = result.paths.repo_wiki_dir / "metrics" / "source-incidents" / f"{result.resolved_handle}.jsonl"
+    events, skipped_lines = load_source_incident_events(event_log)
+    post_turn_events = [
+        event for event in events if event.get("source_kind") == "writeback_post_turn_capture"
+    ]
+    if post_turn_events:
+        _add_finding(
+            result,
+            severity="OK",
+            code="post_turn_capture_evidence_present",
+            path=display_path,
+            message=(
+                "Post-turn source incident capture has recorded evidence for this handle "
+                f"({len(post_turn_events)} event(s))."
+            ),
+        )
+        return
+
+    if events:
+        _add_finding(
+            result,
+            severity="INFO",
+            code="post_turn_capture_no_post_turn_events",
+            path=display_path,
+            message=(
+                "Source incident evidence exists for this handle, but no post-turn capture events "
+                "have been recorded yet."
+            ),
+            suggested_fix=(
+                "If your agent runner supports post-turn hooks, configure it to run "
+                "`aiwiki-toolkit source-incident capture-post-turn --apply`."
+            ),
+        )
+        return
+
+    message = (
+        "No post-turn source incident capture evidence is recorded yet. This is opt-in and is not "
+        "enabled automatically by package install."
+    )
+    if skipped_lines:
+        message += f" Skipped unreadable source incident lines: {skipped_lines}."
+    _add_finding(
+        result,
+        severity="INFO",
+        code="post_turn_capture_not_configured",
+        path=display_path,
+        message=message,
+        suggested_fix=(
+            "If your agent runner supports post-turn hooks, configure it to run "
+            "`aiwiki-toolkit source-incident capture-post-turn --apply`."
+        ),
+    )
+
+
 def _check_prompt_targets(result: DoctorResult) -> None:
     prompt_targets = existing_prompt_targets(result.paths.repo_root)
     if not prompt_targets:
@@ -838,6 +895,7 @@ def run_doctor(start: Path | None = None, handle: str | None = None) -> DoctorRe
     )
     _check_gitignore(result)
     _check_tracked_telemetry(result)
+    _check_post_turn_capture_evidence(result)
     _check_repo_index(result)
     _check_repo_workflows(result, starters)
     _check_child_index(

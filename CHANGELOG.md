@@ -4,6 +4,13 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+## v0.1.38
+
+### Added
+
+- Added install and doctor guidance for opt-in post-turn source incident capture.
+- Added doctor evidence reporting for post-turn capture events without failing strict mode when the hook is not configured.
+
 ## v0.1.37
 
 ### Added
