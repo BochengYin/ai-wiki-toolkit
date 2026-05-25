@@ -4,8 +4,10 @@ author_handle: "bochengyin"
 model: "gpt-5"
 source_kind: "release"
 status: "draft"
+promotion_candidate: true
+promotion_basis: "Observed again during v0.1.38: Homebrew tap checkout still returned Bad credentials, but release assets uploaded and npm publishing completed because tap sync is non-blocking."
 created_at: "2026-05-20T23:50:00+10:00"
-updated_at: "2026-05-20T23:50:00+10:00"
+updated_at: "2026-05-25T22:29:46+10:00"
 ---
 # Release Assets Should Not Be Blocked By Homebrew Tap Sync
 
@@ -14,6 +16,8 @@ updated_at: "2026-05-20T23:50:00+10:00"
 During the `v0.1.32` release, all platform build jobs and Linux runtime matrix checks passed, but `Release Binaries` failed in `Publish GitHub Release assets`.
 
 The failure happened after the release was created but before assets were uploaded because the workflow tried to check out `BochengYin/homebrew-tap` with `HOMEBREW_TAP_PAT`, and GitHub returned `Bad credentials`.
+
+During the `v0.1.38` release, the same Homebrew tap credential problem appeared again, but only as a warning after release asset upload. The GitHub Release assets, npm publish workflow, and Windows ARM smoke check all completed successfully.
 
 ## Lesson
 
