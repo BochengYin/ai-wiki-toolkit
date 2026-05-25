@@ -11,6 +11,7 @@ from typing import Any
 
 from ai_wiki_toolkit.frontmatter import parse_frontmatter
 from ai_wiki_toolkit.route_traces import load_route_traces
+from ai_wiki_toolkit.source_incidents import load_source_incident_events
 from ai_wiki_toolkit.wiki_schema import (
     doc_id_for_relative_path,
     infer_doc_kind,
@@ -123,6 +124,16 @@ def _load_repo_route_traces(repo_wiki_dir: Path) -> tuple[list[dict[str, Any]], 
     return legacy_traces + sharded_traces, legacy_skipped + sharded_skipped
 
 
+def _load_repo_source_incidents(repo_wiki_dir: Path) -> tuple[list[dict[str, Any]], int]:
+    legacy_events, legacy_skipped = load_source_incident_events(
+        repo_wiki_dir / "metrics" / "source-incidents.jsonl"
+    )
+    sharded_events, sharded_skipped = load_source_incident_events(
+        repo_wiki_dir / "metrics" / "source-incidents"
+    )
+    return legacy_events + sharded_events, legacy_skipped + sharded_skipped
+
+
 def _document_title(metadata: dict[str, Any], body: str, path: Path) -> str:
     title = metadata.get("title")
     if isinstance(title, str) and title.strip():
@@ -219,6 +230,21 @@ def _filter_route_traces(
     return filtered
 
 
+def _filter_source_incidents(
+    events: list[dict[str, Any]], *, handle: str | None
+) -> list[dict[str, Any]]:
+    normalized_handle = _normalize_handle_filter(handle)
+    filtered: list[dict[str, Any]] = []
+    for event in events:
+        if normalized_handle and event.get("author_handle") != normalized_handle:
+            continue
+        doc_id = _normalize_doc_id(event.get("doc_id"))
+        if doc_id is None:
+            continue
+        filtered.append(event | {"doc_id": doc_id})
+    return filtered
+
+
 def _estimated_savings(event: dict[str, Any]) -> tuple[int, int]:
     estimates = event.get("estimated_savings")
     if not isinstance(estimates, dict):
@@ -301,9 +327,15 @@ def _source_incident_item(event: dict[str, Any]) -> tuple[str, dict[str, Any]] |
     for key in (
         "included_events",
         "note",
+        "policy",
         "session_file",
+        "session_relpath",
+        "source_kind",
+        "source_task_start_timestamp",
         "task_complete_count",
         "turn_aborted_count",
+        "cutoff_timestamp",
+        "cutoff_turn_id",
     ):
         value = source_incident.get(key)
         if value not in (None, "", []):
@@ -396,6 +428,41 @@ def _last_timestamp(current: str | None, candidate: object) -> str | None:
     return candidate if parsed_candidate >= parsed_current else current
 
 
+def _document_stats_template(
+    doc_id: str, metadata: dict[str, Any], *, doc_kind: object = None
+) -> dict[str, Any]:
+    return {
+        "doc_id": doc_id,
+        "doc_kind": doc_kind or metadata.get("doc_kind") or infer_doc_kind(f"{doc_id}.md"),
+        "candidate_not_helpful_events": 0,
+        "confirmed_not_helpful_events": 0,
+        "path": metadata.get("path"),
+        "status": metadata.get("status"),
+        "title": metadata.get("title") or doc_id,
+        "total_events": 0,
+        "resolved_events": 0,
+        "partial_events": 0,
+        "not_helpful_events": 0,
+        "not_helpful_reasons": Counter(),
+        "lookup_reuse_count": 0,
+        "preloaded_reuse_count": 0,
+        "estimated_token_savings": 0,
+        "estimated_seconds_saved": 0,
+        "reuse_effects": Counter(),
+        "resolved_by_doc_ids": set(),
+        "session_ids": set(),
+        "source_session_ids": set(),
+        "source_incident_timings": {},
+        "source_task_ids": set(),
+        "superseded_by_doc_ids": set(),
+        "tasks": set(),
+        "last_observed_at": None,
+        "stale_note_count": 0,
+        "conflict_note_count": 0,
+        "missed_note_count": 0,
+    }
+
+
 def _aggregate_documents(
     events: list[dict[str, Any]], document_metadata: dict[str, dict[str, Any]]
 ) -> dict[str, dict[str, Any]]:
@@ -405,36 +472,7 @@ def _aggregate_documents(
         metadata = document_metadata.get(doc_id, {})
         stats = documents.setdefault(
             doc_id,
-            {
-                "doc_id": doc_id,
-                "doc_kind": event.get("doc_kind") or metadata.get("doc_kind") or infer_doc_kind(f"{doc_id}.md"),
-                "candidate_not_helpful_events": 0,
-                "confirmed_not_helpful_events": 0,
-                "path": metadata.get("path"),
-                "status": metadata.get("status"),
-                "title": metadata.get("title") or doc_id,
-                "total_events": 0,
-                "resolved_events": 0,
-                "partial_events": 0,
-                "not_helpful_events": 0,
-                "not_helpful_reasons": Counter(),
-                "lookup_reuse_count": 0,
-                "preloaded_reuse_count": 0,
-                "estimated_token_savings": 0,
-                "estimated_seconds_saved": 0,
-                "reuse_effects": Counter(),
-                "resolved_by_doc_ids": set(),
-                "session_ids": set(),
-                "source_session_ids": set(),
-                "source_incident_timings": {},
-                "source_task_ids": set(),
-                "superseded_by_doc_ids": set(),
-                "tasks": set(),
-                "last_observed_at": None,
-                "stale_note_count": 0,
-                "conflict_note_count": 0,
-                "missed_note_count": 0,
-            },
+            _document_stats_template(doc_id, metadata, doc_kind=event.get("doc_kind")),
         )
         stats["total_events"] += 1
         outcome = event.get("reuse_outcome")
@@ -487,6 +525,69 @@ def _aggregate_documents(
         if _contains_any_keyword(notes, MISSED_MEMORY_KEYWORDS):
             stats["missed_note_count"] += 1
     return documents
+
+
+def _source_incident_reuse_event(event: dict[str, Any]) -> dict[str, Any] | None:
+    active_seconds = _non_negative_int(event.get("active_seconds"))
+    duration_ms = _non_negative_int(event.get("duration_ms"))
+    if active_seconds is None:
+        if duration_ms is None:
+            return None
+        active_seconds = round(duration_ms / 1000)
+    if duration_ms is None:
+        duration_ms = active_seconds * 1000
+
+    source_incident: dict[str, Any] = {
+        "active_seconds": active_seconds,
+        "duration_ms": duration_ms,
+        "timing_label": _optional_string(event.get("timing_label"))
+        or "source active-turn estimate",
+        "timing_source": _optional_string(event.get("timing_source")) or "unknown",
+    }
+    for key in (
+        "included_events",
+        "note",
+        "policy",
+        "session_file",
+        "session_relpath",
+        "source_kind",
+        "source_task_start_timestamp",
+        "task_complete_count",
+        "turn_aborted_count",
+        "cutoff_timestamp",
+        "cutoff_turn_id",
+    ):
+        value = event.get(key)
+        if value not in (None, "", []):
+            source_incident[key] = value
+    session_id = _optional_string(event.get("session_id"))
+    if session_id:
+        source_incident["session_id"] = session_id
+    evidence_id = _optional_string(event.get("evidence_id"))
+    return {
+        "event_id": evidence_id,
+        "doc_id": event["doc_id"],
+        "source_session_id": session_id,
+        "source_incident": source_incident,
+    }
+
+
+def _attach_source_incident_events(
+    documents: dict[str, dict[str, Any]],
+    source_incidents: list[dict[str, Any]],
+    document_metadata: dict[str, dict[str, Any]],
+) -> None:
+    for event in source_incidents:
+        doc_id = event["doc_id"]
+        metadata = document_metadata.get(doc_id, {})
+        stats = documents.setdefault(doc_id, _document_stats_template(doc_id, metadata))
+        pseudo_event = _source_incident_reuse_event(event)
+        if pseudo_event is None:
+            continue
+        _merge_source_incident_timing(stats["source_incident_timings"], pseudo_event)
+        source_session_id = _optional_string(event.get("session_id"))
+        if source_session_id:
+            stats["source_session_ids"].add(source_session_id)
 
 
 def _aggregate_tasks(
@@ -1017,11 +1118,14 @@ def build_memory_diagnostics_report(
     all_events, skipped_event_lines = _load_repo_reuse_events(repo_wiki_dir)
     all_checks, skipped_check_lines = _load_repo_task_checks(repo_wiki_dir)
     all_traces, skipped_trace_lines = _load_repo_route_traces(repo_wiki_dir)
+    all_source_incidents, skipped_source_incident_lines = _load_repo_source_incidents(repo_wiki_dir)
     events = _filter_reuse_events(all_events, handle=handle, since=since_cutoff)
     checks = _filter_task_checks(all_checks, handle=handle, since=since_cutoff)
     traces = _filter_route_traces(all_traces, handle=handle, since=since_cutoff)
+    source_incidents = _filter_source_incidents(all_source_incidents, handle=handle)
     document_metadata = _load_document_metadata(repo_wiki_dir)
     documents = _aggregate_documents(events, document_metadata)
+    _attach_source_incident_events(documents, source_incidents, document_metadata)
     tasks = _aggregate_tasks(events, checks)
 
     checked_tasks = sum(1 for task in tasks.values() if task["check_count"] > 0)
@@ -1050,11 +1154,13 @@ def build_memory_diagnostics_report(
         "summary": {
             "checked_tasks": checked_tasks,
             "coverage_gap_count": len(all_coverage_gaps),
-            "documents_with_reuse": len(documents),
+            "documents_with_reuse": sum(1 for stats in documents.values() if stats["total_events"] > 0),
             "reuse_events": len(events),
             "skipped_check_lines": skipped_check_lines,
             "skipped_event_lines": skipped_event_lines,
+            "skipped_source_incident_lines": skipped_source_incident_lines,
             "skipped_trace_lines": skipped_trace_lines,
+            "source_incident_events": len(source_incidents),
             "task_checks": len(checks),
             "tasks_with_wiki_use": tasks_with_wiki_use,
             "tasks_without_wiki_use": tasks_without_wiki_use,
@@ -1377,12 +1483,14 @@ def render_memory_diagnostics_markdown(
             "## Summary",
             "",
             f"- Reuse events: {summary['reuse_events']}",
+            f"- Source incident events: {summary.get('source_incident_events', 0)}",
             f"- Task checks: {summary['task_checks']}",
             f"- Route traces: {summary['route_traces']}",
             f"- Checked tasks: {summary['checked_tasks']}",
             f"- Documents with reuse: {summary['documents_with_reuse']}",
             f"- Coverage gaps: {summary['coverage_gap_count']}",
             f"- Skipped event lines: {summary['skipped_event_lines']}",
+            f"- Skipped source incident lines: {summary.get('skipped_source_incident_lines', 0)}",
             f"- Skipped check lines: {summary['skipped_check_lines']}",
             f"- Skipped trace lines: {summary['skipped_trace_lines']}",
             "",

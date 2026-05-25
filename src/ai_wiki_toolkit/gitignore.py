@@ -44,6 +44,7 @@ def telemetry_untrack_command() -> str:
         ".env.aiwiki",
         "ai-wiki/metrics/reuse-events",
         "ai-wiki/metrics/route-traces",
+        "ai-wiki/metrics/source-incidents",
         "ai-wiki/metrics/task-checks",
         "ai-wiki/_toolkit/consolidation",
         "ai-wiki/_toolkit/diagnostics",

@@ -103,7 +103,13 @@ from ai_wiki_toolkit.route import (
     render_route_packet_text,
 )
 from ai_wiki_toolkit.route_traces import record_route_trace
-from ai_wiki_toolkit.source_incidents import SOURCE_INCIDENT_TIMING_SOURCES
+from ai_wiki_toolkit.source_incidents import (
+    SOURCE_INCIDENT_TIMING_SOURCES,
+    backfill_writeback_source_incidents,
+    capture_post_turn_source_incidents,
+    render_source_incident_backfill_json,
+    render_source_incident_backfill_text,
+)
 from ai_wiki_toolkit.reuse_events import (
     EVIDENCE_MODES,
     NOT_HELPFUL_REASONS,
@@ -146,12 +152,14 @@ impact_eval_family_app = typer.Typer(help="Discover and scaffold impact eval fam
 impact_eval_schedule_app = typer.Typer(help="Run and report scheduled impact eval loops.")
 promote_app = typer.Typer(help="Mark handle-local promotion candidates from useful reuse evidence.")
 report_app = typer.Typer(help="Generate AI wiki local reports.")
+source_incident_app = typer.Typer(help="Backfill and inspect source incident timing evidence.")
 app.add_typer(work_app, name="work")
 app.add_typer(diagnose_app, name="diagnose")
 app.add_typer(consolidate_app, name="consolidate")
 app.add_typer(eval_app, name="eval")
 app.add_typer(promote_app, name="promote")
 app.add_typer(report_app, name="report")
+app.add_typer(source_incident_app, name="source-incident")
 eval_app.add_typer(impact_eval_app, name="impact")
 impact_eval_app.add_typer(impact_eval_family_app, name="family")
 impact_eval_app.add_typer(impact_eval_schedule_app, name="schedule")
@@ -581,6 +589,181 @@ def diagnose_memory(
         typer.echo(result.json_text, nl=False)
     else:
         typer.echo(result.markdown, nl=False)
+
+
+@source_incident_app.command("backfill-writeback")
+def source_incident_backfill_writeback(
+    doc_ids: list[str] | None = typer.Option(
+        None,
+        "--doc-id",
+        help="Optional target doc_id. Repeat to backfill only selected memories.",
+    ),
+    writeback_paths: list[str] | None = typer.Option(
+        None,
+        "--writeback-path",
+        help="Optional AI wiki write-back path. Repeat to backfill only selected paths.",
+    ),
+    sessions_root: Path = typer.Option(
+        Path.home() / ".codex" / "sessions",
+        "--sessions-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Codex sessions root to scan for first write-back footers.",
+    ),
+    apply: bool = typer.Option(
+        False,
+        "--apply/--dry-run",
+        help="Append new source incident evidence. Default is a report-only dry run.",
+    ),
+    include_aborted: bool = typer.Option(
+        True,
+        "--include-aborted/--exclude-aborted",
+        help="Include timed turn_aborted rows before the first write-back cutoff.",
+    ),
+    max_items: int | None = typer.Option(
+        None,
+        "--max-items",
+        min=1,
+        help="Maximum first-writeback candidates to report or write.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional override for the handle shard used under ai-wiki/metrics/.",
+    ),
+) -> None:
+    """Backfill source incident timing from first AI Wiki write-back footers."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        paths = build_paths()
+        if not paths.repo_wiki_dir.exists():
+            raise RepoWikiNotInitializedError(
+                "Repo AI wiki is not initialized. Run `aiwiki-toolkit install` first."
+            )
+        resolved_handle = resolve_user_handle(paths.repo_root, explicit_handle=handle)
+        result = backfill_writeback_source_incidents(
+            repo_wiki_dir=paths.repo_wiki_dir,
+            sessions_root=sessions_root,
+            author_handle=resolved_handle,
+            repo_root=paths.repo_root,
+            doc_ids=doc_ids or [],
+            writeback_paths=writeback_paths or [],
+            apply=apply,
+            include_aborted=include_aborted,
+            max_items=max_items,
+        )
+    except RepoRootNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except RepoWikiNotInitializedError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+
+    if normalized_format == "json":
+        typer.echo(render_source_incident_backfill_json(result), nl=False)
+    else:
+        typer.echo(render_source_incident_backfill_text(result), nl=False)
+
+
+@source_incident_app.command("capture-post-turn")
+def source_incident_capture_post_turn(
+    session_id: str | None = typer.Option(
+        None,
+        "--session-id",
+        help="Optional Codex session id. Defaults to the latest write-back session for this repo.",
+    ),
+    doc_ids: list[str] | None = typer.Option(
+        None,
+        "--doc-id",
+        help="Optional target doc_id. Repeat to capture only selected memories.",
+    ),
+    writeback_paths: list[str] | None = typer.Option(
+        None,
+        "--writeback-path",
+        help="Optional AI wiki write-back path. Repeat to capture only selected paths.",
+    ),
+    sessions_root: Path = typer.Option(
+        Path.home() / ".codex" / "sessions",
+        "--sessions-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Codex sessions root to scan for completed write-back turns.",
+    ),
+    apply: bool = typer.Option(
+        False,
+        "--apply/--dry-run",
+        help="Append new source incident evidence. Default is a report-only dry run.",
+    ),
+    include_aborted: bool = typer.Option(
+        True,
+        "--include-aborted/--exclude-aborted",
+        help="Include timed turn_aborted rows before the first write-back cutoff.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional override for the handle shard used under ai-wiki/metrics/.",
+    ),
+) -> None:
+    """Capture source incident timing for the latest completed write-back turn."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        paths = build_paths()
+        if not paths.repo_wiki_dir.exists():
+            raise RepoWikiNotInitializedError(
+                "Repo AI wiki is not initialized. Run `aiwiki-toolkit install` first."
+            )
+        resolved_handle = resolve_user_handle(paths.repo_root, explicit_handle=handle)
+        result = capture_post_turn_source_incidents(
+            repo_wiki_dir=paths.repo_wiki_dir,
+            sessions_root=sessions_root,
+            author_handle=resolved_handle,
+            repo_root=paths.repo_root,
+            session_id=session_id,
+            doc_ids=doc_ids or [],
+            writeback_paths=writeback_paths or [],
+            apply=apply,
+            include_aborted=include_aborted,
+        )
+    except RepoRootNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except RepoWikiNotInitializedError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+
+    if normalized_format == "json":
+        typer.echo(render_source_incident_backfill_json(result), nl=False)
+    else:
+        typer.echo(render_source_incident_backfill_text(result), nl=False)
 
 
 @consolidate_app.command("queue")

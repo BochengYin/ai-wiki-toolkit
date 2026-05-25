@@ -26,6 +26,7 @@ This outcome is mandatory even when the correct result is `None`.
 5. If the outcome is `Draft` or `PromotionCandidate`, create or update a note under `ai-wiki/people/<handle>/drafts/`.
 6. Emit the final result using the exact output contract in [references/output-contract.md](references/output-contract.md).
 7. Use [references/decision-rules.md](references/decision-rules.md) for the decision gate, promotion rules, memory candidate detection, conflict handling, and note placement rules.
+8. Do not claim current-turn source incident duration from inside the prompt-level skill. If a runner supports post-turn hooks, it may call `aiwiki-toolkit source-incident capture-post-turn --apply` after the final response lands.
 
 ## Constraints
 
