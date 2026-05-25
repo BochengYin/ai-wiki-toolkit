@@ -377,6 +377,24 @@ aiwiki-toolkit record-reuse \
 
 Diagnostics and `eval impact discover` report this as `source_incident_timing`. Treat it as source active-turn context for research, not as exact human time saved or a formal no-AI-wiki baseline.
 
+For older memories where the original `record-reuse` event did not include source timing, backfill a separate evidence ledger from local Codex write-back footers:
+
+```bash
+aiwiki-toolkit source-incident backfill-writeback \
+  --writeback-path ai-wiki/problems/retry-loop.md \
+  --apply
+```
+
+This scans local `~/.codex/sessions` for the first `AI Wiki Write-Back Path:` footer in a session whose `cwd` matches the current repository, counts active `task_complete.duration_ms` plus timed `turn_aborted.duration_ms` rows from the current user task start through that first write-back turn, and appends the result to `ai-wiki/metrics/source-incidents/<handle>.jsonl`. It does not mutate historical reuse events. Omit `--apply` for a dry run, or pass `--doc-id`/`--writeback-path` to scope the backfill.
+
+For a post-turn hook or wrapper, capture only the latest completed write-back turn for the current repo:
+
+```bash
+aiwiki-toolkit source-incident capture-post-turn --apply
+```
+
+This command is idempotent. If the latest write-back was already captured, it reports `skipped_existing` instead of appending another row. A runner that knows the Codex session id can pass `--session-id <id>` to avoid scanning all local session files.
+
 Only record user-owned AI wiki knowledge docs with `record-reuse`.
 
 Managed control-plane docs under `_toolkit/**` should still be cited in user-facing notes when they affect behavior, but they should not be logged as knowledge-reuse events.
@@ -426,10 +444,11 @@ aiwiki-toolkit record-reuse-check \
 
 This appends to the user-owned `ai-wiki/metrics/task-checks/<handle>.jsonl` shard and refreshes the handle-scoped generated views under `ai-wiki/_toolkit/metrics/by-handle/<handle>/`. The installer ignores both the shard and the generated aggregate views by default so these telemetry updates stay local.
 
-Both metrics logs are sharded by handle under:
+The local metrics logs are sharded by handle under:
 
 - `ai-wiki/metrics/reuse-events/<handle>.jsonl`
 - `ai-wiki/metrics/task-checks/<handle>.jsonl`
+- `ai-wiki/metrics/source-incidents/<handle>.jsonl`
 
 These logs are intended as local telemetry by default, not merge-heavy source files.
 
@@ -453,7 +472,9 @@ Use `--focus trial-error` to generate a focused trial/error reduction report fro
 AI wiki evidence. It summarizes material effects such as `avoided_retry`,
 `blocked_wrong_path`, `changed_plan`, and `faster_resolution`, separates missed or repeated issue
 signals from unproven wiki use, and lists replay candidates that still need source incident
-artifacts before becoming formal impact-eval families.
+artifacts before becoming formal impact-eval families. Source incident timing can come either from
+new `record-reuse` provenance fields or from the separate `source-incident backfill-writeback`
+ledger.
 
 To turn diagnostics and handle-local drafts into a human-reviewable consolidation queue:
 

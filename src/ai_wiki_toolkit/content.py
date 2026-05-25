@@ -20,6 +20,7 @@ TELEMETRY_IGNORE_PATHS = (
     ".env.aiwiki",
     "ai-wiki/metrics/reuse-events/",
     "ai-wiki/metrics/route-traces/",
+    "ai-wiki/metrics/source-incidents/",
     "ai-wiki/metrics/task-checks/",
     "ai-wiki/_toolkit/consolidation/",
     "ai-wiki/_toolkit/diagnostics/",
@@ -37,6 +38,7 @@ def gitignore_block_body() -> str:
         .env.aiwiki
         ai-wiki/metrics/reuse-events/
         ai-wiki/metrics/route-traces/
+        ai-wiki/metrics/source-incidents/
         ai-wiki/metrics/task-checks/
         ai-wiki/_toolkit/consolidation/
         ai-wiki/_toolkit/diagnostics/
@@ -74,7 +76,7 @@ def repo_starter_files(handle: str) -> dict[str, str]:
             - `trails/index.md` maps task-specific chronology, dead ends, and release trails.
             - `work/index.md` maps the append-only work ledger for todos, active tasks, and epics.
             - `people/<handle>/index.md` maps handle-local draft notes and working history.
-            - `metrics/` contains user-owned evidence logs such as `reuse-events/<handle>.jsonl`, `route-traces/<handle>.jsonl`, and `task-checks/<handle>.jsonl`.
+            - `metrics/` contains user-owned evidence logs such as `reuse-events/<handle>.jsonl`, `route-traces/<handle>.jsonl`, `source-incidents/<handle>.jsonl`, and `task-checks/<handle>.jsonl`.
             """
         ).strip()
         + "\n",
@@ -311,8 +313,11 @@ def repo_starter_files(handle: str) -> dict[str, str]:
 
             - `reuse-events/<handle>.jsonl` stores per-handle document-level AI wiki reuse observations.
             - `route-traces/<handle>.jsonl` stores per-handle route packet selection traces.
+            - `source-incidents/<handle>.jsonl` stores per-handle source incident timing evidence.
             - `task-checks/<handle>.jsonl` stores per-handle task-level AI wiki reuse checks.
             - `aiwiki-toolkit record-reuse ...` appends one document-level observation for the current handle and refreshes handle-scoped managed metrics.
+            - `aiwiki-toolkit source-incident backfill-writeback ...` appends historical source incident timing evidence to a separate per-handle ledger.
+            - `aiwiki-toolkit source-incident capture-post-turn ...` captures the latest completed write-back turn for post-turn hooks or wrappers.
             - `aiwiki-toolkit record-reuse-check ...` appends one task-level reuse check for the current handle and refreshes handle-scoped managed metrics.
             - The installer manages a `.gitignore` block so `.env.aiwiki`, telemetry logs, and generated `_toolkit/catalog.json`, `_toolkit/metrics/*`, `_toolkit/diagnostics/*`, `_toolkit/consolidation/*`, and `_toolkit/reports/*` files stay local by default.
             - `aiwiki-toolkit refresh-metrics` regenerates package-managed aggregate views if you need a fresh local snapshot.
@@ -535,7 +540,7 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             6. Do not log managed `_toolkit/**` docs with `record-reuse`; if they changed the plan or behavior, cite their paths in a progress update or the final note instead.
             7. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
             8. Treat the footer as the user-facing evidence surface; telemetry and generated aggregates are the local machine-readable record behind it.
-            9. The installer manages a `.gitignore` block that ignores `.env.aiwiki`, `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/route-traces/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/consolidation/`, `ai-wiki/_toolkit/diagnostics/`, `ai-wiki/_toolkit/metrics/`, `ai-wiki/_toolkit/reports/`, `ai-wiki/_toolkit/work/`, and `ai-wiki/_toolkit/catalog.json` so local identity, telemetry, and generated views stay local by default.
+            9. The installer manages a `.gitignore` block that ignores `.env.aiwiki`, `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/route-traces/`, `ai-wiki/metrics/source-incidents/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/consolidation/`, `ai-wiki/_toolkit/diagnostics/`, `ai-wiki/_toolkit/metrics/`, `ai-wiki/_toolkit/reports/`, `ai-wiki/_toolkit/work/`, and `ai-wiki/_toolkit/catalog.json` so local identity, telemetry, and generated views stay local by default.
             10. If those local-state paths were tracked before you upgraded, run `aiwiki-toolkit doctor` and follow the suggested `git rm --cached` fix once to untrack them.
             11. Produce one AI wiki write-back outcome at the end of every completed task, even when the result is `None`.
             12. If runtime skill exposure is missing, follow the Runtime Skill Fallback section in `system.md` and manually read the relevant repo-local skill files under `.agents/skills/`.
@@ -820,6 +825,8 @@ def managed_repo_toolkit_files() -> dict[str, str]:
 
             User-owned route selection traces live in `ai-wiki/metrics/route-traces/<handle>.jsonl`.
 
+            User-owned source incident timing evidence lives in `ai-wiki/metrics/source-incidents/<handle>.jsonl`.
+
             User-owned reuse checks live in `ai-wiki/metrics/task-checks/<handle>.jsonl`.
 
             Package-managed aggregate files are regenerated under `ai-wiki/_toolkit/metrics/`.
@@ -829,6 +836,8 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             so routine reuse logging does not dirty git status.
 
             The toolkit can append explicit document observations via `aiwiki-toolkit record-reuse`.
+
+            The toolkit can append source incident timing evidence via `aiwiki-toolkit source-incident backfill-writeback` or `aiwiki-toolkit source-incident capture-post-turn`.
 
             The toolkit can append task-level reuse checks via `aiwiki-toolkit record-reuse-check`.
 
@@ -990,6 +999,7 @@ def repo_skill_starter_files() -> dict[str, str]:
             5. If the outcome is `Draft` or `PromotionCandidate`, create or update a note under `ai-wiki/people/<handle>/drafts/`.
             6. Emit the final result using the exact output contract in [references/output-contract.md](references/output-contract.md).
             7. Use [references/decision-rules.md](references/decision-rules.md) for the decision gate, promotion rules, memory candidate detection, conflict handling, and note placement rules.
+            8. Do not claim current-turn source incident duration from inside the prompt-level skill. If a runner supports post-turn hooks, it may call `aiwiki-toolkit source-incident capture-post-turn --apply` after the final response lands.
 
             ## Constraints
 
