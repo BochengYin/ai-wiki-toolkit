@@ -28,9 +28,32 @@ def test_doctor_is_clean_for_latest_navigation_and_rule_structure(
     assert "OK    ai-wiki/_toolkit/schema/team-memory-v1.md `ai-wiki/_toolkit/schema/team-memory-v1.md` exists." in result.output
     assert "INFO  .agents/skills Repo-local AI wiki skills are installed" in result.output
     assert "OK    .gitignore `.gitignore` already contains the current managed local-state ignore block." in result.output
+    assert "INFO  ai-wiki/metrics/source-incidents/alice.jsonl No post-turn source incident capture evidence is recorded yet." in result.output
     assert "OK    ai-wiki/index.md `ai-wiki/index.md` exists. It is repo-owned and is not compared against starter navigation drift." in result.output
     assert "OK    ai-wiki/workflows.md `ai-wiki/workflows.md` points to the managed baseline workflow doc." in result.output
     assert "OK    AGENT.md `AGENT.md` already references the current managed-system prompt entrypoint." in result.output
+
+
+def test_doctor_reports_post_turn_capture_evidence(repo_env: dict[str, Path]) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "alice"])
+    assert install_result.exit_code == 0
+
+    source_incident_log = (
+        repo_env["repo"] / "ai-wiki" / "metrics" / "source-incidents" / "alice.jsonl"
+    )
+    source_incident_log.write_text(
+        (
+            '{"schema_version": "source-incident-v1", "source_kind": '
+            '"writeback_post_turn_capture", "doc_id": "problems/retry-loop", '
+            '"session_id": "session-1", "policy": "first_writeback_user_task_inclusive"}\n'
+        ),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["doctor", "--handle", "alice", "--strict"])
+
+    assert result.exit_code == 0
+    assert "OK    ai-wiki/metrics/source-incidents/alice.jsonl Post-turn source incident capture has recorded evidence for this handle (1 event(s))." in result.output
 
 
 def test_doctor_suggests_starter_updates_for_repo_docs(repo_env: dict[str, Path]) -> None:

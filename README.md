@@ -324,6 +324,16 @@ non-interactive shells, pass `--handle your-name` or set `AIWIKI_TOOLKIT_HANDLE`
 
 The tool works best when `git user.name` and `git user.email` are configured first.
 
+For stronger trial/error capture, configure your agent runner to call the post-turn capture command
+after completed AI Wiki write-back turns:
+
+```bash
+aiwiki-toolkit source-incident capture-post-turn --apply
+```
+
+This hook is recommended when your runner supports it, but `install` does not enable hooks
+automatically or mutate agent runtime configuration.
+
 If package-owned repo-local skill files already exist under `.agents/skills/ai-wiki-*`, the installer refreshes them from the current package so new workflow and footer contracts propagate on upgrade. Because these files live in git, local customizations remain visible in `git diff` after running `install`.
 
 `init` remains as a backward-compatible alias for `install`. The actual scaffold creation does not happen at package install time; it happens when you run `aiwiki-toolkit install` or `aiwiki-toolkit init` inside a git repository.

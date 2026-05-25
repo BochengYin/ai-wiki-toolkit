@@ -200,6 +200,10 @@ def _echo_install_result(result) -> None:
     typer.echo(
         "Recommendation: configure git user.name and git user.email for stable handle resolution."
     )
+    typer.echo(
+        "Recommendation: if your agent runner supports post-turn hooks, configure it to run "
+        "`aiwiki-toolkit source-incident capture-post-turn --apply`."
+    )
     for path in result.updated_skill_files:
         typer.echo(f"Updated skill file: {path}")
 
