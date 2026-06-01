@@ -521,15 +521,37 @@ def test_diagnose_memory_route_focus_joins_traces_with_reuse_events(
     assert summary["route_precision"] == pytest.approx(1 / 3)
     assert summary["route_recall_proxy"] == pytest.approx(1 / 2)
     assert summary["route_noise_rate"] == pytest.approx(2 / 3)
+    assert summary["useful_selected_doc_count"] == 1
+    assert summary["selected_but_unused_doc_count"] == 1
+    assert summary["selected_not_helpful_doc_count"] == 1
+    assert summary["later_lookup_doc_count"] == 1
     assert summary["missed_useful_doc_count"] == 1
     assert route["outcome_effects"] == {"avoided_retry": 1, "changed_plan": 1}
     item = route["items"][0]
+    assert item["selected_doc_ids"] == [
+        "review-patterns/noisy",
+        "review-patterns/selected",
+        "review-patterns/unused",
+    ]
+    assert item["useful_selected_doc_ids"] == ["review-patterns/selected"]
+    assert item["later_lookup_doc_ids"] == ["problems/missed"]
     assert item["missed_useful_doc_ids"] == ["problems/missed"]
+    assert item["selected_but_not_useful_doc_ids"] == [
+        "review-patterns/noisy",
+        "review-patterns/unused",
+    ]
+    assert item["selected_but_unused_doc_ids"] == ["review-patterns/unused"]
+    assert item["selected_not_helpful_doc_ids"] == ["review-patterns/noisy"]
     assert item["selected_without_reuse_doc_ids"] == ["review-patterns/unused"]
 
     markdown_path = repo_wiki / "_toolkit" / "diagnostics" / "alice" / "route-report.md"
     assert markdown_path.exists()
-    assert "AI Wiki Route Diagnostics" in markdown_path.read_text(encoding="utf-8")
+    markdown = markdown_path.read_text(encoding="utf-8")
+    assert "AI Wiki Route Diagnostics" in markdown
+    assert "Selected-but-unused docs: 1" in markdown
+    assert "Later lookup docs: 1" in markdown
+    assert "Useful selected docs: `review-patterns/selected`" in markdown
+    assert "Selected but unused: `review-patterns/unused`" in markdown
 
 
 def test_diagnose_memory_requires_initialized_repo_wiki(repo_env: dict[str, Path]) -> None:
