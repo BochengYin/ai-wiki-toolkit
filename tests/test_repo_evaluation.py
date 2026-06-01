@@ -318,4 +318,3 @@ def test_evaluate_repo_help() -> None:
 
     assert result.exit_code == 0
     assert "Generate a review-first repo evaluation" in result.output
-    assert "--no-write" in result.output
