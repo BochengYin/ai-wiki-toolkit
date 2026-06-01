@@ -216,6 +216,8 @@ aiwiki-toolkit record-reuse-check \
 aiwiki-toolkit diagnose memory
 aiwiki-toolkit diagnose memory --focus route
 
+# Generate a local repo evaluation and improvement advisor report.
+aiwiki-toolkit evaluate repo --since 30d
 
 # Generate a local usefulness report.
 aiwiki-toolkit report usefulness --handle your-handle
@@ -230,6 +232,9 @@ aiwiki-toolkit eval impact report --run-dir /path/to/eval-run
 
 See [docs/usage.md](docs/usage.md) for the longer command guide.
 
+`aiwiki-toolkit evaluate repo --since 30d` is a local operator report for reviewing workflow
+coverage, route quality, memory quality, draft queues, impact-eval readiness, and asset-selection
+opportunities. It is report-only and human-review-first; it is not a public benchmark proof.
 
 ## Documentation
 

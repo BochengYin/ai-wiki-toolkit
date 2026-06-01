@@ -171,6 +171,44 @@ Route diagnostics join `route-traces/<handle>.jsonl` with downstream `record-reu
 selected docs, missed useful docs, route precision, route recall proxy, route noise, and context
 cost.
 
+Generate a repo-level evaluation and improvement advisor report:
+
+```bash
+aiwiki-toolkit evaluate repo --since 30d
+aiwiki-toolkit evaluate repo --since 30d --format json --no-write
+```
+
+Run this after a repo has used the AI wiki workflow for a while and has at least some task checks,
+reuse events, route traces, drafts, or impact-eval artifacts. By default it writes generated outputs
+under:
+
+```text
+ai-wiki/_toolkit/reports/repo-evaluation/<handle>/latest.md
+ai-wiki/_toolkit/reports/repo-evaluation/<handle>/latest.json
+```
+
+Use `--no-write` for stdout only. The command does not edit user-owned AI wiki docs, does not create
+workflows, skills, subagents, or automations, and does not change route policy.
+
+How to read the sections:
+
+- `Executive Summary` gives the overall status, top review opportunities, and what not to change yet.
+- `Workflow Coverage` checks task-level reuse checks, document reuse events, documents with reuse,
+  coverage gaps, and weak end-of-task evidence.
+- `Route Quality` summarizes route traces, selected docs, useful selected docs, missed useful docs,
+  selected-but-unused docs, precision, recall proxy, noise, and context cost.
+- `Memory Quality` surfaces high-ROI, noisy, stale, conflicting, and missed-memory candidates.
+- `Draft And Consolidation Queue` summarizes the human-review queue and points back to
+  `aiwiki-toolkit consolidate queue --since <since>`.
+- `Impact Eval Readiness` separates local diagnostics from outcome-impact proof and points to the
+  impact-eval candidate flow.
+- `Asset Selection Opportunities` recommends the smallest reviewable asset form: note, workflow,
+  skill, subagent, automation, extend existing, or skip.
+
+Treat every recommendation as review-first. A workflow is a transparent process contract; a skill is
+a runtime-packaged capability with triggers and instructions. They are different asset forms, not a
+ranked maturity ladder. Route policy optimization is a later phase; this command only points out
+review opportunities.
 
 Generate usefulness reports:
 
