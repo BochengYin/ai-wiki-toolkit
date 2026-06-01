@@ -314,7 +314,7 @@ def test_evaluate_repo_does_not_write_user_owned_ai_wiki_docs(
 
 
 def test_evaluate_repo_help() -> None:
-    result = runner.invoke(app, ["evaluate", "repo", "--help"])
+    result = runner.invoke(app, ["evaluate", "repo", "--help"], terminal_width=120)
 
     assert result.exit_code == 0
     assert "Generate a review-first repo evaluation" in result.output
