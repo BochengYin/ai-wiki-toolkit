@@ -985,7 +985,10 @@ def _build_route_diagnostics_section(
     total_selected_useful = 0
     total_noisy_selected = 0
     total_missed = 0
+    total_selected_but_unused = 0
+    total_selected_not_helpful = 0
     total_extra_lookups = 0
+    total_later_lookups = 0
     total_packet_words = 0
     outcome_effects: Counter[str] = Counter()
 
@@ -1005,8 +1008,23 @@ def _build_route_diagnostics_section(
             and isinstance(event.get("doc_id"), str)
         ]
         useful_doc_ids = {str(event["doc_id"]) for event in useful_events}
-        selected_useful = selected & useful_doc_ids
-        noisy_selected = selected - selected_useful
+        not_helpful_doc_ids = {
+            str(event["doc_id"])
+            for event in task_events
+            if event.get("reuse_outcome") == "not_helpful"
+            and isinstance(event.get("doc_id"), str)
+        }
+        lookup_doc_ids = {
+            str(event["doc_id"])
+            for event in task_events
+            if event.get("retrieval_mode") == "lookup"
+            and isinstance(event.get("doc_id"), str)
+        }
+        selected_useful_doc_ids = sorted(selected & useful_doc_ids)
+        selected_but_not_useful_doc_ids = sorted(selected - useful_doc_ids)
+        selected_but_unused_doc_ids = sorted(selected - event_doc_ids)
+        selected_not_helpful_doc_ids = sorted((selected & not_helpful_doc_ids) - useful_doc_ids)
+        later_lookup_doc_ids = sorted(lookup_doc_ids - selected)
         missed_useful = sorted(
             {
                 str(event["doc_id"])
@@ -1014,7 +1032,7 @@ def _build_route_diagnostics_section(
                 if event.get("retrieval_mode") == "lookup" and str(event["doc_id"]) not in selected
             }
         )
-        extra_lookup_count = len(missed_useful)
+        extra_lookup_count = len(later_lookup_doc_ids)
         effects = Counter()
         for event in useful_events:
             reuse_effects = event.get("reuse_effects")
@@ -1023,8 +1041,8 @@ def _build_route_diagnostics_section(
 
         selected_count = len(selected)
         useful_count = len(useful_doc_ids)
-        selected_useful_count = len(selected_useful)
-        noisy_selected_count = len(noisy_selected)
+        selected_useful_count = len(selected_useful_doc_ids)
+        noisy_selected_count = len(selected_but_not_useful_doc_ids)
         packet_words = trace.get("packet_words")
         packet_words = packet_words if isinstance(packet_words, int) else 0
 
@@ -1033,7 +1051,10 @@ def _build_route_diagnostics_section(
         total_selected_useful += selected_useful_count
         total_noisy_selected += noisy_selected_count
         total_missed += len(missed_useful)
+        total_selected_but_unused += len(selected_but_unused_doc_ids)
+        total_selected_not_helpful += len(selected_not_helpful_doc_ids)
         total_extra_lookups += extra_lookup_count
+        total_later_lookups += len(later_lookup_doc_ids)
         total_packet_words += packet_words
         outcome_effects.update(effects)
 
@@ -1047,6 +1068,9 @@ def _build_route_diagnostics_section(
                 "useful_doc_count": useful_count,
                 "selected_useful_doc_count": selected_useful_count,
                 "noisy_selected_doc_count": noisy_selected_count,
+                "selected_but_unused_doc_count": len(selected_but_unused_doc_ids),
+                "selected_not_helpful_doc_count": len(selected_not_helpful_doc_ids),
+                "later_lookup_doc_count": len(later_lookup_doc_ids),
                 "route_precision": _rate(selected_useful_count, selected_count),
                 "route_recall_proxy": _rate(selected_useful_count, useful_count),
                 "route_noise_rate": _rate(noisy_selected_count, selected_count),
@@ -1056,8 +1080,13 @@ def _build_route_diagnostics_section(
                 "index_card_count": trace.get("index_card_count", 0),
                 "maybe_load_count": trace.get("maybe_load_count", 0),
                 "selected_doc_ids": sorted(selected),
+                "useful_selected_doc_ids": selected_useful_doc_ids,
                 "useful_doc_ids": sorted(useful_doc_ids),
-                "selected_without_reuse_doc_ids": sorted(selected - event_doc_ids),
+                "selected_but_not_useful_doc_ids": selected_but_not_useful_doc_ids,
+                "selected_but_unused_doc_ids": selected_but_unused_doc_ids,
+                "selected_not_helpful_doc_ids": selected_not_helpful_doc_ids,
+                "selected_without_reuse_doc_ids": selected_but_unused_doc_ids,
+                "later_lookup_doc_ids": later_lookup_doc_ids,
                 "outcome_effects": dict(sorted(effects.items())),
             }
         )
@@ -1077,6 +1106,9 @@ def _build_route_diagnostics_section(
             "useful_selected_doc_count": total_selected_useful,
             "noisy_selected_doc_count": total_noisy_selected,
             "missed_useful_doc_count": total_missed,
+            "selected_but_unused_doc_count": total_selected_but_unused,
+            "selected_not_helpful_doc_count": total_selected_not_helpful,
+            "later_lookup_doc_count": total_later_lookups,
             "extra_lookup_count": total_extra_lookups,
             "avg_packet_words": _rate(total_packet_words, len(traces)),
             "avg_selected_docs": _rate(total_selected, len(traces)),
@@ -1094,6 +1126,8 @@ def _build_route_diagnostics_section(
             "Route precision counts selected docs that later had resolved or partial reuse.",
             "Route recall proxy counts useful docs for the task that were selected by route; it is a proxy because useful-but-unlooked-up docs remain unknown.",
             "Route noise counts selected docs with no useful reuse evidence yet, including docs with no reuse event or only not_helpful outcomes.",
+            "Selected-but-unused docs are route-selected docs with no downstream reuse event for the task.",
+            "Later lookup docs are docs recorded with retrieval_mode=lookup that were not in the route-selected set.",
             "Missed useful docs are useful lookup docs that were not in the route-selected set.",
         ],
     }
@@ -1394,8 +1428,10 @@ def _render_route_diagnostics_section(section: dict[str, Any]) -> list[str]:
         f"- Route traces: {summary['route_trace_count']}",
         f"- Selected docs: {summary['selected_doc_count']}",
         f"- Useful selected docs: {summary['useful_selected_doc_count']}",
+        f"- Selected-but-unused docs: {summary.get('selected_but_unused_doc_count', 0)}",
+        f"- Selected not-helpful docs: {summary.get('selected_not_helpful_doc_count', 0)}",
+        f"- Later lookup docs: {summary.get('later_lookup_doc_count', summary['extra_lookup_count'])}",
         f"- Missed useful docs: {summary['missed_useful_doc_count']}",
-        f"- Extra lookup docs: {summary['extra_lookup_count']}",
         f"- Route precision: `{_format_metric(summary['route_precision'])}`",
         f"- Route recall proxy: `{_format_metric(summary['route_recall_proxy'])}`",
         f"- Route noise rate: `{_format_metric(summary['route_noise_rate'])}`",
@@ -1426,16 +1462,34 @@ def _render_route_diagnostics_section(section: dict[str, Any]) -> list[str]:
                 "  - Context cost: "
                 f"{item['packet_words']} packet words, "
                 f"{item['selected_doc_count']} selected docs, "
-                f"{item['extra_lookup_count']} extra lookup docs."
+                f"{item.get('later_lookup_doc_count', item['extra_lookup_count'])} later lookup docs."
             )
+            useful_selected = item.get("useful_selected_doc_ids")
+            if isinstance(useful_selected, list) and useful_selected:
+                lines.append(
+                    "  - Useful selected docs: "
+                    f"{', '.join(f'`{doc_id}`' for doc_id in useful_selected)}"
+                )
+            later_lookup = item.get("later_lookup_doc_ids")
+            if isinstance(later_lookup, list) and later_lookup:
+                lines.append(
+                    "  - Later lookup docs: "
+                    f"{', '.join(f'`{doc_id}`' for doc_id in later_lookup)}"
+                )
             missed = item.get("missed_useful_doc_ids")
             if isinstance(missed, list) and missed:
                 lines.append(f"  - Missed useful docs: {', '.join(f'`{doc_id}`' for doc_id in missed)}")
-            selected_without_reuse = item.get("selected_without_reuse_doc_ids")
-            if isinstance(selected_without_reuse, list) and selected_without_reuse:
+            selected_but_unused = item.get("selected_but_unused_doc_ids")
+            if isinstance(selected_but_unused, list) and selected_but_unused:
                 lines.append(
-                    "  - Selected without reuse: "
-                    f"{', '.join(f'`{doc_id}`' for doc_id in selected_without_reuse[:5])}"
+                    "  - Selected but unused: "
+                    f"{', '.join(f'`{doc_id}`' for doc_id in selected_but_unused[:5])}"
+                )
+            selected_not_helpful = item.get("selected_not_helpful_doc_ids")
+            if isinstance(selected_not_helpful, list) and selected_not_helpful:
+                lines.append(
+                    "  - Selected not helpful: "
+                    f"{', '.join(f'`{doc_id}`' for doc_id in selected_not_helpful[:5])}"
                 )
     lines.extend(["### Interpretation", ""])
     for note in section["interpretation"]:

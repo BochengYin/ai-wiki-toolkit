@@ -5,7 +5,7 @@ model: "gpt-5"
 source_kind: "feature_clarification"
 status: "draft"
 created_at: "2026-05-17T18:37:00+10:00"
-updated_at: "2026-05-17T23:03:19+1000"
+updated_at: "2026-05-29T19:20:00+1000"
 promotion_candidate: true
 promotion_basis: "Auto-marked from useful resolved reuse threshold; exact evidence is generated under ai-wiki/_toolkit/reports/promotion-candidates/latest.md."
 promotion_report: "ai-wiki/_toolkit/reports/promotion-candidates/latest.md"
@@ -66,3 +66,26 @@ Formal eval metrics should stay in the existing impact-eval artifact layer. Rout
 ## Reuse Assessment
 
 Use this when designing route telemetry, route diagnostics, or route quality metrics.
+
+## 2026-05-29 Implementation Follow-Up
+
+Route diagnostics now expose the requested route-versus-use comparison directly through:
+
+```bash
+aiwiki-toolkit diagnose memory --focus route
+```
+
+The report joins `ai-wiki/metrics/route-traces/<handle>.jsonl` with downstream reuse events by `task_id` and reports:
+
+- selected docs
+- useful selected docs
+- selected-but-unused docs
+- selected not-helpful docs
+- later lookup docs
+- missed useful docs
+- route precision
+- route recall proxy
+- route noise rate
+- packet word count and selected doc count
+
+The route trace itself remains an append-only local telemetry stream. The derived diagnostics stay under `_toolkit/diagnostics/<handle-or-all>/` and should be regenerated rather than edited.

@@ -886,6 +886,51 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             - `model`
             - `notes`
 
+            ## Route Trace Fields
+
+            Each route trace entry may include:
+
+            - `schema_version`
+            - `trace_id`
+            - `routed_at`
+            - `author_handle`
+            - `task_id`
+            - `task_type`
+            - `effort`
+            - `risk_tags`
+            - `changed_paths`
+            - `selected_doc_ids`
+            - `must_load_doc_ids`
+            - `index_card_doc_ids`
+            - `maybe_load_doc_ids`
+            - `skipped_doc_ids`
+            - `packet_words`
+            - `selected_doc_count`
+            - `index_card_count`
+            - `maybe_load_count`
+            - `must_load_count`
+            - `route_scores`
+            - `context_budget`
+
+            ## Route Diagnostic Metrics
+
+            `aiwiki-toolkit diagnose memory --focus route` joins route traces with downstream
+            `record-reuse` events by `task_id`.
+
+            It reports:
+
+            - `selected_doc_ids`: docs selected by route
+            - `useful_selected_doc_ids`: selected docs with resolved or partial downstream reuse
+            - `selected_but_unused_doc_ids`: selected docs with no downstream reuse event
+            - `selected_not_helpful_doc_ids`: selected docs with only not_helpful downstream reuse
+            - `later_lookup_doc_ids`: lookup docs that were not selected by route
+            - `missed_useful_doc_ids`: useful lookup docs that were not selected by route
+            - route precision, route recall proxy, route noise rate, packet words, selected doc count,
+              and later lookup count
+
+            Route recall is a proxy because useful-but-unlooked-up docs are unknowable from local
+            telemetry alone.
+
             ## Retrieval Mode
 
             - `preloaded`: the document was already loaded in the normal read path
