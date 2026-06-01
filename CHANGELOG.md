@@ -4,6 +4,16 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+## v0.1.39
+
+### Added
+
+- Added the `evaluate repo` advisor report for deterministic route, noise, context-cost, and evidence-quality recommendations.
+
+### Changed
+
+- Updated AI wiki diagnostics and operator docs with evidence-stack guidance and post-turn source incident capture coverage.
+
 ## v0.1.38
 
 ### Added
