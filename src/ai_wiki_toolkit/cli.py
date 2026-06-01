@@ -102,6 +102,11 @@ from ai_wiki_toolkit.route import (
     render_route_packet_json,
     render_route_packet_text,
 )
+from ai_wiki_toolkit.repo_evaluation import (
+    DEFAULT_REPO_EVALUATION_MAX_ITEMS,
+    DEFAULT_REPO_EVALUATION_SINCE,
+    generate_repo_evaluation,
+)
 from ai_wiki_toolkit.route_traces import record_route_trace
 from ai_wiki_toolkit.source_incidents import (
     SOURCE_INCIDENT_TIMING_SOURCES,
@@ -146,6 +151,7 @@ app = typer.Typer(help="Initialize and maintain ai-wiki-toolkit scaffolds.")
 work_app = typer.Typer(help="Record and report AI wiki work ledger state.")
 diagnose_app = typer.Typer(help="Generate AI wiki diagnostic reports.")
 consolidate_app = typer.Typer(help="Generate AI wiki draft consolidation queues.")
+evaluate_app = typer.Typer(help="Generate AI wiki repo evaluation reports.")
 eval_app = typer.Typer(help="Report AI wiki impact eval results.")
 impact_eval_app = typer.Typer(help="Inspect and summarize impact eval artifacts.")
 impact_eval_family_app = typer.Typer(help="Discover and scaffold impact eval families.")
@@ -156,6 +162,7 @@ source_incident_app = typer.Typer(help="Backfill and inspect source incident tim
 app.add_typer(work_app, name="work")
 app.add_typer(diagnose_app, name="diagnose")
 app.add_typer(consolidate_app, name="consolidate")
+app.add_typer(evaluate_app, name="evaluate")
 app.add_typer(eval_app, name="eval")
 app.add_typer(promote_app, name="promote")
 app.add_typer(report_app, name="report")
@@ -850,6 +857,105 @@ def consolidate_queue(
         typer.echo(result.json_text, nl=False)
     else:
         typer.echo(result.markdown, nl=False)
+
+
+@evaluate_app.command("repo")
+def evaluate_repo(
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="Repository root. Defaults to the current git repository.",
+    ),
+    wiki_dir: Path | None = typer.Option(
+        None,
+        "--wiki-dir",
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+        help="AI wiki directory. Defaults to <repo-root>/ai-wiki.",
+    ),
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional author handle filter for local evidence logs.",
+    ),
+    since: str = typer.Option(
+        DEFAULT_REPO_EVALUATION_SINCE,
+        "--since",
+        help="Optional ISO timestamp or duration such as 30d.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    write: bool = typer.Option(
+        True,
+        "--write/--no-write",
+        help="Write generated reports under ai-wiki/_toolkit/reports/repo-evaluation/.",
+    ),
+    max_items: int = typer.Option(
+        DEFAULT_REPO_EVALUATION_MAX_ITEMS,
+        "--max-items",
+        min=1,
+        help="Maximum items per repo evaluation section.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional extra output path for the selected format.",
+    ),
+) -> None:
+    """Generate a review-first repo evaluation and improvement advisor report."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+    if output is not None and not write:
+        typer.echo("Use --output only when --write is enabled.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        paths = build_paths(repo_root)
+        resolved_repo_root = paths.repo_root
+        resolved_wiki_dir = wiki_dir.resolve() if wiki_dir is not None else paths.repo_wiki_dir
+        if not resolved_wiki_dir.exists():
+            raise RepoWikiNotInitializedError(
+                "Repo AI wiki is not initialized. Run `aiwiki-toolkit install` first."
+            )
+        resolved_handle = resolve_user_handle(resolved_repo_root, explicit_handle=handle)
+        result = generate_repo_evaluation(
+            repo_root=resolved_repo_root,
+            repo_wiki_dir=resolved_wiki_dir,
+            handle=resolved_handle,
+            since=since,
+            max_items=max_items,
+            write=write,
+        )
+    except RepoRootNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except RepoWikiNotInitializedError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read AI wiki repo evaluation data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = result.json_text if normalized_format == "json" else result.markdown
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+    typer.echo(rendered, nl=False)
 
 
 @promote_app.command("candidates")
