@@ -14,8 +14,12 @@ Each rubric contains:
 Supported criterion checks:
 
 - `contains` / `not_contains` against an artifact text
+- `contains_all` / `contains_any` against an artifact text
+- `not_contains_any` against an artifact text
 - `changed_file` / `changed_file_prefix` against `result.json` changed files
+- `changed_file_prefix_any` against `result.json` changed files
 - `untracked_file` / `untracked_file_prefix` against `result.json` untracked files
+- `untracked_file_prefix_any` against `result.json` untracked files
 
 Supported artifacts are `workspace_diff`, `workspace_diff_stat`, `workspace_status`,
 `final_message`, `result`, `changed_files`, and `untracked_files`.
@@ -45,3 +49,16 @@ Example:
   ]
 }
 ```
+
+Current formal family rubrics:
+
+- `aiwiki_evidence_integrity.json`
+- `ownership_boundary.json`
+- `postinstall_archive_staging.json`
+- `release_distribution_integrity.json`
+- `release_runtime_compatibility.json`
+- `scaffold_prompt_workflow_compliance.json`
+- `windows_arm_smoke_cli_output.json`
+
+These rubrics improve on `command-exit` scoring, but they are not a replacement for transcript-backed
+manual review when making research-quality claims.

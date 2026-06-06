@@ -194,6 +194,12 @@ aiwiki-toolkit install
 
 # Generate a task-aware context packet for the current agent task.
 aiwiki-toolkit route --task "fix the failing release smoke test"
+# Add explicit path signals when they should influence routing.
+aiwiki-toolkit route --task "review the release change" --changed-path .github/workflows/release.yml
+# Disable the deterministic top-card reranker for scorer comparisons.
+aiwiki-toolkit route --task "compare route scoring" --rerank-top 0
+# Inspect mixed-language, multi-signal, rerank, and support-aware scoring fields.
+aiwiki-toolkit route --task "优化 route precision 噪音" --format json
 
 # Check starter docs, managed prompt blocks, local state, and rule drift.
 aiwiki-toolkit doctor --strict

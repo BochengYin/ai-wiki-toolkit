@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
 import re
+import sqlite3
 from typing import Any
 from uuid import uuid4
 
@@ -66,6 +68,158 @@ def _route_scores(packet: dict[str, Any]) -> dict[str, int]:
     return scores
 
 
+def _route_numeric_field(packet: dict[str, Any], field: str) -> dict[str, int]:
+    values: dict[str, int] = {}
+    for section in ("index_cards", "must_load", "maybe_load"):
+        items = packet.get(section)
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            doc_id = item.get("doc_id")
+            value = item.get(field)
+            if isinstance(doc_id, str) and isinstance(value, int):
+                values[doc_id] = value
+    return values
+
+
+def _route_quality_adjustments(packet: dict[str, Any]) -> dict[str, int]:
+    return _route_numeric_field(packet, "route_quality_adjustment")
+
+
+def _route_object_field(packet: dict[str, Any], field: str) -> dict[str, object]:
+    values: dict[str, object] = {}
+    for section in ("index_cards", "must_load", "maybe_load"):
+        items = packet.get(section)
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            doc_id = item.get("doc_id")
+            value = item.get(field)
+            if isinstance(doc_id, str) and isinstance(value, dict):
+                values[doc_id] = value
+    return values
+
+
+def _route_list_field(packet: dict[str, Any], field: str) -> dict[str, object]:
+    values: dict[str, object] = {}
+    for section in ("index_cards", "must_load", "maybe_load"):
+        items = packet.get(section)
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            doc_id = item.get("doc_id")
+            value = item.get(field)
+            if isinstance(doc_id, str) and isinstance(value, list):
+                values[doc_id] = value
+    return values
+
+
+def _route_string_field(packet: dict[str, Any], field: str) -> dict[str, str]:
+    values: dict[str, str] = {}
+    for section in ("index_cards", "must_load", "maybe_load"):
+        items = packet.get(section)
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            doc_id = item.get("doc_id")
+            value = item.get(field)
+            if isinstance(doc_id, str) and isinstance(value, str):
+                values[doc_id] = value
+    return values
+
+
+def _current_source_session_metadata() -> dict[str, object]:
+    """Best-effort local Codex session provenance for later route replay."""
+
+    env_names = ("CODEX_THREAD_ID", "CODEX_SESSION_ID", "CODEX_CONVERSATION_ID")
+    session_id = ""
+    env_name = ""
+    for candidate in env_names:
+        value = os.environ.get(candidate, "").strip()
+        if value:
+            session_id = value
+            env_name = candidate
+            break
+
+    metadata: dict[str, object] = {
+        "source_session_id": session_id or None,
+        "source_session_env": env_name or None,
+        "source_session_lookup": "not_available" if not session_id else "env_only",
+    }
+    if not session_id:
+        return metadata
+
+    db_path = Path(os.environ.get("CODEX_STATE_DB", "~/.codex/state_5.sqlite")).expanduser()
+    if not db_path.exists():
+        return metadata
+
+    try:
+        with sqlite3.connect(db_path) as connection:
+            connection.row_factory = sqlite3.Row
+            row = connection.execute(
+                """
+                select
+                    rollout_path,
+                    cwd,
+                    title,
+                    source,
+                    model,
+                    git_branch,
+                    git_sha,
+                    created_at,
+                    updated_at
+                from threads
+                where id = ?
+                limit 1
+                """,
+                (session_id,),
+            ).fetchone()
+    except sqlite3.Error:
+        metadata["source_session_lookup"] = "sqlite_error"
+        return metadata
+
+    if row is None:
+        metadata["source_session_lookup"] = "not_found"
+        return metadata
+
+    def timestamp(value: object) -> str | None:
+        if not isinstance(value, int):
+            return None
+        return datetime.fromtimestamp(value, tz=timezone.utc).isoformat()
+
+    def preview(value: object, *, limit: int = 240) -> str | None:
+        if not isinstance(value, str) or not value:
+            return None
+        normalized = re.sub(r"\s+", " ", value).strip()
+        if len(normalized) <= limit:
+            return normalized
+        return normalized[: limit - 3].rstrip() + "..."
+
+    metadata.update(
+        {
+            "source_session_lookup": "state_5.sqlite",
+            "source_rollout_path": row["rollout_path"],
+            "source_thread_cwd": row["cwd"],
+            "source_thread_title": preview(row["title"]),
+            "source_thread_source": row["source"],
+            "source_thread_model": row["model"],
+            "source_thread_git_branch": row["git_branch"],
+            "source_thread_git_sha": row["git_sha"],
+            "source_thread_created_at": timestamp(row["created_at"]),
+            "source_thread_updated_at": timestamp(row["updated_at"]),
+        }
+    )
+    return metadata
+
+
 def build_route_trace_payload(
     *,
     packet: dict[str, Any],
@@ -84,17 +238,24 @@ def build_route_trace_payload(
     context_budget = (
         packet.get("context_budget") if isinstance(packet.get("context_budget"), dict) else {}
     )
+    routing_strategy = (
+        packet.get("routing_strategy") if isinstance(packet.get("routing_strategy"), dict) else {}
+    )
 
-    return {
+    payload = {
         "schema_version": ROUTE_TRACE_SCHEMA_VERSION,
         "trace_id": trace_id,
         "routed_at": routed_at,
         "author_handle": author_handle,
         "task_id": str(packet.get("task_id", "")),
+        "task": str(packet.get("task", "")),
         "task_type": str(route.get("task_type", "")),
         "effort": str(route.get("effort", "")),
-        "risk_tags": [
-            tag for tag in route.get("risk_tags", []) if isinstance(tag, str) and tag
+        "domain_tags": [
+            tag for tag in route.get("domain_tags", []) if isinstance(tag, str) and tag
+        ],
+        "guardrail_tags": [
+            tag for tag in route.get("guardrail_tags", []) if isinstance(tag, str) and tag
         ],
         "changed_paths": [
             path for path in route.get("changed_paths", []) if isinstance(path, str) and path
@@ -110,12 +271,50 @@ def build_route_trace_payload(
         "maybe_load_count": len(maybe_doc_ids),
         "must_load_count": len(must_load_doc_ids),
         "route_scores": _route_scores(packet),
+        "base_route_scores": _route_numeric_field(packet, "base_score"),
+        "route_rerank_adjustments": _route_numeric_field(packet, "rerank_adjustment"),
+        "route_multi_signal_adjustments": _route_numeric_field(
+            packet,
+            "multi_signal_adjustment",
+        ),
         "context_budget": {
             "safety_cap_words": context_budget.get("safety_cap_words"),
             "effective_max_docs": context_budget.get("effective_max_docs"),
             "max_docs": context_budget.get("max_docs"),
         },
+        "changed_path_signal_source": route.get("changed_path_signal_source"),
+        "changed_path_signal_used": route.get("changed_path_signal_used"),
+        "language_signals": route.get("language_signals")
+        if isinstance(route.get("language_signals"), dict)
+        else {},
+        "intent_signals": route.get("intent_signals")
+        if isinstance(route.get("intent_signals"), dict)
+        else {},
+        "route_mode": route.get("mode") if isinstance(route.get("mode"), dict) else {},
+        "workflow_contract": route.get("workflow_contract")
+        if isinstance(route.get("workflow_contract"), dict)
+        else None,
+        "intent_buckets": [
+            bucket for bucket in route.get("intent_buckets", []) if isinstance(bucket, dict)
+        ],
+        "behavior_contract": packet.get("behavior_contract")
+        if isinstance(packet.get("behavior_contract"), dict)
+        else {},
+        "reranker": routing_strategy.get("reranker") if isinstance(routing_strategy, dict) else None,
+        "selector": routing_strategy.get("selector") if isinstance(routing_strategy, dict) else None,
+        "route_quality_adjustments": _route_quality_adjustments(packet),
+        "route_quality_signals": _route_object_field(packet, "route_quality_signal"),
+        "route_multi_signals": _route_object_field(packet, "multi_signal"),
+        "route_applies_when_adjustments": _route_numeric_field(
+            packet,
+            "applies_when_adjustment",
+        ),
+        "route_applies_when_signals": _route_object_field(packet, "applies_when_signal"),
+        "route_doc_slots": _route_list_field(packet, "doc_slots"),
+        "route_selection_reason_types": _route_string_field(packet, "selection_reason_type"),
     }
+    payload.update(_current_source_session_metadata())
+    return payload
 
 
 def record_route_trace(

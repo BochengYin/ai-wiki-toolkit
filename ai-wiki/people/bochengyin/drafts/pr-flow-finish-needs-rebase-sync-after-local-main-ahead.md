@@ -5,9 +5,9 @@ model: "gpt-5"
 source_kind: "problem"
 status: "draft"
 created_at: "2026-05-02T00:17:27+1000"
-updated_at: "2026-05-02T00:17:27+1000"
-promotion_candidate: false
-promotion_basis: "none"
+updated_at: "2026-06-01T23:25:00+1000"
+promotion_candidate: true
+promotion_basis: "Observed again during the v0.1.39 release PR: direct main push was blocked, the PR was rebase-merged, and local main needed rebase sync after patch-equivalent commits diverged by SHA."
 ---
 # Problem Draft
 
@@ -58,5 +58,9 @@ This preserves the intended remote history and drops the duplicate local patch-e
 
 ## Reuse Assessment
 
-Keep as a draft until this exact local-main-ahead PR handoff happens again or the helper is updated to
-handle it automatically.
+This exact local-main-ahead PR handoff happened again during the v0.1.39 release. The helper merged
+the PR successfully, then failed during final fast-forward sync because local `main` still held the
+pre-PR SHAs while `origin/main` held patch-equivalent rebase-merged SHAs.
+
+This should be promoted or turned into a helper fix so future release tasks do not rediscover the
+same sync recovery manually.

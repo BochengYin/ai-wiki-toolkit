@@ -11,7 +11,9 @@ from .frontmatter import parse_frontmatter
 
 REUSE_SCHEMA_VERSION = "reuse-v1"
 _DESCRIPTION_KEYS = ("short_description", "description", "summary")
+_APPLIES_WHEN_KEYS = ("applies_when",)
 _ROUTING_HINT_KEYS = ("applies_when", "routing_hint", "routing_hints", "scope")
+_TIMESTAMP_KEYS = ("created_at", "updated_at")
 _LOW_INFORMATION_PARAGRAPHS = {
     "active",
     "archived",
@@ -96,6 +98,15 @@ def _extract_document_card(path: Path, repo_wiki_dir: Path) -> dict[str, str]:
         if routing_hint:
             card["routing_hint"] = routing_hint
             break
+    for key in _APPLIES_WHEN_KEYS:
+        applies_when = _normalize_inline_text(metadata.get(key))
+        if applies_when:
+            card["applies_when"] = applies_when
+            break
+    for key in _TIMESTAMP_KEYS:
+        timestamp = _normalize_inline_text(metadata.get(key), max_chars=80)
+        if timestamp:
+            card[key] = timestamp
     return card
 
 
@@ -155,6 +166,9 @@ def build_repo_catalog(repo_wiki_dir: Path) -> dict[str, Any]:
                 "title": card["title"],
             }
             | ({"routing_hint": card["routing_hint"]} if "routing_hint" in card else {})
+            | ({"applies_when": card["applies_when"]} if "applies_when" in card else {})
+            | ({"created_at": card["created_at"]} if "created_at" in card else {})
+            | ({"updated_at": card["updated_at"]} if "updated_at" in card else {})
         )
     return {
         "schema_version": REUSE_SCHEMA_VERSION,

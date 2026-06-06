@@ -1,0 +1,15 @@
+{
+  "schema_version": "applies-when-blind-experiment-v1",
+  "generated_at": "2026-06-04T22:54:49.936339+00:00",
+  "repo_root": "<local ai-wiki-toolkit checkout>",
+  "experiment_dir": "evals/impact/experiments/applies_when_blind_2026_06",
+  "selection_rule": "Top target_count docs by control replay selected_doc_ids frequency; selection ignores useful/false-positive outcomes.",
+  "target_count": 20,
+  "target_doc_count": 20,
+  "packet_count": 15,
+  "before": "2026-06-04T08:20:53+10:00",
+  "catalog_cutoff": "trace-routed-at",
+  "max_docs": 6,
+  "rerank_top": 20,
+  "budget_words": 3000
+}

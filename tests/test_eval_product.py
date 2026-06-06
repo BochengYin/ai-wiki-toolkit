@@ -8,7 +8,18 @@ from typer.testing import CliRunner
 
 import ai_wiki_toolkit.impact_eval as impact_eval
 from ai_wiki_toolkit.cli import app
+from ai_wiki_toolkit.impact_analysis import (
+    generate_neutral_impact_eval_report,
+    generate_route_cohort_report,
+    generate_route_noise_report,
+    generate_route_replay_report,
+    render_neutral_impact_eval_report,
+    render_route_cohort_report,
+    render_route_noise_report,
+    render_route_replay_report,
+)
 from ai_wiki_toolkit.impact_eval import (
+    backfill_historical_impact_eval_run_index,
     capture_impact_eval_result,
     draft_impact_eval_family_candidate,
     discover_impact_eval_families,
@@ -32,6 +43,7 @@ from ai_wiki_toolkit.impact_eval import (
     render_impact_eval_family_candidates,
     render_impact_eval_family_detail,
     render_impact_eval_family_init_result,
+    render_impact_eval_history_backfill_result,
     render_impact_eval_manifest,
     render_impact_eval_prepare_result,
     render_impact_eval_report,
@@ -49,6 +61,10 @@ from ai_wiki_toolkit.impact_eval import (
     score_impact_eval_result,
     show_impact_eval_family,
     validate_impact_eval_run,
+)
+from ai_wiki_toolkit.project_a import (
+    generate_project_a_diagnostics,
+    render_project_a_diagnostics,
 )
 
 
@@ -71,6 +87,52 @@ def _write_jsonl(path: Path, rows: list[dict]) -> None:
         "".join(json.dumps(row) + "\n" for row in rows),
         encoding="utf-8",
     )
+
+
+def _route_trace_row(
+    *,
+    task_id: str,
+    selected_doc_ids: list[str],
+    task_type: str = "eval_workflow",
+    routed_at: str = "2026-05-20T10:00:00+00:00",
+) -> dict:
+    return {
+        "author_handle": "alice",
+        "index_card_count": len(selected_doc_ids),
+        "maybe_load_count": 0,
+        "must_load_count": 0,
+        "packet_words": 500,
+        "routed_at": routed_at,
+        "schema_version": "route-trace-v1",
+        "selected_doc_count": len(selected_doc_ids),
+        "selected_doc_ids": selected_doc_ids,
+        "task_id": task_id,
+        "task_type": task_type,
+        "trace_id": f"rt_{task_id}",
+    }
+
+
+def _reuse_event_row(
+    *,
+    event_id: str,
+    task_id: str,
+    doc_id: str,
+    outcome: str = "resolved",
+    retrieval_mode: str = "lookup",
+) -> dict:
+    return {
+        "author_handle": "alice",
+        "doc_id": doc_id,
+        "doc_kind": "draft",
+        "event_id": event_id,
+        "evidence_mode": "explicit",
+        "observed_at": "2026-05-20T10:05:00+00:00",
+        "retrieval_mode": retrieval_mode,
+        "reuse_effects": ["changed_plan"] if outcome in {"resolved", "partial"} else [],
+        "reuse_outcome": outcome,
+        "schema_version": "reuse-v1",
+        "task_id": task_id,
+    }
 
 
 def test_script_command_uses_python_from_path_when_running_as_packaged_binary(
@@ -1414,8 +1476,14 @@ def test_run_impact_eval_rubric_score_policy_writes_judgment_artifact(
                 {
                     "id": "captures-diff",
                     "artifact": "workspace_diff",
-                    "contains": "diff --git",
+                    "contains_any": ["missing marker", "diff --git"],
                     "description": "The run captured a workspace diff.",
+                },
+                {
+                    "id": "changed-file-prefix-list",
+                    "artifact": "changed_files",
+                    "changed_file_prefix_any": ["scripts/", "s"],
+                    "description": "The run changed at least one expected file prefix.",
                 }
             ],
             "partial": [],
@@ -1621,6 +1689,759 @@ def test_run_impact_eval_schedule_records_index_and_report(
     )
     assert skipped["status"] == "skipped"
     assert len(calls) == 1
+
+
+def test_backfill_historical_impact_eval_run_index_from_findings_note(tmp_path: Path) -> None:
+    repo_root = _make_plan_repo(tmp_path)
+    repo_wiki = repo_root / "ai-wiki"
+    repo_wiki.mkdir(parents=True)
+    note = (
+        repo_root
+        / "evals"
+        / "impact"
+        / "notes"
+        / "manual_v2_cli_original_ownership_20260425_findings.md"
+    )
+    _write_text(
+        note,
+        """
+# Manual v2 CLI Original Ownership Findings
+
+Run label:
+
+- `cli-original-ownership-20260425-1158`
+
+Prompt/model condition:
+
+- prompt: `evals/impact/prompts/ownership_boundary/original.md`
+
+Run artifacts:
+
+- run dir: `/private/tmp/missing/cli-original-ownership-20260425-1158`
+
+After export, `validate_run.py` reported:
+
+- `shareable_for_causal_claims: true`
+- `critical_confounds: []`
+
+| slot | variant | role | score | key evidence |
+| --- | --- | --- | --- | --- |
+| `s01` | `no_aiwiki_workflow` | primary control | fail | Package surface churn. |
+| `s05` | `aiwiki_ambient_memory_workflow` | primary treatment | success | Repo-local helper. |
+| `s06` | `aiwiki_scaffold_no_adjacent_memory` | diagnostic | fail | Package surface churn. |
+""",
+    )
+
+    result = backfill_historical_impact_eval_run_index(
+        repo_root=repo_root,
+        repo_wiki_dir=repo_wiki,
+    )
+
+    assert result["schema_version"] == "impact-eval-historical-run-backfill-v1"
+    assert result["registered_count"] == 1
+    item = result["registered"][0]
+    assert item["family"] == "ownership_boundary"
+    assert item["primary_outcome"] == "positive_signal"
+    assert item["first_attempt_success_delta"] == 1.0
+    assert item["artifact_status"] == "run_dir_missing"
+    assert item["shareable_for_causal_claims"] is True
+    assert "AI Wiki Impact Eval Historical Run Backfill" in render_impact_eval_history_backfill_result(
+        result
+    )
+
+    schedule = generate_impact_eval_schedule_report(
+        repo_root=repo_root,
+        repo_wiki_dir=repo_wiki,
+        period_id="2026-W23",
+        refresh_candidates=False,
+    )
+    assert schedule["summary"]["indexed_run_count"] == 1
+    assert schedule["recent_runs"][0]["historical_backfill"] is True
+
+
+def test_eval_impact_schedule_backfill_history_cli_outputs_json(tmp_path: Path) -> None:
+    repo_root = _make_plan_repo(tmp_path)
+    repo_wiki = repo_root / "ai-wiki"
+    repo_wiki.mkdir(parents=True)
+    note = repo_root / "ownership-findings.md"
+    _write_text(
+        note,
+        """
+Run label:
+
+- `cli-original-ownership-20260425-1158`
+
+- prompt: `evals/impact/prompts/ownership_boundary/original.md`
+- run dir: `/private/tmp/missing/cli-original-ownership-20260425-1158`
+
+| slot | variant | role | score | key evidence |
+| --- | --- | --- | --- | --- |
+| `s01` | `no_aiwiki_workflow` | primary control | partial | Partial. |
+| `s05` | `aiwiki_ambient_memory_workflow` | primary treatment | success | Success. |
+""",
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "eval",
+            "impact",
+            "schedule",
+            "backfill-history",
+            "--repo-root",
+            str(repo_root),
+            "--repo-wiki-dir",
+            str(repo_wiki),
+            "--note",
+            str(note),
+            "--format",
+            "json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    assert payload["registered_count"] == 1
+    assert payload["registered"][0]["avg_score_delta"] == 0.5
+
+
+def test_eval_impact_route_noise_report_aggregates_traces_and_doc_hotspots(
+    tmp_path: Path,
+) -> None:
+    repo_root = _make_plan_repo(tmp_path)
+    (repo_root / ".git").mkdir()
+    repo_wiki = repo_root / "ai-wiki"
+    _write_jsonl(
+        repo_wiki / "metrics" / "route-traces" / "alice.jsonl",
+        [
+            _route_trace_row(
+                task_id="task-route-noise",
+                selected_doc_ids=[
+                    "people/alice/drafts/useful",
+                    "people/alice/drafts/noisy",
+                    "people/alice/drafts/unused",
+                ],
+            ),
+            _route_trace_row(
+                task_id="task-route-miss",
+                selected_doc_ids=["people/alice/drafts/unused"],
+                task_type="memory_governance",
+            ),
+        ],
+    )
+    _write_jsonl(
+        repo_wiki / "metrics" / "reuse-events" / "alice.jsonl",
+        [
+            _reuse_event_row(
+                event_id="evt_useful",
+                task_id="task-route-noise",
+                doc_id="people/alice/drafts/useful",
+                retrieval_mode="preloaded",
+            ),
+            _reuse_event_row(
+                event_id="evt_noisy",
+                task_id="task-route-noise",
+                doc_id="people/alice/drafts/noisy",
+                outcome="not_helpful",
+                retrieval_mode="preloaded",
+            ),
+            _reuse_event_row(
+                event_id="evt_missed",
+                task_id="task-route-noise",
+                doc_id="people/alice/drafts/missed",
+                retrieval_mode="lookup",
+            ),
+            _reuse_event_row(
+                event_id="evt_missed_2",
+                task_id="task-route-miss",
+                doc_id="people/alice/drafts/missed",
+                retrieval_mode="lookup",
+            ),
+        ],
+    )
+
+    result = generate_route_noise_report(
+        repo_root=repo_root,
+        repo_wiki_dir=repo_wiki,
+        handle="alice",
+        since=None,
+        max_items=5,
+    )
+
+    assert result["schema_version"] == "impact-eval-route-noise-report-v1"
+    assert result["summary"]["route_trace_count"] == 2
+    assert result["missed_doc_hotspots"][0]["doc_id"] == "people/alice/drafts/missed"
+    assert result["missed_doc_hotspots"][0]["missed_useful_count"] == 2
+    assert result["noisy_doc_hotspots"][0]["doc_id"] == "people/alice/drafts/unused"
+    assert "Impact Eval Route Noise Report" in render_route_noise_report(result)
+
+    cli_result = runner.invoke(
+        app,
+        [
+            "eval",
+            "impact",
+            "route-noise",
+            "report",
+            "--repo-root",
+            str(repo_root),
+            "--repo-wiki-dir",
+            str(repo_wiki),
+            "--handle",
+            "alice",
+            "--format",
+            "json",
+        ],
+    )
+
+    assert cli_result.exit_code == 0
+    payload = json.loads(cli_result.output)
+    assert payload["schema_version"] == "impact-eval-route-noise-report-v1"
+    assert payload["summary"]["selected_doc_count"] == 4
+
+
+def test_eval_impact_route_noise_cohort_tracks_fixed_post_change_target(
+    tmp_path: Path,
+) -> None:
+    repo_root = _make_plan_repo(tmp_path)
+    (repo_root / ".git").mkdir()
+    repo_wiki = repo_root / "ai-wiki"
+    _write_jsonl(
+        repo_wiki / "metrics" / "route-traces" / "alice.jsonl",
+        [
+            _route_trace_row(
+                task_id="baseline-one",
+                selected_doc_ids=["people/alice/drafts/useful", "people/alice/drafts/noisy"],
+                routed_at="2026-06-03T09:00:00+00:00",
+            ),
+            _route_trace_row(
+                task_id="post-one",
+                selected_doc_ids=["people/alice/drafts/useful"],
+                routed_at="2026-06-04T09:00:00+00:00",
+            ),
+        ],
+    )
+    _write_jsonl(
+        repo_wiki / "metrics" / "reuse-events" / "alice.jsonl",
+        [
+            _reuse_event_row(
+                event_id="evt_baseline_useful",
+                task_id="baseline-one",
+                doc_id="people/alice/drafts/useful",
+                retrieval_mode="preloaded",
+            ),
+            _reuse_event_row(
+                event_id="evt_post_useful",
+                task_id="post-one",
+                doc_id="people/alice/drafts/useful",
+                retrieval_mode="preloaded",
+            ),
+        ],
+    )
+
+    result = generate_route_cohort_report(
+        repo_root=repo_root,
+        repo_wiki_dir=repo_wiki,
+        handle="alice",
+        post_change_since="2026-06-04T00:00:00+00:00",
+        target_evaluable_traces=2,
+        baseline_evaluable_traces=1,
+    )
+
+    assert result["schema_version"] == "impact-eval-route-cohort-report-v1"
+    assert result["baseline"]["summary"]["trace_count"] == 1
+    assert result["baseline"]["summary"]["route_precision"] == 0.5
+    assert result["post_change"]["summary"]["trace_count"] == 1
+    assert result["post_change"]["summary"]["route_precision"] == 1.0
+    assert result["progress"]["remaining_evaluable_traces"] == 1
+    assert result["comparison"]["route_precision_delta"] == 0.5
+    assert "Route Precision Cohort Report" in render_route_cohort_report(result)
+
+    cli_result = runner.invoke(
+        app,
+        [
+            "eval",
+            "impact",
+            "route-noise",
+            "cohort",
+            "--repo-root",
+            str(repo_root),
+            "--repo-wiki-dir",
+            str(repo_wiki),
+            "--handle",
+            "alice",
+            "--post-change-since",
+            "2026-06-04T00:00:00+00:00",
+            "--target-evaluable-traces",
+            "2",
+            "--baseline-evaluable-traces",
+            "1",
+            "--format",
+            "json",
+        ],
+    )
+
+    assert cli_result.exit_code == 0
+    payload = json.loads(cli_result.output)
+    assert payload["progress"]["current_evaluable_traces"] == 1
+
+
+def test_eval_impact_route_noise_replay_recovers_codex_session_prompt(
+    tmp_path: Path,
+) -> None:
+    repo_root = _make_plan_repo(tmp_path)
+    (repo_root / ".git").mkdir()
+    repo_wiki = repo_root / "ai-wiki"
+    _write_text(
+        repo_wiki / "people" / "alice" / "drafts" / "route-precision-routing.md",
+        "\n".join(
+            [
+                "---",
+                "title: Route Precision Routing",
+                "status: draft",
+                "---",
+                "# Route Precision Routing",
+                "",
+                "Fix route precision routing by selecting the route-specific memory.",
+                "",
+            ]
+        ),
+    )
+    _write_jsonl(
+        repo_wiki / "metrics" / "route-traces" / "alice.jsonl",
+        [
+            _route_trace_row(
+                task_id="fix-route-precision-routing",
+                selected_doc_ids=["people/alice/drafts/noisy"],
+                routed_at="2026-06-03T09:00:00+00:00",
+            ),
+        ],
+    )
+    _write_jsonl(
+        repo_wiki / "metrics" / "reuse-events" / "alice.jsonl",
+        [
+            _reuse_event_row(
+                event_id="evt_replay_useful",
+                task_id="fix-route-precision-routing",
+                doc_id="people/alice/drafts/route-precision-routing",
+                retrieval_mode="lookup",
+            ),
+        ],
+    )
+    sessions_root = tmp_path / "codex" / "sessions"
+    rollout_path = (
+        sessions_root
+        / "2026"
+        / "06"
+        / "03"
+        / "rollout-2026-06-03T09-00-00-11111111-2222-3333-4444-555555555555.jsonl"
+    )
+    _write_jsonl(
+        rollout_path,
+        [
+            {
+                "timestamp": "2026-06-03T09:00:02Z",
+                "type": "response_item",
+                "payload": {
+                    "type": "function_call",
+                    "name": "exec_command",
+                    "arguments": json.dumps(
+                        {
+                            "cmd": (
+                                "aiwiki-toolkit route --task "
+                                '"Fix route precision routing" --format json'
+                            ),
+                            "workdir": str(repo_root),
+                        }
+                    ),
+                },
+            }
+        ],
+    )
+
+    result = generate_route_replay_report(
+        repo_root=repo_root,
+        repo_wiki_dir=repo_wiki,
+        handle="alice",
+        before="2026-06-04T00:00:00+00:00",
+        target_evaluable_traces=1,
+        codex_sessions_root=sessions_root,
+        codex_state_db=tmp_path / "missing-state.sqlite",
+    )
+
+    assert result["schema_version"] == "impact-eval-route-replay-report-v1"
+    assert result["prompt_recovery"]["recovered_trace_count"] == 1
+    assert result["prompt_recovery"]["confidence_counts"] == {"high": 1}
+    assert result["baseline"]["summary"]["route_precision"] == 0.0
+    assert result["replay"]["summary"]["route_precision"] == 1.0
+    assert result["comparison"]["route_precision_delta"] == 1.0
+    replay = result["items"][0]["replay"]
+    assert "route" in replay["language_signals"]["expanded_tokens"]
+    assert "people/alice/drafts/route-precision-routing" in replay[
+        "route_quality_signals"
+    ]
+    assert replay["multi_signal_adjustments"][
+        "people/alice/drafts/route-precision-routing"
+    ] > 0
+    assert "Historical Route Replay Report" in render_route_replay_report(result)
+
+    cli_result = runner.invoke(
+        app,
+        [
+            "eval",
+            "impact",
+            "route-noise",
+            "replay",
+            "--repo-root",
+            str(repo_root),
+            "--repo-wiki-dir",
+            str(repo_wiki),
+            "--handle",
+            "alice",
+            "--before",
+            "2026-06-04T00:00:00+00:00",
+            "--target-evaluable-traces",
+            "1",
+            "--codex-sessions-root",
+            str(sessions_root),
+            "--codex-state-db",
+            str(tmp_path / "missing-state.sqlite"),
+            "--format",
+            "json",
+        ],
+    )
+
+    assert cli_result.exit_code == 0
+    payload = json.loads(cli_result.output)
+    assert payload["prompt_recovery"]["replayed_trace_count"] == 1
+
+
+def test_eval_impact_route_noise_replay_can_filter_future_catalog_docs(
+    tmp_path: Path,
+) -> None:
+    repo_root = _make_plan_repo(tmp_path)
+    (repo_root / ".git").mkdir()
+    repo_wiki = repo_root / "ai-wiki"
+    _write_text(
+        repo_wiki / "people" / "alice" / "drafts" / "route-precision-current.md",
+        "\n".join(
+            [
+                "---",
+                "title: Route Precision Current",
+                "created_at: 2026-06-01T09:00:00+00:00",
+                "status: draft",
+                "---",
+                "# Route Precision Current",
+                "",
+                "Fix route precision routing by selecting the current route-specific memory.",
+                "",
+            ]
+        ),
+    )
+    _write_text(
+        repo_wiki / "people" / "alice" / "drafts" / "route-precision-future.md",
+        "\n".join(
+            [
+                "---",
+                "title: Route Precision Future",
+                "created_at: 2026-06-05T09:00:00+00:00",
+                "status: draft",
+                "---",
+                "# Route Precision Future",
+                "",
+                "Fix route precision routing by selecting future route-specific memory.",
+                "",
+            ]
+        ),
+    )
+    trace = _route_trace_row(
+        task_id="fix-route-precision-routing",
+        selected_doc_ids=["people/alice/drafts/noisy"],
+        routed_at="2026-06-03T09:00:00+00:00",
+    )
+    trace["task"] = "Fix route precision routing"
+    _write_jsonl(repo_wiki / "metrics" / "route-traces" / "alice.jsonl", [trace])
+    _write_jsonl(
+        repo_wiki / "metrics" / "reuse-events" / "alice.jsonl",
+        [
+            _reuse_event_row(
+                event_id="evt_replay_useful",
+                task_id="fix-route-precision-routing",
+                doc_id="people/alice/drafts/route-precision-current",
+                retrieval_mode="lookup",
+            ),
+        ],
+    )
+
+    result = generate_route_replay_report(
+        repo_root=repo_root,
+        repo_wiki_dir=repo_wiki,
+        handle="alice",
+        before="2026-06-04T00:00:00+00:00",
+        catalog_cutoff="trace-routed-at",
+        target_evaluable_traces=1,
+        codex_sessions_root=tmp_path / "missing-sessions",
+        codex_state_db=tmp_path / "missing-state.sqlite",
+    )
+
+    item = result["items"][0]
+    replay = item["replay"]
+    assert result["filters"]["catalog_cutoff"] == "trace-routed-at"
+    assert replay["catalog_cutoff"]["filtered_future_doc_count"] == 1
+    assert "people/alice/drafts/route-precision-future" in replay["catalog_cutoff"][
+        "filtered_future_doc_ids"
+    ]
+    assert "people/alice/drafts/route-precision-future" not in replay["selected_doc_ids"]
+    assert result["catalog_timing"]["filtered_future_doc_count"] == 1
+    assert "Temporal Catalog" in render_route_replay_report(result)
+
+    cli_result = runner.invoke(
+        app,
+        [
+            "eval",
+            "impact",
+            "route-noise",
+            "replay",
+            "--repo-root",
+            str(repo_root),
+            "--repo-wiki-dir",
+            str(repo_wiki),
+            "--handle",
+            "alice",
+            "--before",
+            "2026-06-04T00:00:00+00:00",
+            "--catalog-cutoff",
+            "trace-routed-at",
+            "--target-evaluable-traces",
+            "1",
+            "--codex-sessions-root",
+            str(tmp_path / "missing-sessions"),
+            "--codex-state-db",
+            str(tmp_path / "missing-state.sqlite"),
+            "--format",
+            "json",
+        ],
+    )
+
+    assert cli_result.exit_code == 0
+    payload = json.loads(cli_result.output)
+    assert payload["filters"]["catalog_cutoff"] == "trace-routed-at"
+    assert payload["catalog_timing"]["filtered_future_doc_count"] == 1
+
+
+def test_eval_impact_neutral_report_expands_run_index_into_slot_analysis(
+    tmp_path: Path,
+) -> None:
+    repo_root = _make_plan_repo(tmp_path)
+    (repo_root / ".git").mkdir()
+    repo_wiki = repo_root / "ai-wiki"
+    repo_wiki.mkdir(parents=True)
+    run_dir = _make_empty_run_dir(tmp_path, name="neutral_run")
+    _write_result(
+        run_dir,
+        slot="s01",
+        variant="no_aiwiki_workflow",
+        score="success",
+        first_pass_success=True,
+        changed_files=["scripts/pr_flow.py"],
+    )
+    _write_result(
+        run_dir,
+        slot="s02",
+        variant="aiwiki_ambient_memory_workflow",
+        score="success",
+        first_pass_success=True,
+        changed_files=["scripts/pr_flow.py"],
+    )
+    _write_json(
+        run_dir / "slot_command_results.json",
+        {
+            "results": [
+                {
+                    "slot": "s01",
+                    "variant": "no_aiwiki_workflow",
+                    "prompt_level": "original",
+                    "started_at": "2026-06-04T10:00:00",
+                    "finished_at": "2026-06-04T10:05:00",
+                    "codex_returncode": 0,
+                    "save_result_returncode": 0,
+                },
+                {
+                    "slot": "s02",
+                    "variant": "aiwiki_ambient_memory_workflow",
+                    "prompt_level": "original",
+                    "started_at": "2026-06-04T10:05:00",
+                    "finished_at": "2026-06-04T10:12:00",
+                    "codex_returncode": 0,
+                    "save_result_returncode": 0,
+                },
+            ]
+        },
+    )
+    _write_json(
+        repo_wiki / "_toolkit" / "evals" / "runs" / "index.json",
+        {
+            "schema_version": "impact-eval-run-index-v1",
+            "updated_at": "2026-06-04T10:13:00",
+            "runs": [
+                {
+                    "period_id": "period-neutral",
+                    "family": "ownership_boundary",
+                    "run_dir": str(run_dir),
+                    "score_policy": "rubric",
+                    "runner_success": True,
+                    "primary_outcome": "neutral_signal",
+                    "first_attempt_success_delta": 0.0,
+                    "avg_score_delta": 0.0,
+                    "records": 2,
+                }
+            ],
+        },
+    )
+
+    result = generate_neutral_impact_eval_report(
+        repo_root=repo_root,
+        repo_wiki_dir=repo_wiki,
+        period_id="period-neutral",
+    )
+
+    assert result["schema_version"] == "impact-eval-neutral-report-v1"
+    assert result["summary"]["reported_family_count"] == 1
+    family = result["families"][0]
+    assert family["neutral_reason"] == "baseline_also_success"
+    assert family["observability"]["max_duration_seconds"] == 420
+    assert family["observability"]["heartbeat_present"] is False
+    assert len(family["primary_slot_records"]) == 2
+    assert "Impact Eval Neutral Family Report" in render_neutral_impact_eval_report(result)
+
+    cli_result = runner.invoke(
+        app,
+        [
+            "eval",
+            "impact",
+            "neutral",
+            "report",
+            "--repo-root",
+            str(repo_root),
+            "--repo-wiki-dir",
+            str(repo_wiki),
+            "--period-id",
+            "period-neutral",
+            "--format",
+            "json",
+        ],
+    )
+
+    assert cli_result.exit_code == 0
+    payload = json.loads(cli_result.output)
+    assert payload["families"][0]["neutral_reason"] == "baseline_also_success"
+
+
+def test_project_a_diagnostics_combines_harness_repo_and_route_signals(tmp_path: Path) -> None:
+    repo_root = _make_plan_repo(tmp_path)
+    (repo_root / ".git").mkdir()
+    repo_wiki = _write_retry_loop_evidence(repo_root)
+    _write_json(
+        repo_root / "evals" / "impact" / "rubrics" / "ownership_boundary.json",
+        {
+            "schema_version": "impact-eval-rubric-v1",
+            "success": [{"artifact": "workspace_diff", "contains": "diff --git"}],
+        },
+    )
+
+    result = generate_project_a_diagnostics(
+        repo_root=repo_root,
+        repo_wiki_dir=repo_wiki,
+        handle="alice",
+        since="30d",
+        period_id="2026-W23",
+        run_checks=False,
+        write=True,
+    )
+
+    assert result["schema_version"] == "project-a-diagnostics-v1"
+    assert result["family_diagnostics"]["runnable_count"] == 1
+    assert result["family_diagnostics"]["rubrics_present"] == 1
+    assert result["repo_evaluation_summary"]["workflow_coverage"]["reuse_events"] == 1
+    assert Path(result["outputs"]["markdown"]).exists()
+    assert "Project A Coding-Agent Eval Harness Diagnostics" in render_project_a_diagnostics(
+        result
+    )
+
+
+def test_project_a_diagnostics_skips_rerun_backlog_after_successful_rubric_run(
+    tmp_path: Path,
+) -> None:
+    repo_root = _make_plan_repo(tmp_path)
+    (repo_root / ".git").mkdir()
+    repo_wiki = _write_retry_loop_evidence(repo_root)
+    _write_json(
+        repo_root / "evals" / "impact" / "rubrics" / "ownership_boundary.json",
+        {
+            "schema_version": "impact-eval-rubric-v1",
+            "success": [{"artifact": "workspace_diff", "contains": "diff --git"}],
+        },
+    )
+    _write_json(
+        repo_wiki / "_toolkit" / "evals" / "runs" / "index.json",
+        {
+            "schema_version": "impact-eval-run-index-v1",
+            "updated_at": "2026-06-03T12:00:00+00:00",
+            "runs": [
+                {
+                    "period_id": "project-a-rerun-2026-06-03",
+                    "family": "ownership_boundary",
+                    "score_policy": "rubric",
+                    "runner_success": True,
+                    "primary_outcome": "neutral_signal",
+                    "records": 6,
+                }
+            ],
+        },
+    )
+
+    result = generate_project_a_diagnostics(
+        repo_root=repo_root,
+        repo_wiki_dir=repo_wiki,
+        handle="alice",
+        since="30d",
+        run_checks=False,
+        write=False,
+    )
+
+    titles = {item["title"] for item in result["optimization_backlog"]}
+    assert "Rerun selected benchmark families after scoring/index gates" not in titles
+    assert "Analyze neutral benchmark families before adding memory" in titles
+    assert "Add per-slot timeout and heartbeat artifacts" in titles
+
+
+def test_eval_impact_project_a_report_cli_outputs_json(tmp_path: Path) -> None:
+    repo_root = _make_plan_repo(tmp_path)
+    (repo_root / ".git").mkdir()
+    repo_wiki = _write_retry_loop_evidence(repo_root)
+
+    result = runner.invoke(
+        app,
+        [
+            "eval",
+            "impact",
+            "project-a",
+            "report",
+            "--repo-root",
+            str(repo_root),
+            "--repo-wiki-dir",
+            str(repo_wiki),
+            "--handle",
+            "alice",
+            "--no-write",
+            "--format",
+            "json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    assert payload["schema_version"] == "project-a-diagnostics-v1"
+    assert payload["family_diagnostics"]["runnable_count"] == 1
 
 
 def test_eval_impact_schedule_report_cli_outputs_json(tmp_path: Path) -> None:

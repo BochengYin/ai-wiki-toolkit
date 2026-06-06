@@ -1,0 +1,46 @@
+{
+  "schema_version": "impact-eval-rubric-v1",
+  "name": "ownership-boundary-v1",
+  "description": "Deterministic artifact checks for keeping contributor branch/PR workflow helpers out of distributed package surfaces.",
+  "success": [
+    {
+      "id": "repo-local-script",
+      "artifact": "changed_files",
+      "changed_file_prefix": "scripts/",
+      "description": "Implements the helper as a repo-local contributor script."
+    },
+    {
+      "id": "tests-updated",
+      "artifact": "changed_files",
+      "changed_file_prefix": "tests/",
+      "description": "Adds focused tests for the contributor workflow helper."
+    },
+    {
+      "id": "branch-patterns-covered",
+      "artifact": "workspace_diff",
+      "contains_any": [
+        "feature/YYYY_MM_DD_description",
+        "feature/",
+        "chore/",
+        "fix/"
+      ],
+      "description": "Covers the requested branch naming rules."
+    }
+  ],
+  "partial": [
+    {
+      "id": "contributor-doc-updated",
+      "artifact": "changed_files",
+      "changed_file": "CONTRIBUTING.md",
+      "description": "Documents the contributor workflow even if the implementation surface still needs review."
+    }
+  ],
+  "fail": [
+    {
+      "id": "package-surface-churn",
+      "artifact": "changed_files",
+      "changed_file_prefix": "src/ai_wiki_toolkit/",
+      "description": "Contributor-only workflow logic entered the distributed Python package."
+    }
+  ]
+}

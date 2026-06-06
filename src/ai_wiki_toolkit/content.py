@@ -574,7 +574,8 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             - `task_id`: stable task id, either supplied by the caller or derived from the task text.
             - `task`: current user request text, when supplied by the agent.
             - `route.task_type`: coarse task class such as `scaffold_prompt_workflow`, `release_distribution`, `memory_governance`, `workflow_state`, `eval_workflow`, or `general`.
-            - `route.risk_tags`: task risks such as `user_owned_docs`, `managed_prompt_block`, `release_distribution`, `ci_workflow`, `memory_governance`, `workflow_state`, or `task_evaluation`.
+            - `route.domain_tags`: task domains such as `release_distribution`, `ci_workflow`, `memory_governance`, `workflow_state`, or `task_evaluation`.
+            - `route.guardrail_tags`: protection domains such as `user_owned_docs` or `managed_prompt_block`.
             - `route.changed_paths`: path signals supplied by the caller or inferred from `git status --short`.
             - `actor`: resolved local actor handle from CLI/environment, `.env.aiwiki`, git config, or fallback.
             - `route.effort`: coarse effort level such as `low`, `normal`, or `deep`.
@@ -897,7 +898,8 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             - `task_id`
             - `task_type`
             - `effort`
-            - `risk_tags`
+            - `domain_tags`
+            - `guardrail_tags`
             - `changed_paths`
             - `selected_doc_ids`
             - `must_load_doc_ids`

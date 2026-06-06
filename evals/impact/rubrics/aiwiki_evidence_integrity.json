@@ -1,0 +1,53 @@
+{
+  "schema_version": "impact-eval-rubric-v1",
+  "name": "aiwiki-evidence-integrity-v1",
+  "description": "Deterministic artifact checks for task-level AI wiki evidence coverage, managed-doc exclusion, and explicit write-back outcomes.",
+  "success": [
+    {
+      "id": "task-check-command",
+      "artifact": "workspace_diff",
+      "contains": "record-reuse-check",
+      "description": "Adds or documents the task-level reuse-check command instead of relying only on document reuse events."
+    },
+    {
+      "id": "separate-task-check-storage",
+      "artifact": "workspace_diff",
+      "contains_any": [
+        "task-checks",
+        "reuse-check"
+      ],
+      "description": "Separates completed-task coverage from document-level reuse observations."
+    },
+    {
+      "id": "managed-doc-exclusion",
+      "artifact": "workspace_diff",
+      "contains_any": [
+        "managed",
+        "_toolkit"
+      ],
+      "description": "Accounts for package-managed docs so control/workflow docs do not inflate knowledge-reuse metrics."
+    },
+    {
+      "id": "tests-updated",
+      "artifact": "changed_files",
+      "changed_file_prefix": "tests/",
+      "description": "Adds focused regression coverage for the evidence behavior."
+    }
+  ],
+  "partial": [
+    {
+      "id": "document-reuse-only",
+      "artifact": "workspace_diff",
+      "contains": "record-reuse",
+      "description": "Adds some reuse evidence behavior but may still lack task-level coverage."
+    }
+  ],
+  "fail": [
+    {
+      "id": "user-owned-draft-churn",
+      "artifact": "untracked_files",
+      "untracked_file_prefix": "ai-wiki/people/",
+      "description": "Creates user-owned AI wiki draft churn while implementing the evidence workflow."
+    }
+  ]
+}

@@ -5,9 +5,9 @@ model: "gpt-5"
 source_kind: "release"
 status: "draft"
 promotion_candidate: true
-promotion_basis: "Observed again during v0.1.38: Homebrew tap checkout still returned Bad credentials, but release assets uploaded and npm publishing completed because tap sync is non-blocking."
+promotion_basis: "Observed again during v0.1.38 and v0.1.39: Homebrew tap checkout still returned Bad credentials, but release assets uploaded and npm publishing completed because tap sync is non-blocking."
 created_at: "2026-05-20T23:50:00+10:00"
-updated_at: "2026-05-25T22:29:46+10:00"
+updated_at: "2026-06-02T07:45:21+1000"
 ---
 # Release Assets Should Not Be Blocked By Homebrew Tap Sync
 
@@ -18,6 +18,11 @@ During the `v0.1.32` release, all platform build jobs and Linux runtime matrix c
 The failure happened after the release was created but before assets were uploaded because the workflow tried to check out `BochengYin/homebrew-tap` with `HOMEBREW_TAP_PAT`, and GitHub returned `Bad credentials`.
 
 During the `v0.1.38` release, the same Homebrew tap credential problem appeared again, but only as a warning after release asset upload. The GitHub Release assets, npm publish workflow, and Windows ARM smoke check all completed successfully.
+
+During the `v0.1.39` release, `HOMEBREW_TAP_PAT` was still present but invalid. `actions/checkout`
+failed while retrieving the default branch for `BochengYin/homebrew-tap` with `Bad credentials`.
+The tap formula had fallen behind at `0.1.31`, so the formula was manually synced from the
+`v0.1.39` GitHub Release asset and pushed to `BochengYin/homebrew-tap` as commit `d446e89`.
 
 ## Lesson
 
@@ -43,4 +48,6 @@ For `v0.1.32`, the release was rescued by:
 
 ## Follow-Up
 
-Rotate `HOMEBREW_TAP_PAT` if automatic tap sync should keep working. If tap sync stays optional, keep it non-blocking and rely on the release asset plus npm smoke checks as the release gate.
+Rotate `HOMEBREW_TAP_PAT` if automatic tap sync should keep working. The token only needs access to
+the tap repository with contents read/write permission. If tap sync stays optional, keep it
+non-blocking and rely on the release asset plus npm smoke checks as the release gate.

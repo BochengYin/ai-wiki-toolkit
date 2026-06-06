@@ -7,6 +7,7 @@ from datetime import datetime
 import hashlib
 import json
 from pathlib import Path
+import re
 import shlex
 import shutil
 import subprocess
@@ -62,6 +63,9 @@ CANDIDATE_PROMOTION_SCHEMA_VERSION = "impact-eval-candidate-promotion-v1"
 SCHEDULE_REPORT_SCHEMA_VERSION = "impact-eval-schedule-report-v1"
 SCHEDULE_RUN_SCHEMA_VERSION = "impact-eval-schedule-run-v1"
 RUN_INDEX_SCHEMA_VERSION = "impact-eval-run-index-v1"
+HISTORICAL_RUN_BACKFILL_SCHEMA_VERSION = "impact-eval-historical-run-backfill-v1"
+HISTORICAL_NOTE_SCORE_POLICY = "manual-note-rubric"
+HISTORICAL_FINDINGS_GLOB = "manual_v2_cli_original_*_findings.md"
 
 
 @dataclass(frozen=True)
@@ -2744,26 +2748,52 @@ def _evaluate_rubric_criterion(
     contains = criterion.get("contains")
     if isinstance(contains, str):
         checks.append(contains in text)
+    contains_all = criterion.get("contains_all")
+    if isinstance(contains_all, list):
+        values = [str(item) for item in contains_all if str(item)]
+        if values:
+            checks.append(all(value in text for value in values))
+    contains_any = criterion.get("contains_any")
+    if isinstance(contains_any, list):
+        values = [str(item) for item in contains_any if str(item)]
+        if values:
+            checks.append(any(value in text for value in values))
     not_contains = criterion.get("not_contains")
     if isinstance(not_contains, str):
         checks.append(not_contains not in text)
+    not_contains_any = criterion.get("not_contains_any")
+    if isinstance(not_contains_any, list):
+        values = [str(item) for item in not_contains_any if str(item)]
+        if values:
+            checks.append(all(value not in text for value in values))
     changed_file = criterion.get("changed_file")
     if isinstance(changed_file, str):
         checks.append(changed_file in text.splitlines())
     changed_file_prefix = criterion.get("changed_file_prefix")
     if isinstance(changed_file_prefix, str):
         checks.append(any(line.startswith(changed_file_prefix) for line in text.splitlines()))
+    changed_file_prefix_any = criterion.get("changed_file_prefix_any")
+    if isinstance(changed_file_prefix_any, list):
+        values = [str(item) for item in changed_file_prefix_any if str(item)]
+        if values:
+            checks.append(any(line.startswith(prefix) for prefix in values for line in text.splitlines()))
     untracked_file = criterion.get("untracked_file")
     if isinstance(untracked_file, str):
         checks.append(untracked_file in text.splitlines())
     untracked_file_prefix = criterion.get("untracked_file_prefix")
     if isinstance(untracked_file_prefix, str):
         checks.append(any(line.startswith(untracked_file_prefix) for line in text.splitlines()))
+    untracked_file_prefix_any = criterion.get("untracked_file_prefix_any")
+    if isinstance(untracked_file_prefix_any, list):
+        values = [str(item) for item in untracked_file_prefix_any if str(item)]
+        if values:
+            checks.append(any(line.startswith(prefix) for prefix in values for line in text.splitlines()))
     if not checks:
         raise ValueError(
             "Rubric criterion must include at least one supported check: "
-            "contains, not_contains, changed_file, changed_file_prefix, "
-            "untracked_file, or untracked_file_prefix."
+            "contains, contains_all, contains_any, not_contains, not_contains_any, "
+            "changed_file, changed_file_prefix, changed_file_prefix_any, "
+            "untracked_file, untracked_file_prefix, or untracked_file_prefix_any."
         )
     return {
         "id": criterion.get("id"),
@@ -3245,6 +3275,168 @@ def _write_run_index(
     }
     _write_json(path, payload)
     return {"path": str(path), "run_count": len(runs)}
+
+
+_NOTE_RUN_LABEL_RE = re.compile(r"Run label:\s*\n\s*-\s*`([^`]+)`", re.MULTILINE)
+_NOTE_RUN_DIR_RE = re.compile(r"run dir:\s*`([^`]+)`", re.IGNORECASE)
+_NOTE_PROMPT_FAMILY_RE = re.compile(r"evals/impact/prompts/([^/]+)/")
+_NOTE_SLOT_SCORE_RE = re.compile(
+    r"^\|\s*`(?P<slot>s\d+)`\s*\|\s*`(?P<variant>[^`]+)`\s*\|\s*(?P<role>[^|]+?)\s*\|\s*(?P<score>success|partial|fail)\s*\|",
+    re.MULTILINE,
+)
+
+
+def _historical_recorded_at(run_label: str) -> str:
+    match = re.search(r"(20\d{6})", run_label)
+    if not match:
+        return _now_iso()
+    value = match.group(1)
+    return f"{value[:4]}-{value[4:6]}-{value[6:8]}T00:00:00+10:00"
+
+
+def _historical_period_id(run_label: str) -> str:
+    match = re.search(r"(20\d{6})", run_label)
+    if not match:
+        return f"historical-{run_label}"
+    value = match.group(1)
+    return f"historical-{value[:4]}-{value[4:6]}-{value[6:8]}"
+
+
+def _parse_historical_findings_note(note_path: Path, *, repo_root: Path) -> dict:
+    text = note_path.read_text(encoding="utf-8")
+    run_label_match = _NOTE_RUN_LABEL_RE.search(text)
+    run_dir_match = _NOTE_RUN_DIR_RE.search(text)
+    family_match = _NOTE_PROMPT_FAMILY_RE.search(text)
+    if run_label_match is None:
+        raise ValueError(f"Could not find Run label in {note_path}")
+    if family_match is None:
+        raise ValueError(f"Could not find prompt family in {note_path}")
+
+    run_label = run_label_match.group(1)
+    family = family_match.group(1)
+    run_dir = run_dir_match.group(1) if run_dir_match is not None else None
+    score_rows = [
+        match.groupdict()
+        for match in _NOTE_SLOT_SCORE_RE.finditer(text)
+    ]
+    primary_scores = {
+        str(row["variant"]): str(row["score"])
+        for row in score_rows
+        if "primary" in str(row["role"]).lower()
+    }
+    no_aiwiki_score = primary_scores.get(PRIMARY_NO_AIWIKI_VARIANT)
+    aiwiki_score = primary_scores.get(PRIMARY_AIWIKI_VARIANT)
+    first_attempt_success_delta = None
+    avg_score_delta = None
+    primary_outcome = "pending"
+    if no_aiwiki_score in SCORE_VALUES and aiwiki_score in SCORE_VALUES:
+        first_attempt_success_delta = (
+            float(aiwiki_score == "success") - float(no_aiwiki_score == "success")
+        )
+        avg_score_delta = SCORE_VALUES[aiwiki_score] - SCORE_VALUES[no_aiwiki_score]
+        if avg_score_delta > 0:
+            primary_outcome = "positive_signal"
+        elif avg_score_delta < 0:
+            primary_outcome = "negative_signal"
+        else:
+            primary_outcome = "neutral_signal"
+
+    run_dir_exists = Path(run_dir).exists() if run_dir else False
+    try:
+        source_note = note_path.relative_to(repo_root).as_posix()
+    except ValueError:
+        source_note = str(note_path)
+    return {
+        "period_id": _historical_period_id(run_label),
+        "recorded_at": _historical_recorded_at(run_label),
+        "family": family,
+        "run_label": run_label,
+        "run_dir": run_dir,
+        "score_policy": HISTORICAL_NOTE_SCORE_POLICY,
+        "runner_success": None,
+        "primary_outcome": primary_outcome,
+        "first_attempt_success_delta": first_attempt_success_delta,
+        "avg_score_delta": avg_score_delta,
+        "records": len(score_rows),
+        "bundle_dir": None,
+        "historical_backfill": True,
+        "source_note": source_note,
+        "artifact_status": "run_dir_exists" if run_dir_exists else "run_dir_missing",
+        "shareable_for_causal_claims": (
+            "shareable_for_causal_claims: true" in text
+            and "critical_confounds: []" in text
+        ),
+        "primary_scores": {
+            PRIMARY_NO_AIWIKI_VARIANT: no_aiwiki_score,
+            PRIMARY_AIWIKI_VARIANT: aiwiki_score,
+        },
+    }
+
+
+def backfill_historical_impact_eval_run_index(
+    *,
+    repo_root: Path | None = None,
+    repo_wiki_dir: Path | None = None,
+    note_paths: tuple[Path, ...] = (),
+    replace_existing: bool = True,
+) -> dict:
+    """Register repo-local historical findings notes in the managed run index."""
+
+    resolved_repo_root = _resolve_eval_repo_root(repo_root)
+    selected_repo_wiki_dir = _repo_wiki_dir(resolved_repo_root, repo_wiki_dir)
+    selected_note_paths = (
+        note_paths
+        if note_paths
+        else tuple(
+            sorted((resolved_repo_root / "evals" / "impact" / "notes").glob(HISTORICAL_FINDINGS_GLOB))
+        )
+    )
+    items: list[dict] = []
+    skipped: list[dict] = []
+    for note_path in selected_note_paths:
+        resolved_note = note_path if note_path.is_absolute() else resolved_repo_root / note_path
+        try:
+            items.append(_parse_historical_findings_note(resolved_note, repo_root=resolved_repo_root))
+        except (OSError, ValueError) as exc:
+            skipped.append({"path": str(resolved_note), "reason": str(exc)})
+
+    index_path = _run_index_path(resolved_repo_root, selected_repo_wiki_dir)
+    index = _load_run_index(index_path)
+    existing_runs = index.get("runs", [])
+    if not isinstance(existing_runs, list):
+        existing_runs = []
+    if replace_existing:
+        source_notes = {str(item.get("source_note")) for item in items}
+        existing_runs = [
+            item
+            for item in existing_runs
+            if not (
+                isinstance(item, dict)
+                and (
+                    item.get("historical_backfill") is True
+                    or str(item.get("source_note")) in source_notes
+                )
+            )
+        ]
+    runs = [*existing_runs, *items]
+    payload = {
+        "schema_version": RUN_INDEX_SCHEMA_VERSION,
+        "updated_at": _now_iso(),
+        "runs": runs,
+    }
+    _write_json(index_path, payload)
+    return {
+        "schema_version": HISTORICAL_RUN_BACKFILL_SCHEMA_VERSION,
+        "repo_root": str(resolved_repo_root),
+        "repo_wiki_dir": str(selected_repo_wiki_dir),
+        "run_index_path": str(index_path),
+        "replace_existing": replace_existing,
+        "registered_count": len(items),
+        "skipped_count": len(skipped),
+        "run_index_count": len(runs),
+        "registered": items,
+        "skipped": skipped,
+    }
 
 
 def generate_impact_eval_schedule_report(
@@ -4026,6 +4218,53 @@ def render_impact_eval_schedule_run_result(result: dict) -> str:
 
 
 def render_impact_eval_schedule_run_result_json(result: dict) -> str:
+    return json.dumps(result, indent=2) + "\n"
+
+
+def render_impact_eval_history_backfill_result(result: dict) -> str:
+    rows = [
+        [
+            str(item.get("family", "")),
+            str(item.get("run_label", "")),
+            str(item.get("primary_outcome", "")),
+            str(item.get("artifact_status", "")),
+            str(item.get("source_note", "")),
+        ]
+        for item in result.get("registered", [])
+        if isinstance(item, dict)
+    ]
+    skipped_rows = [
+        [str(item.get("path", "")), str(item.get("reason", ""))]
+        for item in result.get("skipped", [])
+        if isinstance(item, dict)
+    ]
+    lines = [
+        "# AI Wiki Impact Eval Historical Run Backfill",
+        "",
+        f"- Registered: `{result.get('registered_count')}`",
+        f"- Skipped: `{result.get('skipped_count')}`",
+        f"- Run index: `{result.get('run_index_path')}`",
+        f"- Run index count: `{result.get('run_index_count')}`",
+        f"- Replace existing historical backfill: `{_format_bool(result.get('replace_existing'))}`",
+        "",
+        "## Registered",
+        "",
+        _markdown_table(["family", "run_label", "outcome", "artifact_status", "source_note"], rows),
+        "",
+    ]
+    if skipped_rows:
+        lines.extend(
+            [
+                "## Skipped",
+                "",
+                _markdown_table(["path", "reason"], skipped_rows),
+                "",
+            ]
+        )
+    return "\n".join(lines)
+
+
+def render_impact_eval_history_backfill_result_json(result: dict) -> str:
     return json.dumps(result, indent=2) + "\n"
 
 

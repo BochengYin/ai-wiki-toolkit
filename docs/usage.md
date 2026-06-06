@@ -46,8 +46,29 @@ Agents normally run route at task start:
 aiwiki-toolkit route --task "current user request"
 ```
 
-The command emits a transient context packet with task type, risk tags, success criteria, index
+The command emits a transient context packet with task type, domain tags, guardrail tags, success criteria, index
 cards, `must_load` docs, `must_follow` rules, `maybe_load` docs, and explicit skip reasons.
+
+After initial scoring, route reranks the top deterministic index cards by card-level specificity.
+The reranker only sees card metadata such as title, short description, routing hint, kind, and
+existing scores; it does not load every full Markdown document as a second pass. Use
+`--rerank-top 0` to disable the reranker for scorer comparisons.
+
+Route also exposes scorer diagnostics in JSON packets. `route.language_signals` shows conservative
+English and Chinese task-term expansions, including mixed-language prompts. Each card includes
+`multi_signal_adjustment` / `multi_signal` for capped route-tag protection and
+`route_quality_signal` for support-aware history such as selected count, useful selections,
+selected precision, missed-useful bonus, and unused/not-helpful penalties.
+
+By default, route shows `git status` paths in the packet but only uses them as routing signals when
+the task text is generic. Pass `--changed-path` when a path should explicitly influence task
+classification, domain/guardrail tags, and document scoring.
+
+Route trace telemetry records the task text, selected docs, language signals, route quality
+adjustments/signals, multi-signal adjustments, changed-path signal policy, and best-effort local
+Codex session provenance such as `CODEX_THREAD_ID`, rollout path, thread cwd/title, and git metadata
+when `~/.codex/state_5.sqlite` is available. This supports later local replay without uploading
+repository contents.
 
 The packet is generated guidance, not canonical memory. Markdown files under `ai-wiki/` remain the
 source of truth.
@@ -170,6 +191,21 @@ Route diagnostics join `route-traces/<handle>.jsonl` with downstream `record-reu
 `task_id`. They report route-selected docs, selected-but-unused docs, later lookup docs, useful
 selected docs, missed useful docs, route precision, route recall proxy, route noise, and context
 cost.
+
+Impact-eval route reports separate historical summaries, real post-change cohorts, and replay
+projections:
+
+```bash
+aiwiki-toolkit eval impact route-noise report --since 30d
+aiwiki-toolkit eval impact route-noise cohort --post-change-since 2026-06-04T08:20:53+10:00
+aiwiki-toolkit eval impact route-noise replay --before 2026-06-04T08:20:53+10:00 --catalog-cutoff trace-routed-at --rerank-top 20
+```
+
+`route-noise replay` recovers historical route prompts from local Codex session JSONL when old route
+traces do not yet contain task text. It compares the historical selected docs and current-router
+selected docs against the same downstream reuse events, and labels the result as a retrospective
+projection rather than post-change production evidence. Use `--rerank-top 0` to compare replay
+without the index-card reranker.
 
 Generate a repo-level evaluation and improvement advisor report:
 

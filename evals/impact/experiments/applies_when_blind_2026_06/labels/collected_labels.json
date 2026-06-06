@@ -1,0 +1,272 @@
+[
+  {
+    "packet_id": "p002-people__bochengyin__drafts__eval-run-manifest-should-precede-auto-runner",
+    "doc_id": "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+    "label": {
+      "doc_id": "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+      "label_status": "labeled",
+      "applies_when": "Require a captured-run manifest when extending eval impact from report generation toward automated benchmark execution; not for report-only metric summaries or immediate agent auto-runner implementation",
+      "routing_hint": "Route before designing or implementing `eval impact run` or other automated benchmark runners so the run identity, prompt hashes, model settings, variant mapping, confound status, and artifact paths are made auditable first.",
+      "rationale": "The source excerpt states the implemented slice deliberately added `eval impact manifest` instead of full auto-running, and the recorded lesson says to add a captured-run manifest surface before auto-running benchmark families."
+    },
+    "audit": {
+      "passed": true,
+      "forbidden_fragments": [],
+      "applies_when_length": 202
+    },
+    "source_session_ref": "redacted",
+    "snapshot_status": "current_file_excluded_future_update_risk"
+  },
+  {
+    "packet_id": "p003-people__bochengyin__drafts__impact-eval-prompts-should-backsolve-from-concrete-history",
+    "doc_id": "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+    "label": {
+      "doc_id": "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+      "label_status": "labeled",
+      "applies_when": "Design impact-eval task prompts when comparing AI-wiki memory variants; not for running eval workspaces or capturing results",
+      "routing_hint": "Route when drafting or revising impact eval prompt families and deciding what concrete task should test memory effects.",
+      "rationale": "The source says the draft captures a rule that impact eval tasks should be backsolved from real repo history, with the task fixed while only memory state and prompt specificity vary."
+    },
+    "audit": {
+      "passed": true,
+      "forbidden_fragments": [],
+      "applies_when_length": 124
+    },
+    "source_session_ref": "redacted",
+    "snapshot_status": "current_file_excluded_future_update_risk"
+  },
+  {
+    "packet_id": "p004-people__bochengyin__drafts__trial-error-reduction-should-extend-memory-diagnostics",
+    "doc_id": "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics",
+    "label": {
+      "doc_id": "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics",
+      "label_status": "labeled",
+      "applies_when": "Use trial/error usefulness reporting when extending memory diagnostics to assess whether AI wiki reduced retries, wrong paths, plan changes, or rework cost; not for launching new benchmark families before repeated task evidence exists",
+      "routing_hint": "Route product/eval clarification tasks here when they ask whether trial-and-error reduction should be measured through aiwiki-toolkit diagnose memory, reuse events, task checks, missed-memory incidents, high-ROI memory reports, or source incident evidence.",
+      "rationale": "The source states that trial_and_error_reduction is a product/evaluation dimension derived from existing AI wiki evidence, with the next slice extending explicit memory diagnostics rather than starting a new formal replay family."
+    },
+    "audit": {
+      "passed": true,
+      "forbidden_fragments": [],
+      "applies_when_length": 234
+    },
+    "source_session_ref": "redacted",
+    "snapshot_status": "current_file_safe_updated_before_cutoff"
+  },
+  {
+    "packet_id": "p005-people__bochengyin__drafts__eval-product-run-requests-need-family-scope-check",
+    "doc_id": "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+    "label": {
+      "doc_id": "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+      "label_status": "labeled",
+      "applies_when": "Check eval-product family scope when a run request expects new benchmark families or names a product theme such as trial-and-error; not for ordinary report smoke over existing captured artifacts.",
+      "routing_hint": "Route on eval-as-product/impact-eval requests where the user asks whether newer families exist or whether a product-theme family should be designed or run.",
+      "rationale": "The source shows the user challenged why only the old families appeared and asked about trial-and-error. The assistant verified only five formal family specs and captured artifacts existed, distinguished report generation from rerunning or creating a family, and wrote the lesson to verify family specs, artifacts, and backlog status before reporting eval-product runs as complete."
+    },
+    "audit": {
+      "passed": true,
+      "forbidden_fragments": [],
+      "applies_when_length": 195
+    },
+    "source_session_ref": "redacted",
+    "snapshot_status": "current_file_excluded_future_update_risk"
+  },
+  {
+    "packet_id": "p007-people__bochengyin__drafts__workflow-primary-impact-evals-compare-working-modes",
+    "doc_id": "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes",
+    "label": {
+      "doc_id": "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes",
+      "label_status": "labeled",
+      "applies_when": "Design impact-eval comparison modes when deciding whether the primary result should measure end-to-end workflow impact versus raw/consolidated diagnostic variants; not for single-memory causality checks or generic harness implementation.",
+      "routing_hint": "Route when planning AI Wiki impact evals, especially when comparing workflow-primary outcomes against linked raw/consolidated memory modes.",
+      "rationale": "The source excerpt states the reusable judgment directly: workflow-primary is the main conclusion, while linked raw/consolidated variants are diagnostic axes. The implementation also separated Workflow Result from Diagnostic Result and avoided making single-memory causality the product claim."
+    },
+    "audit": {
+      "passed": true,
+      "forbidden_fragments": [],
+      "applies_when_length": 237
+    },
+    "source_session_ref": "redacted",
+    "snapshot_status": "current_file_excluded_future_update_risk"
+  },
+  {
+    "packet_id": "p009-people__bochengyin__drafts__efficiency-eval-should-include-source-incident-cost",
+    "doc_id": "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+    "label": {
+      "doc_id": "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+      "label_status": "labeled",
+      "applies_when": "Evaluate AI wiki efficiency when comparing replay outcomes against the original source incident or knowledge acquisition cost; not for routine reuse telemetry or document-level metrics alone",
+      "routing_hint": "Use for AI wiki evaluation/reporting tasks about time-to-solve, avoided rework, break-even value, or adding source-incident cost alongside no_aiwiki and ambient_aiwiki replay comparisons.",
+      "rationale": "The source excerpt shows the user asking to add a dimension for the time from the initial mistake/session artifact through resolution. The assistant framed this as source incident / acquisition cost, distinct from replay slots and document reuse events, and recorded the draft for future efficiency reports."
+    },
+    "audit": {
+      "passed": true,
+      "forbidden_fragments": [],
+      "applies_when_length": 190
+    },
+    "source_session_ref": "redacted",
+    "snapshot_status": "current_file_excluded_future_update_risk"
+  },
+  {
+    "packet_id": "p010-people__bochengyin__drafts__impact-eval-result-capture-must-include-untracked-files",
+    "doc_id": "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+    "label": {
+      "doc_id": "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+      "label_status": "labeled",
+      "applies_when": "Fix impact-eval artifact capture when saved run results must reflect untracked new files as well as tracked diffs; not for eval prompt design, report summarization, or general git workflow docs",
+      "routing_hint": "Use for manual impact-eval result capture scripts or checks where git status shows new untracked files but result.json, diff patches, or diff stats may omit them.",
+      "rationale": "The snapshot and excerpt show save_result.py captured git diff/name-only only, so untracked helper/test files appeared in workspace_status.txt but were missing from workspace_diff.patch, workspace_diff_stat.txt, and changed_files. The recorded fix enumerated untracked files, appended no-index patches and stats, and added untracked_files to result.json."
+    },
+    "audit": {
+      "passed": true,
+      "forbidden_fragments": [],
+      "applies_when_length": 193
+    },
+    "source_session_ref": "redacted",
+    "snapshot_status": "current_file_safe_updated_before_cutoff"
+  },
+  {
+    "packet_id": "p011-people__bochengyin__drafts__source-incident-timing-needs-provenance",
+    "doc_id": "people/bochengyin/drafts/source-incident-timing-needs-provenance",
+    "label": {
+      "doc_id": "people/bochengyin/drafts/source-incident-timing-needs-provenance",
+      "label_status": "labeled",
+      "applies_when": "Route source-incident timing provenance when estimating how long original trial/error diagnosis and resolution took; not for generic reuse metrics or candidate discovery without timing evidence.",
+      "routing_hint": "Use for impact-eval or diagnostics work that needs measured/provenanced source incident duration, especially Codex session or manual timing fields.",
+      "rationale": "The source session shows the user asking to capture how long the original problem took to trial-and-error and solve. The implementation added source incident timing inputs, Codex session duration extraction, diagnostics aggregation, and candidate reporting, with the final note that the memory prevented unsafe timing claims."
+    },
+    "audit": {
+      "passed": true,
+      "forbidden_fragments": [],
+      "applies_when_length": 194
+    },
+    "source_session_ref": "redacted",
+    "snapshot_status": "current_file_excluded_future_update_risk"
+  },
+  {
+    "packet_id": "p012-people__bochengyin__drafts__manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+    "doc_id": "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+    "label": {
+      "doc_id": "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+      "label_status": "labeled",
+      "applies_when": "Tighten manual impact-eval capture when setting up or documenting benchmark rounds; not for ordinary feature tests or generic eval result summaries",
+      "routing_hint": "Use for manual AI wiki impact eval workflow design, especially when a run depends on visible session/transcript exports and a first-pass analysis cutoff to keep later review from contaminating judgments.",
+      "rationale": "The excerpt shows a recurring manual eval process problem: the user asks to document experiment flow and lessons after repeated boundary-test environment issues, open tabs include visible_session/visible_transcript artifacts, and the assistant creates this draft as a durable process lesson after adding capture/analysis protocol and round-one process lessons."
+    },
+    "audit": {
+      "passed": true,
+      "forbidden_fragments": [],
+      "applies_when_length": 147
+    },
+    "source_session_ref": "redacted",
+    "snapshot_status": "current_file_excluded_future_update_risk"
+  },
+  {
+    "packet_id": "p013-people__bochengyin__drafts__neutral-impact-eval-runs-need-change-profile-quality-metrics",
+    "doc_id": "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics",
+    "label": {
+      "doc_id": "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics",
+      "label_status": "labeled",
+      "applies_when": "Add impact-eval report quality metrics when neutral success rates hide change/churn profile; not for new benchmark-family design.",
+      "routing_hint": "Use for impact-eval product/reporting work where first-attempt success or score is neutral and the useful signal may be project footprint, managed telemetry, user-owned wiki churn, or ambient-minus-control deltas.",
+      "rationale": "The source session implemented change-profile metrics in the impact eval report after a neutral primary success result, splitting changed files into project files, managed AI wiki telemetry, and user-owned wiki churn. The final note explicitly says the continuation stayed on eval-product reporting and added quality/churn metrics instead of another family."
+    },
+    "audit": {
+      "passed": true,
+      "forbidden_fragments": [],
+      "applies_when_length": 129
+    },
+    "source_session_ref": "redacted",
+    "snapshot_status": "current_file_excluded_future_update_risk"
+  },
+  {
+    "packet_id": "p014-people__bochengyin__drafts__eval-product-mvp-starts-with-first-attempt-artifact-report",
+    "doc_id": "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+    "label": {
+      "doc_id": "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+      "label_status": "labeled",
+      "applies_when": "Scope eval product MVP when packaging impact or replay evals as a user-run first-attempt report over existing captured artifacts; not for automatic agent-running workflows, final repair analysis, or generic eval scoring.",
+      "routing_hint": "Use for eval impact report CLI/product-surface decisions: summarize existing run directories, compare primary variants on first_pass metrics, keep final captures diagnostic, and avoid auto-running agents in the MVP.",
+      "rationale": "The source excerpt records a new product decision: the MVP should first read captured artifacts and generate a first-attempt report, explicitly not auto-run agents. The implementation and final answer describe aiwiki-toolkit eval impact report, first_pass as product metric, final repairs as diagnostic, primary variant comparison, and causal-claim readiness."
+    },
+    "audit": {
+      "passed": true,
+      "forbidden_fragments": [],
+      "applies_when_length": 220
+    },
+    "source_session_ref": "redacted",
+    "snapshot_status": "current_file_excluded_future_update_risk"
+  },
+  {
+    "packet_id": "p017-people__bochengyin__drafts__consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+    "doc_id": "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+    "label": {
+      "doc_id": "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+      "label_status": "labeled",
+      "applies_when": "Guide memory consolidation design when planning repo-native AI wiki workflows that turn drafts, trails, or metrics into durable guidance; not for routine end-of-task capture or unrelated shared-doc edits",
+      "routing_hint": "Use for ai-wiki-toolkit memory lifecycle, consolidation, promotion, freshness, contradiction detection, or Karpathy/Anthropic memory comparison tasks where shared Markdown churn and gated promotion are central concerns.",
+      "rationale": "The snapshot states the durable rule: keep per-task capture as the first layer, add consolidation as a second-layer maintenance workflow, read raw repo-visible evidence, gate promotion, and avoid direct shared-doc rewrites by default. The source excerpt shows it was reused during a Karpathy/Anthropic memory research task to refine the consolidation draft and product direction."
+    },
+    "audit": {
+      "passed": true,
+      "forbidden_fragments": [],
+      "applies_when_length": 203
+    },
+    "source_session_ref": "redacted",
+    "snapshot_status": "current_file_safe_updated_before_cutoff"
+  },
+  {
+    "packet_id": "p018-people__bochengyin__drafts__route-usefulness-eval-needs-route-traces-and-actual-use-comparison",
+    "doc_id": "people/bochengyin/drafts/route-usefulness-eval-needs-route-traces-and-actual-use-comparison",
+    "label": {
+      "doc_id": "people/bochengyin/drafts/route-usefulness-eval-needs-route-traces-and-actual-use-comparison",
+      "label_status": "labeled",
+      "applies_when": "Evaluate route usefulness when comparing route-selected memories against actual reuse, misses, and noisy selections; not for ordinary route invocation or general wiki reuse dashboards",
+      "routing_hint": "Route to this when designing route-quality metrics, route trace logging, or selected-vs-used memory comparisons.",
+      "rationale": "The source session explicitly frames route as only candidate retrieval and defines usefulness evidence by later outcomes: selected and used, selected but unused/not helpful, not selected but later lookup-used, and high-value effects like changed_plan or avoided_retry. It also identifies the gap that route usefulness needs route traces plus actual-use comparison."
+    },
+    "audit": {
+      "passed": true,
+      "forbidden_fragments": [],
+      "applies_when_length": 183
+    },
+    "source_session_ref": "redacted",
+    "snapshot_status": "current_file_excluded_future_update_risk"
+  },
+  {
+    "packet_id": "p019-people__bochengyin__drafts__karpathy-skills-suggest-success-criteria-and-cross-agent-packaging",
+    "doc_id": "people/bochengyin/drafts/karpathy-skills-suggest-success-criteria-and-cross-agent-packaging",
+    "label": {
+      "doc_id": "people/bochengyin/drafts/karpathy-skills-suggest-success-criteria-and-cross-agent-packaging",
+      "label_status": "labeled",
+      "applies_when": "Use roadmap guidance when evaluating external agent-skill repos or designing aiwikiToolkit improvements around route success criteria, verification plans, memory compilation, or cross-agent runtime assets; not for routine task routing, generic repo research, or direct prompt-rule expansion.",
+      "routing_hint": "Route to this memory for aiwikiToolkit product/design work that asks what to borrow from Karpathy-style skill packages, especially success criteria in route output, SKILL.md/Cursor/Claude packaging, and examples or anti-patterns as eval fixtures.",
+      "rationale": "The source session shows the user asked whether the andrej-karpathy-skills repo could improve aiwikiToolkit. The assistant’s recorded recommendations were to add success criteria and verification planning to route, define memory compilation as cross-agent generated assets, and use examples/anti-patterns for eval and diagnostics, then wrote the target draft."
+    },
+    "audit": {
+      "passed": false,
+      "forbidden_fragments": [],
+      "applies_when_length": 291
+    },
+    "source_session_ref": "redacted",
+    "snapshot_status": "current_file_excluded_future_update_risk"
+  },
+  {
+    "packet_id": "p020-people__bochengyin__drafts__codex-session-recovery-should-search-jsonl-and-state-db",
+    "doc_id": "people/bochengyin/drafts/codex-session-recovery-should-search-jsonl-and-state-db",
+    "label": {
+      "doc_id": "people/bochengyin/drafts/codex-session-recovery-should-search-jsonl-and-state-db",
+      "label_status": "labeled",
+      "applies_when": "Recover local Codex sessions when the user asks to find a missing Codex chat/window from a remembered prompt fragment; not for ChatGPT app history recovery, temporary export directories, or unrelated AI Wiki workflow checks",
+      "routing_hint": "Use for local Codex session recovery: search ~/.codex/sessions JSONL with a distinctive prompt fragment, then map the session id through ~/.codex/session_index.jsonl or ~/.codex/state_5.sqlite threads metadata; mention codex resume when reopening is requested.",
+      "rationale": "The source incident and safe snapshot show the reusable lesson came from locating a missing Codex conversation by searching local rollout JSONL files, then using session metadata/state DB to recover title, cwd, archived status, timestamps, rollout path, and resume id."
+    },
+    "audit": {
+      "passed": true,
+      "forbidden_fragments": [],
+      "applies_when_length": 223
+    },
+    "source_session_ref": "redacted",
+    "snapshot_status": "current_file_safe_updated_before_cutoff"
+  }
+]

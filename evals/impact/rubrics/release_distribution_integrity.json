@@ -1,0 +1,56 @@
+{
+  "schema_version": "impact-eval-rubric-v1",
+  "name": "release-distribution-integrity-v1",
+  "description": "Deterministic artifact checks for keeping public release targets aligned across workflows, npm metadata, archive handling, docs, and tests.",
+  "success": [
+    {
+      "id": "all-new-public-targets",
+      "artifact": "workspace_diff",
+      "contains_all": [
+        "linux-arm64",
+        "linux-musl-x64",
+        "windows-arm64"
+      ],
+      "description": "Adds all requested public release/distribution targets."
+    },
+    {
+      "id": "musl-build-hazard-covered",
+      "artifact": "workspace_diff",
+      "contains_any": [
+        "binutils",
+        "objdump",
+        "apk add",
+        "musl"
+      ],
+      "description": "Handles the known Linux musl PyInstaller/binutils build hazard."
+    },
+    {
+      "id": "npm-libc-metadata",
+      "artifact": "workspace_diff",
+      "contains_any": [
+        "\"libc\"",
+        "libc",
+        "musl"
+      ],
+      "description": "Keeps npm runtime metadata/resolution aligned with libc-specific targets."
+    },
+    {
+      "id": "tests-updated",
+      "artifact": "changed_files",
+      "changed_file_prefix": "tests/",
+      "description": "Adds release/distribution regression coverage."
+    }
+  ],
+  "partial": [
+    {
+      "id": "matrix-expanded-without-known-hazard",
+      "artifact": "workspace_diff",
+      "contains_all": [
+        "linux-arm64",
+        "windows-arm64"
+      ],
+      "description": "Expands much of the matrix but may miss the musl hazard or npm libc alignment."
+    }
+  ],
+  "fail": []
+}

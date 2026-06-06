@@ -1,0 +1,45 @@
+{
+  "schema_version": "impact-eval-rubric-v1",
+  "name": "scaffold-prompt-workflow-compliance-v1",
+  "description": "Deterministic artifact checks for adding team-memory scaffold areas, repo-local skills, managed schema guidance, prompt docs, and tests without naming drift.",
+  "success": [
+    {
+      "id": "team-memory-areas",
+      "artifact": "workspace_diff",
+      "contains_all": [
+        "conventions",
+        "problems",
+        "features"
+      ],
+      "description": "Adds starter areas for conventions, reusable problems, and feature-specific memory."
+    },
+    {
+      "id": "expected-skill-names",
+      "artifact": "workspace_diff",
+      "contains_all": [
+        "ai-wiki-clarify-before-code",
+        "ai-wiki-capture-review-learning"
+      ],
+      "description": "Uses the established repo-local skill names."
+    },
+    {
+      "id": "tests-updated",
+      "artifact": "changed_files",
+      "changed_file_prefix": "tests/",
+      "description": "Adds scaffold, prompt, or doctor tests for the new surfaces."
+    }
+  ],
+  "partial": [
+    {
+      "id": "old-names-or-area-drift",
+      "artifact": "workspace_diff",
+      "contains_any": [
+        "problem-solutions",
+        "ai-wiki-clarify-coding-task",
+        "ai-wiki-pr-review-learning"
+      ],
+      "description": "Implements the broad idea but drifts from the established names or areas."
+    }
+  ],
+  "fail": []
+}

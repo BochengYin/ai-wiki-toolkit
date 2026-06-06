@@ -1,0 +1,38 @@
+{
+  "schema_version": "impact-eval-rubric-v1",
+  "name": "windows-arm-smoke-cli-output-v1",
+  "description": "Deterministic artifact checks for comparing Windows ARM smoke tests against the full CLI version output.",
+  "success": [
+    {
+      "id": "full-cli-version-output",
+      "artifact": "workspace_diff",
+      "contains": "ai-wiki-toolkit",
+      "description": "Compares against the full CLI output string rather than only the bare package version."
+    },
+    {
+      "id": "windows-arm-surface",
+      "artifact": "workspace_diff",
+      "contains_any": [
+        "windows-arm64",
+        "Release Smoke Windows ARM",
+        "windows arm"
+      ],
+      "description": "Touches the Windows ARM smoke path."
+    },
+    {
+      "id": "tests-updated",
+      "artifact": "changed_files",
+      "changed_file_prefix": "tests/",
+      "description": "Adds or updates regression tests for the smoke workflow output check."
+    }
+  ],
+  "partial": [
+    {
+      "id": "version-check-touched",
+      "artifact": "workspace_diff",
+      "contains": "--version",
+      "description": "Touches version verification but may not cover both release-archive and npm-installed paths."
+    }
+  ],
+  "fail": []
+}
