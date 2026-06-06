@@ -5,7 +5,7 @@ model: "gpt-5"
 source_kind: "analysis"
 status: "draft"
 created_at: "2026-06-05T10:28:49+1000"
-updated_at: "2026-06-05T17:37:50+1000"
+updated_at: "2026-06-06T14:18:00+1000"
 promotion_candidate: false
 promotion_basis: "Single follow-up analysis of the 57-trace blinded applies_when replay changed-precision pairs."
 ---
@@ -144,3 +144,42 @@ Verification after that refinement:
 This is a precision improvement over the earlier `0.350` / `0.353` route precision results, but it
 is more conservative: selected useful docs dropped. Treat the next round as a precision/recall tradeoff
 analysis, not as a final route fix.
+
+## Future Redesign TODOs
+
+These follow from the next design discussion and should be tested before another route-side rewrite:
+
+1. Test whether the token/signal layer and baseline classification layer are actually useful as
+   separate stages. Compare the current split pipeline against a merged signal-to-classification
+   pipeline instead of assuming the split is necessary.
+2. Design automatic taxonomy induction with a two-gate activation path. Gate 1 should identify a
+   repeated unknown-task or unknown-doc cluster from traces, misses, false positives, and task
+   language. Gate 2 should validate the generated category in shadow mode through replay or behavior
+   tests before it becomes active. Do not require a human to manually create every new taxonomy item.
+3. Separate taxonomy from `when / do / excluding` labels. Taxonomy decides what category exists;
+   `when / do / excluding` describes when a known category or document should apply. Test whether the
+   same label schema can help propose categories, but do not treat applicability labels as a complete
+   replacement for taxonomy.
+4. Verify whether explicit route-packet prompts can make the runtime agent switch behavior between
+   planning and coding surfaces. Internal phases such as architecture, coding, validation, and PR
+   work may need to map onto the actual runtime modes that Codex exposes.
+5. Verify whether route-mode permissions can be enforced by prompt alone: read-only, edit-files,
+   run-tests, git-write, push, and PR creation should be tested as behavioral constraints, not just
+   packet metadata.
+6. Replace unordered `intent_buckets` with a composable `phase_plan`. The plan should support
+   optional phases, loops, skipped phases, and repo policy differences such as solo-development tasks
+   that do not require PR creation.
+7. Avoid hard-coding an Apex-like order. Use common phases such as init-branch, explore/analyze,
+   plan, propose alternatives, execute, validate/review, fix, add tests, verify, and PR as a library
+   of phase candidates that route can compose for the current prompt.
+8. Add a CLI/debug surface that shows the runtime catalog/index cards built for the current task so
+   the user can inspect doc kind, doc slots, routing hints, and applies_when before final selection.
+9. Clarify the interaction between `doc_kind` and `doc_slots`. `doc_kind` carries ownership/trust
+   and can affect permission or mandatory-read behavior; `doc_slots` should represent the task phase
+   or context role the doc can support.
+10. Run a scorer-versus-reranker ablation. Test whether the deterministic top-card reranker provides
+   independent value or whether its specificity logic should be folded into the primary scorer.
+11. Upgrade packet output to be phase-aware. Each phase should include `current_phase`, runtime mode,
+   permissions, selected docs, exit criteria, and trace fields. Later phases should be regenerated
+   after earlier phases produce new decisions or artifacts, rather than treated as a fixed full-plan
+   prediction.
