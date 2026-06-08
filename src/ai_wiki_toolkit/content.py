@@ -21,6 +21,7 @@ TELEMETRY_IGNORE_PATHS = (
     "ai-wiki/metrics/reuse-events/",
     "ai-wiki/metrics/route-traces/",
     "ai-wiki/metrics/source-incidents/",
+    "ai-wiki/metrics/taxonomy-evidence/",
     "ai-wiki/metrics/task-checks/",
     "ai-wiki/_toolkit/consolidation/",
     "ai-wiki/_toolkit/diagnostics/",
@@ -39,6 +40,7 @@ def gitignore_block_body() -> str:
         ai-wiki/metrics/reuse-events/
         ai-wiki/metrics/route-traces/
         ai-wiki/metrics/source-incidents/
+        ai-wiki/metrics/taxonomy-evidence/
         ai-wiki/metrics/task-checks/
         ai-wiki/_toolkit/consolidation/
         ai-wiki/_toolkit/diagnostics/
@@ -76,7 +78,7 @@ def repo_starter_files(handle: str) -> dict[str, str]:
             - `trails/index.md` maps task-specific chronology, dead ends, and release trails.
             - `work/index.md` maps the append-only work ledger for todos, active tasks, and epics.
             - `people/<handle>/index.md` maps handle-local draft notes and working history.
-            - `metrics/` contains user-owned evidence logs such as `reuse-events/<handle>.jsonl`, `route-traces/<handle>.jsonl`, `source-incidents/<handle>.jsonl`, and `task-checks/<handle>.jsonl`.
+            - `metrics/` contains user-owned evidence logs such as `reuse-events/<handle>.jsonl`, `route-traces/<handle>.jsonl`, `source-incidents/<handle>.jsonl`, `taxonomy-evidence/<handle>.jsonl`, and `task-checks/<handle>.jsonl`.
             """
         ).strip()
         + "\n",
@@ -314,10 +316,13 @@ def repo_starter_files(handle: str) -> dict[str, str]:
             - `reuse-events/<handle>.jsonl` stores per-handle document-level AI wiki reuse observations.
             - `route-traces/<handle>.jsonl` stores per-handle route packet selection traces.
             - `source-incidents/<handle>.jsonl` stores per-handle source incident timing evidence.
+            - `taxonomy-evidence/<handle>.jsonl` stores per-handle taxonomy post-hoc evidence candidates.
             - `task-checks/<handle>.jsonl` stores per-handle task-level AI wiki reuse checks.
             - `aiwiki-toolkit record-reuse ...` appends one document-level observation for the current handle and refreshes handle-scoped managed metrics.
             - `aiwiki-toolkit source-incident backfill-writeback ...` appends historical source incident timing evidence to a separate per-handle ledger.
             - `aiwiki-toolkit source-incident capture-post-turn ...` captures the latest completed write-back turn for post-turn hooks or wrappers.
+            - `aiwiki-toolkit record-taxonomy-evidence ...` appends one taxonomy post-hoc evidence observation without activating taxonomy.
+            - `aiwiki-toolkit taxonomy candidates ...` induces inactive TaxonomyCandidate reports from repeated taxonomy evidence without activating taxonomy.
             - `aiwiki-toolkit record-reuse-check ...` appends one task-level reuse check for the current handle and refreshes handle-scoped managed metrics.
             - The installer manages a `.gitignore` block so `.env.aiwiki`, telemetry logs, and generated `_toolkit/catalog.json`, `_toolkit/metrics/*`, `_toolkit/diagnostics/*`, `_toolkit/consolidation/*`, and `_toolkit/reports/*` files stay local by default.
             - `aiwiki-toolkit refresh-metrics` regenerates package-managed aggregate views if you need a fresh local snapshot.
@@ -540,7 +545,7 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             6. Do not log managed `_toolkit/**` docs with `record-reuse`; if they changed the plan or behavior, cite their paths in a progress update or the final note instead.
             7. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
             8. Treat the footer as the user-facing evidence surface; telemetry and generated aggregates are the local machine-readable record behind it.
-            9. The installer manages a `.gitignore` block that ignores `.env.aiwiki`, `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/route-traces/`, `ai-wiki/metrics/source-incidents/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/consolidation/`, `ai-wiki/_toolkit/diagnostics/`, `ai-wiki/_toolkit/metrics/`, `ai-wiki/_toolkit/reports/`, `ai-wiki/_toolkit/work/`, and `ai-wiki/_toolkit/catalog.json` so local identity, telemetry, and generated views stay local by default.
+            9. The installer manages a `.gitignore` block that ignores `.env.aiwiki`, `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/route-traces/`, `ai-wiki/metrics/source-incidents/`, `ai-wiki/metrics/taxonomy-evidence/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/consolidation/`, `ai-wiki/_toolkit/diagnostics/`, `ai-wiki/_toolkit/metrics/`, `ai-wiki/_toolkit/reports/`, `ai-wiki/_toolkit/work/`, and `ai-wiki/_toolkit/catalog.json` so local identity, telemetry, and generated views stay local by default.
             10. If those local-state paths were tracked before you upgraded, run `aiwiki-toolkit doctor` and follow the suggested `git rm --cached` fix once to untrack them.
             11. Produce one AI wiki write-back outcome at the end of every completed task, even when the result is `None`.
             12. If runtime skill exposure is missing, follow the Runtime Skill Fallback section in `system.md` and manually read the relevant repo-local skill files under `.agents/skills/`.
@@ -577,6 +582,10 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             - `route.domain_tags`: task domains such as `release_distribution`, `ci_workflow`, `memory_governance`, `workflow_state`, or `task_evaluation`.
             - `route.guardrail_tags`: protection domains such as `user_owned_docs` or `managed_prompt_block`.
             - `route.changed_paths`: path signals supplied by the caller or inferred from `git status --short`.
+            - `route.mentioned_labels`: route labels mentioned in the prompt as labels, such as `code/bug_fix`, that should not automatically become actual user intent.
+            - `route.task_type_arbitration`: explanation when route mode or mentioned labels cause the coarse task type to be adjusted.
+            - `route.route_self_audit`: packet-level mismatch checks for suspicious mode/task type conflicts, weak workflow triggers, or label-as-intent errors. Suspicious audits should be recorded as taxonomy evidence after task review.
+            - `phase_plan`: shadow current-phase output with agent surface mode, permissions, docs, goals, criteria, and reroute inputs. It does not replace active `intent_buckets`.
             - `actor`: resolved local actor handle from CLI/environment, `.env.aiwiki`, git config, or fallback.
             - `route.effort`: coarse effort level such as `low`, `normal`, or `deep`.
             - `context_budget`: safety cap and document limits for the packet. The word value is not a fill target; route may use less.
@@ -827,6 +836,8 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             User-owned route selection traces live in `ai-wiki/metrics/route-traces/<handle>.jsonl`.
 
             User-owned source incident timing evidence lives in `ai-wiki/metrics/source-incidents/<handle>.jsonl`.
+
+            User-owned taxonomy post-hoc evidence lives in `ai-wiki/metrics/taxonomy-evidence/<handle>.jsonl`.
 
             User-owned reuse checks live in `ai-wiki/metrics/task-checks/<handle>.jsonl`.
 

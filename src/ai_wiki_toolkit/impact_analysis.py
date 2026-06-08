@@ -34,8 +34,30 @@ from ai_wiki_toolkit.wiki_schema import build_repo_catalog, load_reuse_events
 ROUTE_NOISE_REPORT_SCHEMA_VERSION = "impact-eval-route-noise-report-v1"
 ROUTE_COHORT_REPORT_SCHEMA_VERSION = "impact-eval-route-cohort-report-v1"
 ROUTE_REPLAY_REPORT_SCHEMA_VERSION = "impact-eval-route-replay-report-v1"
+ROUTE_ABLATION_REPORT_SCHEMA_VERSION = "impact-eval-route-ablation-report-v1"
 NEUTRAL_REPORT_SCHEMA_VERSION = "impact-eval-neutral-report-v1"
 ROUTE_REPLAY_CATALOG_CUTOFF_MODES = {"current", "trace-routed-at"}
+CORE_ROUTE_DOC_IDS = {"constraints", "decisions", "workflows"}
+RETRIEVAL_EXCLUDED_REASON_TYPES = {"mandatory_contract", "safety_guardrail"}
+EVAL_STAGE_SLOT_IDS = {
+    "artifact_capture",
+    "manifest_or_runner",
+    "prompt_design",
+    "public_metrics",
+    "report_quality",
+    "route_usefulness",
+    "rubric_scoring",
+    "source_incident_timing",
+}
+ROUTE_ABLATION_VARIANTS = (
+    "current",
+    "eval_stage_shadow",
+    "eval_stage_soft_scoring",
+    "stage_compatible_doc_slots",
+    "no_eval_bucket_selector",
+    "no_reranker",
+    "no_route_quality_history",
+)
 
 _SESSION_ID_RE = re.compile(
     r"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.jsonl$",
@@ -62,6 +84,41 @@ def _string_list(value: Any) -> list[str]:
     if not isinstance(value, list):
         return []
     return [item for item in value if isinstance(item, str) and item]
+
+
+def _ordered_unique_string_list(value: Any) -> list[str]:
+    return list(dict.fromkeys(_string_list(value)))
+
+
+def _int_or_none(value: Any) -> int | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    return None
+
+
+def _selection_reason_type_for_doc(
+    doc_id: str,
+    selection_reason_types: dict[str, Any] | None,
+) -> str:
+    if selection_reason_types:
+        reason_type = selection_reason_types.get(doc_id)
+        if isinstance(reason_type, str) and reason_type:
+            return reason_type
+    if doc_id in CORE_ROUTE_DOC_IDS:
+        return "safety_guardrail"
+    return "topical_memory"
+
+
+def _selection_reason_type_counts(
+    selected_doc_ids: set[str],
+    selection_reason_types: dict[str, Any] | None,
+) -> dict[str, int]:
+    counts: Counter[str] = Counter()
+    for doc_id in selected_doc_ids:
+        counts[_selection_reason_type_for_doc(doc_id, selection_reason_types)] += 1
+    return dict(sorted(counts.items()))
 
 
 def _parse_timestamp(value: Any) -> datetime | None:
@@ -223,86 +280,48 @@ def _cohort_trace_item(
     trace: dict[str, Any],
     task_events: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    selected = set(_string_list(trace.get("selected_doc_ids")))
-    event_doc_ids = {
-        doc_id
-        for event in task_events
-        if isinstance((doc_id := event.get("doc_id")), str) and doc_id
-    }
-    useful_events = [
-        event
-        for event in task_events
-        if event.get("reuse_outcome") in {"resolved", "partial"}
-        and isinstance(event.get("doc_id"), str)
-    ]
-    useful_doc_ids = {str(event["doc_id"]) for event in useful_events}
-    not_helpful_doc_ids = {
-        str(event["doc_id"])
-        for event in task_events
-        if event.get("reuse_outcome") == "not_helpful"
-        and isinstance(event.get("doc_id"), str)
-    }
-    lookup_doc_ids = {
-        str(event["doc_id"])
-        for event in task_events
-        if event.get("retrieval_mode") == "lookup" and isinstance(event.get("doc_id"), str)
-    }
-    selected_useful_doc_ids = sorted(selected & useful_doc_ids)
-    selected_but_unused_doc_ids = sorted(selected - event_doc_ids)
-    selected_not_helpful_doc_ids = sorted((selected & not_helpful_doc_ids) - useful_doc_ids)
-    missed_useful_doc_ids = sorted(
-        doc_id for doc_id in useful_doc_ids if doc_id in lookup_doc_ids and doc_id not in selected
+    selection_reason_types = None
+    if isinstance(trace.get("selection_reason_types"), dict):
+        selection_reason_types = trace.get("selection_reason_types")
+    elif isinstance(trace.get("route_selection_reason_types"), dict):
+        selection_reason_types = trace.get("route_selection_reason_types")
+    candidate_doc_ids = (
+        _string_list(trace.get("candidate_doc_ids"))
+        if isinstance(trace.get("candidate_doc_ids"), list)
+        else None
     )
-    selected_count = len(selected)
-    selected_useful_count = len(selected_useful_doc_ids)
-    noisy_count = len(selected - useful_doc_ids)
+    metrics = _selection_metrics(
+        _string_list(trace.get("selected_doc_ids")),
+        task_events,
+        selection_reason_types=selection_reason_types,
+        maybe_doc_ids=_string_list(trace.get("maybe_load_doc_ids")),
+        candidate_doc_ids=candidate_doc_ids,
+        packet_words=_int_or_none(trace.get("packet_words")),
+    )
     return {
         "trace_id": trace.get("trace_id"),
         "task_id": trace.get("task_id"),
         "task": trace.get("task"),
         "task_type": trace.get("task_type"),
         "routed_at": trace.get("routed_at"),
-        "selected_doc_count": selected_count,
-        "selected_useful_doc_count": selected_useful_count,
-        "useful_doc_count": len(useful_doc_ids),
-        "noisy_selected_doc_count": noisy_count,
-        "selected_but_unused_doc_count": len(selected_but_unused_doc_ids),
-        "selected_not_helpful_doc_count": len(selected_not_helpful_doc_ids),
-        "missed_useful_doc_count": len(missed_useful_doc_ids),
-        "route_precision": selected_useful_count / selected_count if selected_count else None,
-        "route_noise_rate": noisy_count / selected_count if selected_count else None,
-        "selected_doc_ids": sorted(selected),
-        "useful_selected_doc_ids": selected_useful_doc_ids,
-        "selected_but_unused_doc_ids": selected_but_unused_doc_ids,
-        "selected_not_helpful_doc_ids": selected_not_helpful_doc_ids,
-        "missed_useful_doc_ids": missed_useful_doc_ids,
+        **metrics,
         "has_task_text": isinstance(trace.get("task"), str) and bool(str(trace.get("task")).strip()),
     }
 
 
 def _summarize_cohort_items(items: list[dict[str, Any]]) -> dict[str, Any]:
-    selected = sum(int(item.get("selected_doc_count") or 0) for item in items)
-    useful_selected = sum(int(item.get("selected_useful_doc_count") or 0) for item in items)
-    noisy = sum(int(item.get("noisy_selected_doc_count") or 0) for item in items)
     task_types = Counter(str(item.get("task_type") or "unknown") for item in items)
-    return {
-        "trace_count": len(items),
-        "unique_task_id_count": len({item.get("task_id") for item in items if item.get("task_id")}),
-        "selected_doc_count": selected,
-        "useful_doc_count": sum(int(item.get("useful_doc_count") or 0) for item in items),
-        "selected_useful_doc_count": useful_selected,
-        "selected_but_unused_doc_count": sum(
-            int(item.get("selected_but_unused_doc_count") or 0) for item in items
-        ),
-        "selected_not_helpful_doc_count": sum(
-            int(item.get("selected_not_helpful_doc_count") or 0) for item in items
-        ),
-        "missed_useful_doc_count": sum(int(item.get("missed_useful_doc_count") or 0) for item in items),
-        "route_precision": useful_selected / selected if selected else None,
-        "route_noise_rate": noisy / selected if selected else None,
-        "traces_with_task_text": sum(1 for item in items if item.get("has_task_text")),
-        "task_type_counts": dict(sorted(task_types.items())),
-    }
+    summary = _summarize_metric_dicts(items, trace_count=len(items))
+    summary.update(
+        {
+            "unique_task_id_count": len(
+                {item.get("task_id") for item in items if item.get("task_id")}
+            ),
+            "traces_with_task_text": sum(1 for item in items if item.get("has_task_text")),
+            "task_type_counts": dict(sorted(task_types.items())),
+        }
+    )
+    return summary
 
 
 def _cohort_items_for_traces(
@@ -472,8 +491,24 @@ def _packet_doc_field(
 def _selection_metrics(
     selected_doc_ids: list[str],
     task_events: list[dict[str, Any]],
+    selection_reason_types: dict[str, Any] | None = None,
+    *,
+    maybe_doc_ids: list[str] | None = None,
+    candidate_doc_ids: list[str] | None = None,
+    packet_words: int | None = None,
 ) -> dict[str, Any]:
+    selected_doc_ids = _ordered_unique_string_list(selected_doc_ids)
     selected = set(selected_doc_ids)
+    maybe_doc_ids = _ordered_unique_string_list(maybe_doc_ids or [])
+    maybe = set(maybe_doc_ids) - selected
+    selected_plus_maybe = selected | maybe
+    candidate20_available = candidate_doc_ids is not None
+    candidate20_doc_ids = (
+        _ordered_unique_string_list(candidate_doc_ids or [])[:20]
+        if candidate20_available
+        else []
+    )
+    candidate20 = set(candidate20_doc_ids)
     event_doc_ids = {
         doc_id
         for event in task_events
@@ -497,29 +532,144 @@ def _selection_metrics(
         if event.get("retrieval_mode") == "lookup" and isinstance(event.get("doc_id"), str)
     }
     selected_useful_doc_ids = sorted(selected & useful_doc_ids)
+    maybe_useful_doc_ids = sorted(maybe & useful_doc_ids)
+    selected_plus_maybe_useful_doc_ids = sorted(selected_plus_maybe & useful_doc_ids)
+    candidate20_useful_doc_ids = sorted(candidate20 & useful_doc_ids)
+    maybe_recovered_doc_ids = sorted((maybe & useful_doc_ids) - selected)
     selected_but_unused_doc_ids = sorted(selected - event_doc_ids)
     selected_not_helpful_doc_ids = sorted((selected & not_helpful_doc_ids) - useful_doc_ids)
     missed_useful_doc_ids = sorted(
         doc_id for doc_id in useful_doc_ids if doc_id in lookup_doc_ids and doc_id not in selected
     )
+    reason_type_by_doc = {
+        doc_id: _selection_reason_type_for_doc(doc_id, selection_reason_types)
+        for doc_id in selected
+    }
+    retrieval_selected = {
+        doc_id
+        for doc_id in selected
+        if reason_type_by_doc.get(doc_id) not in RETRIEVAL_EXCLUDED_REASON_TYPES
+    }
+    mandatory_selected = {
+        doc_id for doc_id in selected if reason_type_by_doc.get(doc_id) == "mandatory_contract"
+    }
+    safety_selected = {
+        doc_id for doc_id in selected if reason_type_by_doc.get(doc_id) == "safety_guardrail"
+    }
+    background_selected = {
+        doc_id for doc_id in selected if reason_type_by_doc.get(doc_id) == "background_reference"
+    }
+    core_selected = mandatory_selected | safety_selected
+    retrieval_selected_useful_doc_ids = sorted(retrieval_selected & useful_doc_ids)
+    retrieval_selected_but_unused_doc_ids = sorted(retrieval_selected - event_doc_ids)
+    retrieval_selected_not_helpful_doc_ids = sorted(
+        (retrieval_selected & not_helpful_doc_ids) - useful_doc_ids
+    )
+    mandatory_selected_but_unused_doc_ids = sorted(mandatory_selected - event_doc_ids)
+    safety_selected_but_unused_doc_ids = sorted(safety_selected - event_doc_ids)
+    core_selected_but_unused_doc_ids = sorted(core_selected - event_doc_ids)
     selected_count = len(selected)
     selected_useful_count = len(selected_useful_doc_ids)
+    useful_count = len(useful_doc_ids)
     noisy_count = len(selected - useful_doc_ids)
+    retrieval_selected_count = len(retrieval_selected)
+    retrieval_selected_useful_count = len(retrieval_selected_useful_doc_ids)
+    retrieval_noisy_count = len(retrieval_selected - useful_doc_ids)
+    normalized_packet_words = packet_words if isinstance(packet_words, int) and packet_words >= 0 else None
+    failed_route_at_selected = bool(useful_doc_ids and not selected_useful_doc_ids)
+    failed_route_at_selected_plus_maybe = bool(
+        useful_doc_ids and not selected_plus_maybe_useful_doc_ids
+    )
+    failed_route_at_candidate20 = (
+        bool(useful_doc_ids and not candidate20_useful_doc_ids)
+        if candidate20_available
+        else None
+    )
     return {
         "selected_doc_count": selected_count,
         "selected_useful_doc_count": selected_useful_count,
-        "useful_doc_count": len(useful_doc_ids),
+        "useful_doc_count": useful_count,
         "noisy_selected_doc_count": noisy_count,
         "selected_but_unused_doc_count": len(selected_but_unused_doc_ids),
         "selected_not_helpful_doc_count": len(selected_not_helpful_doc_ids),
         "missed_useful_doc_count": len(missed_useful_doc_ids),
         "route_precision": selected_useful_count / selected_count if selected_count else None,
         "route_noise_rate": noisy_count / selected_count if selected_count else None,
+        "useful_coverage_at_selected": (
+            selected_useful_count / useful_count if useful_count else None
+        ),
+        "maybe_load_doc_count": len(maybe),
+        "maybe_load_useful_doc_count": len(maybe_useful_doc_ids),
+        "selected_plus_maybe_doc_count": len(selected_plus_maybe),
+        "selected_plus_maybe_useful_doc_count": len(selected_plus_maybe_useful_doc_ids),
+        "useful_coverage_at_selected_plus_maybe": (
+            len(selected_plus_maybe_useful_doc_ids) / useful_count
+            if useful_count
+            else None
+        ),
+        "candidate20_available": candidate20_available,
+        "candidate20_doc_count": len(candidate20_doc_ids) if candidate20_available else None,
+        "candidate20_useful_doc_count": (
+            len(candidate20_useful_doc_ids) if candidate20_available else None
+        ),
+        "useful_coverage_at_candidate20": (
+            len(candidate20_useful_doc_ids) / useful_count
+            if candidate20_available and useful_count
+            else None
+        ),
+        "failed_route_at_selected": failed_route_at_selected,
+        "failed_route_at_selected_plus_maybe": failed_route_at_selected_plus_maybe,
+        "failed_route_at_candidate20": failed_route_at_candidate20,
+        "maybe_recovered_doc_count": len(maybe_recovered_doc_ids),
+        "maybe_recovered": bool(failed_route_at_selected and maybe_recovered_doc_ids),
+        "packet_word_count": normalized_packet_words,
+        "retrieval_selected_doc_count": retrieval_selected_count,
+        "retrieval_selected_useful_doc_count": retrieval_selected_useful_count,
+        "retrieval_selected_but_unused_doc_count": len(retrieval_selected_but_unused_doc_ids),
+        "retrieval_selected_not_helpful_doc_count": len(retrieval_selected_not_helpful_doc_ids),
+        "retrieval_precision": (
+            retrieval_selected_useful_count / retrieval_selected_count
+            if retrieval_selected_count
+            else None
+        ),
+        "retrieval_noise_rate": (
+            retrieval_noisy_count / retrieval_selected_count
+            if retrieval_selected_count
+            else None
+        ),
+        "mandatory_contract_doc_count": len(mandatory_selected),
+        "mandatory_contract_but_unused_doc_count": len(mandatory_selected_but_unused_doc_ids),
+        "safety_guardrail_doc_count": len(safety_selected),
+        "safety_guardrail_but_unused_doc_count": len(safety_selected_but_unused_doc_ids),
+        "background_reference_doc_count": len(background_selected),
+        "core_doc_count": len(core_selected),
+        "core_selected_but_unused_doc_count": len(core_selected_but_unused_doc_ids),
+        "selection_reason_type_counts": _selection_reason_type_counts(
+            selected,
+            selection_reason_types,
+        ),
         "selected_doc_ids": sorted(selected),
         "useful_selected_doc_ids": selected_useful_doc_ids,
+        "maybe_load_doc_ids": sorted(maybe),
+        "maybe_load_useful_doc_ids": maybe_useful_doc_ids,
+        "selected_plus_maybe_doc_ids": sorted(selected_plus_maybe),
+        "selected_plus_maybe_useful_doc_ids": selected_plus_maybe_useful_doc_ids,
+        "candidate20_doc_ids": candidate20_doc_ids,
+        "candidate20_useful_doc_ids": candidate20_useful_doc_ids,
+        "maybe_recovered_doc_ids": maybe_recovered_doc_ids,
         "selected_but_unused_doc_ids": selected_but_unused_doc_ids,
         "selected_not_helpful_doc_ids": selected_not_helpful_doc_ids,
         "missed_useful_doc_ids": missed_useful_doc_ids,
+        "retrieval_selected_doc_ids": sorted(retrieval_selected),
+        "retrieval_useful_selected_doc_ids": retrieval_selected_useful_doc_ids,
+        "retrieval_selected_but_unused_doc_ids": retrieval_selected_but_unused_doc_ids,
+        "retrieval_selected_not_helpful_doc_ids": retrieval_selected_not_helpful_doc_ids,
+        "mandatory_contract_doc_ids": sorted(mandatory_selected),
+        "mandatory_contract_but_unused_doc_ids": mandatory_selected_but_unused_doc_ids,
+        "safety_guardrail_doc_ids": sorted(safety_selected),
+        "safety_guardrail_but_unused_doc_ids": safety_selected_but_unused_doc_ids,
+        "core_doc_ids": sorted(core_selected),
+        "core_selected_but_unused_doc_ids": core_selected_but_unused_doc_ids,
     }
 
 
@@ -568,27 +718,118 @@ def _selected_catalog_timing(
     }
 
 
-def _summarize_replay_metrics(items: list[dict[str, Any]], *, key: str) -> dict[str, Any]:
+def _summarize_metric_dicts(metrics_list: list[dict[str, Any]], *, trace_count: int) -> dict[str, Any]:
     selected = 0
     useful_selected = 0
     noisy = 0
+    selected_plus_maybe = 0
+    selected_plus_maybe_useful = 0
+    maybe_load = 0
+    maybe_load_useful = 0
+    maybe_recovered_docs = 0
+    candidate20 = 0
+    candidate20_useful = 0
+    candidate20_useful_total = 0
+    retrieval_selected = 0
+    retrieval_useful_selected = 0
+    retrieval_noisy = 0
     selected_but_unused = 0
     selected_not_helpful = 0
+    retrieval_selected_but_unused = 0
+    retrieval_selected_not_helpful = 0
+    mandatory_contract = 0
+    mandatory_contract_but_unused = 0
+    safety_guardrail = 0
+    safety_guardrail_but_unused = 0
+    background_reference = 0
+    core = 0
+    core_selected_but_unused = 0
     missed = 0
     useful = 0
-    for item in items:
-        metrics = item.get(key)
-        if not isinstance(metrics, dict):
-            continue
+    traces_with_useful = 0
+    failed_selected = 0
+    failed_selected_plus_maybe = 0
+    candidate20_evaluable = 0
+    failed_candidate20 = 0
+    maybe_recovery_opportunities = 0
+    maybe_recovered_traces = 0
+    packet_word_total = 0
+    packet_word_traces = 0
+    reason_type_counts: Counter[str] = Counter()
+    for metrics in metrics_list:
         selected += int(metrics.get("selected_doc_count") or 0)
         useful_selected += int(metrics.get("selected_useful_doc_count") or 0)
         noisy += int(metrics.get("noisy_selected_doc_count") or 0)
+        selected_plus_maybe += int(metrics.get("selected_plus_maybe_doc_count") or 0)
+        selected_plus_maybe_useful += int(
+            metrics.get("selected_plus_maybe_useful_doc_count") or 0
+        )
+        maybe_load += int(metrics.get("maybe_load_doc_count") or 0)
+        maybe_load_useful += int(metrics.get("maybe_load_useful_doc_count") or 0)
+        maybe_recovered_docs += int(metrics.get("maybe_recovered_doc_count") or 0)
+        candidate20_count = metrics.get("candidate20_doc_count")
+        if isinstance(candidate20_count, int):
+            candidate20 += candidate20_count
+        candidate20_useful_count = metrics.get("candidate20_useful_doc_count")
+        if isinstance(candidate20_useful_count, int):
+            candidate20_useful += candidate20_useful_count
+        retrieval_selected += int(metrics.get("retrieval_selected_doc_count") or 0)
+        retrieval_useful_selected += int(
+            metrics.get("retrieval_selected_useful_doc_count") or 0
+        )
+        retrieval_noisy += (
+            int(metrics.get("retrieval_selected_doc_count") or 0)
+            - int(metrics.get("retrieval_selected_useful_doc_count") or 0)
+        )
         selected_but_unused += int(metrics.get("selected_but_unused_doc_count") or 0)
         selected_not_helpful += int(metrics.get("selected_not_helpful_doc_count") or 0)
+        retrieval_selected_but_unused += int(
+            metrics.get("retrieval_selected_but_unused_doc_count") or 0
+        )
+        retrieval_selected_not_helpful += int(
+            metrics.get("retrieval_selected_not_helpful_doc_count") or 0
+        )
+        mandatory_contract += int(metrics.get("mandatory_contract_doc_count") or 0)
+        mandatory_contract_but_unused += int(
+            metrics.get("mandatory_contract_but_unused_doc_count") or 0
+        )
+        safety_guardrail += int(metrics.get("safety_guardrail_doc_count") or 0)
+        safety_guardrail_but_unused += int(
+            metrics.get("safety_guardrail_but_unused_doc_count") or 0
+        )
+        background_reference += int(metrics.get("background_reference_doc_count") or 0)
+        core += int(metrics.get("core_doc_count") or 0)
+        core_selected_but_unused += int(
+            metrics.get("core_selected_but_unused_doc_count") or 0
+        )
         missed += int(metrics.get("missed_useful_doc_count") or 0)
-        useful += int(metrics.get("useful_doc_count") or 0)
+        useful_count = int(metrics.get("useful_doc_count") or 0)
+        useful += useful_count
+        if useful_count:
+            traces_with_useful += 1
+            if metrics.get("failed_route_at_selected") is True:
+                failed_selected += 1
+                maybe_recovery_opportunities += 1
+            if metrics.get("failed_route_at_selected_plus_maybe") is True:
+                failed_selected_plus_maybe += 1
+            if metrics.get("candidate20_available") is True:
+                candidate20_evaluable += 1
+                candidate20_useful_total += useful_count
+                if metrics.get("failed_route_at_candidate20") is True:
+                    failed_candidate20 += 1
+        if metrics.get("maybe_recovered") is True:
+            maybe_recovered_traces += 1
+        packet_words = metrics.get("packet_word_count")
+        if isinstance(packet_words, int):
+            packet_word_total += packet_words
+            packet_word_traces += 1
+        counts = metrics.get("selection_reason_type_counts")
+        if isinstance(counts, dict):
+            for reason_type, count in counts.items():
+                if isinstance(reason_type, str):
+                    reason_type_counts[reason_type] += int(count or 0)
     return {
-        "trace_count": len(items),
+        "trace_count": trace_count,
         "selected_doc_count": selected,
         "useful_doc_count": useful,
         "selected_useful_doc_count": useful_selected,
@@ -597,7 +838,81 @@ def _summarize_replay_metrics(items: list[dict[str, Any]], *, key: str) -> dict[
         "missed_useful_doc_count": missed,
         "route_precision": useful_selected / selected if selected else None,
         "route_noise_rate": noisy / selected if selected else None,
+        "useful_coverage_at_selected": useful_selected / useful if useful else None,
+        "maybe_load_doc_count": maybe_load,
+        "maybe_load_useful_doc_count": maybe_load_useful,
+        "selected_plus_maybe_doc_count": selected_plus_maybe,
+        "selected_plus_maybe_useful_doc_count": selected_plus_maybe_useful,
+        "useful_coverage_at_selected_plus_maybe": (
+            selected_plus_maybe_useful / useful if useful else None
+        ),
+        "candidate20_evaluable_trace_count": candidate20_evaluable,
+        "candidate20_doc_count": candidate20,
+        "candidate20_useful_doc_count": candidate20_useful,
+        "useful_coverage_at_candidate20": (
+            candidate20_useful / candidate20_useful_total
+            if candidate20_useful_total
+            else None
+        ),
+        "traces_with_useful_doc_count": traces_with_useful,
+        "failed_route_at_selected_count": failed_selected,
+        "failed_route_at_selected_rate": (
+            failed_selected / traces_with_useful if traces_with_useful else None
+        ),
+        "failed_route_at_selected_plus_maybe_count": failed_selected_plus_maybe,
+        "failed_route_at_selected_plus_maybe_rate": (
+            failed_selected_plus_maybe / traces_with_useful if traces_with_useful else None
+        ),
+        "failed_route_at_candidate20_count": failed_candidate20,
+        "failed_route_at_candidate20_rate": (
+            failed_candidate20 / candidate20_evaluable if candidate20_evaluable else None
+        ),
+        "maybe_recovered_doc_count": maybe_recovered_docs,
+        "maybe_recovery_opportunity_count": maybe_recovery_opportunities,
+        "maybe_recovered_trace_count": maybe_recovered_traces,
+        "maybe_recovery_rate": (
+            maybe_recovered_traces / maybe_recovery_opportunities
+            if maybe_recovery_opportunities
+            else None
+        ),
+        "avg_packet_words": (
+            packet_word_total / packet_word_traces if packet_word_traces else None
+        ),
+        "packet_word_trace_count": packet_word_traces,
+        "avg_selected_docs": selected / trace_count if trace_count else None,
+        "avg_maybe_load_docs": maybe_load / trace_count if trace_count else None,
+        "avg_selected_plus_maybe_docs": (
+            selected_plus_maybe / trace_count if trace_count else None
+        ),
+        "avg_candidate20_docs": (
+            candidate20 / candidate20_evaluable if candidate20_evaluable else None
+        ),
+        "retrieval_selected_doc_count": retrieval_selected,
+        "retrieval_selected_useful_doc_count": retrieval_useful_selected,
+        "retrieval_selected_but_unused_doc_count": retrieval_selected_but_unused,
+        "retrieval_selected_not_helpful_doc_count": retrieval_selected_not_helpful,
+        "retrieval_precision": (
+            retrieval_useful_selected / retrieval_selected
+            if retrieval_selected
+            else None
+        ),
+        "retrieval_noise_rate": (
+            retrieval_noisy / retrieval_selected if retrieval_selected else None
+        ),
+        "mandatory_contract_doc_count": mandatory_contract,
+        "mandatory_contract_but_unused_doc_count": mandatory_contract_but_unused,
+        "safety_guardrail_doc_count": safety_guardrail,
+        "safety_guardrail_but_unused_doc_count": safety_guardrail_but_unused,
+        "background_reference_doc_count": background_reference,
+        "core_doc_count": core,
+        "core_selected_but_unused_doc_count": core_selected_but_unused,
+        "selection_reason_type_counts": dict(sorted(reason_type_counts.items())),
     }
+
+
+def _summarize_replay_metrics(items: list[dict[str, Any]], *, key: str) -> dict[str, Any]:
+    metric_dicts = [item[key] for item in items if isinstance(item.get(key), dict)]
+    return _summarize_metric_dicts(metric_dicts, trace_count=len(items))
 
 
 def _summarize_replay_catalog_timing(items: list[dict[str, Any]]) -> dict[str, Any]:
@@ -621,6 +936,153 @@ def _summarize_replay_catalog_timing(items: list[dict[str, Any]]) -> dict[str, A
         "selected_future_doc_count": selected_future,
         "selected_unknown_created_at_doc_count": selected_unknown,
         "unknown_created_at_doc_count": unknown_created_at,
+    }
+
+
+def _summarize_replay_item_regressions(items: list[dict[str, Any]]) -> dict[str, Any]:
+    precision_regressions = 0
+    precision_improvements = 0
+    precision_ties = 0
+    precision_uncomputed = 0
+    noise_regressions = 0
+    noise_improvements = 0
+    noise_ties = 0
+    noise_uncomputed = 0
+    for item in items:
+        comparison = item.get("comparison")
+        if not isinstance(comparison, dict):
+            continue
+        precision_delta = comparison.get("route_precision_delta")
+        if isinstance(precision_delta, int | float) and not isinstance(precision_delta, bool):
+            if precision_delta < 0:
+                precision_regressions += 1
+            elif precision_delta > 0:
+                precision_improvements += 1
+            else:
+                precision_ties += 1
+        else:
+            precision_uncomputed += 1
+        noise_delta = comparison.get("route_noise_delta")
+        if isinstance(noise_delta, int | float) and not isinstance(noise_delta, bool):
+            if noise_delta > 0:
+                noise_regressions += 1
+            elif noise_delta < 0:
+                noise_improvements += 1
+            else:
+                noise_ties += 1
+        else:
+            noise_uncomputed += 1
+    return {
+        "compared_item_count": len(items),
+        "precision_regression_count": precision_regressions,
+        "precision_improvement_count": precision_improvements,
+        "precision_tie_count": precision_ties,
+        "precision_uncomputed_count": precision_uncomputed,
+        "noise_regression_count": noise_regressions,
+        "noise_improvement_count": noise_improvements,
+        "noise_tie_count": noise_ties,
+        "noise_uncomputed_count": noise_uncomputed,
+    }
+
+
+def _eval_doc_slots(doc_slots: Any) -> list[str]:
+    if not isinstance(doc_slots, list):
+        return []
+    return [slot for slot in doc_slots if isinstance(slot, str) and slot in EVAL_STAGE_SLOT_IDS]
+
+
+def _doc_stage_for_task(doc_slots: Any, *, compatible_slots: set[str]) -> str:
+    eval_slots = _eval_doc_slots(doc_slots)
+    if not eval_slots:
+        return "none"
+    for slot in eval_slots:
+        if slot in compatible_slots:
+            return slot
+    return eval_slots[0]
+
+
+def _summarize_eval_stage_confusion(items: list[dict[str, Any]], *, key: str) -> dict[str, Any]:
+    matrix: Counter[tuple[str, str]] = Counter()
+    off_diagonal: Counter[tuple[str, str]] = Counter()
+    compatible_count = 0
+    incompatible_count = 0
+    stage_active_count = 0
+    selected_eval_doc_count = 0
+    useful_compatible_count = 0
+    useful_incompatible_count = 0
+    for item in items:
+        metrics = item.get(key)
+        if not isinstance(metrics, dict):
+            continue
+        eval_stage = metrics.get("eval_stage")
+        if not isinstance(eval_stage, dict) or not eval_stage.get("active"):
+            task_stage = "none"
+            compatible_slots: set[str] = set()
+        else:
+            stage_active_count += 1
+            task_stage = str(eval_stage.get("primary") or "unknown")
+            compatible_slots = {
+                slot
+                for slot in eval_stage.get("compatible_doc_slots", [])
+                if isinstance(slot, str)
+            }
+        selected_doc_ids = _string_list(metrics.get("selected_doc_ids"))
+        useful_doc_ids = set(_string_list(metrics.get("useful_selected_doc_ids")))
+        doc_slots_by_id = metrics.get("doc_slots")
+        if not isinstance(doc_slots_by_id, dict):
+            doc_slots_by_id = {}
+        for doc_id in selected_doc_ids:
+            eval_doc_slots = _eval_doc_slots(doc_slots_by_id.get(doc_id))
+            doc_stage = _doc_stage_for_task(
+                doc_slots_by_id.get(doc_id),
+                compatible_slots=compatible_slots,
+            )
+            matrix[(task_stage, doc_stage)] += 1
+            if task_stage == "none" or doc_stage == "none":
+                continue
+            selected_eval_doc_count += 1
+            if set(eval_doc_slots) & compatible_slots:
+                compatible_count += 1
+                if doc_id in useful_doc_ids:
+                    useful_compatible_count += 1
+            else:
+                incompatible_count += 1
+                off_diagonal[(task_stage, doc_stage)] += 1
+                if doc_id in useful_doc_ids:
+                    useful_incompatible_count += 1
+
+    return {
+        "stage_active_trace_count": stage_active_count,
+        "selected_eval_doc_count": selected_eval_doc_count,
+        "compatible_eval_doc_count": compatible_count,
+        "incompatible_eval_doc_count": incompatible_count,
+        "useful_compatible_eval_doc_count": useful_compatible_count,
+        "useful_incompatible_eval_doc_count": useful_incompatible_count,
+        "compatibility_rate": (
+            compatible_count / selected_eval_doc_count if selected_eval_doc_count else None
+        ),
+        "matrix": [
+            {
+                "task_stage": task_stage,
+                "doc_stage": doc_stage,
+                "selected_doc_count": count,
+            }
+            for (task_stage, doc_stage), count in sorted(
+                matrix.items(),
+                key=lambda item: (-item[1], item[0][0], item[0][1]),
+            )
+        ],
+        "top_off_diagonal": [
+            {
+                "task_stage": task_stage,
+                "doc_stage": doc_stage,
+                "selected_doc_count": count,
+            }
+            for (task_stage, doc_stage), count in sorted(
+                off_diagonal.items(),
+                key=lambda item: (-item[1], item[0][0], item[0][1]),
+            )[:10]
+        ],
     }
 
 
@@ -945,8 +1407,31 @@ def _route_replay_item(
     max_docs: int,
     rerank_top: int,
     budget_words: int,
+    selector_mode: str = "intent_bucket_selector",
+    stage_compatible_doc_slots: bool = False,
+    eval_stage_scoring_mode: str = "off",
+    disable_route_quality_history: bool = False,
 ) -> dict[str, Any]:
-    baseline_metrics = _selection_metrics(_string_list(trace.get("selected_doc_ids")), task_events)
+    trace_selection_reason_types = (
+        trace.get("selection_reason_types")
+        if isinstance(trace.get("selection_reason_types"), dict)
+        else trace.get("route_selection_reason_types")
+        if isinstance(trace.get("route_selection_reason_types"), dict)
+        else None
+    )
+    trace_candidate_doc_ids = (
+        _string_list(trace.get("candidate_doc_ids"))
+        if isinstance(trace.get("candidate_doc_ids"), list)
+        else None
+    )
+    baseline_metrics = _selection_metrics(
+        _string_list(trace.get("selected_doc_ids")),
+        task_events,
+        selection_reason_types=trace_selection_reason_types,
+        maybe_doc_ids=_string_list(trace.get("maybe_load_doc_ids")),
+        candidate_doc_ids=trace_candidate_doc_ids,
+        packet_words=_int_or_none(trace.get("packet_words")),
+    )
     item: dict[str, Any] = {
         "trace_id": trace.get("trace_id"),
         "task_id": trace.get("task_id"),
@@ -969,11 +1454,46 @@ def _route_replay_item(
         budget_words=budget_words,
         max_docs=max_docs,
         rerank_top=rerank_top,
+        selector_mode=selector_mode,
+        stage_compatible_doc_slots=stage_compatible_doc_slots,
+        eval_stage_scoring_mode=eval_stage_scoring_mode,
+        disable_route_quality_history=disable_route_quality_history,
         start=repo_root,
         catalog_cutoff=replay_catalog_cutoff,
     )
     selected_doc_ids = _selected_doc_ids_from_packet(result.packet)
-    replay_metrics = _selection_metrics(selected_doc_ids, task_events)
+    maybe_doc_ids = _string_list(
+        [
+            item.get("doc_id")
+            for item in result.packet.get("maybe_load", [])
+            if isinstance(item, dict)
+        ]
+    )
+    routing_strategy = (
+        result.packet.get("routing_strategy")
+        if isinstance(result.packet.get("routing_strategy"), dict)
+        else {}
+    )
+    candidate_doc_ids = (
+        _string_list(routing_strategy.get("candidate_doc_ids"))
+        if isinstance(routing_strategy.get("candidate_doc_ids"), list)
+        else None
+    )
+    replay_selection_reason_types = _packet_doc_field(
+        result.packet,
+        "selection_reason_type",
+        selected_doc_ids=selected_doc_ids,
+    )
+    rendered_packet = render_route_packet_text(result.packet)
+    packet_words = len(re.findall(r"\S+", rendered_packet))
+    replay_metrics = _selection_metrics(
+        selected_doc_ids,
+        task_events,
+        selection_reason_types=replay_selection_reason_types,
+        maybe_doc_ids=maybe_doc_ids,
+        candidate_doc_ids=candidate_doc_ids,
+        packet_words=packet_words,
+    )
     route = result.packet.get("route", {}) if isinstance(result.packet.get("route"), dict) else {}
     route_catalog_cutoff = (
         route.get("catalog_cutoff") if isinstance(route.get("catalog_cutoff"), dict) else {}
@@ -991,13 +1511,28 @@ def _route_replay_item(
         "intent_signals": route.get("intent_signals")
         if isinstance(route.get("intent_signals"), dict)
         else {},
+        "mentioned_labels": route.get("mentioned_labels")
+        if isinstance(route.get("mentioned_labels"), dict)
+        else {},
+        "task_type_arbitration": route.get("task_type_arbitration")
+        if isinstance(route.get("task_type_arbitration"), dict)
+        else {},
         "route_mode": route.get("mode") if isinstance(route.get("mode"), dict) else {},
+        "route_self_audit": route.get("route_self_audit")
+        if isinstance(route.get("route_self_audit"), dict)
+        else {},
         "workflow_contract": route.get("workflow_contract")
         if isinstance(route.get("workflow_contract"), dict)
         else None,
+        "eval_stage": route.get("eval_stage")
+        if isinstance(route.get("eval_stage"), dict)
+        else {},
         "intent_buckets": route.get("intent_buckets")
         if isinstance(route.get("intent_buckets"), list)
         else [],
+        "phase_plan": result.packet.get("phase_plan")
+        if isinstance(result.packet.get("phase_plan"), dict)
+        else {},
         "changed_path_signal_source": route.get("changed_path_signal_source"),
         "changed_path_signal_used": route.get("changed_path_signal_used"),
         "route_quality_adjustments": _packet_doc_field(
@@ -1030,16 +1565,22 @@ def _route_replay_item(
             "applies_when_signal",
             selected_doc_ids=selected_doc_ids,
         ),
+        "eval_stage_adjustments": _packet_doc_field(
+            result.packet,
+            "eval_stage_adjustment",
+            selected_doc_ids=selected_doc_ids,
+        ),
+        "eval_stage_signals": _packet_doc_field(
+            result.packet,
+            "eval_stage_signal",
+            selected_doc_ids=selected_doc_ids,
+        ),
         "doc_slots": _packet_doc_field(
             result.packet,
             "doc_slots",
             selected_doc_ids=selected_doc_ids,
         ),
-        "selection_reason_types": _packet_doc_field(
-            result.packet,
-            "selection_reason_type",
-            selected_doc_ids=selected_doc_ids,
-        ),
+        "selection_reason_types": replay_selection_reason_types,
         "reranker": result.packet.get("routing_strategy", {}).get("reranker")
         if isinstance(result.packet.get("routing_strategy"), dict)
         else None,
@@ -1053,7 +1594,7 @@ def _route_replay_item(
             route_catalog_cutoff=route_catalog_cutoff,
             mode=catalog_cutoff,
         ),
-        "packet_words": len(re.findall(r"\S+", render_route_packet_text(result.packet))),
+        "packet_words": packet_words,
     }
     baseline_precision = baseline_metrics.get("route_precision")
     replay_precision = replay_metrics.get("route_precision")
@@ -1089,6 +1630,10 @@ def generate_route_replay_report(
     max_docs: int = 6,
     rerank_top: int = DEFAULT_ROUTE_RERANK_TOP,
     budget_words: int = DEFAULT_ROUTE_SAFETY_CAP_WORDS,
+    selector_mode: str = "intent_bucket_selector",
+    stage_compatible_doc_slots: bool = False,
+    eval_stage_scoring_mode: str = "off",
+    disable_route_quality_history: bool = False,
     max_items: int = DEFAULT_DIAGNOSTICS_MAX_ITEMS,
 ) -> dict[str, Any]:
     """Replay historical route prompts through the current router."""
@@ -1161,6 +1706,10 @@ def generate_route_replay_report(
             max_docs=max_docs,
             rerank_top=rerank_top,
             budget_words=budget_words,
+            selector_mode=selector_mode,
+            stage_compatible_doc_slots=stage_compatible_doc_slots,
+            eval_stage_scoring_mode=eval_stage_scoring_mode,
+            disable_route_quality_history=disable_route_quality_history,
         )
         items.append(item)
 
@@ -1168,6 +1717,8 @@ def generate_route_replay_report(
     baseline_summary = _summarize_replay_metrics(replayed_items, key="baseline")
     replay_summary = _summarize_replay_metrics(replayed_items, key="replay")
     catalog_timing_summary = _summarize_replay_catalog_timing(replayed_items)
+    item_regression_summary = _summarize_replay_item_regressions(replayed_items)
+    eval_stage_confusion = _summarize_eval_stage_confusion(replayed_items, key="replay")
     baseline_precision = baseline_summary.get("route_precision")
     replay_precision = replay_summary.get("route_precision")
     baseline_noise = baseline_summary.get("route_noise_rate")
@@ -1188,6 +1739,10 @@ def generate_route_replay_report(
             "max_docs": max_docs,
             "rerank_top": rerank_top,
             "budget_words": budget_words,
+            "selector_mode": selector_mode,
+            "stage_compatible_doc_slots": stage_compatible_doc_slots,
+            "eval_stage_scoring_mode": eval_stage_scoring_mode,
+            "disable_route_quality_history": disable_route_quality_history,
             "max_items": max_items,
         },
         "replay_policy": {
@@ -1220,6 +1775,8 @@ def generate_route_replay_report(
             "summary": replay_summary,
         },
         "catalog_timing": catalog_timing_summary,
+        "item_regression_summary": item_regression_summary,
+        "eval_stage_confusion": eval_stage_confusion,
         "comparison": {
             "route_precision_delta": (
                 replay_precision - baseline_precision
@@ -1240,6 +1797,300 @@ def generate_route_replay_report(
         ],
     }
     return payload
+
+
+def _route_ablation_options(variant: str, *, rerank_top: int) -> dict[str, Any]:
+    if variant == "current":
+        return {
+            "selector_mode": "intent_bucket_selector",
+            "stage_compatible_doc_slots": False,
+            "eval_stage_scoring_mode": "off",
+            "disable_route_quality_history": False,
+            "rerank_top": rerank_top,
+            "description": "Current working-tree router.",
+        }
+    if variant == "eval_stage_shadow":
+        return {
+            "selector_mode": "intent_bucket_selector",
+            "stage_compatible_doc_slots": False,
+            "eval_stage_scoring_mode": "off",
+            "disable_route_quality_history": False,
+            "rerank_top": rerank_top,
+            "description": "Current router with eval_stage diagnostics observed but not enforced.",
+        }
+    if variant == "eval_stage_soft_scoring":
+        return {
+            "selector_mode": "intent_bucket_selector",
+            "stage_compatible_doc_slots": False,
+            "eval_stage_scoring_mode": "soft",
+            "disable_route_quality_history": False,
+            "rerank_top": rerank_top,
+            "description": "Use eval_stage as soft scoring, tie-breaker, and maybe-load boundary.",
+        }
+    if variant == "stage_compatible_doc_slots":
+        return {
+            "selector_mode": "intent_bucket_selector",
+            "stage_compatible_doc_slots": True,
+            "eval_stage_scoring_mode": "off",
+            "disable_route_quality_history": False,
+            "rerank_top": rerank_top,
+            "description": "Require selected eval docs to match the task eval_stage compatible slots.",
+        }
+    if variant == "no_eval_bucket_selector":
+        return {
+            "selector_mode": "flat_top_k",
+            "stage_compatible_doc_slots": False,
+            "eval_stage_scoring_mode": "off",
+            "disable_route_quality_history": False,
+            "rerank_top": rerank_top,
+            "description": "Disable intent bucket coverage and select flat top-k scored docs.",
+        }
+    if variant == "no_reranker":
+        return {
+            "selector_mode": "intent_bucket_selector",
+            "stage_compatible_doc_slots": False,
+            "eval_stage_scoring_mode": "off",
+            "disable_route_quality_history": False,
+            "rerank_top": 0,
+            "description": "Disable deterministic index-card reranker.",
+        }
+    if variant == "no_route_quality_history":
+        return {
+            "selector_mode": "intent_bucket_selector",
+            "stage_compatible_doc_slots": False,
+            "eval_stage_scoring_mode": "off",
+            "disable_route_quality_history": True,
+            "rerank_top": rerank_top,
+            "description": "Disable route-quality history bonuses and penalties.",
+        }
+    raise ValueError(f"Unknown route ablation variant: {variant}")
+
+
+def _replay_summary_for_ablation(report: dict[str, Any]) -> dict[str, Any]:
+    replay = report.get("replay", {}).get("summary", {})
+    baseline = report.get("baseline", {}).get("summary", {})
+    comparison = report.get("comparison", {})
+    regressions = report.get("item_regression_summary", {})
+    confusion = report.get("eval_stage_confusion", {})
+    recovery = report.get("prompt_recovery", {})
+    return {
+        "replayed_trace_count": recovery.get("replayed_trace_count"),
+        "route_precision": replay.get("route_precision"),
+        "route_noise_rate": replay.get("route_noise_rate"),
+        "retrieval_precision": replay.get("retrieval_precision"),
+        "failed_route_at_selected_rate": replay.get("failed_route_at_selected_rate"),
+        "failed_route_at_selected_plus_maybe_rate": replay.get(
+            "failed_route_at_selected_plus_maybe_rate"
+        ),
+        "failed_route_at_candidate20_rate": replay.get("failed_route_at_candidate20_rate"),
+        "maybe_recovery_rate": replay.get("maybe_recovery_rate"),
+        "useful_coverage_at_selected": replay.get("useful_coverage_at_selected"),
+        "useful_coverage_at_selected_plus_maybe": replay.get(
+            "useful_coverage_at_selected_plus_maybe"
+        ),
+        "useful_coverage_at_candidate20": replay.get("useful_coverage_at_candidate20"),
+        "avg_packet_words": replay.get("avg_packet_words"),
+        "avg_selected_plus_maybe_docs": replay.get("avg_selected_plus_maybe_docs"),
+        "avg_candidate20_docs": replay.get("avg_candidate20_docs"),
+        "selected_doc_count": replay.get("selected_doc_count"),
+        "selected_plus_maybe_doc_count": replay.get("selected_plus_maybe_doc_count"),
+        "selected_useful_doc_count": replay.get("selected_useful_doc_count"),
+        "selected_plus_maybe_useful_doc_count": replay.get(
+            "selected_plus_maybe_useful_doc_count"
+        ),
+        "missed_useful_doc_count": replay.get("missed_useful_doc_count"),
+        "retrieval_selected_doc_count": replay.get("retrieval_selected_doc_count"),
+        "retrieval_selected_useful_doc_count": replay.get("retrieval_selected_useful_doc_count"),
+        "core_doc_count": replay.get("core_doc_count"),
+        "core_selected_but_unused_doc_count": replay.get("core_selected_but_unused_doc_count"),
+        "baseline_route_precision": baseline.get("route_precision"),
+        "baseline_retrieval_precision": baseline.get("retrieval_precision"),
+        "baseline_failed_route_at_selected_plus_maybe_rate": baseline.get(
+            "failed_route_at_selected_plus_maybe_rate"
+        ),
+        "route_precision_delta_vs_baseline": comparison.get("route_precision_delta"),
+        "route_noise_delta_vs_baseline": comparison.get("route_noise_delta"),
+        "selected_useful_delta_vs_baseline": (
+            int(replay.get("selected_useful_doc_count") or 0)
+            - int(baseline.get("selected_useful_doc_count") or 0)
+        ),
+        "missed_useful_delta_vs_baseline": (
+            int(replay.get("missed_useful_doc_count") or 0)
+            - int(baseline.get("missed_useful_doc_count") or 0)
+        ),
+        "precision_regression_count": regressions.get("precision_regression_count"),
+        "noise_regression_count": regressions.get("noise_regression_count"),
+        "eval_stage_compatibility_rate": confusion.get("compatibility_rate"),
+        "eval_stage_incompatible_doc_count": confusion.get("incompatible_eval_doc_count"),
+        "eval_stage_top_off_diagonal": confusion.get("top_off_diagonal", [])[:5]
+        if isinstance(confusion.get("top_off_diagonal"), list)
+        else [],
+    }
+
+
+def _metric_delta(value: Any, baseline: Any) -> float | int | None:
+    if isinstance(value, bool) or isinstance(baseline, bool):
+        return None
+    if isinstance(value, int | float) and isinstance(baseline, int | float):
+        return value - baseline
+    return None
+
+
+def generate_route_ablation_report(
+    *,
+    repo_root: Path | None = None,
+    repo_wiki_dir: Path | None = None,
+    handle: str | None = None,
+    before: str | None = None,
+    catalog_cutoff: str = "trace-routed-at",
+    target_evaluable_traces: int = 57,
+    codex_sessions_root: Path | None = None,
+    codex_state_db: Path | None = None,
+    max_docs: int = 6,
+    rerank_top: int = DEFAULT_ROUTE_RERANK_TOP,
+    budget_words: int = DEFAULT_ROUTE_SAFETY_CAP_WORDS,
+    variants: tuple[str, ...] = ROUTE_ABLATION_VARIANTS,
+    max_items: int = DEFAULT_DIAGNOSTICS_MAX_ITEMS,
+) -> dict[str, Any]:
+    """Run route ablation variants over the same replay cohort."""
+
+    selected_variants = tuple(variants) if variants else ROUTE_ABLATION_VARIANTS
+    reports: dict[str, dict[str, Any]] = {}
+    variant_rows: list[dict[str, Any]] = []
+    for variant in selected_variants:
+        options = _route_ablation_options(variant, rerank_top=rerank_top)
+        report = generate_route_replay_report(
+            repo_root=repo_root,
+            repo_wiki_dir=repo_wiki_dir,
+            handle=handle,
+            before=before,
+            catalog_cutoff=catalog_cutoff,
+            target_evaluable_traces=target_evaluable_traces,
+            codex_sessions_root=codex_sessions_root,
+            codex_state_db=codex_state_db,
+            max_docs=max_docs,
+            rerank_top=int(options["rerank_top"]),
+            budget_words=budget_words,
+            selector_mode=str(options["selector_mode"]),
+            stage_compatible_doc_slots=bool(options["stage_compatible_doc_slots"]),
+            eval_stage_scoring_mode=str(options["eval_stage_scoring_mode"]),
+            disable_route_quality_history=bool(options["disable_route_quality_history"]),
+            max_items=max_items,
+        )
+        reports[variant] = report
+        summary = _replay_summary_for_ablation(report)
+        variant_rows.append(
+            {
+                "variant": variant,
+                "description": options["description"],
+                "options": {
+                    key: value
+                    for key, value in options.items()
+                    if key != "description"
+                },
+                **summary,
+            }
+        )
+
+    current = next((row for row in variant_rows if row["variant"] == "current"), None)
+    if current:
+        for row in variant_rows:
+            row["retrieval_precision_delta_vs_current"] = _metric_delta(
+                row.get("retrieval_precision"),
+                current.get("retrieval_precision"),
+            )
+            row["failed_route_at_selected_plus_maybe_delta_vs_current"] = _metric_delta(
+                row.get("failed_route_at_selected_plus_maybe_rate"),
+                current.get("failed_route_at_selected_plus_maybe_rate"),
+            )
+            row["maybe_recovery_rate_delta_vs_current"] = _metric_delta(
+                row.get("maybe_recovery_rate"),
+                current.get("maybe_recovery_rate"),
+            )
+            row["useful_coverage_at_selected_plus_maybe_delta_vs_current"] = _metric_delta(
+                row.get("useful_coverage_at_selected_plus_maybe"),
+                current.get("useful_coverage_at_selected_plus_maybe"),
+            )
+            row["selected_useful_delta_vs_current"] = _metric_delta(
+                row.get("selected_useful_doc_count"),
+                current.get("selected_useful_doc_count"),
+            )
+            row["missed_useful_delta_vs_current"] = _metric_delta(
+                row.get("missed_useful_doc_count"),
+                current.get("missed_useful_doc_count"),
+            )
+            row["eval_stage_incompatible_delta_vs_current"] = _metric_delta(
+                row.get("eval_stage_incompatible_doc_count"),
+                current.get("eval_stage_incompatible_doc_count"),
+            )
+
+    best_retrieval = sorted(
+        variant_rows,
+        key=lambda row: (
+            float(row.get("failed_route_at_selected_plus_maybe_rate"))
+            if isinstance(row.get("failed_route_at_selected_plus_maybe_rate"), int | float)
+            and not isinstance(row.get("failed_route_at_selected_plus_maybe_rate"), bool)
+            else 1.0,
+            -float(row.get("retrieval_precision") or -1),
+            -int(row.get("selected_useful_doc_count") or 0),
+            int(row.get("missed_useful_doc_count") or 0),
+            str(row.get("variant")),
+        ),
+    )[0] if variant_rows else None
+    activation = {
+        "status": "blocked",
+        "reason": "Ablation is diagnostic only; activation requires non-regressing replay plus behavior tests.",
+        "recommended_next_step": (
+            "Prioritize eval-stage selector if it improves retrieval precision without losing useful docs; "
+            "otherwise inspect the largest off-diagonal stage pairs."
+        ),
+        "best_retrieval_variant": best_retrieval.get("variant") if best_retrieval else None,
+    }
+    if current and best_retrieval and best_retrieval.get("variant") != "current":
+        activation["candidate_signal"] = {
+            "variant": best_retrieval.get("variant"),
+            "retrieval_precision_delta_vs_current": best_retrieval.get(
+                "retrieval_precision_delta_vs_current"
+            ),
+            "failed_route_at_selected_plus_maybe_delta_vs_current": best_retrieval.get(
+                "failed_route_at_selected_plus_maybe_delta_vs_current"
+            ),
+            "maybe_recovery_rate_delta_vs_current": best_retrieval.get(
+                "maybe_recovery_rate_delta_vs_current"
+            ),
+            "selected_useful_delta_vs_current": best_retrieval.get(
+                "selected_useful_delta_vs_current"
+            ),
+            "missed_useful_delta_vs_current": best_retrieval.get(
+                "missed_useful_delta_vs_current"
+            ),
+        }
+
+    first_report = reports.get(selected_variants[0], {}) if selected_variants else {}
+    return {
+        "schema_version": ROUTE_ABLATION_REPORT_SCHEMA_VERSION,
+        "generated_at": _now_iso(),
+        "repo_root": first_report.get("repo_root"),
+        "repo_wiki_dir": first_report.get("repo_wiki_dir"),
+        "filters": {
+            "handle": handle,
+            "before": before,
+            "catalog_cutoff": catalog_cutoff,
+            "target_evaluable_traces": target_evaluable_traces,
+            "max_docs": max_docs,
+            "rerank_top": rerank_top,
+            "budget_words": budget_words,
+            "variants": list(selected_variants),
+            "max_items": max_items,
+        },
+        "variant_summaries": variant_rows,
+        "reports": reports,
+        "activation": activation,
+        "warnings": [
+            "Ablation variants are retrospective projections over recovered route prompts.",
+            "Do not activate a selector change from ablation alone; combine with behavior tests.",
+        ],
+    }
 
 
 def generate_route_noise_report(
@@ -1575,6 +2426,10 @@ def render_route_replay_report_json(payload: dict[str, Any]) -> str:
     return json.dumps(payload, indent=2, sort_keys=True) + "\n"
 
 
+def render_route_ablation_report_json(payload: dict[str, Any]) -> str:
+    return json.dumps(payload, indent=2, sort_keys=True) + "\n"
+
+
 def render_neutral_impact_eval_report_json(payload: dict[str, Any]) -> str:
     return json.dumps(payload, indent=2, sort_keys=True) + "\n"
 
@@ -1677,7 +2532,9 @@ def render_route_cohort_report(payload: dict[str, Any]) -> str:
             str(baseline.get("trace_count")),
             _format_metric(baseline.get("route_precision")),
             _format_metric(baseline.get("route_noise_rate")),
+            _format_metric(baseline.get("failed_route_at_selected_plus_maybe_rate")),
             str(baseline.get("selected_doc_count")),
+            str(baseline.get("selected_plus_maybe_doc_count")),
             str(baseline.get("selected_useful_doc_count")),
         ],
         [
@@ -1685,7 +2542,9 @@ def render_route_cohort_report(payload: dict[str, Any]) -> str:
             str(post_change.get("trace_count")),
             _format_metric(post_change.get("route_precision")),
             _format_metric(post_change.get("route_noise_rate")),
+            _format_metric(post_change.get("failed_route_at_selected_plus_maybe_rate")),
             str(post_change.get("selected_doc_count")),
+            str(post_change.get("selected_plus_maybe_doc_count")),
             str(post_change.get("selected_useful_doc_count")),
         ],
     ]
@@ -1708,7 +2567,16 @@ def render_route_cohort_report(payload: dict[str, Any]) -> str:
         "## Comparison",
         "",
         _markdown_table(
-            ["cohort", "traces", "precision", "noise", "selected", "selected_useful"],
+            [
+                "cohort",
+                "traces",
+                "precision",
+                "noise",
+                "failed@selected+maybe",
+                "selected",
+                "selected+maybe",
+                "selected_useful",
+            ],
             baseline_rows,
         ),
         "",
@@ -1737,6 +2605,8 @@ def render_route_replay_report(payload: dict[str, Any]) -> str:
     replay = payload.get("replay", {}).get("summary", {})
     comparison = payload.get("comparison", {})
     catalog_timing = payload.get("catalog_timing", {})
+    regression_summary = payload.get("item_regression_summary", {})
+    eval_stage_confusion = payload.get("eval_stage_confusion", {})
     rows = [
         [
             str(item.get("task_id")),
@@ -1755,16 +2625,24 @@ def render_route_replay_report(payload: dict[str, Any]) -> str:
             str(baseline.get("trace_count")),
             _format_metric(baseline.get("route_precision")),
             _format_metric(baseline.get("route_noise_rate")),
+            _format_metric(baseline.get("retrieval_precision")),
             str(baseline.get("selected_doc_count")),
             str(baseline.get("selected_useful_doc_count")),
+            str(baseline.get("retrieval_selected_doc_count")),
+            str(baseline.get("retrieval_selected_useful_doc_count")),
+            str(baseline.get("core_doc_count")),
         ],
         [
             "replay",
             str(replay.get("trace_count")),
             _format_metric(replay.get("route_precision")),
             _format_metric(replay.get("route_noise_rate")),
+            _format_metric(replay.get("retrieval_precision")),
             str(replay.get("selected_doc_count")),
             str(replay.get("selected_useful_doc_count")),
+            str(replay.get("retrieval_selected_doc_count")),
+            str(replay.get("retrieval_selected_useful_doc_count")),
+            str(replay.get("core_doc_count")),
         ],
     ]
     lines = [
@@ -1787,12 +2665,87 @@ def render_route_replay_report(payload: dict[str, Any]) -> str:
         "## Comparison",
         "",
         _markdown_table(
-            ["cohort", "traces", "precision", "noise", "selected", "selected_useful"],
+            [
+                "cohort",
+                "traces",
+                "precision",
+                "noise",
+                "retrieval_precision",
+                "selected",
+                "selected_useful",
+                "retrieval_selected",
+                "retrieval_useful",
+                "core_docs",
+            ],
             summary_rows,
         ),
         "",
         f"- Precision delta: `{_format_metric(comparison.get('route_precision_delta'))}`",
         f"- Noise delta: `{_format_metric(comparison.get('route_noise_delta'))}`",
+        "",
+        "## Layered Metrics",
+        "",
+        f"- Baseline reason types: `{baseline.get('selection_reason_type_counts')}`",
+        f"- Replay reason types: `{replay.get('selection_reason_type_counts')}`",
+        f"- Replay mandatory contract docs: `{replay.get('mandatory_contract_doc_count')}`",
+        f"- Replay safety guardrail docs: `{replay.get('safety_guardrail_doc_count')}`",
+        f"- Replay core docs selected-but-unused: `{replay.get('core_selected_but_unused_doc_count')}`",
+        f"- Replay retrieval selected-but-unused: `{replay.get('retrieval_selected_but_unused_doc_count')}`",
+        "",
+        "## RAG-Style Retrieval Metrics",
+        "",
+        _markdown_table(
+            [
+                "cohort",
+                "failed@selected",
+                "failed@selected+maybe",
+                "failed@candidate20",
+                "coverage@selected",
+                "coverage@selected+maybe",
+                "coverage@candidate20",
+                "maybe_recovery",
+                "avg_words",
+                "avg_docs",
+            ],
+            [
+                [
+                    "baseline",
+                    _format_metric(baseline.get("failed_route_at_selected_rate")),
+                    _format_metric(baseline.get("failed_route_at_selected_plus_maybe_rate")),
+                    _format_metric(baseline.get("failed_route_at_candidate20_rate")),
+                    _format_metric(baseline.get("useful_coverage_at_selected")),
+                    _format_metric(baseline.get("useful_coverage_at_selected_plus_maybe")),
+                    _format_metric(baseline.get("useful_coverage_at_candidate20")),
+                    _format_metric(baseline.get("maybe_recovery_rate")),
+                    _format_metric(baseline.get("avg_packet_words")),
+                    _format_metric(baseline.get("avg_selected_plus_maybe_docs")),
+                ],
+                [
+                    "replay",
+                    _format_metric(replay.get("failed_route_at_selected_rate")),
+                    _format_metric(replay.get("failed_route_at_selected_plus_maybe_rate")),
+                    _format_metric(replay.get("failed_route_at_candidate20_rate")),
+                    _format_metric(replay.get("useful_coverage_at_selected")),
+                    _format_metric(replay.get("useful_coverage_at_selected_plus_maybe")),
+                    _format_metric(replay.get("useful_coverage_at_candidate20")),
+                    _format_metric(replay.get("maybe_recovery_rate")),
+                    _format_metric(replay.get("avg_packet_words")),
+                    _format_metric(replay.get("avg_selected_plus_maybe_docs")),
+                ],
+            ],
+        ),
+        "",
+        "## Per-Trace Regression Summary",
+        "",
+        f"- Compared items: `{regression_summary.get('compared_item_count')}`",
+        f"- Precision regressions: `{regression_summary.get('precision_regression_count')}`",
+        f"- Precision improvements: `{regression_summary.get('precision_improvement_count')}`",
+        f"- Precision ties: `{regression_summary.get('precision_tie_count')}`",
+        f"- Precision uncomputed: `{regression_summary.get('precision_uncomputed_count')}`",
+        f"- Noise regressions: `{regression_summary.get('noise_regression_count')}`",
+        f"- Noise improvements: `{regression_summary.get('noise_improvement_count')}`",
+        f"- Noise ties: `{regression_summary.get('noise_tie_count')}`",
+        f"- Noise uncomputed: `{regression_summary.get('noise_uncomputed_count')}`",
         "",
         "## Temporal Catalog",
         "",
@@ -1801,6 +2754,27 @@ def render_route_replay_report(payload: dict[str, Any]) -> str:
         f"- Selected unknown-created-at docs: `{catalog_timing.get('selected_unknown_created_at_doc_count')}`",
         f"- Catalog docs without created_at: `{catalog_timing.get('unknown_created_at_doc_count')}`",
         "",
+        "## Eval Stage Confusion",
+        "",
+        f"- Stage-active traces: `{eval_stage_confusion.get('stage_active_trace_count')}`",
+        f"- Selected eval docs: `{eval_stage_confusion.get('selected_eval_doc_count')}`",
+        f"- Compatible eval docs: `{eval_stage_confusion.get('compatible_eval_doc_count')}`",
+        f"- Incompatible eval docs: `{eval_stage_confusion.get('incompatible_eval_doc_count')}`",
+        f"- Compatibility rate: `{_format_metric(eval_stage_confusion.get('compatibility_rate'))}`",
+        "",
+        _markdown_table(
+            ["task_stage", "doc_stage", "selected_docs"],
+            [
+                [
+                    str(item.get("task_stage")),
+                    str(item.get("doc_stage")),
+                    str(item.get("selected_doc_count")),
+                ]
+                for item in eval_stage_confusion.get("top_off_diagonal", [])
+                if isinstance(item, dict)
+            ],
+        ),
+        "",
         "## Replay Rows",
         "",
         _markdown_table(
@@ -1808,6 +2782,112 @@ def render_route_replay_report(payload: dict[str, Any]) -> str:
             rows,
         ),
     ]
+    warnings = payload.get("warnings", [])
+    if warnings:
+        lines.extend(["", "## Warnings", ""])
+        lines.extend(f"- {warning}" for warning in warnings)
+    lines.append("")
+    return "\n".join(lines)
+
+
+def render_route_ablation_report(payload: dict[str, Any]) -> str:
+    rows = [
+        [
+            str(item.get("variant")),
+            _format_metric(item.get("retrieval_precision")),
+            _format_metric(item.get("retrieval_precision_delta_vs_current")),
+            _format_metric(item.get("failed_route_at_selected_plus_maybe_rate")),
+            _format_metric(item.get("failed_route_at_selected_plus_maybe_delta_vs_current")),
+            _format_metric(item.get("maybe_recovery_rate")),
+            _format_metric(item.get("useful_coverage_at_selected_plus_maybe")),
+            str(item.get("selected_useful_doc_count")),
+            str(item.get("selected_useful_delta_vs_current")),
+            str(item.get("missed_useful_doc_count")),
+            str(item.get("missed_useful_delta_vs_current")),
+            str(item.get("eval_stage_incompatible_doc_count")),
+            str(item.get("precision_regression_count")),
+        ]
+        for item in payload.get("variant_summaries", [])
+        if isinstance(item, dict)
+    ]
+    off_diagonal_rows: list[list[str]] = []
+    for item in payload.get("variant_summaries", []):
+        if not isinstance(item, dict):
+            continue
+        variant = str(item.get("variant"))
+        top_pairs = item.get("eval_stage_top_off_diagonal")
+        if not isinstance(top_pairs, list):
+            continue
+        for pair in top_pairs[:5]:
+            if not isinstance(pair, dict):
+                continue
+            off_diagonal_rows.append(
+                [
+                    variant,
+                    str(pair.get("task_stage")),
+                    str(pair.get("doc_stage")),
+                    str(pair.get("selected_doc_count")),
+                ]
+            )
+    activation = payload.get("activation") if isinstance(payload.get("activation"), dict) else {}
+    lines = [
+        "# Route Eval-Stage Ablation Report",
+        "",
+        f"- Generated at: `{payload.get('generated_at')}`",
+        f"- Before: `{payload.get('filters', {}).get('before')}`",
+        f"- Catalog cutoff: `{payload.get('filters', {}).get('catalog_cutoff')}`",
+        f"- Target evaluable traces: `{payload.get('filters', {}).get('target_evaluable_traces')}`",
+        "",
+        "## Variant Summary",
+        "",
+        _markdown_table(
+            [
+                "variant",
+                "retrieval_precision",
+                "retrieval_delta",
+                "failed@selected+maybe",
+                "failed_delta",
+                "maybe_recovery",
+                "coverage@selected+maybe",
+                "selected_useful",
+                "useful_delta",
+                "missed_useful",
+                "missed_delta",
+                "stage_incompatible",
+                "precision_regressions",
+            ],
+            rows,
+        ),
+        "",
+        "## Top Eval-Stage Off-Diagonal Pairs",
+        "",
+        _markdown_table(
+            ["variant", "task_stage", "doc_stage", "selected_docs"],
+            off_diagonal_rows,
+        ),
+        "",
+        "## Activation",
+        "",
+        f"- Status: `{activation.get('status')}`",
+        f"- Reason: {activation.get('reason')}",
+        f"- Best retrieval variant: `{activation.get('best_retrieval_variant')}`",
+        f"- Recommended next step: {activation.get('recommended_next_step')}",
+    ]
+    candidate = activation.get("candidate_signal")
+    if isinstance(candidate, dict):
+        lines.extend(
+            [
+                "",
+                "## Candidate Signal",
+                "",
+                f"- Variant: `{candidate.get('variant')}`",
+                f"- Retrieval precision delta vs current: `{_format_metric(candidate.get('retrieval_precision_delta_vs_current'))}`",
+                f"- Failed route@selected+maybe delta vs current: `{_format_metric(candidate.get('failed_route_at_selected_plus_maybe_delta_vs_current'))}`",
+                f"- Maybe recovery rate delta vs current: `{_format_metric(candidate.get('maybe_recovery_rate_delta_vs_current'))}`",
+                f"- Selected useful delta vs current: `{candidate.get('selected_useful_delta_vs_current')}`",
+                f"- Missed useful delta vs current: `{candidate.get('missed_useful_delta_vs_current')}`",
+            ]
+        )
     warnings = payload.get("warnings", [])
     if warnings:
         lines.extend(["", "## Warnings", ""])

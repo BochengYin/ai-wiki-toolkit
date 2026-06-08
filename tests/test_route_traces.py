@@ -47,6 +47,9 @@ def test_route_records_trace_by_default(repo_env: dict[str, Path], monkeypatch) 
     assert isinstance(trace["domain_tags"], list)
     assert trace["packet_words"] > 0
     assert trace["selected_doc_count"] == len(trace["selected_doc_ids"])
+    assert trace["candidate_doc_count"] == len(trace["candidate_doc_ids"])
+    assert trace["candidate_doc_count"] <= 20
+    assert set(trace["selected_doc_ids"]) <= set(trace["candidate_doc_ids"])
     assert "constraints" in trace["selected_doc_ids"]
     assert isinstance(trace["route_scores"], dict)
     assert isinstance(trace["base_route_scores"], dict)
@@ -60,8 +63,13 @@ def test_route_records_trace_by_default(repo_env: dict[str, Path], monkeypatch) 
     assert isinstance(trace["intent_signals"], dict)
     assert isinstance(trace["route_mode"], dict)
     assert trace["route_mode"]["name"] == "code"
+    assert isinstance(trace["route_self_audit"], dict)
+    assert trace["route_self_audit"]["status"] == "ok"
     assert trace["workflow_contract"] is None
     assert isinstance(trace["intent_buckets"], list)
+    assert isinstance(trace["phase_plan"], dict)
+    assert trace["phase_plan"]["status"] == "shadow"
+    assert trace["phase_plan"]["current_phase"]["id"] == "code"
     assert isinstance(trace["behavior_contract"], dict)
     assert isinstance(trace["selector"], dict)
     assert isinstance(trace["route_applies_when_adjustments"], dict)

@@ -241,6 +241,11 @@ def build_route_trace_payload(
     routing_strategy = (
         packet.get("routing_strategy") if isinstance(packet.get("routing_strategy"), dict) else {}
     )
+    candidate_doc_ids = [
+        doc_id
+        for doc_id in routing_strategy.get("candidate_doc_ids", [])
+        if isinstance(doc_id, str) and doc_id
+    ]
 
     payload = {
         "schema_version": ROUTE_TRACE_SCHEMA_VERSION,
@@ -264,11 +269,13 @@ def build_route_trace_payload(
         "must_load_doc_ids": must_load_doc_ids,
         "index_card_doc_ids": index_card_doc_ids,
         "maybe_load_doc_ids": maybe_doc_ids,
+        "candidate_doc_ids": candidate_doc_ids,
         "skipped_doc_ids": skipped_doc_ids,
         "packet_words": _packet_words(rendered_packet),
         "selected_doc_count": len(selected_doc_ids),
         "index_card_count": len(index_card_doc_ids),
         "maybe_load_count": len(maybe_doc_ids),
+        "candidate_doc_count": len(candidate_doc_ids),
         "must_load_count": len(must_load_doc_ids),
         "route_scores": _route_scores(packet),
         "base_route_scores": _route_numeric_field(packet, "base_score"),
@@ -291,12 +298,18 @@ def build_route_trace_payload(
         if isinstance(route.get("intent_signals"), dict)
         else {},
         "route_mode": route.get("mode") if isinstance(route.get("mode"), dict) else {},
+        "route_self_audit": route.get("route_self_audit")
+        if isinstance(route.get("route_self_audit"), dict)
+        else {},
         "workflow_contract": route.get("workflow_contract")
         if isinstance(route.get("workflow_contract"), dict)
         else None,
         "intent_buckets": [
             bucket for bucket in route.get("intent_buckets", []) if isinstance(bucket, dict)
         ],
+        "phase_plan": packet.get("phase_plan")
+        if isinstance(packet.get("phase_plan"), dict)
+        else {},
         "behavior_contract": packet.get("behavior_contract")
         if isinstance(packet.get("behavior_contract"), dict)
         else {},

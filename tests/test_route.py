@@ -9,6 +9,7 @@ from typer.testing import CliRunner
 from ai_wiki_toolkit.cli import app
 from ai_wiki_toolkit.route import (
     _applies_when_adjustment,
+    generate_route_packet,
     _route_intent_signals,
     _split_applies_when,
     _task_tokens,
@@ -315,6 +316,8 @@ def test_route_applies_when_requires_action_stage_alignment(
     assert packet["index_cards"][0]["doc_id"] == (
         "people/alice/drafts/zzz-impact-eval-prompt-design"
     )
+    assert packet["route"]["eval_stage"]["active"] is True
+    assert packet["route"]["eval_stage"]["primary"] == "prompt_design"
     intent_signals = packet["route"]["intent_signals"]
     assert "design" in intent_signals["alignment_tokens"]
     assert "prompts" in intent_signals["alignment_tokens"]
@@ -340,6 +343,125 @@ def test_route_applies_when_requires_action_stage_alignment(
     assert signal["positive_alignment_tokens"]
     assert not signal["positive_alignment_matches"]
     assert any("action/stage mismatch" in reason for reason in reasons)
+
+
+def test_route_stage_compatible_selector_filters_adjacent_eval_stage_docs(
+    repo_env: dict[str, Path],
+) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "alice"])
+    assert install_result.exit_code == 0
+    repo_wiki = repo_env["repo"] / "ai-wiki"
+    capture_doc = repo_wiki / "people" / "alice" / "drafts" / "impact-eval-result-capture.md"
+    capture_doc.parent.mkdir(parents=True, exist_ok=True)
+    capture_doc.write_text(
+        strip_margin(
+            """
+            ---
+            title: "Impact eval result capture"
+            short_description: "Use for impact eval artifact capture and untracked result files."
+            ---
+            # Impact Eval Result Capture
+
+            Impact eval artifact capture preserves result files, untracked files, and workspace diff evidence.
+            """
+        ),
+        encoding="utf-8",
+    )
+    prompt_doc = repo_wiki / "people" / "alice" / "drafts" / "impact-eval-prompts.md"
+    prompt_doc.write_text(
+        strip_margin(
+            """
+            ---
+            title: "Impact eval prompts"
+            short_description: "Use for impact eval prompt design and task family prompts."
+            ---
+            # Impact Eval Prompts
+
+            Impact eval prompt design covers task family prompt variants and rubric framing.
+            """
+        ),
+        encoding="utf-8",
+    )
+
+    result = generate_route_packet(
+        task="Fix impact eval result capture so untracked artifact files are saved.",
+        max_docs=2,
+        stage_compatible_doc_slots=True,
+        start=repo_env["repo"],
+    )
+
+    packet = result.packet
+    assert packet["route"]["eval_stage"]["primary"] == "artifact_capture"
+    selected_ids = {
+        card["doc_id"]
+        for card in packet["index_cards"]
+        if card.get("selection_reason_type")
+    }
+    assert "people/alice/drafts/impact-eval-result-capture" in selected_ids
+    assert "people/alice/drafts/impact-eval-prompts" not in selected_ids
+    assert packet["routing_strategy"]["selector"]["stage_compatible_doc_slots_required"] is True
+
+
+def test_route_eval_stage_soft_scoring_demotes_adjacent_stage_to_maybe_load(
+    repo_env: dict[str, Path],
+) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "alice"])
+    assert install_result.exit_code == 0
+    repo_wiki = repo_env["repo"] / "ai-wiki"
+    manifest_doc = repo_wiki / "people" / "alice" / "drafts" / "zzz-eval-run-manifest.md"
+    manifest_doc.parent.mkdir(parents=True, exist_ok=True)
+    manifest_doc.write_text(
+        strip_margin(
+            """
+            ---
+            title: "Eval run manifest"
+            short_description: "Use for eval run manifest and runner workspace setup."
+            ---
+            # Eval Run Manifest
+
+            Eval run manifest runner workspace setup defines slot mappings and run artifacts.
+            """
+        ),
+        encoding="utf-8",
+    )
+    prompt_doc = repo_wiki / "people" / "alice" / "drafts" / "aaa-impact-eval-prompts.md"
+    prompt_doc.write_text(
+        strip_margin(
+            """
+            ---
+            title: "Impact eval prompts"
+            short_description: "Use for impact eval prompt design and task family prompts."
+            ---
+            # Impact Eval Prompts
+
+            Impact eval prompt design covers task family prompt variants and rubric framing.
+            """
+        ),
+        encoding="utf-8",
+    )
+
+    result = generate_route_packet(
+        task="Design the eval run manifest for runner workspaces.",
+        max_docs=1,
+        eval_stage_scoring_mode="soft",
+        start=repo_env["repo"],
+    )
+
+    packet = result.packet
+    assert packet["route"]["eval_stage"]["primary"] == "manifest_or_runner"
+    selected_cards = [
+        card for card in packet["index_cards"] if card.get("selection_reason_type")
+    ]
+    assert selected_cards[0]["doc_id"] == "people/alice/drafts/zzz-eval-run-manifest"
+    assert selected_cards[0]["eval_stage_signal"]["relation"] == "primary_stage_match"
+    maybe_ids = {doc["doc_id"] for doc in packet["maybe_load"]}
+    assert "people/alice/drafts/aaa-impact-eval-prompts" in maybe_ids
+    maybe_prompt = next(
+        doc
+        for doc in packet["maybe_load"]
+        if doc["doc_id"] == "people/alice/drafts/aaa-impact-eval-prompts"
+    )
+    assert maybe_prompt["eval_stage_signal"]["relation"] == "adjacent_eval_stage"
 
 
 def test_route_classifies_simple_pr_tasks_as_low_effort(repo_env: dict[str, Path]) -> None:
@@ -448,6 +570,125 @@ def test_route_expands_chinese_task_terms_for_eval_routing(repo_env: dict[str, P
     assert packet["behavior_contract"]["recognized_mode"] == "plan"
 
 
+def test_route_does_not_treat_mentioned_code_bug_fix_label_as_intent(
+    repo_env: dict[str, Path],
+) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "alice"])
+    assert install_result.exit_code == 0
+
+    result = runner.invoke(
+        app,
+        [
+            "route",
+            "--task",
+            "我觉得你要搞清楚为什么他当时是按照 code/bug_fix 走 然后才能正确的修复这个问题",
+            "--no-record-trace",
+            "--format",
+            "json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    packet = json.loads(result.output)
+    assert packet["route"]["task_type"] == "memory_governance"
+    assert packet["route"]["mode"]["name"] == "plan"
+    assert packet["behavior_contract"]["recognized_mode"] == "plan"
+    assert "edit_files" in packet["behavior_contract"]["disallowed_actions"]
+    mentioned = packet["route"]["mentioned_labels"]
+    assert mentioned["labels"] == ["bug_fix", "code"]
+    assert {"bug", "fix", "code"} <= set(mentioned["ignored_intent_tokens"])
+    audit = packet["route"]["route_self_audit"]
+    assert audit["status"] == "ok"
+    assert any(
+        observation["type"] == "mentioned_label_excluded_from_intent"
+        for observation in audit["observations"]
+    )
+    assert not any(
+        item["criterion"] == "The reported bug is reproduced or its failure mode is explicitly identified."
+        for item in packet["success_criteria"]["items"]
+    )
+
+
+def test_route_plan_mode_arbitrates_bug_fix_task_type_for_planning_only_prompt(
+    repo_env: dict[str, Path],
+) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "alice"])
+    assert install_result.exit_code == 0
+
+    result = runner.invoke(
+        app,
+        [
+            "route",
+            "--task",
+            "不要直接实现，先研究 router 为什么把 planning-only prompt 误判成 code/bug_fix，然后给出修复计划",
+            "--no-record-trace",
+            "--format",
+            "json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    packet = json.loads(result.output)
+    assert packet["route"]["mode"]["name"] == "plan"
+    assert packet["route"]["task_type"] == "memory_governance"
+    assert packet["behavior_contract"]["recognized_mode"] == "plan"
+    assert "edit_files" in packet["behavior_contract"]["disallowed_actions"]
+    audit = packet["route"]["route_self_audit"]
+    assert audit["status"] == "ok"
+    assert "mode_task_type_conflict" not in audit["flags"]
+
+
+def test_route_does_not_trigger_fixed_workflow_from_broad_chinese_verify_synonym(
+    repo_env: dict[str, Path],
+) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "alice"])
+    assert install_result.exit_code == 0
+
+    result = runner.invoke(
+        app,
+        [
+            "route",
+            "--task",
+            (
+                "先做 Codex runtime capability test，验证 route packet 能不能真的让 Codex "
+                "进入 plan/code/validate/git/push 这些行为边界。这个比继续调 scorer 更优先。"
+            ),
+            "--no-record-trace",
+            "--format",
+            "json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    packet = json.loads(result.output)
+    assert packet["route"]["task_type"] == "memory_governance"
+    assert packet["route"]["workflow_contract"] is None
+    assert packet["route"]["mode"]["name"] != "fixed_workflow"
+    assert packet["behavior_contract"]["workflow_contract_id"] is None
+    audit = packet["route"]["route_self_audit"]
+    assert audit["status"] == "ok"
+    assert "weak_workflow_trigger" not in audit["flags"]
+
+
+def test_route_self_audit_flags_synthetic_mode_task_type_conflict() -> None:
+    from ai_wiki_toolkit.route import _build_route_self_audit
+
+    audit = _build_route_self_audit(
+        task_type="bug_fix",
+        route_mode={"name": "plan"},
+        workflow_contract=None,
+        mentioned_labels={"labels": [], "ignored_intent_tokens": [], "evidence": []},
+        intent_signals={"mode": "analysis", "alignment_tokens": ["fix", "planning"]},
+        task_tokens={"fix", "planning"},
+        selected=[],
+    )
+
+    assert audit["status"] == "suspicious"
+    assert "mode_task_type_conflict" in audit["flags"]
+    assert audit["recommended_action"] == "record_taxonomy_evidence"
+    assert audit["taxonomy_evidence_candidate"]["signal_type"] == "unknown_task_language"
+
+
 def test_route_uses_fixed_workflow_contract_before_adjacent_design_docs(
     repo_env: dict[str, Path],
 ) -> None:
@@ -499,6 +740,62 @@ def test_route_uses_fixed_workflow_contract_before_adjacent_design_docs(
     assert packet["routing_strategy"]["selector"]["fixed_workflow_without_support"] is True
     selected_ids = {card["doc_id"] for card in packet["index_cards"]}
     assert "people/alice/drafts/weekly-report-eval-design" not in selected_ids
+
+
+def test_route_fixed_workflow_can_select_primary_bucket_supporting_docs(
+    repo_env: dict[str, Path],
+) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "alice"])
+    assert install_result.exit_code == 0
+    release_doc = (
+        repo_env["repo"]
+        / "ai-wiki"
+        / "people"
+        / "alice"
+        / "drafts"
+        / "release-assets.md"
+    )
+    release_doc.write_text(
+        strip_margin(
+            """
+            ---
+            title: "Release assets"
+            short_description: "Use for npm release package assets and distribution checks."
+            ---
+            # Release Assets
+
+            Verify npm release assets, package distribution, and published version checks.
+            """
+        ),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "route",
+            "--task",
+            "push current changes and release a new version",
+            "--max-docs",
+            "3",
+            "--no-record-trace",
+            "--format",
+            "json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    packet = json.loads(result.output)
+    assert packet["route"]["mode"]["name"] == "fixed_workflow"
+    assert packet["route"]["workflow_contract"]["id"] == "release-flow"
+    selector = packet["routing_strategy"]["selector"]
+    assert selector["fixed_workflow_without_support"] is True
+    assert selector["workflow_contract_selection_mode"] == (
+        "contract_with_supporting_doc_retrieval"
+    )
+    selected_ids = {card["doc_id"] for card in packet["index_cards"]}
+    assert "people/alice/drafts/release-assets" in selected_ids
+    assert "workflows" not in selected_ids
 
 
 def test_route_bucket_selector_covers_release_and_eval_mixed_intent(
@@ -568,6 +865,119 @@ def test_route_bucket_selector_covers_release_and_eval_mixed_intent(
     assert selected["people/alice/drafts/aaa-eval-report-quality"]["selected_bucket_id"] == (
         "report_quality"
     )
+
+
+def test_route_phase_plan_shadow_outputs_plan_read_only_for_no_code_prompt(
+    repo_env: dict[str, Path],
+) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "alice"])
+    assert install_result.exit_code == 0
+
+    result = runner.invoke(
+        app,
+        [
+            "route",
+            "--task",
+            "只要计划，不要实现：解释 route phase_plan 应该怎么设计。",
+            "--no-record-trace",
+            "--format",
+            "json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    packet = json.loads(result.output)
+    phase_plan = packet["phase_plan"]
+    current_phase = phase_plan["current_phase"]
+    assert phase_plan["status"] == "shadow"
+    assert phase_plan["replaces_intent_buckets"] is False
+    assert current_phase["id"] == "plan"
+    assert current_phase["agent_surface_mode"] == "plan"
+    assert "edit_files" in current_phase["permissions"]["disallowed_actions"]
+    assert current_phase["next_phase_inputs"]["reroute_policy"] == (
+        "regenerate_after_current_phase"
+    )
+    assert "current_phase_result" in current_phase["next_phase_inputs"]["required_inputs"]
+
+
+def test_route_phase_plan_orders_compound_prompt_without_replacing_buckets(
+    repo_env: dict[str, Path],
+) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "alice"])
+    assert install_result.exit_code == 0
+    repo_wiki = repo_env["repo"] / "ai-wiki"
+    release_doc = repo_wiki / "problems" / "npm-release-package.md"
+    release_doc.parent.mkdir(parents=True, exist_ok=True)
+    release_doc.write_text(
+        strip_margin(
+            """
+            ---
+            title: "NPM release package"
+            short_description: "Use for npm release package publish verification."
+            ---
+            # NPM Release Package
+
+            Release distribution package publish verification keeps npm assets aligned.
+            """
+        ),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "route",
+            "--task",
+            "Plan the npm release package change, then implement it, run tests, commit locally, but do not push.",
+            "--max-docs",
+            "3",
+            "--no-record-trace",
+            "--format",
+            "json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    packet = json.loads(result.output)
+    phase_plan = packet["phase_plan"]
+    phase_ids = [phase["id"] for phase in phase_plan["phases"]]
+    assert phase_plan["status"] == "shadow"
+    assert phase_plan["replaces_intent_buckets"] is False
+    assert phase_ids == ["plan", "code", "validate", "git"]
+    assert "push" not in phase_ids
+    assert packet["route"]["intent_buckets"]
+    assert packet["routing_strategy"]["phase_plan"]["mode"] == "shadow"
+    assert packet["behavior_contract"]["current_phase_id"] == "plan"
+
+
+def test_route_phase_plan_wraps_fixed_workflow_contract_current_phase(
+    repo_env: dict[str, Path],
+) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "alice"])
+    assert install_result.exit_code == 0
+
+    result = runner.invoke(
+        app,
+        [
+            "route",
+            "--task",
+            "Generate the weekly report with coverage promotion noisy diagnosis telemetry provenance.",
+            "--max-docs",
+            "3",
+            "--no-record-trace",
+            "--format",
+            "json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    packet = json.loads(result.output)
+    current_phase = packet["phase_plan"]["current_phase"]
+    assert current_phase["id"] == "workflow"
+    assert current_phase["agent_surface_mode"] == "code"
+    assert current_phase["workflow_contract_id"] == "weekly-report-diagnostics"
+    assert "workflow_contract" in current_phase["intent_bucket_ids"]
+    assert "follow_workflow_contract" in current_phase["permissions"]["allowed_actions"]
 
 
 def test_route_keeps_broad_chinese_assessment_out_of_eval_workflow(

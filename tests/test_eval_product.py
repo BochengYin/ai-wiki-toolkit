@@ -9,11 +9,15 @@ from typer.testing import CliRunner
 import ai_wiki_toolkit.impact_eval as impact_eval
 from ai_wiki_toolkit.cli import app
 from ai_wiki_toolkit.impact_analysis import (
+    _selection_metrics,
+    _summarize_replay_metrics,
     generate_neutral_impact_eval_report,
+    generate_route_ablation_report,
     generate_route_cohort_report,
     generate_route_noise_report,
     generate_route_replay_report,
     render_neutral_impact_eval_report,
+    render_route_ablation_report,
     render_route_cohort_report,
     render_route_noise_report,
     render_route_replay_report,
@@ -95,8 +99,9 @@ def _route_trace_row(
     selected_doc_ids: list[str],
     task_type: str = "eval_workflow",
     routed_at: str = "2026-05-20T10:00:00+00:00",
+    task: str | None = None,
 ) -> dict:
-    return {
+    row = {
         "author_handle": "alice",
         "index_card_count": len(selected_doc_ids),
         "maybe_load_count": 0,
@@ -110,6 +115,9 @@ def _route_trace_row(
         "task_type": task_type,
         "trace_id": f"rt_{task_id}",
     }
+    if task is not None:
+        row["task"] = task
+    return row
 
 
 def _reuse_event_row(
@@ -133,6 +141,144 @@ def _reuse_event_row(
         "schema_version": "reuse-v1",
         "task_id": task_id,
     }
+
+
+def test_route_selection_metrics_separate_core_docs_from_retrieval_precision() -> None:
+    metrics = _selection_metrics(
+        [
+            "constraints",
+            "people/alice/drafts/useful",
+            "people/alice/drafts/noisy",
+        ],
+        [
+            _reuse_event_row(
+                event_id="evt_useful",
+                task_id="task",
+                doc_id="people/alice/drafts/useful",
+            ),
+        ],
+        selection_reason_types={
+            "constraints": "safety_guardrail",
+            "people/alice/drafts/useful": "bucket_primary",
+            "people/alice/drafts/noisy": "topical_memory",
+        },
+    )
+
+    assert metrics["selected_doc_count"] == 3
+    assert metrics["selected_useful_doc_count"] == 1
+    assert metrics["route_precision"] == 1 / 3
+    assert metrics["retrieval_selected_doc_count"] == 2
+    assert metrics["retrieval_selected_useful_doc_count"] == 1
+    assert metrics["retrieval_precision"] == 1 / 2
+    assert metrics["safety_guardrail_doc_count"] == 1
+    assert metrics["core_selected_but_unused_doc_count"] == 1
+    assert metrics["selection_reason_type_counts"] == {
+        "bucket_primary": 1,
+        "safety_guardrail": 1,
+        "topical_memory": 1,
+    }
+
+    summary = _summarize_replay_metrics([{"replay": metrics}], key="replay")
+    assert summary["route_precision"] == 1 / 3
+    assert summary["retrieval_precision"] == 1 / 2
+    assert summary["core_doc_count"] == 1
+
+
+def test_route_selection_metrics_include_failed_route_and_maybe_recovery() -> None:
+    metrics = _selection_metrics(
+        ["people/alice/drafts/noisy"],
+        [
+            _reuse_event_row(
+                event_id="evt_useful",
+                task_id="task",
+                doc_id="people/alice/drafts/useful",
+                retrieval_mode="lookup",
+            ),
+        ],
+        maybe_doc_ids=["people/alice/drafts/useful"],
+        candidate_doc_ids=[
+            "people/alice/drafts/noisy",
+            "people/alice/drafts/useful",
+        ],
+        packet_words=120,
+    )
+
+    assert metrics["failed_route_at_selected"] is True
+    assert metrics["failed_route_at_selected_plus_maybe"] is False
+    assert metrics["failed_route_at_candidate20"] is False
+    assert metrics["maybe_recovered"] is True
+    assert metrics["maybe_recovered_doc_ids"] == ["people/alice/drafts/useful"]
+    assert metrics["useful_coverage_at_selected"] == 0.0
+    assert metrics["useful_coverage_at_selected_plus_maybe"] == 1.0
+    assert metrics["packet_word_count"] == 120
+
+    summary = _summarize_replay_metrics([{"replay": metrics}], key="replay")
+    assert summary["failed_route_at_selected_rate"] == 1.0
+    assert summary["failed_route_at_selected_plus_maybe_rate"] == 0.0
+    assert summary["failed_route_at_candidate20_rate"] == 0.0
+    assert summary["maybe_recovery_rate"] == 1.0
+    assert summary["useful_coverage_at_selected_plus_maybe"] == 1.0
+    assert summary["avg_packet_words"] == 120
+
+
+def test_route_ablation_report_includes_eval_stage_confusion(
+    repo_env: dict[str, Path],
+) -> None:
+    install_result = runner.invoke(app, ["install", "--handle", "alice"])
+    assert install_result.exit_code == 0
+    repo_wiki = repo_env["repo"] / "ai-wiki"
+    capture_doc = repo_wiki / "people" / "alice" / "drafts" / "impact-eval-result-capture.md"
+    capture_doc.parent.mkdir(parents=True, exist_ok=True)
+    capture_doc.write_text(
+        """
+---
+title: "Impact eval result capture"
+short_description: "Use for impact eval artifact capture and untracked result files."
+---
+# Impact Eval Result Capture
+
+Impact eval artifact capture preserves untracked result files and workspace diffs.
+""",
+        encoding="utf-8",
+    )
+    _write_jsonl(
+        repo_wiki / "metrics" / "route-traces" / "alice.jsonl",
+        [
+            _route_trace_row(
+                task_id="capture-task",
+                selected_doc_ids=[],
+                task="Fix impact eval result capture so untracked artifact files are saved.",
+            )
+        ],
+    )
+    _write_jsonl(
+        repo_wiki / "metrics" / "reuse-events" / "alice.jsonl",
+        [
+            _reuse_event_row(
+                event_id="evt_capture",
+                task_id="capture-task",
+                doc_id="people/alice/drafts/impact-eval-result-capture",
+            )
+        ],
+    )
+
+    report = generate_route_ablation_report(
+        repo_root=repo_env["repo"],
+        handle="alice",
+        target_evaluable_traces=1,
+        variants=("current", "stage_compatible_doc_slots"),
+        max_items=1,
+    )
+
+    variants = {item["variant"]: item for item in report["variant_summaries"]}
+    assert set(variants) == {"current", "stage_compatible_doc_slots"}
+    assert variants["stage_compatible_doc_slots"]["eval_stage_compatibility_rate"] is not None
+    assert "failed_route_at_selected_plus_maybe_rate" in variants["current"]
+    assert "maybe_recovery_rate" in variants["current"]
+    rendered = render_route_ablation_report(report)
+    assert "Route Eval-Stage Ablation Report" in rendered
+    assert "stage_compatible_doc_slots" in rendered
+    assert "failed@selected+maybe" in rendered
 
 
 def test_script_command_uses_python_from_path_when_running_as_packaged_binary(
@@ -2082,7 +2228,9 @@ def test_eval_impact_route_noise_replay_recovers_codex_session_prompt(
     assert replay["multi_signal_adjustments"][
         "people/alice/drafts/route-precision-routing"
     ] > 0
-    assert "Historical Route Replay Report" in render_route_replay_report(result)
+    rendered = render_route_replay_report(result)
+    assert "Historical Route Replay Report" in rendered
+    assert "RAG-Style Retrieval Metrics" in rendered
 
     cli_result = runner.invoke(
         app,

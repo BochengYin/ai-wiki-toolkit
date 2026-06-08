@@ -149,13 +149,16 @@ _TASK_TYPE_KEYWORDS: dict[str, set[str]] = {
         "memory",
         "noise",
         "packet",
+        "phase",
         "precision",
         "promote",
         "promotion",
         "recall",
         "reuse",
         "route",
+        "router",
         "stale",
+        "taxonomy",
         "write-back",
     },
     "workflow_state": {
@@ -312,6 +315,8 @@ _DOMAIN_TAG_KEYWORDS: dict[str, set[str]] = {
         "promotion",
         "reuse",
         "route",
+        "router",
+        "taxonomy",
         "write-back",
     },
     "workflow_state": {
@@ -476,6 +481,7 @@ _ROUTE_INTENT_CATEGORIES: dict[str, set[str]] = {
         "patch",
         "refactor",
         "update",
+        "upgrade",
         "wire",
     },
     "execution": {
@@ -564,13 +570,23 @@ _ROUTE_INTENT_ALIGNMENT_TERMS = set().union(*_ROUTE_INTENT_CATEGORIES.values())
 _ROUTE_MODE_PLAN_PHRASES = (
     "think hard",
     "plan first",
+    "explain why",
+    "research why",
+    "root cause",
     "先计划",
     "先要计划",
+    "先研究",
+    "先分析",
+    "先搞清楚",
     "先不要代码",
     "不要代码",
+    "不要实现",
     "不要直接实现",
     "先不要写代码",
     "只计划",
+    "只要计划",
+    "搞清楚为什么",
+    "给出修复计划",
 )
 
 _ROUTE_MODE_QUESTION_PHRASES = (
@@ -585,6 +601,197 @@ _ROUTE_MODE_QUESTION_PHRASES = (
     "为什么",
     "怎么理解",
 )
+
+_ROUTE_LABEL_NAMES = {
+    "bug_fix",
+    "code",
+    "fixed_workflow",
+    "git",
+    "plan",
+    "push",
+    "question_only",
+    "report",
+    "review",
+    "validate",
+}
+
+_ROUTE_LABEL_TOKEN_MAP: dict[str, set[str]] = {
+    "bug_fix": {"bug", "bug-fix", "bug_fix", "bugfix", "error", "fail", "failing", "fix", "regression"},
+    "code": {"code"},
+    "fixed_workflow": {"fixed", "fixed-workflow", "fixed_workflow", "workflow"},
+    "git": {"git"},
+    "plan": {"plan"},
+    "push": {"push"},
+    "question_only": {"question", "question-only", "question_only"},
+    "report": {"report"},
+    "review": {"review"},
+    "validate": {"validate"},
+}
+
+_ROUTE_LABEL_SEQUENCE_RE = re.compile(
+    r"\b(?:bug[_-]?fix|code|fixed[_-]?workflow|git|plan|push|question[_-]?only|report|review|validate)"
+    r"(?:\s*/\s*(?:bug[_-]?fix|code|fixed[_-]?workflow|git|plan|push|question[_-]?only|report|review|validate))+",
+    re.IGNORECASE,
+)
+
+_ROUTE_LABEL_RE = re.compile(
+    r"\b(?:bug[_-]?fix|code|fixed[_-]?workflow|plan|question[_-]?only|report|review)\b",
+    re.IGNORECASE,
+)
+
+_ROUTE_LABEL_CONTEXT_MARKERS = (
+    "as ",
+    "classified",
+    "misclassified",
+    "mode",
+    "route_mode",
+    "routed",
+    "task_type",
+    "treated",
+    "type",
+    "按照",
+    "打成",
+    "分类",
+    "判成",
+    "误判",
+    "走",
+)
+
+_ROUTE_PHASE_TERMS: dict[str, tuple[str, ...]] = {
+    "plan": (
+        "architecture",
+        "design",
+        "plan",
+        "plan first",
+        "proposal",
+        "propose",
+        "方案",
+        "架构",
+        "计划",
+        "设计",
+    ),
+    "code": (
+        "build",
+        "change",
+        "code",
+        "edit",
+        "fix",
+        "implement",
+        "implementation",
+        "patch",
+        "refactor",
+        "update",
+        "upgrade",
+        "修改",
+        "升级",
+        "实现",
+        "改",
+        "补",
+    ),
+    "validate": (
+        "pytest",
+        "run tests",
+        "smoke",
+        "test",
+        "tests",
+        "validate",
+        "verification",
+        "verify",
+        "验证",
+        "测试",
+        "跑测试",
+    ),
+    "git": (
+        "commit",
+        "git commit",
+        "local commit",
+        "stage",
+        "提交",
+        "本地提交",
+    ),
+    "push": (
+        "git push",
+        "push",
+        "推送",
+    ),
+    "pr": (
+        "create pr",
+        "open pr",
+        "pull request",
+        "pr",
+        "开 pr",
+        "创建 pr",
+    ),
+    "review": (
+        "code review",
+        "review",
+        "检查",
+        "审查",
+    ),
+    "report": (
+        "generate report",
+        "report",
+        "summary",
+        "报告",
+        "总结",
+    ),
+}
+
+_ROUTE_PHASE_NEGATION_TERMS: dict[str, tuple[str, ...]] = {
+    "code": (
+        "do not code",
+        "do not edit",
+        "do not implement",
+        "don't code",
+        "don't edit",
+        "don't implement",
+        "no code",
+        "no-code",
+        "without code",
+        "只计划",
+        "不要代码",
+        "不要实现",
+        "不要写代码",
+        "不要直接实现",
+        "先不要写代码",
+    ),
+    "validate": (
+        "do not run tests",
+        "don't run tests",
+        "no tests",
+        "without tests",
+        "不要跑测试",
+        "不要测试",
+    ),
+    "git": (
+        "do not commit",
+        "don't commit",
+        "no commit",
+        "without commit",
+        "不要 commit",
+        "不要提交",
+    ),
+    "push": (
+        "do not push",
+        "don't push",
+        "no push",
+        "without push",
+        "不要 push",
+        "不要推送",
+    ),
+    "pr": (
+        "do not create pr",
+        "do not open pr",
+        "do not pr",
+        "don't create pr",
+        "don't open pr",
+        "no pr",
+        "without pr",
+        "不要 pr",
+        "不要开 pr",
+        "不要创建 pr",
+    ),
+}
 
 _WORKFLOW_SUPPORT_REQUEST_PHRASES = (
     "add ",
@@ -734,6 +941,69 @@ _ROUTE_BUCKET_ALIASES: dict[str, set[str]] = {
     "workflow_contract": {"workflow_contract"},
 }
 
+_EVAL_STAGE_SLOT_IDS = {
+    "artifact_capture",
+    "manifest_or_runner",
+    "prompt_design",
+    "public_metrics",
+    "report_quality",
+    "route_usefulness",
+    "rubric_scoring",
+    "source_incident_timing",
+}
+_EVAL_STAGE_SCORING_MODES = {"off", "soft"}
+
+_EVAL_STAGE_DEFINITIONS: tuple[dict[str, Any], ...] = (
+    {
+        "id": "prompt_design",
+        "keywords": {"design", "families", "family", "prompt", "prompts", "task-family"},
+        "phrases": ("prompt design", "design prompts", "task family", "task-family"),
+        "intent_categories": {"prompting", "design"},
+    },
+    {
+        "id": "manifest_or_runner",
+        "keywords": {"execution", "manifest", "orchestrator", "run", "runner", "workspace", "workspaces"},
+        "phrases": ("run manifest", "eval manifest", "auto runner", "auto-runner"),
+        "intent_categories": {"runner", "execution"},
+    },
+    {
+        "id": "artifact_capture",
+        "keywords": {"artifact", "artifacts", "capture", "diff", "result", "results", "save", "untracked"},
+        "phrases": ("artifact capture", "result capture", "capture result", "save result"),
+        "intent_categories": {"capture"},
+    },
+    {
+        "id": "rubric_scoring",
+        "keywords": {"rubric", "rubrics", "score", "scoring"},
+        "phrases": ("rubric scoring", "score run", "score result"),
+        "intent_categories": {"prompting"},
+    },
+    {
+        "id": "report_quality",
+        "keywords": {"change", "churn", "neutral", "profile", "quality", "report"},
+        "phrases": ("report quality", "neutral impact", "change profile"),
+        "intent_categories": {"reporting"},
+    },
+    {
+        "id": "route_usefulness",
+        "keywords": {"misses", "noise", "noisy", "precision", "recall", "route", "routing", "selected", "usefulness"},
+        "phrases": ("route precision", "route usefulness", "missed useful", "selected docs"),
+        "intent_categories": {"design", "reporting"},
+    },
+    {
+        "id": "source_incident_timing",
+        "keywords": {"incident", "provenance", "session", "source", "timing", "transcript"},
+        "phrases": ("source incident", "incident timing", "session provenance"),
+        "intent_categories": {"provenance"},
+    },
+    {
+        "id": "public_metrics",
+        "keywords": {"dashboard", "metric", "metrics", "proof", "public"},
+        "phrases": ("public metrics", "proof stack", "external metrics"),
+        "intent_categories": {"reporting"},
+    },
+)
+
 _CHINESE_INTENT_SYNONYMS: tuple[tuple[tuple[str, ...], set[str]], ...] = (
     (("实现", "改", "修改", "补", "加", "修", "修复", "写进", "接进"), {"implement", "update", "fix"}),
     (("跑", "重跑", "执行", "测试", "验证"), {"run", "rerun", "test"}),
@@ -821,11 +1091,14 @@ _ROUTE_CONCERN_SIGNAL_KEYWORDS: dict[str, set[str]] = {
         "memory",
         "noise",
         "packet",
+        "phase",
         "precision",
         "recall",
         "reuse",
         "route",
         "routing",
+        "router",
+        "taxonomy",
         "write-back",
     },
     "user_owned_docs": {
@@ -1018,21 +1291,23 @@ def _route_intent_signals(
     *,
     raw_task_tokens: set[str],
     task_tokens: set[str],
+    mentioned_label_tokens: set[str] | None = None,
 ) -> dict[str, Any]:
     """Return action/stage signals used to avoid broad topic-only routing."""
 
-    lexical_tokens = raw_task_tokens | task_tokens
+    ignored_label_tokens = mentioned_label_tokens or set()
+    lexical_tokens = (raw_task_tokens | task_tokens) - ignored_label_tokens
     chinese_expansions: set[str] = set()
     chinese_matches: list[dict[str, Any]] = []
     for needles, expansions in _CHINESE_INTENT_SYNONYMS:
         matched_terms = [needle for needle in needles if needle in value]
         if not matched_terms:
             continue
-        chinese_expansions.update(expansions)
+        chinese_expansions.update(expansions - ignored_label_tokens)
         chinese_matches.append(
             {
                 "matched_terms": matched_terms,
-                "expanded_tokens": sorted(expansions),
+                "expanded_tokens": sorted(expansions - ignored_label_tokens),
             }
         )
 
@@ -1059,12 +1334,80 @@ def _route_intent_signals(
         "alignment_tokens": sorted(alignment_tokens),
         "categories": categories,
         "chinese_intent_synonyms": chinese_matches,
+        "ignored_mentioned_label_tokens": sorted(ignored_label_tokens),
     }
 
 
 def _contains_phrase(value: str, phrases: Iterable[str]) -> list[str]:
     lowered = value.lower()
     return [phrase for phrase in phrases if phrase.lower() in lowered]
+
+
+def _normalise_route_label(value: str) -> str | None:
+    normalized = value.strip().lower().replace("-", "_")
+    if normalized == "bugfix":
+        normalized = "bug_fix"
+    if normalized == "fixedworkflow":
+        normalized = "fixed_workflow"
+    if normalized == "questiononly":
+        normalized = "question_only"
+    return normalized if normalized in _ROUTE_LABEL_NAMES else None
+
+
+def _route_mentioned_label_signals(value: str) -> dict[str, Any]:
+    """Find route labels that are mentioned as labels rather than requested actions."""
+
+    labels: set[str] = set()
+    evidence: list[dict[str, str]] = []
+    for match in _ROUTE_LABEL_SEQUENCE_RE.finditer(value):
+        parts = re.split(r"\s*/\s*", match.group(0))
+        normalized_parts = [
+            label for part in parts if (label := _normalise_route_label(part)) is not None
+        ]
+        if not normalized_parts:
+            continue
+        labels.update(normalized_parts)
+        evidence.append(
+            {
+                "text": match.group(0),
+                "reason": "slash_separated_route_labels",
+            }
+        )
+
+    lowered = value.lower()
+    for match in _ROUTE_LABEL_RE.finditer(value):
+        label = _normalise_route_label(match.group(0))
+        if label is None:
+            continue
+        window = lowered[max(0, match.start() - 48) : min(len(lowered), match.end() + 48)]
+        if not any(marker in window for marker in _ROUTE_LABEL_CONTEXT_MARKERS):
+            continue
+        labels.add(label)
+        evidence.append(
+            {
+                "text": match.group(0),
+                "reason": "route_label_context",
+            }
+        )
+
+    ignored_tokens: set[str] = set()
+    for label in labels:
+        ignored_tokens.update(_ROUTE_LABEL_TOKEN_MAP.get(label, set()))
+
+    return {
+        "labels": sorted(labels),
+        "ignored_intent_tokens": sorted(ignored_tokens),
+        "evidence": evidence,
+    }
+
+
+def _tokens_without_mentioned_labels(tokens: set[str], mentioned_labels: dict[str, Any]) -> set[str]:
+    ignored = {
+        token
+        for token in mentioned_labels.get("ignored_intent_tokens", [])
+        if isinstance(token, str)
+    }
+    return tokens - ignored
 
 
 def _has_workflow_support_request(value: str, tokens: set[str]) -> bool:
@@ -1089,26 +1432,32 @@ def _detect_workflow_contract(
     *,
     value: str,
     task_tokens: set[str],
+    explicit_task_tokens: set[str] | None = None,
 ) -> dict[str, Any] | None:
-    candidates: list[tuple[int, dict[str, Any], list[str], list[str]]] = []
+    explicit_tokens = explicit_task_tokens or set()
+    candidates: list[tuple[int, dict[str, Any], list[str], list[str], list[str]]] = []
     for contract in _ROUTE_WORKFLOW_CONTRACTS:
         phrase_matches = _contains_phrase(value, contract.get("trigger_phrases", ()))
-        token_matches = sorted(task_tokens & set(contract.get("trigger_tokens", set())))
-        if not phrase_matches and len(token_matches) < 2:
+        trigger_tokens = set(contract.get("trigger_tokens", set()))
+        token_matches = sorted(task_tokens & trigger_tokens)
+        explicit_matches = sorted(explicit_tokens & trigger_tokens)
+        if not phrase_matches and len(explicit_matches) < 2:
             continue
-        score = len(phrase_matches) * 4 + len(token_matches)
-        candidates.append((score, contract, phrase_matches, token_matches))
+        score = len(phrase_matches) * 4 + len(explicit_matches) * 2 + len(token_matches)
+        candidates.append((score, contract, phrase_matches, token_matches, explicit_matches))
     if not candidates:
         return None
     candidates.sort(key=lambda item: (-item[0], str(item[1]["id"])))
-    score, contract, phrase_matches, token_matches = candidates[0]
+    score, contract, phrase_matches, token_matches, explicit_matches = candidates[0]
     supporting_docs_allowed = _has_workflow_support_request(value, task_tokens)
     return {
         "id": contract["id"],
         "name": contract["name"],
-        "confidence": "high" if phrase_matches or score >= 5 else "medium",
+        "confidence": "high" if phrase_matches or len(explicit_matches) >= 3 else "medium",
         "matched_phrases": phrase_matches,
         "matched_terms": token_matches[:8],
+        "explicit_matched_terms": explicit_matches[:8],
+        "trigger_strength": "phrase" if phrase_matches else "explicit_terms",
         "required_steps": list(contract["required_steps"]),
         "supporting_docs_allowed": supporting_docs_allowed,
         "supporting_docs_allowed_when": list(contract["supporting_docs_allowed_when"]),
@@ -1267,6 +1616,598 @@ def _classify_intent_buckets(
     return deduped
 
 
+def _classify_eval_stage(
+    *,
+    value: str,
+    task_tokens: set[str],
+    task_type: str,
+    domain_tags: list[str],
+    route_intent: dict[str, Any],
+) -> dict[str, Any]:
+    """Classify the active eval/workflow stage before document selection."""
+
+    active = (
+        task_type == "eval_workflow"
+        or "task_evaluation" in domain_tags
+        or bool(task_tokens & {"missed", "noise", "precision", "recall", "route", "routing", "usefulness"})
+    )
+    intent_categories = {
+        str(item.get("name"))
+        for item in route_intent.get("categories", [])
+        if isinstance(item, dict) and isinstance(item.get("name"), str)
+    }
+    stage_rows: list[dict[str, Any]] = []
+    for definition in _EVAL_STAGE_DEFINITIONS:
+        stage_id = str(definition["id"])
+        keyword_matches = sorted(task_tokens & set(definition["keywords"]))
+        phrase_matches = _contains_phrase(value, definition.get("phrases", ()))
+        intent_matches = sorted(intent_categories & set(definition.get("intent_categories", set())))
+        score = len(keyword_matches) + len(phrase_matches) * 4 + len(intent_matches) * 2
+        if stage_id == "route_usefulness" and task_tokens & {"precision", "recall", "noise", "route", "routing"}:
+            score += 3
+        if stage_id == "source_incident_timing" and task_tokens & {"source", "incident", "timing", "provenance"}:
+            score += 2
+        if stage_id == "artifact_capture" and task_tokens & {"capture", "artifact", "untracked", "result"}:
+            score += 2
+        if stage_id == "manifest_or_runner" and task_tokens & {"manifest", "runner", "workspace", "run"}:
+            score += 2
+        if stage_id == "report_quality" and task_tokens & {"neutral", "quality", "report"}:
+            score += 2
+        if stage_id == "public_metrics" and task_tokens & {"public", "proof", "dashboard"}:
+            score += 2
+        if score <= 0:
+            continue
+        stage_rows.append(
+            {
+                "id": stage_id,
+                "score": score,
+                "matched_terms": keyword_matches[:8],
+                "matched_phrases": phrase_matches[:4],
+                "intent_categories": intent_matches,
+            }
+        )
+
+    stage_rows.sort(key=lambda item: (-int(item["score"]), str(item["id"])))
+    primary = str(stage_rows[0]["id"]) if active and stage_rows else None
+    secondary = [
+        str(row["id"])
+        for row in stage_rows[1:4]
+        if primary is not None and int(row.get("score") or 0) >= max(2, int(stage_rows[0]["score"]) - 3)
+    ]
+    compatible_doc_slots: set[str] = set()
+    if primary:
+        compatible_doc_slots.update(_ROUTE_BUCKET_ALIASES.get(primary, {primary}))
+    for stage_id in secondary:
+        compatible_doc_slots.update(_ROUTE_BUCKET_ALIASES.get(stage_id, {stage_id}))
+    return {
+        "schema_version": "route-eval-stage-v1",
+        "active": bool(active and primary),
+        "primary": primary,
+        "secondary": secondary,
+        "compatible_doc_slots": sorted(compatible_doc_slots),
+        "stage_scores": stage_rows[:8],
+        "policy": "shadow unless stage_compatible_doc_slots selector is enabled",
+    }
+
+
+def _eval_stage_slot_compatible(
+    *,
+    slot_id: str,
+    eval_stage: dict[str, Any] | None,
+) -> bool:
+    if not eval_stage or not eval_stage.get("active"):
+        return True
+    compatible = {
+        slot for slot in eval_stage.get("compatible_doc_slots", []) if isinstance(slot, str)
+    }
+    if slot_id not in _EVAL_STAGE_SLOT_IDS:
+        return True
+    return slot_id in compatible
+
+
+def _eval_stage_slot_priority(
+    *,
+    slot_id: str,
+    eval_stage: dict[str, Any] | None,
+) -> int:
+    if not eval_stage or not eval_stage.get("active"):
+        return 1
+    if slot_id not in _EVAL_STAGE_SLOT_IDS:
+        return 1
+    primary = str(eval_stage.get("primary") or "")
+    compatible = {
+        slot for slot in eval_stage.get("compatible_doc_slots", []) if isinstance(slot, str)
+    }
+    aliases = _ROUTE_BUCKET_ALIASES.get(slot_id, {slot_id})
+    if primary and primary in aliases:
+        return 3
+    if aliases & compatible:
+        return 2
+    return 0
+
+
+def _candidate_eval_stage_compatible(
+    candidate: dict[str, Any],
+    *,
+    eval_stage: dict[str, Any] | None,
+) -> bool:
+    if not eval_stage or not eval_stage.get("active"):
+        return True
+    slots = {
+        slot
+        for slot in candidate.get("doc_slots", [])
+        if isinstance(slot, str) and slot in _EVAL_STAGE_SLOT_IDS
+    }
+    if not slots:
+        return True
+    compatible = {
+        slot for slot in eval_stage.get("compatible_doc_slots", []) if isinstance(slot, str)
+    }
+    return bool(slots & compatible)
+
+
+def _eval_slots_from_doc_slots(doc_slots: Iterable[str]) -> list[str]:
+    return [slot for slot in doc_slots if slot in _EVAL_STAGE_SLOT_IDS]
+
+
+def _eval_stage_scoring_adjustment(
+    *,
+    doc_slots: list[str],
+    eval_stage: dict[str, Any] | None,
+    mode: str,
+) -> tuple[int, list[str], dict[str, Any]]:
+    """Return a soft stage score adjustment without making stage a hard gate."""
+
+    normalized_mode = mode if mode in _EVAL_STAGE_SCORING_MODES else "off"
+    eval_doc_slots = _eval_slots_from_doc_slots(doc_slots)
+    if normalized_mode == "off" or not eval_stage or not eval_stage.get("active"):
+        return 0, [], {
+            "mode": normalized_mode,
+            "relation": "inactive",
+            "adjustment": 0,
+            "sort_priority": 1,
+            "doc_eval_slots": eval_doc_slots,
+        }
+    if not eval_doc_slots:
+        return 0, [], {
+            "mode": normalized_mode,
+            "relation": "non_eval_doc",
+            "adjustment": 0,
+            "sort_priority": 1,
+            "doc_eval_slots": [],
+        }
+
+    primary = str(eval_stage.get("primary") or "")
+    secondary = {
+        stage for stage in eval_stage.get("secondary", []) if isinstance(stage, str)
+    }
+    compatible = {
+        slot for slot in eval_stage.get("compatible_doc_slots", []) if isinstance(slot, str)
+    }
+    doc_slot_set = set(eval_doc_slots)
+    reasons: list[str] = []
+    adjustment = 0
+    relation = "adjacent_eval_stage"
+    sort_priority = 0
+
+    if primary and primary in doc_slot_set:
+        adjustment = 3
+        relation = "primary_stage_match"
+        sort_priority = 3
+        reasons.append(f"eval-stage primary match: +3 via `{primary}`")
+    elif doc_slot_set & compatible:
+        matched = sorted(doc_slot_set & compatible)
+        adjustment = 1
+        relation = "secondary_stage_match"
+        sort_priority = 2
+        reasons.append(f"eval-stage secondary match: +1 via {', '.join(matched[:3])}")
+    else:
+        adjustment = -2
+        relation = "adjacent_eval_stage"
+        sort_priority = 0
+        if primary == "manifest_or_runner" and "prompt_design" in doc_slot_set:
+            adjustment = -3
+        reasons.append(
+            "eval-stage adjacent-stage soft penalty: "
+            f"{adjustment}; task `{primary or 'unknown'}` vs doc {', '.join(eval_doc_slots[:3])}"
+        )
+
+    return adjustment, reasons, {
+        "mode": normalized_mode,
+        "relation": relation,
+        "task_primary_stage": primary or None,
+        "task_secondary_stages": sorted(secondary),
+        "compatible_doc_slots": sorted(compatible),
+        "doc_eval_slots": eval_doc_slots,
+        "adjustment": adjustment,
+        "sort_priority": sort_priority,
+    }
+
+
+def _contains_phase_negation(value: str, phase_id: str) -> bool:
+    lower = value.lower()
+    return any(phrase in lower for phrase in _ROUTE_PHASE_NEGATION_TERMS.get(phase_id, ()))
+
+
+def _term_positions(value: str, term: str) -> list[int]:
+    lower = value.lower()
+    normalized = term.lower()
+    if _CJK_RE.search(normalized):
+        positions: list[int] = []
+        start = 0
+        while True:
+            index = lower.find(normalized, start)
+            if index == -1:
+                break
+            positions.append(index)
+            start = index + len(normalized)
+        return positions
+    pattern = re.compile(rf"(?<![\w-]){re.escape(normalized)}(?![\w-])", re.IGNORECASE)
+    return [match.start() for match in pattern.finditer(value)]
+
+
+def _phase_signals(value: str) -> list[dict[str, Any]]:
+    signals: list[dict[str, Any]] = []
+    for phase_id, terms in _ROUTE_PHASE_TERMS.items():
+        if _contains_phase_negation(value, phase_id):
+            continue
+        matches: list[tuple[int, str]] = []
+        for term in terms:
+            matches.extend((position, term) for position in _term_positions(value, term))
+        if not matches:
+            continue
+        matches.sort(key=lambda item: (item[0], item[1]))
+        signals.append(
+            {
+                "phase_id": phase_id,
+                "first_position": matches[0][0],
+                "matched_terms": sorted({term for _, term in matches})[:6],
+            }
+        )
+    signals.sort(key=lambda item: (int(item["first_position"]), str(item["phase_id"])))
+    return signals
+
+
+def _fallback_phase_id(
+    *,
+    route_mode: dict[str, Any],
+    workflow_contract: dict[str, Any] | None,
+) -> str:
+    mode_name = str(route_mode.get("name") or "")
+    if workflow_contract or mode_name == "fixed_workflow":
+        return "workflow"
+    if mode_name == "question_only":
+        return "question"
+    if mode_name in {"plan", "code", "review", "report"}:
+        return mode_name
+    return "plan"
+
+
+def _phase_sequence(
+    *,
+    value: str,
+    route_mode: dict[str, Any],
+    workflow_contract: dict[str, Any] | None,
+) -> tuple[list[str], list[dict[str, Any]]]:
+    signals = _phase_signals(value)
+    phase_ids: list[str] = []
+    seen: set[str] = set()
+    for signal in signals:
+        phase_id = str(signal["phase_id"])
+        if phase_id in seen:
+            continue
+        phase_ids.append(phase_id)
+        seen.add(phase_id)
+    if workflow_contract and route_mode.get("name") == "fixed_workflow" and "workflow" not in seen:
+        phase_ids.insert(0, "workflow")
+        seen.add("workflow")
+    if not phase_ids:
+        phase_ids.append(_fallback_phase_id(route_mode=route_mode, workflow_contract=workflow_contract))
+    return phase_ids[:6], signals
+
+
+def _phase_permissions(phase_id: str, route_mode: dict[str, Any]) -> dict[str, list[str]]:
+    mode_disallowed = [
+        item for item in route_mode.get("disallowed_actions", []) if isinstance(item, str)
+    ]
+    by_phase: dict[str, tuple[list[str], list[str]]] = {
+        "question": (
+            ["answer_from_context", "read_docs"],
+            ["edit_files", "run_tests", "git_write", "push", "create_pr"],
+        ),
+        "plan": (
+            ["read_files", "inspect_docs", "propose_plan"],
+            ["edit_files", "run_tests", "git_write", "push", "create_pr"],
+        ),
+        "code": (
+            ["read_files", "edit_files", "run_commands"],
+            ["git_write", "push", "create_pr"],
+        ),
+        "validate": (
+            ["read_files", "run_tests", "inspect_results"],
+            ["feature_edits", "git_write", "push", "create_pr"],
+        ),
+        "git": (
+            ["git_status", "git_add", "git_commit"],
+            ["feature_edits", "push", "create_pr"],
+        ),
+        "push": (
+            ["git_push"],
+            ["feature_edits", "create_pr"],
+        ),
+        "pr": (
+            ["create_pr", "push_if_needed"],
+            ["feature_edits"],
+        ),
+        "review": (
+            ["read_files", "run_checks", "review_diff"],
+            ["feature_edits", "git_write", "push", "create_pr"],
+        ),
+        "report": (
+            ["read_metrics", "write_managed_report"],
+            ["shared_doc_edits", "push", "create_pr"],
+        ),
+        "workflow": (
+            ["follow_workflow_contract", "read_required_inputs", "write_managed_outputs"],
+            ["shared_doc_edits"],
+        ),
+    }
+    allowed, disallowed = by_phase.get(phase_id, by_phase["plan"])
+    return {
+        "allowed_actions": sorted(set(allowed)),
+        "disallowed_actions": sorted({*disallowed, *mode_disallowed}),
+    }
+
+
+def _agent_surface_mode(phase_id: str, route_mode: dict[str, Any]) -> str:
+    if phase_id in {"question", "plan", "review"}:
+        return "plan"
+    if phase_id in {"code", "validate", "git", "push", "pr", "report", "workflow"}:
+        return "code"
+    mode_name = str(route_mode.get("name") or "")
+    return "code" if mode_name in {"code", "fixed_workflow", "report"} else "plan"
+
+
+def _phase_bucket_ids(
+    phase_id: str,
+    *,
+    intent_buckets: list[dict[str, Any]],
+    workflow_contract: dict[str, Any] | None,
+) -> list[str]:
+    bucket_ids = [
+        str(bucket.get("id"))
+        for bucket in intent_buckets
+        if isinstance(bucket.get("id"), str) and bucket.get("id")
+    ]
+    if phase_id == "workflow":
+        return [str(workflow_contract.get("bucket_id") or "workflow_contract")] if workflow_contract else ["workflow_contract"]
+    if phase_id in {"question", "plan", "review"}:
+        preferred = {
+            "memory_consolidation",
+            "memory_metrics",
+            "prompt_design",
+            "public_metrics",
+            "report_quality",
+            "route_usefulness",
+            "source_incident_timing",
+            "workflow_contract",
+        }
+    elif phase_id == "validate":
+        preferred = {
+            "artifact_capture",
+            "public_metrics",
+            "report_quality",
+            "release_distribution",
+            "route_usefulness",
+            "rubric_scoring",
+        }
+    elif phase_id in {"git", "push", "pr"}:
+        preferred = {"release_distribution", "workflow_contract"}
+    elif phase_id == "report":
+        preferred = {"public_metrics", "report_quality", "source_incident_timing"}
+    else:
+        preferred = {
+            "artifact_capture",
+            "manifest_or_runner",
+            "release_distribution",
+            "rubric_scoring",
+            "workflow_contract",
+        }
+    matched = [bucket_id for bucket_id in bucket_ids if bucket_id in preferred]
+    return matched or bucket_ids[:3]
+
+
+def _phase_doc_refs(
+    *,
+    phase_id: str,
+    phase_bucket_ids: list[str],
+    selected: list[dict[str, Any]],
+    fallback_to_all_selected: bool,
+) -> list[dict[str, Any]]:
+    aliases = set(phase_bucket_ids)
+    for bucket_id in phase_bucket_ids:
+        aliases.update(_ROUTE_BUCKET_ALIASES.get(bucket_id, {bucket_id}))
+    docs: list[dict[str, Any]] = []
+    for candidate in selected:
+        selected_bucket = candidate.get("selected_bucket_id")
+        doc_slots = set(candidate.get("doc_slots") or [])
+        if selected_bucket not in aliases and not (doc_slots & aliases):
+            continue
+        docs.append(
+            {
+                "doc_id": candidate["doc_id"],
+                "reference_path": candidate["reference_path"],
+                "selection_reason_type": candidate.get("selection_reason_type"),
+                "selected_bucket_id": selected_bucket,
+                "doc_slots": sorted(doc_slots),
+            }
+        )
+    if not docs and fallback_to_all_selected:
+        for candidate in selected[:4]:
+            docs.append(
+                {
+                    "doc_id": candidate["doc_id"],
+                    "reference_path": candidate["reference_path"],
+                    "selection_reason_type": candidate.get("selection_reason_type"),
+                    "selected_bucket_id": candidate.get("selected_bucket_id"),
+                    "doc_slots": candidate.get("doc_slots") or [],
+                }
+            )
+    return docs[:6]
+
+
+def _phase_goal(
+    phase_id: str,
+    *,
+    task_text: str,
+    workflow_contract: dict[str, Any] | None,
+) -> str:
+    if phase_id == "workflow" and workflow_contract:
+        return f"Follow the `{workflow_contract['id']}` workflow contract for this task."
+    goals = {
+        "question": "Answer the user from available context without mutating the workspace.",
+        "plan": "Produce the next decision or implementation plan without editing files.",
+        "code": "Make the requested code or documentation change within the task scope.",
+        "validate": "Verify the current result and report failures without broad feature edits.",
+        "git": "Prepare local git state only after implementation and verification are complete.",
+        "push": "Push only the approved branch or ref after local git state is ready.",
+        "pr": "Create or prepare the pull request after the branch is pushed.",
+        "review": "Review the relevant diff or design and surface actionable findings.",
+        "report": "Generate the requested report from local evidence and managed outputs.",
+    }
+    return goals.get(phase_id, f"Handle the current phase for: {task_text[:160]}")
+
+
+def _phase_acceptance_criteria(phase_id: str) -> list[str]:
+    criteria = {
+        "question": ["Answer addresses the prompt directly.", "No workspace mutations are made."],
+        "plan": ["Plan names concrete steps and tradeoffs.", "No files are edited in this phase."],
+        "code": ["Relevant files are updated.", "Change stays within the requested scope."],
+        "validate": ["Focused verification is run or a clear reason is stated.", "Failures are reported before any fix phase."],
+        "git": ["Git status is inspected.", "Only approved local git writes are performed."],
+        "push": ["Remote target is explicit.", "Push happens only after local checks are complete."],
+        "pr": ["PR summary includes impact and verification.", "No PR is created before branch state is ready."],
+        "review": ["Findings are prioritized by severity.", "File and line references are included when applicable."],
+        "report": ["Report is generated from cited local evidence.", "Generated outputs stay under managed paths unless explicitly requested."],
+        "workflow": ["Required workflow steps are followed.", "Supporting docs are opened only when the contract permits them."],
+    }
+    return criteria.get(phase_id, ["Phase goal is satisfied."])
+
+
+def _phase_exit_criteria(phase_id: str) -> list[str]:
+    exits = {
+        "question": ["User has a direct answer or an explicit blocker."],
+        "plan": ["User or next phase has enough detail to start implementation."],
+        "code": ["Requested edits are complete or an implementation blocker is documented."],
+        "validate": ["Verification result is recorded and unresolved failures are listed."],
+        "git": ["Local commit decision is complete and push/PR policy is unresolved or ready."],
+        "push": ["Remote branch/ref state is verified."],
+        "pr": ["PR is created/prepared or the missing prerequisite is documented."],
+        "review": ["Review findings and residual test gaps are reported."],
+        "report": ["Report path or report content is available to the user."],
+        "workflow": ["Workflow required steps are complete or blocked with concrete missing input."],
+    }
+    return exits.get(phase_id, ["Phase completion can be summarized for reroute."])
+
+
+def _phase_result_schema(phase_id: str) -> dict[str, list[str]]:
+    return {
+        "required": [
+            "summary",
+            "artifacts",
+            "decisions",
+            "changed_paths",
+            "unresolved_acceptance_criteria",
+        ],
+        "optional": [
+            "test_results",
+            "user_feedback",
+            "blocked_reason",
+            "next_requested_action",
+            f"{phase_id}_notes",
+        ],
+    }
+
+
+def _next_phase_inputs(phase_id: str, task_text: str) -> dict[str, Any]:
+    return {
+        "reroute_policy": "regenerate_after_current_phase",
+        "original_task": task_text,
+        "completed_phase_id": phase_id,
+        "required_inputs": [
+            "original_task",
+            "current_phase_result",
+            "changed_paths",
+            "unresolved_acceptance_criteria",
+            "user_feedback",
+        ],
+        "phase_result_schema": _phase_result_schema(phase_id),
+    }
+
+
+def _build_route_phase_plan(
+    *,
+    task_text: str,
+    route_mode: dict[str, Any],
+    workflow_contract: dict[str, Any] | None,
+    intent_buckets: list[dict[str, Any]],
+    selected: list[dict[str, Any]],
+) -> dict[str, Any]:
+    phase_ids, signals = _phase_sequence(
+        value=task_text,
+        route_mode=route_mode,
+        workflow_contract=workflow_contract,
+    )
+    phases: list[dict[str, Any]] = []
+    for index, phase_id in enumerate(phase_ids, start=1):
+        bucket_ids = _phase_bucket_ids(
+            phase_id,
+            intent_buckets=intent_buckets,
+            workflow_contract=workflow_contract,
+        )
+        phases.append(
+            {
+                "order": index,
+                "id": phase_id,
+                "agent_surface_mode": _agent_surface_mode(phase_id, route_mode),
+                "route_mode": route_mode.get("name"),
+                "permissions": _phase_permissions(phase_id, route_mode),
+                "workflow_contract_id": workflow_contract.get("id") if workflow_contract else None,
+                "intent_bucket_ids": bucket_ids,
+                "docs": _phase_doc_refs(
+                    phase_id=phase_id,
+                    phase_bucket_ids=bucket_ids,
+                    selected=selected,
+                    fallback_to_all_selected=index == 1,
+                ),
+                "goal": _phase_goal(
+                    phase_id,
+                    task_text=task_text,
+                    workflow_contract=workflow_contract,
+                ),
+                "acceptance_criteria": _phase_acceptance_criteria(phase_id),
+                "exit_criteria": _phase_exit_criteria(phase_id),
+                "next_phase_inputs": _next_phase_inputs(phase_id, task_text),
+                "shadow_notes": [
+                    "This phase is advisory shadow output and does not replace active intent_buckets.",
+                    "Regenerate the next phase after this phase completes instead of treating future phases as fixed.",
+                ],
+            }
+        )
+    current_phase = phases[0]
+    return {
+        "schema_version": "route-phase-plan-v1",
+        "status": "shadow",
+        "active": False,
+        "replaces_intent_buckets": False,
+        "generation_policy": "current_phase_first_then_reroute",
+        "current_phase": current_phase,
+        "phases": phases,
+        "phase_signals": signals,
+        "next_phase_inputs": current_phase["next_phase_inputs"],
+    }
+
+
 def _classify_doc_slots(*, text: str, kind: str, doc_id: str) -> list[str]:
     tokens = _tokenize(text)
     slots: list[str] = []
@@ -1400,6 +2341,54 @@ def _classify_task_type(tokens: set[str]) -> str:
     return scored[0][1]
 
 
+def _arbitrate_task_type(
+    *,
+    task_type: str,
+    task_tokens: set[str],
+    route_mode: dict[str, Any],
+    mentioned_labels: dict[str, Any],
+) -> tuple[str, dict[str, Any]]:
+    """Resolve contradictions between prompt mode and coarse task type."""
+
+    mode_name = str(route_mode.get("name") or "")
+    labels = {
+        label for label in mentioned_labels.get("labels", []) if isinstance(label, str)
+    }
+    reasons: list[str] = []
+    adjusted = task_type
+    memory_terms = {"memory", "packet", "phase", "prompt", "route", "router", "routing", "taxonomy"}
+
+    if (
+        task_type == "bug_fix"
+        and mode_name in {"plan", "question_only"}
+        and (labels & {"bug_fix", "code"})
+        and task_tokens & memory_terms
+    ):
+        adjusted = "memory_governance"
+        reasons.append("mentioned code/bug_fix label in planning memory-routing prompt")
+    elif (
+        task_type == "bug_fix"
+        and mode_name in {"plan", "question_only"}
+        and labels & {"bug_fix", "code"}
+    ):
+        adjusted = "general"
+        reasons.append("mentioned code/bug_fix label without concrete bug-fix request")
+    elif (
+        task_type == "general"
+        and mode_name in {"plan", "question_only"}
+        and labels & {"bug_fix", "code"}
+    ):
+        adjusted = "memory_governance"
+        reasons.append("mentioned route classification label in planning prompt")
+
+    return adjusted, {
+        "input_task_type": task_type,
+        "output_task_type": adjusted,
+        "changed": adjusted != task_type,
+        "reasons": reasons,
+    }
+
+
 def _classify_domain_tags(tokens: set[str]) -> list[str]:
     tags = [
         tag
@@ -1424,6 +2413,120 @@ def _classify_effort(tokens: set[str], task_type: str) -> str:
     if task_type in {"memory_governance", "eval_workflow"} or tokens & _DEEP_EFFORT_KEYWORDS:
         return "deep"
     return "normal"
+
+
+def _build_route_self_audit(
+    *,
+    task_type: str,
+    route_mode: dict[str, Any],
+    workflow_contract: dict[str, Any] | None,
+    mentioned_labels: dict[str, Any],
+    intent_signals: dict[str, Any],
+    task_tokens: set[str],
+    selected: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Self-check route classification before the packet is consumed."""
+
+    flags: list[str] = []
+    observations: list[dict[str, Any]] = []
+    mode_name = str(route_mode.get("name") or "")
+    labels = [
+        label for label in mentioned_labels.get("labels", []) if isinstance(label, str)
+    ]
+    ignored_tokens = [
+        token
+        for token in mentioned_labels.get("ignored_intent_tokens", [])
+        if isinstance(token, str)
+    ]
+
+    if labels:
+        observations.append(
+            {
+                "type": "mentioned_label_excluded_from_intent",
+                "labels": labels,
+                "ignored_intent_tokens": ignored_tokens,
+            }
+        )
+
+    if labels and (mode_name == "code" or task_type == "bug_fix"):
+        alignment_tokens = set(intent_signals.get("alignment_tokens") or [])
+        ignored_alignment = sorted(alignment_tokens & set(ignored_tokens))
+        implementation_or_execution = (
+            _ROUTE_INTENT_CATEGORIES["implementation"] | _ROUTE_INTENT_CATEGORIES["execution"]
+        )
+        actual_implementation_tokens = sorted(
+            (alignment_tokens & implementation_or_execution) - set(ignored_tokens)
+        )
+        if ignored_alignment or (task_type == "bug_fix" and not actual_implementation_tokens):
+            flags.append("mentioned_label_treated_as_intent")
+            observations.append(
+                {
+                    "type": "mentioned_label_still_affects_route",
+                    "labels": labels,
+                    "alignment_tokens": ignored_alignment,
+                    "actual_implementation_tokens": actual_implementation_tokens[:8],
+                }
+            )
+
+    if mode_name in {"plan", "question_only"} and task_type == "bug_fix":
+        flags.append("mode_task_type_conflict")
+        observations.append(
+            {
+                "type": "mode_task_type_conflict",
+                "mode": mode_name,
+                "task_type": task_type,
+            }
+        )
+
+    if workflow_contract:
+        trigger_strength = workflow_contract.get("trigger_strength")
+        explicit_terms = workflow_contract.get("explicit_matched_terms")
+        if trigger_strength != "phrase" and (
+            not isinstance(explicit_terms, list) or len(explicit_terms) < 2
+        ):
+            flags.append("weak_workflow_trigger")
+            observations.append(
+                {
+                    "type": "weak_workflow_trigger",
+                    "workflow_contract_id": workflow_contract.get("id"),
+                    "matched_terms": workflow_contract.get("matched_terms", []),
+                }
+            )
+
+    if mode_name in {"plan", "question_only"}:
+        implementation_slot_docs = [
+            candidate.get("doc_id")
+            for candidate in selected
+            if set(candidate.get("doc_slots") or [])
+            & {"artifact_capture", "manifest_or_runner", "release_distribution", "rubric_scoring"}
+        ]
+        if implementation_slot_docs:
+            observations.append(
+                {
+                    "type": "planning_mode_selected_implementation_docs",
+                    "doc_ids": implementation_slot_docs[:6],
+                    "severity": "informational",
+                }
+            )
+
+    deduped_flags = sorted(set(flags))
+    status = "suspicious" if deduped_flags else "ok"
+    evidence_candidate = None
+    if status == "suspicious":
+        evidence_candidate = {
+            "signal_type": "unknown_task_language",
+            "candidate_category_hint": "route_phase_planning",
+            "reason": "Route self-audit found taxonomy/prompt mismatch signals before task execution.",
+            "confidence": "medium",
+        }
+
+    return {
+        "status": status,
+        "flags": deduped_flags,
+        "observations": observations,
+        "recommended_action": "record_taxonomy_evidence" if status == "suspicious" else "none",
+        "taxonomy_evidence_candidate": evidence_candidate,
+    }
 
 
 def _confidence(score: int) -> str:
@@ -1835,6 +2938,8 @@ def _score_document(
     route_tags: list[str],
     document_stats: dict[str, Any],
     route_quality_doc_stats: dict[str, dict[str, int]],
+    eval_stage: dict[str, Any] | None = None,
+    eval_stage_scoring_mode: str = "off",
 ) -> dict[str, Any]:
     text = _load_document_text(repo_root, entry)
     body = _strip_frontmatter(text)
@@ -1863,6 +2968,11 @@ def _score_document(
     )
     path_title_tokens = _tokenize(path_title_text)
     body_tokens = _tokenize(body[:5000])
+    doc_slots = _classify_doc_slots(
+        text=slot_text,
+        kind=entry["kind"],
+        doc_id=entry["doc_id"],
+    )
     path_title_matches = sorted(task_tokens & path_title_tokens)
     strong_path_title_matches = [
         term for term in path_title_matches if term not in _WEAK_ROUTE_MATCH_TERMS
@@ -1922,7 +3032,20 @@ def _score_document(
         task_tokens=task_tokens,
         route_intent=route_intent,
     )
-    score = max(0, score + route_quality_adjustment + applies_when_adjustment)
+    eval_stage_adjustment, eval_stage_reasons, eval_stage_signal = (
+        _eval_stage_scoring_adjustment(
+            doc_slots=doc_slots,
+            eval_stage=eval_stage,
+            mode=eval_stage_scoring_mode,
+        )
+    )
+    score = max(
+        0,
+        score
+        + route_quality_adjustment
+        + applies_when_adjustment
+        + eval_stage_adjustment,
+    )
 
     reasons: list[str] = []
     if path_title_matches:
@@ -1940,6 +3063,7 @@ def _score_document(
         reasons.append("ownership or memory-governance work may depend on durable decisions")
     reasons.extend(route_quality_reasons)
     reasons.extend(applies_when_reasons)
+    reasons.extend(eval_stage_reasons)
     if not reasons:
         reasons.append("no strong task-specific signal")
 
@@ -1966,11 +3090,10 @@ def _score_document(
         "multi_signal": route_tag_signal,
         "applies_when_adjustment": applies_when_adjustment,
         "applies_when_signal": applies_when_signal,
-        "doc_slots": _classify_doc_slots(
-            text=slot_text,
-            kind=kind,
-            doc_id=entry["doc_id"],
-        ),
+        "eval_stage_adjustment": eval_stage_adjustment,
+        "eval_stage_signal": eval_stage_signal,
+        "eval_stage_sort_priority": int(eval_stage_signal.get("sort_priority") or 0),
+        "doc_slots": doc_slots,
     }
 
 
@@ -2119,7 +3242,14 @@ def _rerank_index_card_candidates(
         updated["rerank_reason"] = "outside rerank window"
         tail.append(updated)
 
-    reranked.sort(key=lambda item: (-item["score"], -item["base_score"], item["doc_id"]))
+    reranked.sort(
+        key=lambda item: (
+            -item["score"],
+            -int(item.get("eval_stage_sort_priority") or 0),
+            -item["base_score"],
+            item["doc_id"],
+        )
+    )
     return reranked + tail, {
         "enabled": True,
         "mode": "deterministic_index_card",
@@ -2179,31 +3309,92 @@ def _select_route_candidates(
     route_mode: dict[str, Any],
     workflow_contract: dict[str, Any] | None,
     intent_buckets: list[dict[str, Any]],
+    selector_mode: str = "intent_bucket_selector",
+    eval_stage: dict[str, Any] | None = None,
+    require_stage_compatible_doc_slots: bool = False,
+    eval_stage_scoring_mode: str = "off",
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     selected: list[dict[str, Any]] = []
     selected_ids: set[str] = set()
     selected_bucket_ids: list[str] = []
+    selector_buckets = list(intent_buckets)
+    if eval_stage_scoring_mode == "soft":
+        selector_buckets = sorted(
+            enumerate(selector_buckets),
+            key=lambda item: (
+                -_eval_stage_slot_priority(
+                    slot_id=str(item[1].get("id") or ""),
+                    eval_stage=eval_stage,
+                ),
+                item[0],
+            ),
+        )
+        selector_buckets = [bucket for _index, bucket in selector_buckets]
 
     fixed_workflow_without_support = (
         route_mode.get("name") == "fixed_workflow"
         and workflow_contract
         and not workflow_contract.get("supporting_docs_allowed")
     )
-    eligible = [candidate for candidate in scored if int(candidate.get("score") or 0) >= 7]
-    if fixed_workflow_without_support:
-        return [], {
-            "mode": "intent_bucket_selector",
-            "fixed_workflow_without_support": True,
+    eligible = [
+        candidate
+        for candidate in scored
+        if int(candidate.get("score") or 0) >= 7
+        and not (
+            fixed_workflow_without_support
+            and candidate.get("doc_id") == "workflows"
+        )
+    ]
+    if require_stage_compatible_doc_slots:
+        eligible = [
+            candidate
+            for candidate in eligible
+            if _candidate_eval_stage_compatible(candidate, eval_stage=eval_stage)
+        ]
+
+    if selector_mode == "flat_top_k":
+        for candidate in eligible[:effective_max_docs]:
+            selected.append(
+                _mark_selected_candidate(
+                    candidate,
+                    route_mode=route_mode,
+                    workflow_contract=workflow_contract,
+                    note="flat top-k selected for ablation",
+                )
+            )
+            selected_ids.add(candidate["doc_id"])
+        return selected, {
+            "mode": "flat_top_k",
+            "fixed_workflow_without_support": bool(fixed_workflow_without_support),
+            "workflow_contract_selection_mode": (
+                "contract_with_supporting_doc_retrieval"
+                if fixed_workflow_without_support
+                else "normal"
+            ),
             "bucket_count": len(intent_buckets),
-            "selected_bucket_ids": [],
-            "selected_doc_count": 0,
-            "abstained_reason": "workflow contract selected without supporting docs",
+            "bucket_order": [
+                str(bucket.get("id") or "") for bucket in selector_buckets
+            ],
+            "selected_bucket_ids": selected_bucket_ids,
+            "supporting_doc_count": len(selected),
+            "selected_doc_count": len(selected),
+            "stage_compatible_doc_slots_required": bool(require_stage_compatible_doc_slots),
+            "eval_stage_scoring_mode": eval_stage_scoring_mode,
         }
 
-    for bucket in intent_buckets:
+    for bucket in selector_buckets:
         if len(selected) >= effective_max_docs:
             break
         bucket_id = str(bucket.get("id") or "")
+        if require_stage_compatible_doc_slots and not _eval_stage_slot_compatible(
+            slot_id=bucket_id,
+            eval_stage=eval_stage,
+        ):
+            continue
+        if fixed_workflow_without_support:
+            workflow_bucket_id = str(workflow_contract.get("bucket_id") or "workflow_contract")
+            if workflow_bucket_id == "workflow_contract" or bucket_id != workflow_bucket_id:
+                continue
         quota = int(bucket.get("quota") or 1)
         if quota <= 0:
             continue
@@ -2227,19 +3418,20 @@ def _select_route_candidates(
             if len(selected) >= effective_max_docs:
                 break
 
-    for candidate in eligible:
-        if len(selected) >= effective_max_docs:
-            break
-        if candidate["doc_id"] in selected_ids:
-            continue
-        selected.append(
-            _mark_selected_candidate(
-                candidate,
-                route_mode=route_mode,
-                workflow_contract=workflow_contract,
+    if not fixed_workflow_without_support:
+        for candidate in eligible:
+            if len(selected) >= effective_max_docs:
+                break
+            if candidate["doc_id"] in selected_ids:
+                continue
+            selected.append(
+                _mark_selected_candidate(
+                    candidate,
+                    route_mode=route_mode,
+                    workflow_contract=workflow_contract,
+                )
             )
-        )
-        selected_ids.add(candidate["doc_id"])
+            selected_ids.add(candidate["doc_id"])
 
     if not selected and scored and not fixed_workflow_without_support:
         for candidate in scored[: min(3, effective_max_docs)]:
@@ -2256,9 +3448,20 @@ def _select_route_candidates(
     return selected, {
         "mode": "intent_bucket_selector",
         "fixed_workflow_without_support": bool(fixed_workflow_without_support),
+        "workflow_contract_selection_mode": (
+            "contract_with_supporting_doc_retrieval"
+            if fixed_workflow_without_support
+            else "normal"
+        ),
         "bucket_count": len(intent_buckets),
+        "bucket_order": [
+            str(bucket.get("id") or "") for bucket in selector_buckets
+        ],
         "selected_bucket_ids": selected_bucket_ids,
+        "supporting_doc_count": len(selected),
         "selected_doc_count": len(selected),
+        "stage_compatible_doc_slots_required": bool(require_stage_compatible_doc_slots),
+        "eval_stage_scoring_mode": eval_stage_scoring_mode,
     }
 
 
@@ -2289,6 +3492,8 @@ def _packet_docs(candidates: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
                 "multi_signal": candidate.get("multi_signal", {}),
                 "applies_when_adjustment": candidate.get("applies_when_adjustment", 0),
                 "applies_when_signal": candidate.get("applies_when_signal", {}),
+                "eval_stage_adjustment": candidate.get("eval_stage_adjustment", 0),
+                "eval_stage_signal": candidate.get("eval_stage_signal", {}),
                 "doc_slots": candidate.get("doc_slots", []),
                 "selection_reason_type": candidate.get("selection_reason_type"),
                 "selected_bucket_id": candidate.get("selected_bucket_id"),
@@ -2336,6 +3541,8 @@ def _packet_index_cards(
                 "multi_signal": candidate.get("multi_signal", {}),
                 "applies_when_adjustment": candidate.get("applies_when_adjustment", 0),
                 "applies_when_signal": candidate.get("applies_when_signal", {}),
+                "eval_stage_adjustment": candidate.get("eval_stage_adjustment", 0),
+                "eval_stage_signal": candidate.get("eval_stage_signal", {}),
                 "doc_slots": candidate.get("doc_slots", []),
                 "selection_reason_type": candidate.get("selection_reason_type"),
                 "selected_bucket_id": candidate.get("selected_bucket_id"),
@@ -2580,10 +3787,21 @@ def generate_route_packet(
     budget_words: int = DEFAULT_ROUTE_SAFETY_CAP_WORDS,
     max_docs: int = 6,
     rerank_top: int = DEFAULT_ROUTE_RERANK_TOP,
+    selector_mode: str = "intent_bucket_selector",
+    stage_compatible_doc_slots: bool = False,
+    eval_stage_scoring_mode: str = "off",
+    disable_route_quality_history: bool = False,
     start: Path | None = None,
     catalog_cutoff: datetime | None = None,
 ) -> RouteResult:
     """Generate a conservative task-aware context packet."""
+
+    normalized_selector_mode = selector_mode.strip().lower()
+    if normalized_selector_mode not in {"flat_top_k", "intent_bucket_selector"}:
+        raise ValueError("Invalid selector_mode. Expected flat_top_k or intent_bucket_selector.")
+    normalized_eval_stage_scoring_mode = eval_stage_scoring_mode.strip().lower()
+    if normalized_eval_stage_scoring_mode not in _EVAL_STAGE_SCORING_MODES:
+        raise ValueError("Invalid eval_stage_scoring_mode. Expected off or soft.")
 
     paths = build_paths(start)
     if not paths.repo_wiki_dir.exists():
@@ -2600,6 +3818,12 @@ def generate_route_packet(
             changed_path_signal_source = "none"
 
     task_text = task.strip() if task else ""
+    mentioned_labels = _route_mentioned_label_signals(task_text)
+    mentioned_label_tokens = {
+        token
+        for token in mentioned_labels.get("ignored_intent_tokens", [])
+        if isinstance(token, str)
+    }
     raw_request_tokens = _task_tokens(task_text, filter_stopwords=False)
     request_tokens = _task_tokens(task_text)
     use_changed_path_signals = _should_use_changed_path_signals(
@@ -2611,19 +3835,23 @@ def generate_route_packet(
     signal_text = " ".join([task_text, *changed_path_signal_list])
     raw_task_tokens = _task_tokens(signal_text, filter_stopwords=False)
     task_tokens = _task_tokens(signal_text)
+    explicit_task_tokens = _tokenize(signal_text, filter_stopwords=False)
+    classification_tokens = _tokens_without_mentioned_labels(raw_task_tokens, mentioned_labels)
     language_signals = _task_language_signals(signal_text)
     intent_signals = _route_intent_signals(
         signal_text,
         raw_task_tokens=raw_task_tokens,
         task_tokens=task_tokens,
+        mentioned_label_tokens=mentioned_label_tokens,
     )
-    task_type = _classify_task_type(raw_task_tokens)
-    domain_tags = _classify_domain_tags(raw_task_tokens)
+    task_type = _classify_task_type(classification_tokens)
+    domain_tags = _classify_domain_tags(classification_tokens)
     guardrail_tags = _classify_guardrail_tags(raw_task_tokens)
     route_tags = sorted({*domain_tags, *guardrail_tags})
     workflow_contract = _detect_workflow_contract(
         value=signal_text,
         task_tokens=raw_task_tokens | task_tokens,
+        explicit_task_tokens=explicit_task_tokens,
     )
     route_mode = _classify_route_mode(
         value=task_text,
@@ -2631,6 +3859,19 @@ def generate_route_packet(
         task_tokens=request_tokens or task_tokens,
         route_intent=intent_signals,
         workflow_contract=workflow_contract,
+    )
+    task_type, task_type_arbitration = _arbitrate_task_type(
+        task_type=task_type,
+        task_tokens=classification_tokens | task_tokens,
+        route_mode=route_mode,
+        mentioned_labels=mentioned_labels,
+    )
+    eval_stage = _classify_eval_stage(
+        value=signal_text,
+        task_tokens=raw_task_tokens | task_tokens,
+        task_type=task_type,
+        domain_tags=domain_tags,
+        route_intent=intent_signals,
     )
     intent_buckets = _classify_intent_buckets(
         task_tokens=raw_task_tokens | task_tokens,
@@ -2653,9 +3894,13 @@ def generate_route_packet(
     document_stats = build_document_stats(paths.repo_wiki_dir).get("documents", {})
     if not isinstance(document_stats, dict):
         document_stats = {}
-    route_quality_doc_stats = _build_route_quality_doc_stats(
-        paths.repo_wiki_dir,
-        handle=actor_handle,
+    route_quality_doc_stats = (
+        {}
+        if disable_route_quality_history
+        else _build_route_quality_doc_stats(
+            paths.repo_wiki_dir,
+            handle=actor_handle,
+        )
     )
     work_state = build_work_state(paths.repo_wiki_dir)
     work_context_items = _select_work_context(
@@ -2674,10 +3919,18 @@ def generate_route_packet(
             route_tags=route_tags,
             document_stats=document_stats,
             route_quality_doc_stats=route_quality_doc_stats,
+            eval_stage=eval_stage,
+            eval_stage_scoring_mode=normalized_eval_stage_scoring_mode,
         )
         for entry in catalog_documents
     ]
-    scored.sort(key=lambda item: (-item["score"], item["doc_id"]))
+    scored.sort(
+        key=lambda item: (
+            -item["score"],
+            -int(item.get("eval_stage_sort_priority") or 0),
+            item["doc_id"],
+        )
+    )
     scored, reranker_stats = _rerank_index_card_candidates(
         scored,
         task_tokens=task_tokens,
@@ -2691,13 +3944,30 @@ def generate_route_packet(
         route_mode=route_mode,
         workflow_contract=workflow_contract,
         intent_buckets=intent_buckets,
+        selector_mode=normalized_selector_mode,
+        eval_stage=eval_stage,
+        require_stage_compatible_doc_slots=stage_compatible_doc_slots,
+        eval_stage_scoring_mode=normalized_eval_stage_scoring_mode,
     )
 
-    maybe = [
-        candidate
-        for candidate in scored
-        if 3 <= candidate["score"] < 7 and candidate["doc_id"] not in {doc["doc_id"] for doc in selected}
-    ][:3]
+    maybe = (
+        []
+        if selector_stats.get("fixed_workflow_without_support")
+        else [
+            candidate
+            for candidate in scored
+            if (
+                3 <= candidate["score"] < 7
+                or (
+                    normalized_eval_stage_scoring_mode == "soft"
+                    and isinstance(candidate.get("eval_stage_signal"), dict)
+                    and candidate["eval_stage_signal"].get("relation") == "adjacent_eval_stage"
+                    and int(candidate.get("score") or 0) >= 3
+                )
+            )
+            and candidate["doc_id"] not in {doc["doc_id"] for doc in selected}
+        ][:3]
+    )
     skipped = [
         {
             "doc_id": candidate["doc_id"],
@@ -2731,6 +4001,22 @@ def generate_route_packet(
         for candidate in selected
         if _reference_mode(candidate, selected_ids) == "required_context"
     ]
+    route_self_audit = _build_route_self_audit(
+        task_type=task_type,
+        route_mode=route_mode,
+        workflow_contract=workflow_contract,
+        mentioned_labels=mentioned_labels,
+        intent_signals=intent_signals,
+        task_tokens=task_tokens,
+        selected=selected,
+    )
+    phase_plan = _build_route_phase_plan(
+        task_text=task_text,
+        route_mode=route_mode,
+        workflow_contract=workflow_contract,
+        intent_buckets=intent_buckets,
+        selected=selected,
+    )
     success_criteria = _build_success_criteria(
         task_type=task_type,
         effort=effort,
@@ -2753,11 +4039,16 @@ def generate_route_packet(
             "changed_path_signal_used": use_changed_path_signals,
             "language_signals": language_signals,
             "intent_signals": intent_signals,
+            "mentioned_labels": mentioned_labels,
+            "task_type_arbitration": task_type_arbitration,
             "mode": route_mode,
             "workflow_contract": workflow_contract,
+            "eval_stage": eval_stage,
             "intent_buckets": intent_buckets,
+            "route_self_audit": route_self_audit,
             "catalog_cutoff": catalog_cutoff_stats,
         },
+        "phase_plan": phase_plan,
         "actor": {
             "handle": actor_handle,
             "source": ".env.aiwiki, environment, git config, or fallback",
@@ -2774,6 +4065,28 @@ def generate_route_packet(
             "budget_policy": "safety_cap_not_fill_target",
             "reranker": reranker_stats,
             "selector": selector_stats,
+            "candidate_doc_ids": [
+                candidate["doc_id"] for candidate in scored[: min(20, len(scored))]
+            ],
+            "candidate_doc_count": min(20, len(scored)),
+            "eval_stage": {
+                "mode": (
+                    "selector_enforced"
+                    if stage_compatible_doc_slots
+                    else "soft_scoring"
+                    if normalized_eval_stage_scoring_mode == "soft"
+                    else "shadow"
+                ),
+                "stage_compatible_doc_slots": bool(stage_compatible_doc_slots),
+                "scoring_mode": normalized_eval_stage_scoring_mode,
+                "disable_route_quality_history": bool(disable_route_quality_history),
+            },
+            "phase_plan": {
+                "mode": "shadow",
+                "phase_count": len(phase_plan.get("phases", [])),
+                "current_phase_id": phase_plan.get("current_phase", {}).get("id"),
+                "replaces_intent_buckets": False,
+            },
             "reference_policy": (
                 "Include mandatory workflow or constraint material directly; provide "
                 "short index cards and reference paths for other memory so the acting "
@@ -2787,6 +4100,8 @@ def generate_route_packet(
             if workflow_contract
             else [],
             "disallowed_actions": route_mode.get("disallowed_actions", []),
+            "current_phase_id": phase_plan.get("current_phase", {}).get("id"),
+            "agent_surface_mode": phase_plan.get("current_phase", {}).get("agent_surface_mode"),
             "supporting_docs_policy": (
                 "open supporting docs only for workflow changes, bug fixes, or exception cases"
                 if workflow_contract
@@ -2848,6 +4163,12 @@ def render_route_packet_text(packet: dict[str, Any]) -> str:
     workflow_contract = packet["route"].get("workflow_contract")
     if isinstance(workflow_contract, dict) and workflow_contract.get("id"):
         lines.append(f"Workflow Contract: `{workflow_contract['id']}`")
+    route_self_audit = packet["route"].get("route_self_audit")
+    if isinstance(route_self_audit, dict) and route_self_audit.get("status"):
+        lines.append(f"Route Self-Audit: `{route_self_audit['status']}`")
+        flags = route_self_audit.get("flags")
+        if isinstance(flags, list) and flags:
+            lines.append(f"Self-Audit Flags: {', '.join(f'`{flag}`' for flag in flags)}")
     intent_buckets = packet["route"].get("intent_buckets")
     if isinstance(intent_buckets, list) and intent_buckets:
         bucket_ids = [
@@ -2857,6 +4178,14 @@ def render_route_packet_text(packet: dict[str, Any]) -> str:
         ]
         if bucket_ids:
             lines.append(f"Intent Buckets: {', '.join(f'`{bucket_id}`' for bucket_id in bucket_ids)}")
+    eval_stage = packet["route"].get("eval_stage")
+    if isinstance(eval_stage, dict) and eval_stage.get("active"):
+        primary = eval_stage.get("primary")
+        secondary = eval_stage.get("secondary")
+        stage_text = f"`{primary}`" if primary else "`unknown`"
+        if isinstance(secondary, list) and secondary:
+            stage_text += ", secondary " + ", ".join(f"`{item}`" for item in secondary[:3])
+        lines.append(f"Eval Stage: {stage_text}")
     language_signals = packet["route"].get("language_signals")
     if isinstance(language_signals, dict) and language_signals.get("contains_cjk"):
         expanded = language_signals.get("expanded_tokens")
@@ -2909,6 +4238,12 @@ def render_route_packet_text(packet: dict[str, Any]) -> str:
     if behavior_contract:
         lines.extend(["", "## Behavior Contract"])
         lines.append(f"- Mode: `{behavior_contract.get('recognized_mode', 'unknown')}`")
+        current_phase_id = behavior_contract.get("current_phase_id")
+        if current_phase_id:
+            lines.append(f"- Current Phase: `{current_phase_id}`")
+        agent_surface_mode = behavior_contract.get("agent_surface_mode")
+        if agent_surface_mode:
+            lines.append(f"- Agent Surface Mode: `{agent_surface_mode}`")
         workflow_id = behavior_contract.get("workflow_contract_id")
         if workflow_id:
             lines.append(f"- Workflow: `{workflow_id}`")
@@ -2918,6 +4253,60 @@ def render_route_packet_text(packet: dict[str, Any]) -> str:
         steps = behavior_contract.get("workflow_steps_to_follow")
         if isinstance(steps, list) and steps:
             lines.append("- Steps: " + "; ".join(str(step) for step in steps[:6]))
+    phase_plan = packet.get("phase_plan") if isinstance(packet.get("phase_plan"), dict) else {}
+    current_phase = (
+        phase_plan.get("current_phase")
+        if isinstance(phase_plan.get("current_phase"), dict)
+        else {}
+    )
+    if current_phase:
+        lines.extend(["", "## Phase Plan (Shadow)"])
+        lines.append("- Status: `shadow`; does not replace active `intent_buckets`.")
+        lines.append(f"- Current Phase: `{current_phase.get('id', 'unknown')}`")
+        lines.append(
+            f"- Agent Surface Mode: `{current_phase.get('agent_surface_mode', 'unknown')}`"
+        )
+        permissions = (
+            current_phase.get("permissions")
+            if isinstance(current_phase.get("permissions"), dict)
+            else {}
+        )
+        allowed = permissions.get("allowed_actions")
+        if isinstance(allowed, list) and allowed:
+            lines.append(f"- Allowed: {', '.join(f'`{item}`' for item in allowed)}")
+        disallowed = permissions.get("disallowed_actions")
+        if isinstance(disallowed, list) and disallowed:
+            lines.append(f"- Disallowed: {', '.join(f'`{item}`' for item in disallowed)}")
+        goal = current_phase.get("goal")
+        if isinstance(goal, str) and goal:
+            lines.append(f"- Goal: {goal}")
+        docs = current_phase.get("docs")
+        if isinstance(docs, list) and docs:
+            doc_ids = [
+                doc.get("doc_id")
+                for doc in docs
+                if isinstance(doc, dict) and isinstance(doc.get("doc_id"), str)
+            ]
+            if doc_ids:
+                lines.append(f"- Phase Docs: {', '.join(f'`{doc_id}`' for doc_id in doc_ids[:6])}")
+        phases = phase_plan.get("phases")
+        if isinstance(phases, list) and len(phases) > 1:
+            phase_ids = [
+                phase.get("id")
+                for phase in phases
+                if isinstance(phase, dict) and isinstance(phase.get("id"), str)
+            ]
+            lines.append(f"- Future Candidate Phases: {', '.join(f'`{item}`' for item in phase_ids[1:])}")
+        next_inputs = current_phase.get("next_phase_inputs")
+        if isinstance(next_inputs, dict):
+            lines.append(
+                "- Reroute Next Phase With: "
+                + ", ".join(
+                    f"`{item}`"
+                    for item in next_inputs.get("required_inputs", [])
+                    if isinstance(item, str)
+                )
+            )
     work_context = packet.get("work_context") or {}
     work_items = work_context.get("items") if isinstance(work_context, dict) else []
     if work_items:
