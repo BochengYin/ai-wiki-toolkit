@@ -25,7 +25,7 @@ from ai_wiki_toolkit.impact_analysis import generate_route_replay_report
 
 
 DEFAULT_EXPERIMENT_DIR = Path("evals/impact/experiments/applies_when_blind_2026_06")
-DEFAULT_REPLAY_REPORT = Path("evals/impact/reports/historical_route_replay_2026-06-04.json")
+DEFAULT_REPLAY_REPORT = Path("evals/impact/reports/route-research-2026-06-04/historical_route_replay_2026-06-04.json")
 DEFAULT_BEFORE = "2026-06-04T08:20:53+10:00"
 DEFAULT_TARGET_COUNT = 20
 DEFAULT_HANDLE = "bochengyin"

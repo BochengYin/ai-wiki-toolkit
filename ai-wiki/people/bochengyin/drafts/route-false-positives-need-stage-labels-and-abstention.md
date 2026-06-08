@@ -18,7 +18,7 @@ The strict 57-trace historical route replay selected 320 docs, with 112 useful s
 false positives. The detailed analysis is recorded at:
 
 ```text
-evals/impact/reports/route_false_positive_research_2026-06-04.md
+evals/impact/reports/route-research-2026-06-04/route_false_positive_research_2026-06-04.md
 ```
 
 The low precision is not caused by one bad document. The false positives concentrate in broad
@@ -157,5 +157,5 @@ preference for fewer docs, more labels, or moving core docs to `maybe_load`.
 The handoff report is:
 
 ```text
-evals/impact/reports/route_precision_handoff_2026-06-05.md
+evals/impact/reports/route-method-2026-06-05/route_precision_handoff_2026-06-05.md
 ```

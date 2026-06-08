@@ -8,7 +8,7 @@ synthesizes across notes.
 
 1. `evals/impact/README.md`
    Current benchmark framing, workspace layout, and CLI-first execution protocol.
-2. `evals/impact/reports/current.md`
+2. `evals/impact/reports/synthesis/current.md`
    Current synthesis across completed runs, including what can and cannot be claimed.
 3. `evals/impact/notes/manual_v2_cli_original_ownership_20260425_findings.md`
    The clean formal CLI-first ownership-boundary run, extended with supplemental `s06`.

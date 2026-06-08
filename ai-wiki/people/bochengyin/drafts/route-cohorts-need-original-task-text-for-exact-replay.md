@@ -42,7 +42,7 @@ before claiming route precision improved.
 The first regression diagnosis is recorded at:
 
 ```text
-evals/impact/reports/route_replay_regression_diagnosis_2026-06-04.md
+evals/impact/reports/route-research-2026-06-04/route_replay_regression_diagnosis_2026-06-04.md
 ```
 
 The main findings were: mixed Chinese/English prompts lose most task semantics in lexical routing;

@@ -369,8 +369,8 @@ agent to behave correctly, not merely did a selected doc later get cited.
 Public-safe artifacts:
 
 - `evals/impact/public/blinded_applies_when_route_replay.md`
-- `evals/impact/reports/route_false_positive_research_2026-06-04.md`
-- `evals/impact/reports/route_precision_handoff_2026-06-05.md`
+- `evals/impact/reports/route-research-2026-06-04/route_false_positive_research_2026-06-04.md`
+- `evals/impact/reports/route-method-2026-06-05/route_precision_handoff_2026-06-05.md`
 - `evals/impact/experiments/applies_when_blind_2026_06/manifest.json`
 - `evals/impact/experiments/applies_when_blind_2026_06/inputs/target_docs.json`
 - `evals/impact/experiments/applies_when_blind_2026_06/labels/treatment_overlay.json`

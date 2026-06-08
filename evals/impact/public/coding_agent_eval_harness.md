@@ -35,7 +35,7 @@ The source material lives under:
 - `evals/impact/families/`
 - `evals/impact/prompts/`
 - `evals/impact/notes/`
-- `evals/impact/reports/current.md`
+- `evals/impact/reports/synthesis/current.md`
 - `evals/impact/public/ai_wiki_impact_eval_pilot.md`
 - `evals/impact/public/agent_failure_postmortem_pack.md`
 

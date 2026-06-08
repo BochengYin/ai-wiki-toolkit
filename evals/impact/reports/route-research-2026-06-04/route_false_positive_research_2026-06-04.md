@@ -1,6 +1,6 @@
 # Route False-Positive Research Report
 
-- Generated from: `evals/impact/reports/historical_route_replay_2026-06-04.json`
+- Generated from: `evals/impact/reports/route-research-2026-06-04/historical_route_replay_2026-06-04.json`
 - Cohort: strict temporal replay of the latest 57 pre-change evaluable route traces before `2026-06-04T08:20:53+10:00`
 - Router: current scorer with conservative Chinese/mixed-language signals, support-aware route quality, multi-signal protection, deterministic top-card reranker, and `--catalog-cutoff trace-routed-at`
 

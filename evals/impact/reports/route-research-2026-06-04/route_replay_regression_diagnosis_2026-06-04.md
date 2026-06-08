@@ -1,6 +1,6 @@
 # Route Replay Regression Diagnosis
 
-- Generated from: `evals/impact/reports/historical_route_replay_2026-06-04.json`
+- Generated from: `evals/impact/reports/route-research-2026-06-04/historical_route_replay_2026-06-04.json`
 - Cohort: latest 57 pre-change evaluable route traces before `2026-06-04T08:20:53+10:00`
 - Prompt recovery: 57/57 recovered, all high confidence
 

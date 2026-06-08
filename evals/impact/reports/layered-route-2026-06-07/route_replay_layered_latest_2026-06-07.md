@@ -112,7 +112,7 @@
 | implementation-prompt-aiwiki-toolkit-evaluate-repo | high | 0.833 | 0.000 | -0.833 | 为新窗口生成可复制粘贴的详细 implementation prompt：实现 aiwiki-toolkit evaluate repo 自评估与改进建议命令 |
 | ai-wiki-toolkit-agent-codebase | high | 0.333 | 0.250 | -0.083 | 评价别人关于增强 AI wiki toolkit 以找到 agent 工作的建议，并结合当前 codebase 给出判断 |
 | project-a-eval-report-diagnostics | high | 1.000 | 0.333 | -0.667 | 补做 Project A 的测试和诊断：运行完整本地测试、eval/report diagnostics，并给出具体优化建议 |
-| evals-impact-reports-route-precision-handoff-2026-06-05-md-core-doc-gating-57-tr | high | 0.333 | 0.167 | -0.167 | 请先读 evals/impact/reports/route_precision_handoff_2026-06-05.md。不要直接实现 core-doc gating。先... |
+| evals-impact-reports-route-precision-handoff-2026-06-05-md-core-doc-gating-57-tr | high | 0.333 | 0.167 | -0.167 | 请先读 evals/impact/reports/route-method-2026-06-05/route_precision_handoff_2026-06-05.md。不要直接实现 core-doc gating。先... |
 
 ## Warnings
 

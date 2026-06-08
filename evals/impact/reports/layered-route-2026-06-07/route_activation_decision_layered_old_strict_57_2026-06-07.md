@@ -8,8 +8,8 @@
 
 ## Inputs
 
-- Replay report: `evals/impact/reports/route_replay_layered_old_strict_57_2026-06-07.json`
-- Behavior report: `evals/impact/reports/route_behavior_tests_2026-06-06.json`
+- Replay report: `evals/impact/reports/layered-route-2026-06-07/route_replay_layered_old_strict_57_2026-06-07.json`
+- Behavior report: `evals/impact/reports/phase-plan-2026-06-06/route_behavior_tests_2026-06-06.json`
 
 ## Metrics
 

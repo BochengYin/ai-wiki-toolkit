@@ -20,8 +20,8 @@ Primary repo-local documentation for the current benchmark lives in:
 - `evals/impact/public/coding_agent_eval_harness.md`
 - `evals/impact/public/agent_failure_postmortem_pack.md`
 - `evals/impact/notes/index.md`
-- `evals/impact/reports/current.md`
-- `evals/impact/reports/project_a_diagnostics_2026-06-04.md`
+- `evals/impact/reports/synthesis/current.md`
+- `evals/impact/reports/project-a-2026-06-04/project_a_diagnostics_2026-06-04.md`
 - `evals/impact/TODO.md`
 - `evals/impact/runbooks/ownership_boundary.md`
 - `evals/impact/runbooks/release_distribution_integrity.md`

@@ -5,7 +5,7 @@ postmortems. It is intended for public technical discussion, not as a statistica
 benchmark.
 
 The cases come from real `ai-wiki-toolkit` development and eval work. They are artifact-backed by
-the notes under `evals/impact/notes/` and the synthesis in `evals/impact/reports/current.md`.
+the notes under `evals/impact/notes/` and the synthesis in `evals/impact/reports/synthesis/current.md`.
 
 ## How To Read This
 
@@ -24,7 +24,7 @@ debugged and improved systematically, not just that a model sometimes succeeds o
 
 ## Source Notes
 
-- `evals/impact/reports/current.md`
+- `evals/impact/reports/synthesis/current.md`
 - `evals/impact/notes/manual_v2_cli_original_ownership_20260425_findings.md`
 - `evals/impact/notes/manual_v2_cli_original_release_distribution_20260425_findings.md`
 - `evals/impact/notes/manual_v2_cli_original_release_runtime_20260425_findings.md`

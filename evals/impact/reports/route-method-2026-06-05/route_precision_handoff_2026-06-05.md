@@ -185,7 +185,7 @@ Questions to evaluate:
 Start by reading:
 
 1. `evals/impact/public/blinded_applies_when_route_replay.md`
-2. `evals/impact/reports/route_false_positive_research_2026-06-04.md`
+2. `evals/impact/reports/route-research-2026-06-04/route_false_positive_research_2026-06-04.md`
 3. `evals/impact/experiments/applies_when_blind_2026_06/reports/control_vs_treatment.json`
 4. `ai-wiki/people/bochengyin/drafts/route-false-positives-need-stage-labels-and-abstention.md`
 

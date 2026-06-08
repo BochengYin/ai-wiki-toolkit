@@ -190,7 +190,7 @@ Important caveats:
 - The router still misclassified planning requests as `code` / `bug_fix` during this work, so the
   next bottleneck is generating the right phase packet from natural prompts.
 
-The report is `evals/impact/reports/codex_runtime_capability_2026-06-06.md`.
+The report is `evals/impact/reports/phase-plan-2026-06-06/codex_runtime_capability_2026-06-06.md`.
 
 ## 2026-06-06 Route Self-Audit Implementation Result
 
@@ -345,8 +345,8 @@ evals/impact/route_behavior/phase_plan_shadow_suite_2026-06-06.json
 Generated reports:
 
 ```text
-evals/impact/reports/route_behavior_tests_2026-06-06.md
-evals/impact/reports/route_behavior_tests_2026-06-06.json
+evals/impact/reports/phase-plan-2026-06-06/route_behavior_tests_2026-06-06.md
+evals/impact/reports/phase-plan-2026-06-06/route_behavior_tests_2026-06-06.json
 ```
 
 Result:
@@ -394,8 +394,8 @@ New command:
 
 ```text
 aiwiki-toolkit eval impact route-noise activation \
-  --replay-report evals/impact/reports/route_replay_phase_plan_2026-06-06.json \
-  --behavior-report evals/impact/reports/route_behavior_tests_2026-06-06.json \
+  --replay-report evals/impact/reports/phase-plan-2026-06-06/route_replay_phase_plan_2026-06-06.json \
+  --behavior-report evals/impact/reports/phase-plan-2026-06-06/route_behavior_tests_2026-06-06.json \
   --handle bochengyin \
   --write
 ```
@@ -403,10 +403,10 @@ aiwiki-toolkit eval impact route-noise activation \
 Generated reports:
 
 ```text
-evals/impact/reports/route_replay_phase_plan_2026-06-06.md
-evals/impact/reports/route_replay_phase_plan_2026-06-06.json
-evals/impact/reports/route_activation_decision_2026-06-06.md
-evals/impact/reports/route_activation_decision_2026-06-06.json
+evals/impact/reports/phase-plan-2026-06-06/route_replay_phase_plan_2026-06-06.md
+evals/impact/reports/phase-plan-2026-06-06/route_replay_phase_plan_2026-06-06.json
+evals/impact/reports/phase-plan-2026-06-06/route_activation_decision_2026-06-06.md
+evals/impact/reports/phase-plan-2026-06-06/route_activation_decision_2026-06-06.json
 ai-wiki/_toolkit/reports/route-activation/bochengyin/latest.md
 ai-wiki/_toolkit/reports/route-activation/bochengyin/latest.json
 ```
@@ -464,10 +464,10 @@ Verification:
 Layered replay outputs:
 
 ```text
-evals/impact/reports/route_replay_layered_old_strict_57_2026-06-07.md
-evals/impact/reports/route_replay_layered_latest_2026-06-07.md
-evals/impact/reports/route_activation_decision_layered_old_strict_57_2026-06-07.md
-evals/impact/reports/route_activation_decision_layered_2026-06-07.md
+evals/impact/reports/layered-route-2026-06-07/route_replay_layered_old_strict_57_2026-06-07.md
+evals/impact/reports/layered-route-2026-06-07/route_replay_layered_latest_2026-06-07.md
+evals/impact/reports/layered-route-2026-06-07/route_activation_decision_layered_old_strict_57_2026-06-07.md
+evals/impact/reports/layered-route-2026-06-07/route_activation_decision_layered_2026-06-07.md
 ```
 
 Result on the old strict 57 cohort:
@@ -549,8 +549,8 @@ stage compatibility during document selection.
 Reports:
 
 ```text
-evals/impact/reports/route_eval_stage_ablation_old_strict_57_2026-06-07.md
-evals/impact/reports/route_eval_stage_ablation_latest_57_2026-06-07.md
+evals/impact/reports/layered-route-2026-06-07/route_eval_stage_ablation_old_strict_57_2026-06-07.md
+evals/impact/reports/layered-route-2026-06-07/route_eval_stage_ablation_latest_57_2026-06-07.md
 ```
 
 Old strict 57:
