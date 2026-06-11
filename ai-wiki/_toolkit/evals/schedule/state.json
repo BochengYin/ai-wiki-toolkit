@@ -1,0 +1,24 @@
+{
+  "schema_version": "impact-eval-schedule-run-v1",
+  "last_period_id": "project-a-rerun-2026-06-03",
+  "last_ran_at": "2026-06-03T21:53:18+10:00",
+  "families": [
+    "aiwiki_evidence_integrity",
+    "ownership_boundary",
+    "postinstall_archive_staging",
+    "release_distribution_integrity",
+    "release_runtime_compatibility",
+    "scaffold_prompt_workflow_compliance",
+    "windows_arm_smoke_cli_output"
+  ],
+  "run_index": {
+    "path": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/runs/index.json",
+    "run_count": 17
+  },
+  "report": {
+    "json": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/reports/project-a-rerun-2026-06-03/report.json",
+    "markdown": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/reports/project-a-rerun-2026-06-03/report.md",
+    "latest_json": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/reports/latest.json",
+    "latest_markdown": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/reports/latest.md"
+  }
+}

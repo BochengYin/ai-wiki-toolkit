@@ -1,0 +1,704 @@
+{
+  "schema_version": "impact-eval-schedule-report-v1",
+  "generated_at": "2026-06-04T05:00:27+10:00",
+  "period_id": "project-a-rerun-2026-06-03",
+  "repo_root": "/Users/by/AI Project/ai-wiki-toolkit",
+  "repo_wiki_dir": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki",
+  "summary": {
+    "formal_family_count": 7,
+    "runnable_family_count": 7,
+    "candidate_status_counts": {
+      "candidate": 12,
+      "observed": 6,
+      "promoted": 7
+    },
+    "indexed_run_count": 17,
+    "recent_run_count": 17
+  },
+  "candidate_filters": {
+    "handle": null,
+    "since": null,
+    "max_items": 25,
+    "include_not_ready": true,
+    "refreshed": true
+  },
+  "families": [
+    {
+      "name": "aiwiki_evidence_integrity",
+      "status": "runnable",
+      "missing": [],
+      "spec_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/families/aiwiki_evidence_integrity/spec.toml",
+      "prompt_family": "aiwiki_evidence_integrity",
+      "prompt_root": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/prompts/aiwiki_evidence_integrity",
+      "prompt_levels": [
+        "original"
+      ],
+      "prompt_present": true,
+      "rubric_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/rubrics/aiwiki_evidence_integrity.json",
+      "rubric_present": true,
+      "historical_issue": "AI wiki evidence could log document-level reuse without task-level coverage, count managed toolkit docs as knowledge reuse, and omit mandatory end-of-task update outcomes.",
+      "baseline_ref": "8228ba6^",
+      "memory_fixtures": {
+        "raw_docs": 3,
+        "raw_overlays": 0,
+        "consolidated_docs": 2,
+        "consolidated_overlays": 0,
+        "ambient_exclude_paths": 6,
+        "strict_scaffold_exclude_paths": 8
+      },
+      "next_commands": {
+        "plan": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "plan",
+          "--family",
+          "aiwiki_evidence_integrity"
+        ],
+        "prepare": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "prepare",
+          "--family",
+          "aiwiki_evidence_integrity"
+        ],
+        "benchmark": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "benchmark",
+          "--family",
+          "aiwiki_evidence_integrity",
+          "--score-policy",
+          "rubric"
+        ]
+      }
+    },
+    {
+      "name": "ownership_boundary",
+      "status": "runnable",
+      "missing": [],
+      "spec_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/families/ownership_boundary/spec.toml",
+      "prompt_family": "ownership_boundary",
+      "prompt_root": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/prompts/ownership_boundary",
+      "prompt_levels": [
+        "full",
+        "medium",
+        "original",
+        "short"
+      ],
+      "prompt_present": true,
+      "rubric_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/rubrics/ownership_boundary.json",
+      "rubric_present": true,
+      "historical_issue": "Contributor-only branch and PR workflow helpers can be misdesigned as distributed package features.",
+      "baseline_ref": "34cd5a3^",
+      "memory_fixtures": {
+        "raw_docs": 3,
+        "raw_overlays": 0,
+        "consolidated_docs": 2,
+        "consolidated_overlays": 0,
+        "ambient_exclude_paths": 3,
+        "strict_scaffold_exclude_paths": 4
+      },
+      "next_commands": {
+        "plan": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "plan",
+          "--family",
+          "ownership_boundary"
+        ],
+        "prepare": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "prepare",
+          "--family",
+          "ownership_boundary"
+        ],
+        "benchmark": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "benchmark",
+          "--family",
+          "ownership_boundary",
+          "--score-policy",
+          "rubric"
+        ]
+      }
+    },
+    {
+      "name": "postinstall_archive_staging",
+      "status": "runnable",
+      "missing": [],
+      "spec_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/families/postinstall_archive_staging/spec.toml",
+      "prompt_family": "postinstall_archive_staging",
+      "prompt_root": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/prompts/postinstall_archive_staging",
+      "prompt_levels": [
+        "original"
+      ],
+      "prompt_present": true,
+      "rubric_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/rubrics/postinstall_archive_staging.json",
+      "rubric_present": true,
+      "historical_issue": "The npm postinstall wrapper can delete its own downloaded release archive when extraction cleans the install target directory.",
+      "baseline_ref": "408ff40^",
+      "memory_fixtures": {
+        "raw_docs": 1,
+        "raw_overlays": 0,
+        "consolidated_docs": 0,
+        "consolidated_overlays": 0,
+        "ambient_exclude_paths": 3,
+        "strict_scaffold_exclude_paths": 5
+      },
+      "next_commands": {
+        "plan": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "plan",
+          "--family",
+          "postinstall_archive_staging"
+        ],
+        "prepare": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "prepare",
+          "--family",
+          "postinstall_archive_staging"
+        ],
+        "benchmark": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "benchmark",
+          "--family",
+          "postinstall_archive_staging",
+          "--score-policy",
+          "rubric"
+        ]
+      }
+    },
+    {
+      "name": "release_distribution_integrity",
+      "status": "runnable",
+      "missing": [],
+      "spec_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/families/release_distribution_integrity/spec.toml",
+      "prompt_family": "release_distribution_integrity",
+      "prompt_root": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/prompts/release_distribution_integrity",
+      "prompt_levels": [
+        "medium",
+        "original",
+        "short"
+      ],
+      "prompt_present": true,
+      "rubric_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/rubrics/release_distribution_integrity.json",
+      "rubric_present": true,
+      "historical_issue": "Public release target changes can drift across release workflows, npm metadata, archive handling, docs, and verification.",
+      "baseline_ref": "06a47cd^",
+      "memory_fixtures": {
+        "raw_docs": 1,
+        "raw_overlays": 0,
+        "consolidated_docs": 1,
+        "consolidated_overlays": 0,
+        "ambient_exclude_paths": 3,
+        "strict_scaffold_exclude_paths": 5
+      },
+      "next_commands": {
+        "plan": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "plan",
+          "--family",
+          "release_distribution_integrity"
+        ],
+        "prepare": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "prepare",
+          "--family",
+          "release_distribution_integrity"
+        ],
+        "benchmark": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "benchmark",
+          "--family",
+          "release_distribution_integrity",
+          "--score-policy",
+          "rubric"
+        ]
+      }
+    },
+    {
+      "name": "release_runtime_compatibility",
+      "status": "runnable",
+      "missing": [],
+      "spec_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/families/release_runtime_compatibility/spec.toml",
+      "prompt_family": "release_runtime_compatibility",
+      "prompt_root": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/prompts/release_runtime_compatibility",
+      "prompt_levels": [
+        "original"
+      ],
+      "prompt_present": true,
+      "rubric_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/rubrics/release_runtime_compatibility.json",
+      "rubric_present": true,
+      "historical_issue": "Linux release binaries can publish and install successfully while still failing at runtime on an older glibc baseline.",
+      "baseline_ref": "f946ed6^",
+      "memory_fixtures": {
+        "raw_docs": 1,
+        "raw_overlays": 0,
+        "consolidated_docs": 0,
+        "consolidated_overlays": 1,
+        "ambient_exclude_paths": 3,
+        "strict_scaffold_exclude_paths": 4
+      },
+      "next_commands": {
+        "plan": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "plan",
+          "--family",
+          "release_runtime_compatibility"
+        ],
+        "prepare": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "prepare",
+          "--family",
+          "release_runtime_compatibility"
+        ],
+        "benchmark": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "benchmark",
+          "--family",
+          "release_runtime_compatibility",
+          "--score-policy",
+          "rubric"
+        ]
+      }
+    },
+    {
+      "name": "scaffold_prompt_workflow_compliance",
+      "status": "runnable",
+      "missing": [],
+      "spec_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/families/scaffold_prompt_workflow_compliance/spec.toml",
+      "prompt_family": "scaffold_prompt_workflow_compliance",
+      "prompt_root": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/prompts/scaffold_prompt_workflow_compliance",
+      "prompt_levels": [
+        "original"
+      ],
+      "prompt_present": true,
+      "rubric_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/rubrics/scaffold_prompt_workflow_compliance.json",
+      "rubric_present": true,
+      "historical_issue": "Scaffold and prompt behavior changes can miss tests, install verification, prompt-block boundary checks, or user-agnostic shared prompt guidance.",
+      "baseline_ref": "b1366fe^",
+      "memory_fixtures": {
+        "raw_docs": 3,
+        "raw_overlays": 0,
+        "consolidated_docs": 3,
+        "consolidated_overlays": 0,
+        "ambient_exclude_paths": 3,
+        "strict_scaffold_exclude_paths": 3
+      },
+      "next_commands": {
+        "plan": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "plan",
+          "--family",
+          "scaffold_prompt_workflow_compliance"
+        ],
+        "prepare": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "prepare",
+          "--family",
+          "scaffold_prompt_workflow_compliance"
+        ],
+        "benchmark": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "benchmark",
+          "--family",
+          "scaffold_prompt_workflow_compliance",
+          "--score-policy",
+          "rubric"
+        ]
+      }
+    },
+    {
+      "name": "windows_arm_smoke_cli_output",
+      "status": "runnable",
+      "missing": [],
+      "spec_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/families/windows_arm_smoke_cli_output/spec.toml",
+      "prompt_family": "windows_arm_smoke_cli_output",
+      "prompt_root": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/prompts/windows_arm_smoke_cli_output",
+      "prompt_levels": [
+        "original"
+      ],
+      "prompt_present": true,
+      "rubric_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/rubrics/windows_arm_smoke_cli_output.json",
+      "rubric_present": true,
+      "historical_issue": "Windows ARM smoke checks can fail even when the binary is healthy if version assertions compare against the bare package version instead of the full CLI output.",
+      "baseline_ref": "e0d6fa9^",
+      "memory_fixtures": {
+        "raw_docs": 0,
+        "raw_overlays": 1,
+        "consolidated_docs": 1,
+        "consolidated_overlays": 0,
+        "ambient_exclude_paths": 3,
+        "strict_scaffold_exclude_paths": 4
+      },
+      "next_commands": {
+        "plan": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "plan",
+          "--family",
+          "windows_arm_smoke_cli_output"
+        ],
+        "prepare": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "prepare",
+          "--family",
+          "windows_arm_smoke_cli_output"
+        ],
+        "benchmark": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "benchmark",
+          "--family",
+          "windows_arm_smoke_cli_output",
+          "--score-policy",
+          "rubric"
+        ]
+      }
+    }
+  ],
+  "candidate_queue": {
+    "summary": {
+      "active_count": 25,
+      "stale_count": 0,
+      "status_counts": {
+        "candidate": 12,
+        "observed": 6,
+        "promoted": 7
+      }
+    },
+    "outputs": {
+      "latest_json": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/candidates/latest.json",
+      "latest_markdown": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/candidates/latest.md",
+      "state": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/candidates/state.json"
+    }
+  },
+  "recent_runs": [
+    {
+      "period_id": "smoke-20260523225229",
+      "recorded_at": "2026-05-23T22:52:29+10:00",
+      "family": "windows_arm_smoke_cli_output",
+      "run_dir": "/private/tmp/aiwiki_first_round/windows_arm_smoke_cli_output/runs/smoke-20260523225229-windows_arm_smoke_cli_output",
+      "score_policy": "command-exit",
+      "runner_success": true,
+      "primary_outcome": "neutral_signal",
+      "first_attempt_success_delta": 0.0,
+      "avg_score_delta": 0.0,
+      "records": 6,
+      "bundle_dir": "/private/tmp/aiwiki_first_round/windows_arm_smoke_cli_output/runs/smoke-20260523225229-windows_arm_smoke_cli_output/report_bundle"
+    },
+    {
+      "period_id": "dogfood-fixed-20260524124712",
+      "recorded_at": "2026-05-24T12:47:12+10:00",
+      "family": "windows_arm_smoke_cli_output",
+      "run_dir": "/private/tmp/aiwiki_first_round/windows_arm_smoke_cli_output/runs/dogfood-fixed-20260524124712-windows_arm_smoke_cli_output",
+      "score_policy": "command-exit",
+      "runner_success": true,
+      "primary_outcome": "neutral_signal",
+      "first_attempt_success_delta": 0.0,
+      "avg_score_delta": 0.0,
+      "records": 6,
+      "bundle_dir": "/private/tmp/aiwiki_first_round/windows_arm_smoke_cli_output/runs/dogfood-fixed-20260524124712-windows_arm_smoke_cli_output/report_bundle"
+    },
+    {
+      "period_id": "formal-20260524T034658Z",
+      "recorded_at": "2026-05-24T13:47:25+10:00",
+      "family": "ownership_boundary",
+      "run_dir": "/private/tmp/aiwiki_first_round/ownership_boundary/runs/formal-20260524T034658Z-ownership_boundary",
+      "score_policy": "command-exit",
+      "runner_success": true,
+      "primary_outcome": "neutral_signal",
+      "first_attempt_success_delta": 0.0,
+      "avg_score_delta": 0.0,
+      "records": 6,
+      "bundle_dir": "/private/tmp/aiwiki_first_round/ownership_boundary/runs/formal-20260524T034658Z-ownership_boundary/report_bundle"
+    },
+    {
+      "period_id": "historical-2026-05-01",
+      "recorded_at": "2026-05-01T00:00:00+10:00",
+      "family": "aiwiki_evidence_integrity",
+      "run_label": "cli-original-aiwiki-evidence-20260501-1725",
+      "run_dir": "/private/tmp/aiwiki_first_round/aiwiki_evidence_integrity/runs/cli-original-aiwiki-evidence-20260501-1725",
+      "score_policy": "manual-note-rubric",
+      "runner_success": null,
+      "primary_outcome": "positive_signal",
+      "first_attempt_success_delta": 1.0,
+      "avg_score_delta": 0.5,
+      "records": 6,
+      "bundle_dir": null,
+      "historical_backfill": true,
+      "source_note": "evals/impact/notes/manual_v2_cli_original_aiwiki_evidence_20260501_findings.md",
+      "artifact_status": "run_dir_missing",
+      "shareable_for_causal_claims": true,
+      "primary_scores": {
+        "no_aiwiki_workflow": "partial",
+        "aiwiki_ambient_memory_workflow": "success"
+      }
+    },
+    {
+      "period_id": "historical-2026-04-25",
+      "recorded_at": "2026-04-25T00:00:00+10:00",
+      "family": "ownership_boundary",
+      "run_label": "cli-original-ownership-20260425-1158",
+      "run_dir": "/private/tmp/aiwiki_first_round/ownership_boundary/runs/cli-original-ownership-20260425-1158",
+      "score_policy": "manual-note-rubric",
+      "runner_success": null,
+      "primary_outcome": "positive_signal",
+      "first_attempt_success_delta": 1.0,
+      "avg_score_delta": 1.0,
+      "records": 6,
+      "bundle_dir": null,
+      "historical_backfill": true,
+      "source_note": "evals/impact/notes/manual_v2_cli_original_ownership_20260425_findings.md",
+      "artifact_status": "run_dir_missing",
+      "shareable_for_causal_claims": true,
+      "primary_scores": {
+        "no_aiwiki_workflow": "fail",
+        "aiwiki_ambient_memory_workflow": "success"
+      }
+    },
+    {
+      "period_id": "historical-2026-04-30",
+      "recorded_at": "2026-04-30T00:00:00+10:00",
+      "family": "postinstall_archive_staging",
+      "run_label": "cli-original-postinstall-20260430-0903",
+      "run_dir": "/private/tmp/aiwiki_first_round/postinstall_archive_staging/runs/cli-original-postinstall-20260430-0903",
+      "score_policy": "manual-note-rubric",
+      "runner_success": null,
+      "primary_outcome": "neutral_signal",
+      "first_attempt_success_delta": 0.0,
+      "avg_score_delta": 0.0,
+      "records": 6,
+      "bundle_dir": null,
+      "historical_backfill": true,
+      "source_note": "evals/impact/notes/manual_v2_cli_original_postinstall_archive_20260430_findings.md",
+      "artifact_status": "run_dir_missing",
+      "shareable_for_causal_claims": true,
+      "primary_scores": {
+        "no_aiwiki_workflow": "success",
+        "aiwiki_ambient_memory_workflow": "success"
+      }
+    },
+    {
+      "period_id": "historical-2026-04-25",
+      "recorded_at": "2026-04-25T00:00:00+10:00",
+      "family": "release_distribution_integrity",
+      "run_label": "cli-original-release-20260425-1246",
+      "run_dir": "/private/tmp/aiwiki_first_round/release_distribution_integrity/runs/cli-original-release-20260425-1246",
+      "score_policy": "manual-note-rubric",
+      "runner_success": null,
+      "primary_outcome": "positive_signal",
+      "first_attempt_success_delta": 1.0,
+      "avg_score_delta": 0.5,
+      "records": 6,
+      "bundle_dir": null,
+      "historical_backfill": true,
+      "source_note": "evals/impact/notes/manual_v2_cli_original_release_distribution_20260425_findings.md",
+      "artifact_status": "run_dir_missing",
+      "shareable_for_causal_claims": true,
+      "primary_scores": {
+        "no_aiwiki_workflow": "partial",
+        "aiwiki_ambient_memory_workflow": "success"
+      }
+    },
+    {
+      "period_id": "historical-2026-04-25",
+      "recorded_at": "2026-04-25T00:00:00+10:00",
+      "family": "release_runtime_compatibility",
+      "run_label": "cli-original-runtime-20260425-1618",
+      "run_dir": "/private/tmp/aiwiki_first_round/release_runtime_compatibility/runs/cli-original-runtime-20260425-1618",
+      "score_policy": "manual-note-rubric",
+      "runner_success": null,
+      "primary_outcome": "positive_signal",
+      "first_attempt_success_delta": 1.0,
+      "avg_score_delta": 0.5,
+      "records": 6,
+      "bundle_dir": null,
+      "historical_backfill": true,
+      "source_note": "evals/impact/notes/manual_v2_cli_original_release_runtime_20260425_findings.md",
+      "artifact_status": "run_dir_missing",
+      "shareable_for_causal_claims": true,
+      "primary_scores": {
+        "no_aiwiki_workflow": "partial",
+        "aiwiki_ambient_memory_workflow": "success"
+      }
+    },
+    {
+      "period_id": "historical-2026-04-25",
+      "recorded_at": "2026-04-25T00:00:00+10:00",
+      "family": "scaffold_prompt_workflow_compliance",
+      "run_label": "cli-original-scaffold-20260425-1618",
+      "run_dir": "/private/tmp/aiwiki_first_round/scaffold_prompt_workflow_compliance/runs/cli-original-scaffold-20260425-1618",
+      "score_policy": "manual-note-rubric",
+      "runner_success": null,
+      "primary_outcome": "positive_signal",
+      "first_attempt_success_delta": 1.0,
+      "avg_score_delta": 0.5,
+      "records": 6,
+      "bundle_dir": null,
+      "historical_backfill": true,
+      "source_note": "evals/impact/notes/manual_v2_cli_original_scaffold_prompt_workflow_20260425_findings.md",
+      "artifact_status": "run_dir_missing",
+      "shareable_for_causal_claims": true,
+      "primary_scores": {
+        "no_aiwiki_workflow": "partial",
+        "aiwiki_ambient_memory_workflow": "success"
+      }
+    },
+    {
+      "period_id": "historical-2026-04-25",
+      "recorded_at": "2026-04-25T00:00:00+10:00",
+      "family": "windows_arm_smoke_cli_output",
+      "run_label": "cli-original-windows-arm-20260425-1618",
+      "run_dir": "/private/tmp/aiwiki_first_round/windows_arm_smoke_cli_output/runs/cli-original-windows-arm-20260425-1618",
+      "score_policy": "manual-note-rubric",
+      "runner_success": null,
+      "primary_outcome": "neutral_signal",
+      "first_attempt_success_delta": 0.0,
+      "avg_score_delta": 0.0,
+      "records": 6,
+      "bundle_dir": null,
+      "historical_backfill": true,
+      "source_note": "evals/impact/notes/manual_v2_cli_original_windows_arm_20260425_findings.md",
+      "artifact_status": "run_dir_missing",
+      "shareable_for_causal_claims": true,
+      "primary_scores": {
+        "no_aiwiki_workflow": "success",
+        "aiwiki_ambient_memory_workflow": "success"
+      }
+    },
+    {
+      "period_id": "project-a-rerun-2026-06-03",
+      "recorded_at": "2026-06-03T21:53:18+10:00",
+      "family": "aiwiki_evidence_integrity",
+      "run_dir": "/private/tmp/aiwiki_first_round/aiwiki_evidence_integrity/runs/project-a-rerun-2026-06-03-aiwiki_evidence_integrity",
+      "score_policy": "rubric",
+      "runner_success": true,
+      "primary_outcome": "positive_signal",
+      "first_attempt_success_delta": 1.0,
+      "avg_score_delta": 0.5,
+      "records": 6,
+      "bundle_dir": "/private/tmp/aiwiki_first_round/aiwiki_evidence_integrity/runs/project-a-rerun-2026-06-03-aiwiki_evidence_integrity/report_bundle"
+    },
+    {
+      "period_id": "project-a-rerun-2026-06-03",
+      "recorded_at": "2026-06-03T21:53:18+10:00",
+      "family": "ownership_boundary",
+      "run_dir": "/private/tmp/aiwiki_first_round/ownership_boundary/runs/project-a-rerun-2026-06-03-ownership_boundary",
+      "score_policy": "rubric",
+      "runner_success": true,
+      "primary_outcome": "positive_signal",
+      "first_attempt_success_delta": 1.0,
+      "avg_score_delta": 1.0,
+      "records": 6,
+      "bundle_dir": "/private/tmp/aiwiki_first_round/ownership_boundary/runs/project-a-rerun-2026-06-03-ownership_boundary/report_bundle"
+    },
+    {
+      "period_id": "project-a-rerun-2026-06-03",
+      "recorded_at": "2026-06-03T21:53:18+10:00",
+      "family": "postinstall_archive_staging",
+      "run_dir": "/private/tmp/aiwiki_first_round/postinstall_archive_staging/runs/project-a-rerun-2026-06-03-postinstall_archive_staging",
+      "score_policy": "rubric",
+      "runner_success": true,
+      "primary_outcome": "neutral_signal",
+      "first_attempt_success_delta": 0.0,
+      "avg_score_delta": 0.0,
+      "records": 6,
+      "bundle_dir": "/private/tmp/aiwiki_first_round/postinstall_archive_staging/runs/project-a-rerun-2026-06-03-postinstall_archive_staging/report_bundle"
+    },
+    {
+      "period_id": "project-a-rerun-2026-06-03",
+      "recorded_at": "2026-06-03T21:53:18+10:00",
+      "family": "release_distribution_integrity",
+      "run_dir": "/private/tmp/aiwiki_first_round/release_distribution_integrity/runs/project-a-rerun-2026-06-03-release_distribution_integrity",
+      "score_policy": "rubric",
+      "runner_success": true,
+      "primary_outcome": "neutral_signal",
+      "first_attempt_success_delta": 0.0,
+      "avg_score_delta": 0.0,
+      "records": 6,
+      "bundle_dir": "/private/tmp/aiwiki_first_round/release_distribution_integrity/runs/project-a-rerun-2026-06-03-release_distribution_integrity/report_bundle"
+    },
+    {
+      "period_id": "project-a-rerun-2026-06-03",
+      "recorded_at": "2026-06-03T21:53:18+10:00",
+      "family": "release_runtime_compatibility",
+      "run_dir": "/private/tmp/aiwiki_first_round/release_runtime_compatibility/runs/project-a-rerun-2026-06-03-release_runtime_compatibility",
+      "score_policy": "rubric",
+      "runner_success": true,
+      "primary_outcome": "neutral_signal",
+      "first_attempt_success_delta": 0.0,
+      "avg_score_delta": 0.0,
+      "records": 6,
+      "bundle_dir": "/private/tmp/aiwiki_first_round/release_runtime_compatibility/runs/project-a-rerun-2026-06-03-release_runtime_compatibility/report_bundle"
+    },
+    {
+      "period_id": "project-a-rerun-2026-06-03",
+      "recorded_at": "2026-06-03T21:53:18+10:00",
+      "family": "scaffold_prompt_workflow_compliance",
+      "run_dir": "/private/tmp/aiwiki_first_round/scaffold_prompt_workflow_compliance/runs/project-a-rerun-2026-06-03-scaffold_prompt_workflow_compliance",
+      "score_policy": "rubric",
+      "runner_success": true,
+      "primary_outcome": "positive_signal",
+      "first_attempt_success_delta": 1.0,
+      "avg_score_delta": 0.5,
+      "records": 6,
+      "bundle_dir": "/private/tmp/aiwiki_first_round/scaffold_prompt_workflow_compliance/runs/project-a-rerun-2026-06-03-scaffold_prompt_workflow_compliance/report_bundle"
+    },
+    {
+      "period_id": "project-a-rerun-2026-06-03",
+      "recorded_at": "2026-06-03T21:53:18+10:00",
+      "family": "windows_arm_smoke_cli_output",
+      "run_dir": "/private/tmp/aiwiki_first_round/windows_arm_smoke_cli_output/runs/project-a-rerun-2026-06-03-windows_arm_smoke_cli_output",
+      "score_policy": "rubric",
+      "runner_success": true,
+      "primary_outcome": "neutral_signal",
+      "first_attempt_success_delta": 0.0,
+      "avg_score_delta": 0.0,
+      "records": 6,
+      "bundle_dir": "/private/tmp/aiwiki_first_round/windows_arm_smoke_cli_output/runs/project-a-rerun-2026-06-03-windows_arm_smoke_cli_output/report_bundle"
+    }
+  ],
+  "outputs": {
+    "json": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/reports/project-a-rerun-2026-06-03/report.json",
+    "markdown": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/reports/project-a-rerun-2026-06-03/report.md",
+    "latest_json": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/reports/latest.json",
+    "latest_markdown": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/reports/latest.md"
+  }
+}

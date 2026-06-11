@@ -1,0 +1,125 @@
+{
+  "schema_version": "impact-eval-candidate-draft-v1",
+  "candidate_id": "people_bochengyin_drafts_local_dogfooding_should_check_source_cli_vs_installed_entrypoint",
+  "family": "people_bochengyin_drafts_local_dogfooding_should_check_source_cli_vs_installed_entrypoint",
+  "source": "people/bochengyin/drafts/local-dogfooding-should-check-source-cli-vs-installed-entrypoint",
+  "baseline_ref": "<baseline-ref>",
+  "historical_issue": "Local dogfooding should check source CLI vs installed entrypoint",
+  "generated_at": "2026-05-24T12:47:26+10:00",
+  "readiness": {
+    "present": [
+      "source_incident",
+      "replayable_memory_evidence",
+      "prompt_draft",
+      "rubric_draft"
+    ],
+    "missing": [
+      "baseline_ref"
+    ]
+  },
+  "paths": {
+    "draft_dir": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/drafts/people_bochengyin_drafts_local_dogfooding_should_check_source_cli_vs_installed_entrypoint",
+    "spec": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/drafts/people_bochengyin_drafts_local_dogfooding_should_check_source_cli_vs_installed_entrypoint/spec.toml",
+    "prompt": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/drafts/people_bochengyin_drafts_local_dogfooding_should_check_source_cli_vs_installed_entrypoint/original.md",
+    "rubric": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/drafts/people_bochengyin_drafts_local_dogfooding_should_check_source_cli_vs_installed_entrypoint/rubric.json",
+    "manifest": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/drafts/people_bochengyin_drafts_local_dogfooding_should_check_source_cli_vs_installed_entrypoint/manifest.json"
+  },
+  "candidate": {
+    "candidate_id": "people_bochengyin_drafts_local_dogfooding_should_check_source_cli_vs_installed_entrypoint",
+    "status": "candidate",
+    "first_seen_at": "2026-05-24T12:42:59+10:00",
+    "last_seen_at": "2026-05-24T12:47:14+10:00",
+    "seen_count": 4,
+    "doc_id": "people/bochengyin/drafts/local-dogfooding-should-check-source-cli-vs-installed-entrypoint",
+    "task_id": null,
+    "title": "Local dogfooding should check source CLI vs installed entrypoint",
+    "path": "ai-wiki/people/bochengyin/drafts/local-dogfooding-should-check-source-cli-vs-installed-entrypoint.md",
+    "suggested_family": "people_bochengyin_drafts_local_dogfooding_should_check_source_cli_vs_installed_entrypoint",
+    "registered_family": null,
+    "readiness": {
+      "status": "candidate",
+      "present": [
+        "replayable_memory_evidence",
+        "source_incident",
+        "concrete_memory_doc"
+      ],
+      "missing": [
+        "baseline_ref",
+        "prompt",
+        "rubric"
+      ]
+    },
+    "evidence": {
+      "reason": "direct retry or wrong-path avoidance signal; candidate for formal replay if a concrete source incident exists",
+      "trial_error_effects": {
+        "avoided_retry": 1,
+        "blocked_wrong_path": 1,
+        "changed_plan": 1
+      },
+      "trial_error_signal_count": 3,
+      "resolved_events": 4,
+      "total_events": 7,
+      "tasks": [
+        "answer-whether-the-current-ai-wiki-toolkit-can-be-downloaded-installed-and-used",
+        "check-local-latest-version",
+        "find-codex-chat-window-2026-05-17",
+        "generate-hyperpersonalized-codex-suggestions-20260517",
+        "merge-local-artifacts-pr-68",
+        "repo-cleanup-local-state",
+        "route-evaluate-metrics-miss-miss-metrics"
+      ],
+      "source_task_ids": [],
+      "source_session_ids": []
+    },
+    "next_commands": {
+      "init": [
+        "aiwiki-toolkit",
+        "eval",
+        "impact",
+        "family",
+        "init",
+        "--name",
+        "people_bochengyin_drafts_local_dogfooding_should_check_source_cli_vs_installed_entrypoint",
+        "--from-candidate",
+        "people/bochengyin/drafts/local-dogfooding-should-check-source-cli-vs-installed-entrypoint",
+        "--baseline-ref",
+        "<baseline-ref>"
+      ],
+      "show_registered": [
+        "aiwiki-toolkit",
+        "eval",
+        "impact",
+        "family",
+        "show",
+        "<family>"
+      ],
+      "draft": [
+        "aiwiki-toolkit",
+        "eval",
+        "impact",
+        "family",
+        "draft",
+        "--candidate",
+        "people_bochengyin_drafts_local_dogfooding_should_check_source_cli_vs_installed_entrypoint",
+        "--baseline-ref",
+        "<baseline-ref>"
+      ],
+      "promote_check": [
+        "aiwiki-toolkit",
+        "eval",
+        "impact",
+        "family",
+        "promote",
+        "--candidate",
+        "people_bochengyin_drafts_local_dogfooding_should_check_source_cli_vs_installed_entrypoint"
+      ],
+      "schedule_report": [
+        "aiwiki-toolkit",
+        "eval",
+        "impact",
+        "schedule",
+        "report"
+      ]
+    }
+  }
+}

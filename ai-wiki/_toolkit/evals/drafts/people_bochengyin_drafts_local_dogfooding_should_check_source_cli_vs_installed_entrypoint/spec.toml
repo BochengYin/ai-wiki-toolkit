@@ -1,0 +1,10 @@
+name = "people_bochengyin_drafts_local_dogfooding_should_check_source_cli_vs_installed_entrypoint"
+prompt_family = "people_bochengyin_drafts_local_dogfooding_should_check_source_cli_vs_installed_entrypoint"
+baseline_ref = "<baseline-ref>"
+historical_issue = "Local dogfooding should check source CLI vs installed entrypoint"
+
+raw_docs = [
+  "ai-wiki/people/bochengyin/drafts/local-dogfooding-should-check-source-cli-vs-installed-entrypoint.md",
+]
+
+consolidated_docs = []

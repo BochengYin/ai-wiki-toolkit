@@ -1,0 +1,3346 @@
+{
+  "schema_version": "impact-eval-candidate-queue-v1",
+  "generated_at": "2026-06-04T07:26:34+10:00",
+  "candidates": {
+    "constraints": {
+      "candidate_id": "constraints",
+      "status": "observed",
+      "first_seen_at": "2026-05-23T22:52:17+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 28,
+      "doc_id": "constraints",
+      "task_id": null,
+      "title": "Project Constraints",
+      "path": "ai-wiki/constraints.md",
+      "suggested_family": "constraints",
+      "registered_family": null,
+      "readiness": {
+        "status": "not_ready",
+        "present": [
+          "replayable_memory_evidence",
+          "source_incident"
+        ],
+        "missing": [
+          "concrete_memory_doc",
+          "baseline_ref",
+          "prompt",
+          "rubric"
+        ]
+      },
+      "evidence": {
+        "reason": "direct retry or wrong-path avoidance signal; candidate for formal replay if a concrete source incident exists",
+        "trial_error_effects": {
+          "avoided_retry": 8,
+          "blocked_wrong_path": 6,
+          "changed_plan": 10,
+          "faster_resolution": 5
+        },
+        "trial_error_signal_count": 29,
+        "resolved_events": 104,
+        "total_events": 141,
+        "tasks": [
+          "2026-04-20-consolidate-memory-brainstorm",
+          "2026-04-20-team-coding-memory-scaffolds",
+          "2026-04-21-product-direction-review",
+          "2026-04-25-six-slot-impact-eval-protocol",
+          "add-a-rubric-judge-scoring-policy-to-the-autonomous-impact-eval-runner-so-eval-i",
+          "add-aiwiki-drafts-pr",
+          "add-linux-arm64-musl-and-win32-arm64-targets",
+          "add-release-distribution-experiment-to-prepare-variants-20260424",
+          "add-windows-arm-smoke-release-workflow",
+          "adjust-fermi-estimate-for-aiwiki-install-time-and-side-project-hours-20260426",
+          "ai-wiki-changes-push-repo",
+          "ai-wiki-toolkit-agent-codebase",
+          "ai-wiki-toolkit-claude-md-prompt-ai-wiki-gate-npm",
+          "ai-wiki-toolkit-company-code-privacy",
+          "ai-wiki-toolkit-development",
+          "ai-wiki-toolkit-package-post-turn-hook",
+          "ai-wiki-toolkit-project-showcase-live-workshop-ppt-tech-stack-project-demo",
+          "ai-wiki-toolkit-trial-and-error-source-incident",
+          "aiwiki-toolkit-evaluate-repo",
+          "aiwiki-toolkit-improvement-opportunities-2026-05-27",
+          "aiwiki-toolkit-install-aiwiki-toolkit-unit",
+          "aiwikitoolkit-code",
+          "answer-feature-push-main-release-readiness",
+          "answer-npm-release-status",
+          "assess-current-public-install-matrix-after-merge",
+          "automate-postinstall-eval-family-2026-04-30",
+          "check-local-latest-version",
+          "clarify-whether-an-agent-can-know-current-session-id-and-duration-at-the-moment",
+          "claude-md-local-aiwiki-gate-prompt",
+          "codex-security-application-field-why-does-ai-wiki-toolkit-need-codex-security",
+          "commit-draft-and-merge-target-expansion-pr",
+          "commit-the-local-ai-wiki-prompt-gate-draft-into-the-repository",
+          "complete-eval-impact-automation-lifecycle-by-adding-capture-validate-and-score-c",
+          "could-you-please-use-the-route-and-some-other-features-to-evaluate-whether-this",
+          "decide-if-release-is-ready-after-pr15",
+          "decide-next-step-after-implementing-eval-impact-plan-prepare-manifest-report-sum",
+          "decide-next-step-after-pr13-and-pr14",
+          "discuss-empty-constraints-decisions-starter-20260425",
+          "document-impact-eval-round1-2026-04-24",
+          "eval-as-product-mvp-report-command",
+          "evaluate-ai-wiki-toolkit-usefulness",
+          "evaluate-renaming-aiwiki-toolkit-install-to-aiwiki-toolkit-unit",
+          "explain-no-new-trial-error-eval-family",
+          "explain-repo-evaluation-thresholds-2026-06-01",
+          "explain-why-docker-cannot-fully-cover-windows-arm64-execution",
+          "feedback-diagnosis-implementation-strategy",
+          "fermi-estimate-monthly-aiwiki-savings-20260426",
+          "find-codex-chat-window-2026-05-17",
+          "fix-release-platform-failures-2026-04-21",
+          "fix-windows-release-support",
+          "framework-framing-agent-advice-2026-04-27",
+          "generate-hyperpersonalized-codex-suggestions-20260515",
+          "generate-hyperpersonalized-codex-suggestions-20260517",
+          "homebrew-tap-bad-credentials-2026-06-02",
+          "how-could-i-evaluate-this-ai-wiki-toolkit-is-useful-generate-a-picture-talking-a",
+          "hyperpersonalized-codex-suggestions-20260510",
+          "identify-what-the-current-project-still-needs-to-implement-eval-impact-family-di",
+          "impact-eval-cli-first-flow-2026-04-25",
+          "impact-eval-next-family-recommendation-20260423",
+          "impact-eval-original-prompt-only-20260425",
+          "impact-eval-release-distribution-integrity-results-20260424-182219",
+          "impact-eval-workflow-primary-v2-20260425",
+          "implement-consolidation-review-queue",
+          "implement-eval-impact-prepare-command-after-eval-impact-plan-create-workspaces-a",
+          "implement-feedback-diagnosis-report",
+          "implement-opencode-runtime-skill-exposure-fallback-in-aiwiki-toolkit",
+          "implement-post-turn-source-incident-capture-for-ai-wiki-write-back-after-a-codex",
+          "implement-route-success-criteria-2026-05-02",
+          "implement-source-incident-trial-error-timing-extraction-for-impact-eval-candidat",
+          "implement-the-three-step-autonomous-impact-eval-runner-v0-single-slot-run-v1-all",
+          "implement-write-back-provenance-backfill-for-source-incident-timing-find-first-a",
+          "implementation-prompt-aiwiki-toolkit-evaluate-repo",
+          "install-missing-git-identity-prompt",
+          "linkedin-post-feedback-2026-04-20",
+          "local-aiwiki-identity-feature",
+          "local-experiment-analysis-2026-04-24",
+          "mark-context-routing-v2-done",
+          "merge-current-uncommitted-ai-wiki-draft-changes-into-the-local-personal-index-wo",
+          "merge-eval-as-product-mvp-and-release-npm",
+          "merge-local-artifacts-pr-68",
+          "merge-pr-67",
+          "merge-pr-73-release-ai-wiki-toolkit-to-npm-update-the-local-installed-package-th",
+          "merge-the-source-incident-timing-feature-into-the-repo-release-the-npm-package-u",
+          "move-managed-routing-to-toolkit-system-doc-pr",
+          "oss-application-opinion-20260531",
+          "patch-and-merge-pr14-draft-metadata",
+          "personalized-codex-suggestions-2026-05-10",
+          "personalized-suggestions-2026-05-14",
+          "plan-impact-folder-structure-20260424",
+          "post-turn-hook-install-post-turn-capture-doctor-hook",
+          "prepare-release-pr-v0-1-11",
+          "presentation-project-showcase-live-workshop-tech-insights-tech-stack-project-dem",
+          "prioritize-next-env-targets-after-win32",
+          "project-a-coding-agent-eval-harness",
+          "project-a-harness-rubric-backfill-diagnostic-rerun-2026-06-03",
+          "project-d-agent-failure-postmortem-pack",
+          "promote-user-owned-index-boundary-into-shared-memory",
+          "prompt-entry-short-pointer-design",
+          "prompt-vs-aiwiki-dogfood-2026-05-27",
+          "propose-aiwiki-framework-roadmap-with-task-ledger",
+          "push-and-release-npm-0.1.39-2026-06-01",
+          "push-code-release-0-1-23",
+          "push-current-changes-and-release-npm-0-1-28",
+          "push-current-changes-to-remote-merge-the-pr-then-release-npm-for-ai-wiki-toolkit",
+          "push-current-local-changes-by-creating-a-new-branch-and-merging-it",
+          "push-personal-ai-wiki-design-drafts",
+          "push-the-continuous-impact-eval-loop-changes-reinstall-the-local-aiwiki-toolkit",
+          "readme-public-evidence-refresh",
+          "release-0.1.12-pr-2026-04-21",
+          "release-0.1.13-2026-04-21",
+          "release-0.1.31",
+          "release-npm-0.1.21-20260425",
+          "release-tag-and-skill-2026-04-21",
+          "release-v0-1-22-install-and-test-route-context-packet",
+          "release-v0-1-24-install-identity-prompt-and-short-aiwiki-entry",
+          "repo-ai-wiki-team-collaboration-constraints",
+          "repo-cleanup-local-state",
+          "repo-next-step",
+          "research-andrej-karpathy-skills-aiwikitoolkit-2026-05-02",
+          "review-eval-as-product-mvp-implementation",
+          "review-opencode-skill-exposure-issue",
+          "route-ai-file-refer",
+          "route-context-packet-mvp-implementation-2026-04-27",
+          "route-policy-optimization-auto-research-metrics",
+          "run-boundary-and-release-impact-evals",
+          "session-ai-wiki-load-load-index-constraints-decisions-workflows",
+          "short-prompt-entrypoint-implementation",
+          "split-current-workspace-into-two-commits-2026-06-01",
+          "standardize-impact-eval-first-round-layout-20260424",
+          "strengthen-aiwiki-local-gate-wording",
+          "summarize-uncommitted-changes-and-readiness-2026-06-01",
+          "task-add-impact-family-todo-list",
+          "task-rebuild-impact-benchmark-baseline",
+          "upgrade-package-managed-workflow-maintenance",
+          "verify-homebrew-token-and-sync-2026-06-02",
+          "what-files-you-will-initially-loaded-automatically-when-we-start-a-new-chat-i-kn",
+          "work-ledger-feature",
+          "workflow-vs-skills-aiwiki-toolkit-evaluation-review-repo",
+          "would-you-load-memory-md",
+          "x-article-agent-framework-aiwiki-2026-04-27"
+        ],
+        "source_task_ids": [],
+        "source_session_ids": [],
+        "source_incident_timing": {
+          "active_seconds": 0,
+          "active_minutes": 0.0,
+          "evidence_count": 0,
+          "event_count": 0,
+          "sources": [],
+          "status": "not_recorded"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "constraints",
+          "--from-candidate",
+          "constraints",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "<family>"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "constraints",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "constraints"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "workflows": {
+      "candidate_id": "workflows",
+      "status": "promoted",
+      "first_seen_at": "2026-05-23T22:52:17+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 28,
+      "doc_id": "workflows",
+      "task_id": null,
+      "title": "Project Workflows",
+      "path": "ai-wiki/workflows.md",
+      "suggested_family": "workflows",
+      "registered_family": "scaffold_prompt_workflow_compliance",
+      "readiness": {
+        "status": "not_ready",
+        "present": [
+          "replayable_memory_evidence",
+          "source_incident",
+          "concrete_memory_doc",
+          "baseline_ref",
+          "prompt",
+          "rubric_or_manual_scoring"
+        ],
+        "missing": []
+      },
+      "evidence": {
+        "reason": "direct retry or wrong-path avoidance signal; candidate for formal replay if a concrete source incident exists",
+        "trial_error_effects": {
+          "avoided_retry": 5,
+          "blocked_wrong_path": 1,
+          "changed_plan": 6,
+          "faster_resolution": 13
+        },
+        "trial_error_signal_count": 25,
+        "resolved_events": 75,
+        "total_events": 96,
+        "tasks": [
+          "2026-04-20-consolidate-memory-brainstorm",
+          "2026-04-20-team-coding-memory-scaffolds",
+          "2026-04-25-six-slot-impact-eval-protocol",
+          "add-linux-arm64-musl-and-win32-arm64-targets",
+          "add-release-distribution-experiment-to-prepare-variants-20260424",
+          "add-windows-arm-smoke-release-workflow",
+          "ai-wiki-changes-push-repo",
+          "ai-wiki-toolkit-package-post-turn-hook",
+          "ai-wiki-toolkit-project-showcase-live-workshop-ppt-tech-stack-project-demo",
+          "aiwiki-toolkit-improvement-opportunities-2026-05-27",
+          "aiwiki-toolkit-install-aiwiki-toolkit-unit",
+          "analyze-boundary-release-original-evals",
+          "answer-feature-push-main-release-readiness",
+          "assess-current-public-install-matrix-after-merge",
+          "check-local-latest-version",
+          "clarify-pr-merge-flow-is-repo-local-not-package",
+          "claude-md-local-aiwiki-gate-prompt",
+          "commit-draft-and-merge-target-expansion-pr",
+          "decide-if-release-is-ready-after-pr15",
+          "decide-next-step-after-pr13-and-pr14",
+          "document-impact-eval-round1-2026-04-24",
+          "eval-as-product-mvp-report-command",
+          "evaluate-ai-wiki-toolkit-usefulness",
+          "evaluate-renaming-aiwiki-toolkit-install-to-aiwiki-toolkit-unit",
+          "explain-why-docker-cannot-fully-cover-windows-arm64-execution",
+          "fermi-estimate-monthly-aiwiki-savings-20260426",
+          "fix-release-platform-failures-2026-04-21",
+          "fix-windows-release-support",
+          "generate-hyperpersonalized-codex-suggestions-20260515",
+          "generate-hyperpersonalized-codex-suggestions-20260517",
+          "how-could-i-evaluate-this-ai-wiki-toolkit-is-useful-generate-a-picture-talking-a",
+          "hyperpersonalized-codex-suggestions-20260510",
+          "impact-eval-cli-first-flow-2026-04-25",
+          "impact-eval-next-family-recommendation-20260423",
+          "impact-eval-original-prompt-only-20260425",
+          "impact-eval-prompt-reconstruction-20260425",
+          "impact-eval-release-distribution-integrity-results-20260424-182219",
+          "impact-eval-source-prompts-summary-20260425",
+          "impact-eval-three-family-setup-20260425",
+          "impact-eval-workflow-primary-v2-20260425",
+          "implement-managed-toolkit-toc-and-scope-aware-doctor",
+          "implement-opencode-runtime-skill-exposure-fallback-in-aiwiki-toolkit",
+          "implement-post-turn-source-incident-capture-for-ai-wiki-write-back-after-a-codex",
+          "linkedin-post-feedback-2026-04-20",
+          "local-experiment-analysis-2026-04-24",
+          "merge-branch-explain-context-routing",
+          "merge-local-artifacts-pr-68",
+          "merge-opencode-runtime-skill-fallback-changes-and-release-a-new-npm-version",
+          "merge-pr-67",
+          "merge-pr-73-release-ai-wiki-toolkit-to-npm-update-the-local-installed-package-th",
+          "move-managed-routing-to-toolkit-system-doc-pr",
+          "organize-route-telemetry-feature-branch-pr",
+          "patch-and-merge-pr14-draft-metadata",
+          "personalized-codex-suggestions-2026-05-10",
+          "personalized-suggestions-2026-05-14",
+          "plan-impact-folder-structure-20260424",
+          "prepare-release-pr-v0-1-11",
+          "presentation-project-showcase-live-workshop-tech-insights-tech-stack-project-dem",
+          "prioritize-next-env-targets-after-win32",
+          "productize-ai-wiki-reuse-logging",
+          "promote-user-owned-index-boundary-into-shared-memory",
+          "prompt-entry-short-pointer-design",
+          "propose-aiwiki-framework-roadmap-with-task-ledger",
+          "push-current-changes-and-release-npm-0-1-28",
+          "push-current-local-changes-by-creating-a-new-branch-and-merging-it",
+          "push-personal-ai-wiki-design-drafts",
+          "release-0.1.12-pr-2026-04-21",
+          "release-0.1.13-2026-04-21",
+          "release-0.1.31",
+          "release-npm-0.1.21-20260425",
+          "release-tag-and-skill-2026-04-21",
+          "release-v0-1-10",
+          "release-v0-1-22-install-and-test-route-context-packet",
+          "release-v0-1-24-install-identity-prompt-and-short-aiwiki-entry",
+          "repo-ai-wiki-team-collaboration-constraints",
+          "repo-cleanup-local-state",
+          "repo-next-step",
+          "revert-pr-flow-to-repo-local-layer",
+          "run-boundary-and-release-impact-evals",
+          "session-ai-wiki-load-load-index-constraints-decisions-workflows",
+          "short-prompt-entrypoint-implementation",
+          "standardize-impact-eval-first-round-layout-20260424",
+          "task-analyze-pr-flow-benchmark-failure",
+          "task-define-four-group-consolidate-benchmark",
+          "task-design-consolidate-vs-no-aiwiki-and-prompt-axis",
+          "task-identify-concrete-history-based-benchmark",
+          "task-identify-repeated-draft-clusters-for-consolidate-benchmark",
+          "task-propose-next-impact-eval-families-and-reuse-flow",
+          "task-rebuild-impact-benchmark-baseline",
+          "task-rewrite-impact-pr-flow-prompts",
+          "task-setup-impact-eval-environment-and-prompts",
+          "task-toolkit-product-stability-suite",
+          "upgrade-package-managed-workflow-maintenance",
+          "work-ledger-feature",
+          "workflow-user-update-guidance"
+        ],
+        "source_task_ids": [],
+        "source_session_ids": [],
+        "source_incident_timing": {
+          "active_seconds": 0,
+          "active_minutes": 0.0,
+          "evidence_count": 0,
+          "event_count": 0,
+          "sources": [],
+          "status": "not_recorded"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "workflows",
+          "--from-candidate",
+          "workflows",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "scaffold_prompt_workflow_compliance"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "workflows",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "workflows"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "review_patterns_shared_prompt_files_must_be_user_agnostic": {
+      "candidate_id": "review_patterns_shared_prompt_files_must_be_user_agnostic",
+      "status": "promoted",
+      "first_seen_at": "2026-05-23T22:52:17+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 22,
+      "doc_id": "review-patterns/shared-prompt-files-must-be-user-agnostic",
+      "task_id": null,
+      "title": "Shared prompt files must be user-agnostic",
+      "path": "ai-wiki/review-patterns/shared-prompt-files-must-be-user-agnostic.md",
+      "suggested_family": "review_patterns_shared_prompt_files_must_be_user_agnostic",
+      "registered_family": "scaffold_prompt_workflow_compliance",
+      "readiness": {
+        "status": "not_ready",
+        "present": [
+          "replayable_memory_evidence",
+          "source_incident",
+          "concrete_memory_doc",
+          "baseline_ref",
+          "prompt",
+          "rubric_or_manual_scoring"
+        ],
+        "missing": []
+      },
+      "evidence": {
+        "reason": "direct retry or wrong-path avoidance signal; candidate for formal replay if a concrete source incident exists",
+        "trial_error_effects": {
+          "avoided_retry": 3,
+          "blocked_wrong_path": 3,
+          "faster_resolution": 1
+        },
+        "trial_error_signal_count": 7,
+        "resolved_events": 29,
+        "total_events": 41,
+        "tasks": [
+          "ai-wiki-toolkit-ai-wiki-toolkit-handle-git-conflict",
+          "ai-wiki-toolkit-claude-md-prompt-ai-wiki-gate-npm",
+          "aiwiki-toolkit-improvement-opportunities-2026-05-27",
+          "check-local-latest-version",
+          "claude-md-local-aiwiki-gate-prompt",
+          "code",
+          "commit-the-local-ai-wiki-prompt-gate-draft-into-the-repository",
+          "design-automated-not-helpful-missed-memory-review-2026-05-18",
+          "fix-family-level-impact-attribution-2026-05-18",
+          "impact-eval-prompt-reconstruction-20260425",
+          "impact-eval-source-prompts-summary-20260425",
+          "impact-eval-three-family-setup-20260425",
+          "impact-eval-workflow-primary-v2-20260425",
+          "implement-consolidation-review-queue",
+          "implement-opencode-runtime-skill-exposure-fallback-in-aiwiki-toolkit",
+          "install-missing-git-identity-prompt",
+          "karpathy-ai-wiki-toolkit",
+          "merge-current-uncommitted-ai-wiki-draft-changes-into-the-local-personal-index-wo",
+          "move-local-main-commit-to-a-feature-branch-and-open-pr-after-protected-main-push",
+          "personalized-codex-suggestions-2026-05-10",
+          "post-turn-hook-install-post-turn-capture-doctor-hook",
+          "prompt-entry-short-pointer-design",
+          "push-current-changes-and-release-a-new-version",
+          "referenced-file-saved-time-attribution-2026-05-18",
+          "release-new-npm-version-for-strengthened-ai-wiki-local-workflow-gate-prompt-chan",
+          "release-v0-1-24-install-identity-prompt-and-short-aiwiki-entry",
+          "review-opencode-skill-exposure-issue",
+          "short-prompt-entrypoint-implementation",
+          "simplify-weekly-report-reference-counts-2026-05-18",
+          "strengthen-aiwiki-local-gate-wording",
+          "task-define-four-group-consolidate-benchmark",
+          "task-design-consolidate-vs-no-aiwiki-and-prompt-axis",
+          "task-explain-consolidated-doc-provenance-vs-pr-workflow",
+          "task-identify-repeated-draft-clusters-for-consolidate-benchmark",
+          "task-setup-impact-eval-environment-and-prompts",
+          "task-toolkit-product-stability-suite",
+          "weekly-html-report-implementation-20260517",
+          "weekly-impact-table-card-layout-2026-05-18",
+          "weekly-report-coverage-promotion-diagnosis-design-2026-05-18",
+          "weekly-report-saved-time-coverage-promotion-noisy-diagnosis-telemetry-provenance",
+          "what-files-you-will-initially-loaded-automatically-when-we-start-a-new-chat-i-kn"
+        ],
+        "source_task_ids": [],
+        "source_session_ids": [],
+        "source_incident_timing": {
+          "active_seconds": 0,
+          "active_minutes": 0.0,
+          "evidence_count": 0,
+          "event_count": 0,
+          "sources": [],
+          "status": "not_recorded"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "review_patterns_shared_prompt_files_must_be_user_agnostic",
+          "--from-candidate",
+          "review-patterns/shared-prompt-files-must-be-user-agnostic",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "scaffold_prompt_workflow_compliance"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "review_patterns_shared_prompt_files_must_be_user_agnostic",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "review_patterns_shared_prompt_files_must_be_user_agnostic"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "problems_windows_arm_smoke_version_checks_need_full_cli_output": {
+      "candidate_id": "problems_windows_arm_smoke_version_checks_need_full_cli_output",
+      "status": "promoted",
+      "first_seen_at": "2026-05-23T22:52:17+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 28,
+      "doc_id": "problems/windows-arm-smoke-version-checks-need-full-cli-output",
+      "task_id": null,
+      "title": "Windows Arm Smoke Version Checks Need Full CLI Output",
+      "path": "ai-wiki/problems/windows-arm-smoke-version-checks-need-full-cli-output.md",
+      "suggested_family": "problems_windows_arm_smoke_version_checks_need_full_cli_output",
+      "registered_family": "windows_arm_smoke_cli_output",
+      "readiness": {
+        "status": "runnable",
+        "present": [
+          "replayable_memory_evidence",
+          "source_incident",
+          "concrete_memory_doc",
+          "baseline_ref",
+          "prompt",
+          "rubric_or_manual_scoring"
+        ],
+        "missing": []
+      },
+      "evidence": {
+        "reason": "direct retry or wrong-path avoidance signal; candidate for formal replay if a concrete source incident exists",
+        "trial_error_effects": {
+          "avoided_retry": 3,
+          "blocked_wrong_path": 3,
+          "changed_plan": 1,
+          "faster_resolution": 1
+        },
+        "trial_error_signal_count": 8,
+        "resolved_events": 14,
+        "total_events": 39,
+        "tasks": [
+          "ai-wiki-toolkit-package-post-turn-hook",
+          "analyze-boundary-release-original-evals",
+          "clarify-roadmap-for-continuous-automatic-discovery-of-new-impact-eval-families-a",
+          "claude-md-local-aiwiki-gate-prompt",
+          "code",
+          "complete-eval-impact-automation-lifecycle-by-adding-capture-validate-and-score-c",
+          "continue-eval-productization-after-adding-eval-impact-manifest-implement-the-nex",
+          "decide-next-step-after-implementing-eval-impact-plan-prepare-manifest-report-sum",
+          "design-automated-not-helpful-missed-memory-review-2026-05-18",
+          "explain-with-examples-which-parts-of-eval-impact-workflow-are-currently-automate",
+          "find-codex-chat-window-2026-05-17",
+          "find-five-prompt-efficiency-metrics-20260426",
+          "fix-family-level-impact-attribution-2026-05-18",
+          "identify-what-the-current-project-still-needs-to-implement-eval-impact-family-di",
+          "impact-eval-next-family-recommendation-20260423",
+          "impact-eval-prompt-reconstruction-20260425",
+          "impact-eval-release-distribution-integrity-results-20260424-182219",
+          "impact-eval-source-prompts-summary-20260425",
+          "impact-eval-three-family-setup-20260425",
+          "implement-eval-impact-prepare-command-after-eval-impact-plan-create-workspaces-a",
+          "karpathy-ai-wiki-toolkit",
+          "merge-eval-as-product-mvp-and-release-npm",
+          "merge-pr-73-release-ai-wiki-toolkit-to-npm-update-the-local-installed-package-th",
+          "merge-the-source-incident-timing-feature-into-the-repo-release-the-npm-package-u",
+          "push-and-release-npm-0.1.39-2026-06-01",
+          "push-code-release-0-1-23",
+          "push-current-changes-and-release-a-new-version",
+          "push-current-changes-and-release-npm-0-1-28",
+          "push-the-continuous-impact-eval-loop-changes-reinstall-the-local-aiwiki-toolkit",
+          "referenced-file-saved-time-attribution-2026-05-18",
+          "release-new-npm-version-for-strengthened-ai-wiki-local-workflow-gate-prompt-chan",
+          "release-v0-1-24-install-identity-prompt-and-short-aiwiki-entry",
+          "run-boundary-and-release-impact-evals",
+          "simplify-weekly-report-reference-counts-2026-05-18",
+          "task-identify-repeated-draft-clusters-for-consolidate-benchmark",
+          "task-propose-next-impact-eval-families-and-reuse-flow",
+          "weekly-impact-table-card-layout-2026-05-18",
+          "weekly-report-coverage-promotion-diagnosis-design-2026-05-18",
+          "weekly-report-saved-time-coverage-promotion-noisy-diagnosis-telemetry-provenance"
+        ],
+        "source_task_ids": [],
+        "source_session_ids": [],
+        "source_incident_timing": {
+          "active_seconds": 0,
+          "active_minutes": 0.0,
+          "evidence_count": 0,
+          "event_count": 0,
+          "sources": [],
+          "status": "not_recorded"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "problems_windows_arm_smoke_version_checks_need_full_cli_output",
+          "--from-candidate",
+          "problems/windows-arm-smoke-version-checks-need-full-cli-output",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "windows_arm_smoke_cli_output"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "problems_windows_arm_smoke_version_checks_need_full_cli_output",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "problems_windows_arm_smoke_version_checks_need_full_cli_output"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "conventions_distribution_target_matrix_must_match_published_assets": {
+      "candidate_id": "conventions_distribution_target_matrix_must_match_published_assets",
+      "status": "promoted",
+      "first_seen_at": "2026-05-23T22:52:17+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 22,
+      "doc_id": "conventions/distribution-target-matrix-must-match-published-assets",
+      "task_id": null,
+      "title": "Distribution target matrix must match published assets",
+      "path": "ai-wiki/conventions/distribution-target-matrix-must-match-published-assets.md",
+      "suggested_family": "conventions_distribution_target_matrix_must_match_published_assets",
+      "registered_family": "release_distribution_integrity",
+      "readiness": {
+        "status": "not_ready",
+        "present": [
+          "replayable_memory_evidence",
+          "source_incident",
+          "concrete_memory_doc",
+          "baseline_ref",
+          "prompt",
+          "rubric_or_manual_scoring"
+        ],
+        "missing": []
+      },
+      "evidence": {
+        "reason": "direct retry or wrong-path avoidance signal; candidate for formal replay if a concrete source incident exists",
+        "trial_error_effects": {
+          "avoided_retry": 2,
+          "changed_plan": 3,
+          "faster_resolution": 1
+        },
+        "trial_error_signal_count": 6,
+        "resolved_events": 31,
+        "total_events": 40,
+        "tasks": [
+          "2026-04-21-draft-post-promotion-handling",
+          "ai-wiki-toolkit-agent-codebase",
+          "ai-wiki-toolkit-claude-md-prompt-ai-wiki-gate-npm",
+          "ai-wiki-toolkit-package-post-turn-hook",
+          "ai-wiki-toolkit-project-showcase-live-workshop-ppt-tech-stack-project-demo",
+          "ai-wiki-toolkit-trial-and-error-source-incident",
+          "aiwiki-toolkit-improvement-opportunities-2026-05-27",
+          "aiwiki-toolkit-install-aiwiki-toolkit-unit",
+          "analyze-boundary-release-original-evals",
+          "evaluate-renaming-aiwiki-toolkit-install-to-aiwiki-toolkit-unit",
+          "find-five-prompt-efficiency-metrics-20260426",
+          "generate-hyperpersonalized-codex-suggestions-20260515",
+          "impact-eval-next-family-recommendation-20260423",
+          "impact-eval-plan-release-distribution-integrity-20260423",
+          "impact-eval-release-distribution-integrity-explanation-20260423",
+          "impact-eval-release-distribution-integrity-results-20260424-182219",
+          "karpathy-ai-wiki-toolkit",
+          "merge-eval-as-product-mvp-and-release-npm",
+          "merge-opencode-runtime-skill-fallback-changes-and-release-a-new-npm-version",
+          "merge-pr-73-release-ai-wiki-toolkit-to-npm-update-the-local-installed-package-th",
+          "merge-the-source-incident-timing-feature-into-the-repo-release-the-npm-package-u",
+          "project-a-coding-agent-eval-harness",
+          "project-a-harness-rubric-backfill-diagnostic-rerun-2026-06-03",
+          "project-d-agent-failure-postmortem-pack",
+          "prompt-vs-aiwiki-dogfood-2026-05-27",
+          "push-and-release-npm-0.1.39-2026-06-01",
+          "push-code-release-0-1-23",
+          "push-current-changes-and-release-npm-0-1-28",
+          "push-current-changes-to-remote-merge-the-pr-then-release-npm-for-ai-wiki-toolkit",
+          "push-the-continuous-impact-eval-loop-changes-reinstall-the-local-aiwiki-toolkit",
+          "release-0.1.25-memory-governance-tools",
+          "release-0.1.31",
+          "release-new-npm-version-for-strengthened-ai-wiki-local-workflow-gate-prompt-chan",
+          "release-v0-1-24-install-identity-prompt-and-short-aiwiki-entry",
+          "repo-cleanup-local-state",
+          "run-boundary-and-release-impact-evals",
+          "strengthen-aiwiki-local-gate-wording",
+          "task-add-impact-family-todo-list",
+          "task-answer-consolidate-provenance-and-clean-session",
+          "verify-homebrew-token-and-sync-2026-06-02"
+        ],
+        "source_task_ids": [],
+        "source_session_ids": [],
+        "source_incident_timing": {
+          "active_seconds": 0,
+          "active_minutes": 0.0,
+          "evidence_count": 0,
+          "event_count": 0,
+          "sources": [],
+          "status": "not_recorded"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "conventions_distribution_target_matrix_must_match_published_assets",
+          "--from-candidate",
+          "conventions/distribution-target-matrix-must-match-published-assets",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "release_distribution_integrity"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "conventions_distribution_target_matrix_must_match_published_assets",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "conventions_distribution_target_matrix_must_match_published_assets"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "people_bochengyin_drafts_eval_run_manifest_should_precede_auto_runner": {
+      "candidate_id": "people_bochengyin_drafts_eval_run_manifest_should_precede_auto_runner",
+      "status": "candidate",
+      "first_seen_at": "2026-05-23T22:52:17+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 28,
+      "doc_id": "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+      "task_id": null,
+      "title": "Eval run manifest should precede auto runner",
+      "path": "ai-wiki/people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner.md",
+      "suggested_family": "people_bochengyin_drafts_eval_run_manifest_should_precede_auto_runner",
+      "registered_family": null,
+      "readiness": {
+        "status": "candidate",
+        "present": [
+          "replayable_memory_evidence",
+          "source_incident",
+          "concrete_memory_doc"
+        ],
+        "missing": [
+          "baseline_ref",
+          "prompt",
+          "rubric"
+        ]
+      },
+      "evidence": {
+        "reason": "direct retry or wrong-path avoidance signal; candidate for formal replay if a concrete source incident exists",
+        "trial_error_effects": {
+          "avoided_retry": 4,
+          "changed_plan": 8,
+          "faster_resolution": 6
+        },
+        "trial_error_signal_count": 18,
+        "resolved_events": 20,
+        "total_events": 20,
+        "tasks": [
+          "add-a-rubric-judge-scoring-policy-to-the-autonomous-impact-eval-runner-so-eval-i",
+          "answer-whether-the-current-ai-wiki-toolkit-can-be-downloaded-installed-and-used",
+          "build-a-continuous-impact-eval-loop-automatically-discover-new-eval-families-fro",
+          "clarify-roadmap-for-continuous-automatic-discovery-of-new-impact-eval-families-a",
+          "clarify-whether-eval-impact-users-need-a-family-discovery-command-before-they-ca",
+          "clarify-whether-users-must-run-plan-prepare-run-report-separately-or-whether-the",
+          "complete-eval-impact-automation-lifecycle-by-adding-capture-validate-and-score-c",
+          "continue-eval-productization-after-adding-eval-impact-manifest-implement-the-nex",
+          "decide-next-step-after-implementing-eval-impact-plan-prepare-manifest-report-sum",
+          "decide-the-next-implementation-step-after-adding-eval-impact-manifest-and-eval-i",
+          "design-the-eval-impact-family-discovery-step-including-how-it-should-identify-tr",
+          "explain-the-discovered-continuous-impact-eval-candidates-their-underlying-proble",
+          "explain-with-examples-which-parts-of-eval-impact-workflow-are-currently-automate",
+          "identify-what-the-current-project-still-needs-to-implement-eval-impact-family-di",
+          "implement-eval-impact-family-discovery-trial-error-candidate-discovery-family-le",
+          "implement-eval-impact-prepare-command-after-eval-impact-plan-create-workspaces-a",
+          "implement-the-three-step-autonomous-impact-eval-runner-v0-single-slot-run-v1-all",
+          "project-a-eval-report-diagnostics",
+          "project-a-harness-rubric-backfill-diagnostic-rerun-2026-06-03",
+          "push-the-continuous-impact-eval-loop-changes-reinstall-the-local-aiwiki-toolkit"
+        ],
+        "source_task_ids": [],
+        "source_session_ids": [
+          "019e479b-30c3-7933-a75b-ead48796f977"
+        ],
+        "source_incident_timing": {
+          "active_seconds": 550,
+          "active_minutes": 9.17,
+          "evidence_count": 1,
+          "event_count": 1,
+          "sources": [
+            {
+              "active_seconds": 550,
+              "duration_ms": 550248,
+              "timing_label": "source active-turn estimate",
+              "timing_source": "codex_writeback_footer",
+              "source_session_id": "019e479b-30c3-7933-a75b-ead48796f977",
+              "included_events": [
+                "task_complete",
+                "turn_aborted"
+              ],
+              "note": "Backfilled from the first AI Wiki Write-Back Path footer; counts active turns from the current user task start through the first write-back turn.",
+              "policy": "first_writeback_user_task_inclusive",
+              "session_file": "rollout-2026-05-21T08-56-53-019e479b-30c3-7933-a75b-ead48796f977.jsonl",
+              "session_relpath": "2026/05/21/rollout-2026-05-21T08-56-53-019e479b-30c3-7933-a75b-ead48796f977.jsonl",
+              "source_kind": "writeback_backfill",
+              "source_task_start_timestamp": "2026-05-20T23:45:06.689Z",
+              "task_complete_count": 1,
+              "turn_aborted_count": 0,
+              "cutoff_timestamp": "2026-05-20T23:54:16.930Z",
+              "cutoff_turn_id": "019e47c7-566a-7760-9f45-ccae30df96ff",
+              "evidence_key": "019e479b-30c3-7933-a75b-ead48796f977::-",
+              "event_ids": [
+                "srcinc_668b04455ce1"
+              ]
+            }
+          ],
+          "status": "measured"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "people_bochengyin_drafts_eval_run_manifest_should_precede_auto_runner",
+          "--from-candidate",
+          "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "<family>"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "people_bochengyin_drafts_eval_run_manifest_should_precede_auto_runner",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "people_bochengyin_drafts_eval_run_manifest_should_precede_auto_runner"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "people_bochengyin_drafts_efficiency_eval_should_include_source_incident_cost": {
+      "candidate_id": "people_bochengyin_drafts_efficiency_eval_should_include_source_incident_cost",
+      "status": "candidate",
+      "first_seen_at": "2026-05-23T22:52:17+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 28,
+      "doc_id": "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+      "task_id": null,
+      "title": "Efficiency eval should include source incident cost",
+      "path": "ai-wiki/people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost.md",
+      "suggested_family": "people_bochengyin_drafts_efficiency_eval_should_include_source_incident_cost",
+      "registered_family": null,
+      "readiness": {
+        "status": "candidate",
+        "present": [
+          "replayable_memory_evidence",
+          "source_incident",
+          "concrete_memory_doc"
+        ],
+        "missing": [
+          "baseline_ref",
+          "prompt",
+          "rubric"
+        ]
+      },
+      "evidence": {
+        "reason": "direct retry or wrong-path avoidance signal; candidate for formal replay if a concrete source incident exists",
+        "trial_error_effects": {
+          "avoided_retry": 2,
+          "changed_plan": 5,
+          "faster_resolution": 1
+        },
+        "trial_error_signal_count": 8,
+        "resolved_events": 29,
+        "total_events": 33,
+        "tasks": [
+          "add-family-frequency-assumptions-to-fermi-estimate-20260426",
+          "add-fermi-extrapolation-to-public-eval-20260426",
+          "add-project-specific-fermi-caveats-20260426",
+          "add-rework-adjusted-active-time-delta-20260426",
+          "add-source-active-turn-efficiency-table-20260426",
+          "adjust-fermi-estimate-for-aiwiki-install-time-and-side-project-hours-20260426",
+          "ai-wiki-toolkit-metrics-think-hard",
+          "assess-other-aiwiki-reuse-saved-time-candidates-20260426",
+          "clarify-efficiency-delta-source-vs-ambient-20260426",
+          "clarify-efficiency-source-cost-20260426",
+          "clarify-trial-and-error-reduction-evidence-scope",
+          "clarify-why-source-session-ids-were-not-saved-when-writing-ai-wiki-memory-and-in",
+          "decide-trial-error-reduction-tool-next-step",
+          "eval-as-product-mvp-report-command",
+          "explain-17-saved-mins-per-active-hour-20260426",
+          "explain-the-discovered-continuous-impact-eval-candidates-their-underlying-proble",
+          "explain-why-historical-local-codex-sessions-are-not-enough-to-safely-infer-sourc",
+          "fermi-estimate-monthly-aiwiki-savings-20260426",
+          "fix-family-level-impact-attribution-2026-05-18",
+          "implement-route-trace-telemetry-and-diagnostics-metrics",
+          "implement-source-incident-trial-error-timing-extraction-for-impact-eval-candidat",
+          "implement-trial-error-focus-for-memory-diagnostics",
+          "implement-write-back-provenance-backfill-for-source-incident-timing-find-first-a",
+          "include-interrupted-fail-time-in-efficiency-table-20260426",
+          "memory-compile-benefit-question",
+          "normalize-fermi-extrapolation-to-weekly-units-20260426",
+          "readme-public-evidence-refresh",
+          "recalc-medium-repo-extended-team-six-savings-20260426",
+          "referenced-file-saved-time-attribution-2026-05-18",
+          "rename-saved-time-metric-20260426",
+          "run-postinstall-archive-staging-eval-2026-04-30",
+          "update-fermi-family-frequencies-20260426",
+          "weekly-report-impact-efficiency-missing-estimated-saved-20260517"
+        ],
+        "source_task_ids": [],
+        "source_session_ids": [
+          "019dc22e-6afb-7723-a0fa-b323333ee990"
+        ],
+        "source_incident_timing": {
+          "active_seconds": 129,
+          "active_minutes": 2.15,
+          "evidence_count": 1,
+          "event_count": 1,
+          "sources": [
+            {
+              "active_seconds": 129,
+              "duration_ms": 128727,
+              "timing_label": "source active-turn estimate",
+              "timing_source": "codex_writeback_footer",
+              "source_session_id": "019dc22e-6afb-7723-a0fa-b323333ee990",
+              "included_events": [
+                "task_complete",
+                "turn_aborted"
+              ],
+              "note": "Backfilled from the first AI Wiki Write-Back Path footer; counts active turns from the current user task start through the first write-back turn.",
+              "policy": "first_writeback_user_task_inclusive",
+              "session_file": "rollout-2026-04-25T11-08-35-019dc22e-6afb-7723-a0fa-b323333ee990.jsonl",
+              "session_relpath": "2026/04/25/rollout-2026-04-25T11-08-35-019dc22e-6afb-7723-a0fa-b323333ee990.jsonl",
+              "source_kind": "writeback_backfill",
+              "source_task_start_timestamp": "2026-04-26T01:28:42.868Z",
+              "task_complete_count": 1,
+              "turn_aborted_count": 0,
+              "cutoff_timestamp": "2026-04-26T01:30:02.041Z",
+              "cutoff_turn_id": "019dc766-72e1-7071-8f5c-2d90ed1c6618",
+              "evidence_key": "019dc22e-6afb-7723-a0fa-b323333ee990::-",
+              "event_ids": [
+                "srcinc_18493eeb44bb"
+              ]
+            }
+          ],
+          "status": "measured"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "people_bochengyin_drafts_efficiency_eval_should_include_source_incident_cost",
+          "--from-candidate",
+          "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "<family>"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "people_bochengyin_drafts_efficiency_eval_should_include_source_incident_cost",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "people_bochengyin_drafts_efficiency_eval_should_include_source_incident_cost"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "decisions": {
+      "candidate_id": "decisions",
+      "status": "observed",
+      "first_seen_at": "2026-05-23T22:52:17+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 28,
+      "doc_id": "decisions",
+      "task_id": null,
+      "title": "Project Decisions",
+      "path": "ai-wiki/decisions.md",
+      "suggested_family": "decisions",
+      "registered_family": null,
+      "readiness": {
+        "status": "not_ready",
+        "present": [
+          "replayable_memory_evidence",
+          "source_incident"
+        ],
+        "missing": [
+          "concrete_memory_doc",
+          "baseline_ref",
+          "prompt",
+          "rubric"
+        ]
+      },
+      "evidence": {
+        "reason": "direct retry or wrong-path avoidance signal; candidate for formal replay if a concrete source incident exists",
+        "trial_error_effects": {
+          "blocked_wrong_path": 1,
+          "changed_plan": 5,
+          "faster_resolution": 4
+        },
+        "trial_error_signal_count": 10,
+        "resolved_events": 32,
+        "total_events": 65,
+        "tasks": [
+          "2026-04-20-consolidate-memory-brainstorm",
+          "2026-04-20-team-coding-memory-scaffolds",
+          "2026-04-21-product-direction-review",
+          "2026-04-25-six-slot-impact-eval-protocol",
+          "ai-wiki-toolkit-claude-md-prompt-ai-wiki-gate-npm",
+          "ai-wiki-toolkit-package-post-turn-hook",
+          "ai-wiki-toolkit-project-showcase-live-workshop-ppt-tech-stack-project-demo",
+          "aiwiki-toolkit-improvement-opportunities-2026-05-27",
+          "aiwiki-toolkit-install-aiwiki-toolkit-unit",
+          "check-local-latest-version",
+          "clarify-repo-evaluation-prompt-questions-2026-06-01",
+          "claude-md-local-aiwiki-gate-prompt",
+          "could-you-please-use-the-route-and-some-other-features-to-evaluate-whether-this",
+          "decide-if-release-is-ready-after-pr15",
+          "decide-next-step-after-pr13-and-pr14",
+          "discuss-empty-constraints-decisions-starter-20260425",
+          "document-impact-eval-round1-2026-04-24",
+          "evaluate-ai-wiki-toolkit-usefulness",
+          "evaluate-renaming-aiwiki-toolkit-install-to-aiwiki-toolkit-unit",
+          "fermi-estimate-monthly-aiwiki-savings-20260426",
+          "find-codex-chat-window-2026-05-17",
+          "fix-windows-release-support",
+          "framework-framing-agent-advice-2026-04-27",
+          "generate-hyperpersonalized-codex-suggestions-20260515",
+          "generate-hyperpersonalized-codex-suggestions-20260517",
+          "how-could-i-evaluate-this-ai-wiki-toolkit-is-useful-generate-a-picture-talking-a",
+          "hyperpersonalized-codex-suggestions-20260510",
+          "impact-eval-cli-first-flow-2026-04-25",
+          "impact-eval-next-family-recommendation-20260423",
+          "impact-eval-release-distribution-integrity-results-20260424-182219",
+          "impact-eval-workflow-primary-v2-20260425",
+          "implement-opencode-runtime-skill-exposure-fallback-in-aiwiki-toolkit",
+          "implement-post-turn-source-incident-capture-for-ai-wiki-write-back-after-a-codex",
+          "implement-source-incident-trial-error-timing-extraction-for-impact-eval-candidat",
+          "install-missing-git-identity-prompt",
+          "local-experiment-analysis-2026-04-24",
+          "mark-context-routing-v2-done",
+          "move-managed-routing-to-toolkit-system-doc-pr",
+          "patch-and-merge-pr14-draft-metadata",
+          "personalized-codex-suggestions-2026-05-10",
+          "personalized-suggestions-2026-05-14",
+          "post-turn-hook-install-post-turn-capture-doctor-hook",
+          "prepare-release-pr-v0-1-11",
+          "presentation-project-showcase-live-workshop-tech-insights-tech-stack-project-dem",
+          "promote-user-owned-index-boundary-into-shared-memory",
+          "prompt-vs-aiwiki-dogfood-2026-05-27",
+          "push-current-changes-and-release-npm-0-1-28",
+          "push-current-local-changes-by-creating-a-new-branch-and-merging-it",
+          "push-personal-ai-wiki-design-drafts",
+          "release-0.1.12-pr-2026-04-21",
+          "release-0.1.31",
+          "repo-next-step",
+          "research-andrej-karpathy-skills-aiwikitoolkit-2026-05-02",
+          "route-ai-file-refer",
+          "route-context-packet-mvp-implementation-2026-04-27",
+          "session-ai-wiki-load-load-index-constraints-decisions-workflows",
+          "standardize-impact-eval-first-round-layout-20260424",
+          "task-add-impact-family-todo-list",
+          "task-rebuild-impact-benchmark-baseline",
+          "task-toolkit-product-stability-suite",
+          "upgrade-package-managed-workflow-maintenance",
+          "what-files-you-will-initially-loaded-automatically-when-we-start-a-new-chat-i-kn",
+          "would-you-load-memory-md",
+          "x-article-agent-framework-aiwiki-2026-04-27"
+        ],
+        "source_task_ids": [],
+        "source_session_ids": [],
+        "source_incident_timing": {
+          "active_seconds": 0,
+          "active_minutes": 0.0,
+          "evidence_count": 0,
+          "event_count": 0,
+          "sources": [],
+          "status": "not_recorded"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "decisions",
+          "--from-candidate",
+          "decisions",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "<family>"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "decisions",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "decisions"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "people_bochengyin_drafts_eval_product_run_requests_need_family_scope_check": {
+      "candidate_id": "people_bochengyin_drafts_eval_product_run_requests_need_family_scope_check",
+      "status": "candidate",
+      "first_seen_at": "2026-05-23T22:52:17+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 28,
+      "doc_id": "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+      "task_id": null,
+      "title": "Eval product run requests need evidence scope check",
+      "path": "ai-wiki/people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check.md",
+      "suggested_family": "people_bochengyin_drafts_eval_product_run_requests_need_family_scope_check",
+      "registered_family": null,
+      "readiness": {
+        "status": "candidate",
+        "present": [
+          "replayable_memory_evidence",
+          "source_incident",
+          "concrete_memory_doc"
+        ],
+        "missing": [
+          "baseline_ref",
+          "prompt",
+          "rubric"
+        ]
+      },
+      "evidence": {
+        "reason": "direct retry or wrong-path avoidance signal; candidate for formal replay if a concrete source incident exists",
+        "trial_error_effects": {
+          "avoided_retry": 4,
+          "changed_plan": 5,
+          "faster_resolution": 1
+        },
+        "trial_error_signal_count": 10,
+        "resolved_events": 16,
+        "total_events": 23,
+        "tasks": [
+          "build-a-continuous-impact-eval-loop-automatically-discover-new-eval-families-fro",
+          "clarify-roadmap-for-continuous-automatic-discovery-of-new-impact-eval-families-a",
+          "clarify-trial-and-error-reduction-evidence-scope",
+          "clarify-whether-eval-impact-users-need-a-family-discovery-command-before-they-ca",
+          "commit-and-review-next-eval-product-todo-2026-04-30",
+          "complete-eval-impact-automation-lifecycle-by-adding-capture-validate-and-score-c",
+          "continue-postinstall-eval-quality-automation-2026-04-30",
+          "decide-next-step-after-postinstall-change-profile-2026-04-30",
+          "decide-the-next-implementation-step-after-adding-eval-impact-manifest-and-eval-i",
+          "design-the-eval-impact-family-discovery-step-including-how-it-should-identify-tr",
+          "explain-the-discovered-continuous-impact-eval-candidates-their-underlying-proble",
+          "identify-what-the-current-project-still-needs-to-implement-eval-impact-family-di",
+          "implement-cross-run-impact-summary-2026-04-30",
+          "implement-eval-impact-family-discovery-trial-error-candidate-discovery-family-le",
+          "implement-source-incident-trial-error-timing-extraction-for-impact-eval-candidat",
+          "implement-the-next-eval-productization-slice-after-eval-impact-report-add-lightw",
+          "implement-the-three-step-autonomous-impact-eval-runner-v0-single-slot-run-v1-all",
+          "implement-trial-error-focus-for-memory-diagnostics",
+          "project-a-eval-report-diagnostics",
+          "project-a-harness-rubric-backfill-diagnostic-rerun-2026-06-03",
+          "review-impact-eval-todo-next-step-2026-04-30",
+          "run-aiwiki-evidence-integrity-family-2026-05-01",
+          "run-postinstall-archive-staging-eval-2026-04-30"
+        ],
+        "source_task_ids": [],
+        "source_session_ids": [
+          "019dd942-fcfa-7a81-91b5-f240fdec56b4"
+        ],
+        "source_incident_timing": {
+          "active_seconds": 86,
+          "active_minutes": 1.43,
+          "evidence_count": 1,
+          "event_count": 1,
+          "sources": [
+            {
+              "active_seconds": 86,
+              "duration_ms": 86365,
+              "timing_label": "source active-turn estimate",
+              "timing_source": "codex_writeback_footer",
+              "source_session_id": "019dd942-fcfa-7a81-91b5-f240fdec56b4",
+              "included_events": [
+                "task_complete",
+                "turn_aborted"
+              ],
+              "note": "Backfilled from the first AI Wiki Write-Back Path footer; counts active turns from the current user task start through the first write-back turn.",
+              "policy": "first_writeback_user_task_inclusive",
+              "session_file": "rollout-2026-04-29T22-42-19-019dd942-fcfa-7a81-91b5-f240fdec56b4.jsonl",
+              "session_relpath": "2026/04/29/rollout-2026-04-29T22-42-19-019dd942-fcfa-7a81-91b5-f240fdec56b4.jsonl",
+              "source_kind": "writeback_backfill",
+              "source_task_start_timestamp": "2026-04-29T13:02:45.998Z",
+              "task_complete_count": 1,
+              "turn_aborted_count": 0,
+              "cutoff_timestamp": "2026-04-29T13:04:12.359Z",
+              "cutoff_turn_id": "019dd955-b4eb-75c0-991b-3271c9849d27",
+              "evidence_key": "019dd942-fcfa-7a81-91b5-f240fdec56b4::-",
+              "event_ids": [
+                "srcinc_7fdd41dfa2fe"
+              ]
+            }
+          ],
+          "status": "measured"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "people_bochengyin_drafts_eval_product_run_requests_need_family_scope_check",
+          "--from-candidate",
+          "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "<family>"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "people_bochengyin_drafts_eval_product_run_requests_need_family_scope_check",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "people_bochengyin_drafts_eval_product_run_requests_need_family_scope_check"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "people_bochengyin_drafts_repo_local_contributor_workflows_should_stay_out_of_the_package_layer": {
+      "candidate_id": "people_bochengyin_drafts_repo_local_contributor_workflows_should_stay_out_of_the_package_layer",
+      "status": "promoted",
+      "first_seen_at": "2026-05-23T22:52:17+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 21,
+      "doc_id": "people/bochengyin/drafts/repo-local-contributor-workflows-should-stay-out-of-the-package-layer",
+      "task_id": null,
+      "title": "Repo-local contributor workflows should stay out of the package layer",
+      "path": "ai-wiki/people/bochengyin/drafts/repo-local-contributor-workflows-should-stay-out-of-the-package-layer.md",
+      "suggested_family": "people_bochengyin_drafts_repo_local_contributor_workflows_should_stay_out_of_the_package_layer",
+      "registered_family": "ownership_boundary",
+      "readiness": {
+        "status": "runnable",
+        "present": [
+          "replayable_memory_evidence",
+          "source_incident",
+          "concrete_memory_doc",
+          "baseline_ref",
+          "prompt",
+          "rubric_or_manual_scoring"
+        ],
+        "missing": []
+      },
+      "evidence": {
+        "reason": "direct retry or wrong-path avoidance signal; candidate for formal replay if a concrete source incident exists",
+        "trial_error_effects": {
+          "avoided_retry": 4,
+          "faster_resolution": 1
+        },
+        "trial_error_signal_count": 5,
+        "resolved_events": 13,
+        "total_events": 17,
+        "tasks": [
+          "analyze-boundary-release-original-evals",
+          "find-five-prompt-efficiency-metrics-20260426",
+          "generate-hyperpersonalized-codex-suggestions-20260515",
+          "local-aiwiki-identity-feature",
+          "move-local-main-commit-to-a-feature-branch-and-open-pr-after-protected-main-push",
+          "personalized-codex-suggestions-2026-05-10",
+          "push-current-changes-and-release-npm-0-1-28",
+          "push-current-local-changes-by-creating-a-new-branch-and-merging-it",
+          "repo-next-step",
+          "research-andrej-karpathy-skills-aiwikitoolkit-2026-05-02",
+          "task-define-four-group-consolidate-benchmark",
+          "task-explain-consolidated-doc-provenance-vs-pr-workflow",
+          "task-identify-concrete-history-based-benchmark",
+          "task-identify-repeated-draft-clusters-for-consolidate-benchmark",
+          "task-rebuild-impact-benchmark-baseline",
+          "task-rewrite-impact-pr-flow-prompts",
+          "task-rewrite-impact-prompts-to-real-wiki-update"
+        ],
+        "source_task_ids": [],
+        "source_session_ids": [],
+        "source_incident_timing": {
+          "active_seconds": 0,
+          "active_minutes": 0.0,
+          "evidence_count": 0,
+          "event_count": 0,
+          "sources": [],
+          "status": "not_recorded"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "people_bochengyin_drafts_repo_local_contributor_workflows_should_stay_out_of_the_package_layer",
+          "--from-candidate",
+          "people/bochengyin/drafts/repo-local-contributor-workflows-should-stay-out-of-the-package-layer",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "ownership_boundary"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "people_bochengyin_drafts_repo_local_contributor_workflows_should_stay_out_of_the_package_layer",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "people_bochengyin_drafts_repo_local_contributor_workflows_should_stay_out_of_the_package_layer"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "people_bochengyin_drafts_manual_impact_evals_need_visible_session_export_and_first_pass_cutoff": {
+      "candidate_id": "people_bochengyin_drafts_manual_impact_evals_need_visible_session_export_and_first_pass_cutoff",
+      "status": "candidate",
+      "first_seen_at": "2026-05-24T12:42:59+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 21,
+      "doc_id": "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+      "task_id": null,
+      "title": "Manual impact evals need visible session export and first-pass cutoff",
+      "path": "ai-wiki/people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff.md",
+      "suggested_family": "people_bochengyin_drafts_manual_impact_evals_need_visible_session_export_and_first_pass_cutoff",
+      "registered_family": null,
+      "readiness": {
+        "status": "candidate",
+        "present": [
+          "replayable_memory_evidence",
+          "source_incident",
+          "concrete_memory_doc"
+        ],
+        "missing": [
+          "baseline_ref",
+          "prompt",
+          "rubric"
+        ]
+      },
+      "evidence": {
+        "reason": "direct retry or wrong-path avoidance signal; candidate for formal replay if a concrete source incident exists",
+        "trial_error_effects": {
+          "avoided_retry": 3,
+          "changed_plan": 10
+        },
+        "trial_error_signal_count": 13,
+        "resolved_events": 16,
+        "total_events": 23,
+        "tasks": [
+          "add-a-rubric-judge-scoring-policy-to-the-autonomous-impact-eval-runner-so-eval-i",
+          "assess-other-aiwiki-reuse-saved-time-candidates-20260426",
+          "build-a-continuous-impact-eval-loop-automatically-discover-new-eval-families-fro",
+          "complete-eval-impact-automation-lifecycle-by-adding-capture-validate-and-score-c",
+          "computer-use-smoke-s01-original",
+          "continue-eval-productization-after-adding-eval-impact-manifest-implement-the-nex",
+          "continue-postinstall-eval-quality-automation-2026-04-30",
+          "decide-the-next-implementation-step-after-adding-eval-impact-manifest-and-eval-i",
+          "eval-as-product-mvp-report-command",
+          "find-deferred-codex-session-export-20260425",
+          "impact-eval-cli-first-flow-2026-04-25",
+          "impact-eval-workflow-primary-v2-20260425",
+          "implement-cross-run-impact-summary-2026-04-30",
+          "implement-source-incident-trial-error-timing-extraction-for-impact-eval-candidat",
+          "implement-the-three-step-autonomous-impact-eval-runner-v0-single-slot-run-v1-all",
+          "implement-write-back-provenance-backfill-for-source-incident-timing-find-first-a",
+          "project-a-coding-agent-eval-harness",
+          "project-a-eval-report-diagnostics",
+          "project-d-agent-failure-postmortem-pack",
+          "review-eval-as-product-mvp-implementation",
+          "review-impact-eval-todo-next-step-2026-04-30",
+          "run-aiwiki-evidence-integrity-family-2026-05-01",
+          "run-eval-as-product-mvp-in-the-local-repo"
+        ],
+        "source_task_ids": [],
+        "source_session_ids": [],
+        "source_incident_timing": {
+          "active_seconds": 0,
+          "active_minutes": 0.0,
+          "evidence_count": 0,
+          "event_count": 0,
+          "sources": [],
+          "status": "not_recorded"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "people_bochengyin_drafts_manual_impact_evals_need_visible_session_export_and_first_pass_cutoff",
+          "--from-candidate",
+          "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "<family>"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "people_bochengyin_drafts_manual_impact_evals_need_visible_session_export_and_first_pass_cutoff",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "people_bochengyin_drafts_manual_impact_evals_need_visible_session_export_and_first_pass_cutoff"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "people_bochengyin_drafts_local_dogfooding_should_check_source_cli_vs_installed_entrypoint": {
+      "candidate_id": "people_bochengyin_drafts_local_dogfooding_should_check_source_cli_vs_installed_entrypoint",
+      "status": "candidate",
+      "first_seen_at": "2026-05-24T12:42:59+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 20,
+      "doc_id": "people/bochengyin/drafts/local-dogfooding-should-check-source-cli-vs-installed-entrypoint",
+      "task_id": null,
+      "title": "Local dogfooding should check source CLI vs installed entrypoint",
+      "path": "ai-wiki/people/bochengyin/drafts/local-dogfooding-should-check-source-cli-vs-installed-entrypoint.md",
+      "suggested_family": "people_bochengyin_drafts_local_dogfooding_should_check_source_cli_vs_installed_entrypoint",
+      "registered_family": null,
+      "readiness": {
+        "status": "candidate",
+        "present": [
+          "replayable_memory_evidence",
+          "source_incident",
+          "concrete_memory_doc"
+        ],
+        "missing": [
+          "baseline_ref",
+          "prompt",
+          "rubric"
+        ]
+      },
+      "evidence": {
+        "reason": "direct retry or wrong-path avoidance signal; candidate for formal replay if a concrete source incident exists",
+        "trial_error_effects": {
+          "avoided_retry": 3,
+          "blocked_wrong_path": 1,
+          "changed_plan": 1
+        },
+        "trial_error_signal_count": 5,
+        "resolved_events": 7,
+        "total_events": 10,
+        "tasks": [
+          "answer-whether-the-current-ai-wiki-toolkit-can-be-downloaded-installed-and-used",
+          "check-local-latest-version",
+          "explain-the-discovered-continuous-impact-eval-candidates-their-underlying-proble",
+          "find-codex-chat-window-2026-05-17",
+          "generate-hyperpersonalized-codex-suggestions-20260517",
+          "implement-repo-evaluation-command-2026-06-01",
+          "merge-local-artifacts-pr-68",
+          "merge-the-source-incident-timing-feature-into-the-repo-release-the-npm-package-u",
+          "repo-cleanup-local-state",
+          "route-evaluate-metrics-miss-miss-metrics"
+        ],
+        "source_task_ids": [],
+        "source_session_ids": [
+          "019e311b-dcca-7072-bda4-45ec5898178a"
+        ],
+        "source_incident_timing": {
+          "active_seconds": 252,
+          "active_minutes": 4.2,
+          "evidence_count": 1,
+          "event_count": 1,
+          "sources": [
+            {
+              "active_seconds": 252,
+              "duration_ms": 251718,
+              "timing_label": "source active-turn estimate",
+              "timing_source": "codex_writeback_footer",
+              "source_session_id": "019e311b-dcca-7072-bda4-45ec5898178a",
+              "included_events": [
+                "task_complete",
+                "turn_aborted"
+              ],
+              "note": "Backfilled from the first AI Wiki Write-Back Path footer; counts active turns from the current user task start through the first write-back turn.",
+              "policy": "first_writeback_user_task_inclusive",
+              "session_file": "rollout-2026-05-17T00-06-10-019e311b-dcca-7072-bda4-45ec5898178a.jsonl",
+              "session_relpath": "2026/05/17/rollout-2026-05-17T00-06-10-019e311b-dcca-7072-bda4-45ec5898178a.jsonl",
+              "source_kind": "writeback_backfill",
+              "source_task_start_timestamp": "2026-05-16T14:07:09.561Z",
+              "task_complete_count": 1,
+              "turn_aborted_count": 0,
+              "cutoff_timestamp": "2026-05-16T14:11:21.237Z",
+              "cutoff_turn_id": "019e311c-c4d0-7682-b2b0-b47d77b86232",
+              "evidence_key": "019e311b-dcca-7072-bda4-45ec5898178a::-",
+              "event_ids": [
+                "srcinc_97fb6e88633f"
+              ]
+            }
+          ],
+          "status": "measured"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "people_bochengyin_drafts_local_dogfooding_should_check_source_cli_vs_installed_entrypoint",
+          "--from-candidate",
+          "people/bochengyin/drafts/local-dogfooding-should-check-source-cli-vs-installed-entrypoint",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "<family>"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "people_bochengyin_drafts_local_dogfooding_should_check_source_cli_vs_installed_entrypoint",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "people_bochengyin_drafts_local_dogfooding_should_check_source_cli_vs_installed_entrypoint"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "people_bochengyin_drafts_workflow_primary_impact_evals_compare_working_modes": {
+      "candidate_id": "people_bochengyin_drafts_workflow_primary_impact_evals_compare_working_modes",
+      "status": "candidate",
+      "first_seen_at": "2026-05-24T12:42:59+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 14,
+      "doc_id": "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes",
+      "task_id": null,
+      "title": "Workflow-primary impact evals compare working modes",
+      "path": "ai-wiki/people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes.md",
+      "suggested_family": "people_bochengyin_drafts_workflow_primary_impact_evals_compare_working_modes",
+      "registered_family": null,
+      "readiness": {
+        "status": "candidate",
+        "present": [
+          "replayable_memory_evidence",
+          "source_incident",
+          "concrete_memory_doc"
+        ],
+        "missing": [
+          "baseline_ref",
+          "prompt",
+          "rubric"
+        ]
+      },
+      "evidence": {
+        "reason": "direct retry or wrong-path avoidance signal; candidate for formal replay if a concrete source incident exists",
+        "trial_error_effects": {
+          "avoided_retry": 2,
+          "changed_plan": 9,
+          "faster_resolution": 5
+        },
+        "trial_error_signal_count": 16,
+        "resolved_events": 14,
+        "total_events": 22,
+        "tasks": [
+          "add-a-rubric-judge-scoring-policy-to-the-autonomous-impact-eval-runner-so-eval-i",
+          "ai-wiki-toolkit-metrics-think-hard",
+          "build-a-continuous-impact-eval-loop-automatically-discover-new-eval-families-fro",
+          "complete-eval-impact-automation-lifecycle-by-adding-capture-validate-and-score-c",
+          "continue-eval-productization-after-adding-eval-impact-manifest-implement-the-nex",
+          "continue-postinstall-eval-quality-automation-2026-04-30",
+          "design-the-eval-impact-family-discovery-step-including-how-it-should-identify-tr",
+          "eval-as-product-mvp-report-command",
+          "evaluate-another-agent-s-assessment-that-ai-wiki-toolkit-has-first-version-workf",
+          "explain-with-examples-which-parts-of-eval-impact-workflow-are-currently-automate",
+          "identify-the-next-product-todo-for-ai-wiki-toolkit",
+          "identify-what-the-current-project-still-needs-to-implement-eval-impact-family-di",
+          "impact-eval-cli-first-flow-2026-04-25",
+          "impact-eval-original-prompt-only-20260425",
+          "implement-cross-run-impact-summary-2026-04-30",
+          "implement-the-three-step-autonomous-impact-eval-runner-v0-single-slot-run-v1-all",
+          "memory-compile-benefit-question",
+          "review-eval-as-product-mvp-implementation",
+          "review-impact-eval-todo-next-step-2026-04-30",
+          "run-aiwiki-evidence-integrity-family-2026-05-01",
+          "run-eval-as-product-mvp-in-the-local-repo",
+          "scaffold-aiwiki-evidence-integrity-family-2026-05-01"
+        ],
+        "source_task_ids": [],
+        "source_session_ids": [],
+        "source_incident_timing": {
+          "active_seconds": 0,
+          "active_minutes": 0.0,
+          "evidence_count": 0,
+          "event_count": 0,
+          "sources": [],
+          "status": "not_recorded"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "people_bochengyin_drafts_workflow_primary_impact_evals_compare_working_modes",
+          "--from-candidate",
+          "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "<family>"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "people_bochengyin_drafts_workflow_primary_impact_evals_compare_working_modes",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "people_bochengyin_drafts_workflow_primary_impact_evals_compare_working_modes"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "people_bochengyin_drafts_eval_product_mvp_starts_with_first_attempt_artifact_report": {
+      "candidate_id": "people_bochengyin_drafts_eval_product_mvp_starts_with_first_attempt_artifact_report",
+      "status": "candidate",
+      "first_seen_at": "2026-05-24T12:42:59+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 14,
+      "doc_id": "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+      "task_id": null,
+      "title": "Eval product MVP starts with first-attempt artifact report",
+      "path": "ai-wiki/people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report.md",
+      "suggested_family": "people_bochengyin_drafts_eval_product_mvp_starts_with_first_attempt_artifact_report",
+      "registered_family": null,
+      "readiness": {
+        "status": "candidate",
+        "present": [
+          "replayable_memory_evidence",
+          "source_incident",
+          "concrete_memory_doc"
+        ],
+        "missing": [
+          "baseline_ref",
+          "prompt",
+          "rubric"
+        ]
+      },
+      "evidence": {
+        "reason": "direct retry or wrong-path avoidance signal; candidate for formal replay if a concrete source incident exists",
+        "trial_error_effects": {
+          "avoided_retry": 1,
+          "changed_plan": 7,
+          "faster_resolution": 7
+        },
+        "trial_error_signal_count": 15,
+        "resolved_events": 18,
+        "total_events": 23,
+        "tasks": [
+          "add-a-rubric-judge-scoring-policy-to-the-autonomous-impact-eval-runner-so-eval-i",
+          "ai-wiki-toolkit-agent-codebase",
+          "ai-wiki-toolkit-metrics-think-hard",
+          "answer-whether-the-current-ai-wiki-toolkit-can-be-downloaded-installed-and-used",
+          "clarify-whether-users-must-run-plan-prepare-run-report-separately-or-whether-the",
+          "code-post-release-local-validation-for-eval-as-product-mvp",
+          "commit-aiwiki-evidence-and-fix-report-runs-2026-05-01",
+          "complete-eval-impact-automation-lifecycle-by-adding-capture-validate-and-score-c",
+          "evaluate-ai-wiki-toolkit-usefulness",
+          "evaluate-another-agent-s-assessment-that-ai-wiki-toolkit-has-first-version-workf",
+          "implement-the-next-eval-productization-slice-after-eval-impact-report-add-lightw",
+          "implement-the-three-step-autonomous-impact-eval-runner-v0-single-slot-run-v1-all",
+          "merge-eval-as-product-mvp-and-release-npm",
+          "plan-post-release-local-run-for-eval-as-product-mvp",
+          "project-a-coding-agent-eval-harness",
+          "project-a-eval-report-diagnostics",
+          "project-a-harness-rubric-backfill-diagnostic-rerun-2026-06-03",
+          "project-d-agent-failure-postmortem-pack",
+          "readme-public-evidence-refresh",
+          "review-eval-as-product-mvp-implementation",
+          "route-evaluate-metrics-miss-miss-metrics",
+          "run-aiwiki-evidence-integrity-family-2026-05-01",
+          "run-eval-as-product-mvp-in-the-local-repo"
+        ],
+        "source_task_ids": [],
+        "source_session_ids": [
+          "019dd39a-bd8f-7f00-bece-43f985a84597"
+        ],
+        "source_incident_timing": {
+          "active_seconds": 878,
+          "active_minutes": 14.63,
+          "evidence_count": 1,
+          "event_count": 1,
+          "sources": [
+            {
+              "active_seconds": 878,
+              "duration_ms": 878261,
+              "timing_label": "source active-turn estimate",
+              "timing_source": "codex_writeback_footer",
+              "source_session_id": "019dd39a-bd8f-7f00-bece-43f985a84597",
+              "included_events": [
+                "task_complete",
+                "turn_aborted"
+              ],
+              "note": "Backfilled from the first AI Wiki Write-Back Path footer; counts active turns from the current user task start through the first write-back turn.",
+              "policy": "first_writeback_user_task_inclusive",
+              "session_file": "rollout-2026-04-28T20-20-26-019dd39a-bd8f-7f00-bece-43f985a84597.jsonl",
+              "session_relpath": "2026/04/28/rollout-2026-04-28T20-20-26-019dd39a-bd8f-7f00-bece-43f985a84597.jsonl",
+              "source_kind": "writeback_backfill",
+              "source_task_start_timestamp": "2026-04-29T11:34:19.102Z",
+              "task_complete_count": 1,
+              "turn_aborted_count": 0,
+              "cutoff_timestamp": "2026-04-29T11:48:57.361Z",
+              "cutoff_turn_id": "019dd904-bad9-7d90-956e-059043c6451a",
+              "evidence_key": "019dd39a-bd8f-7f00-bece-43f985a84597::-",
+              "event_ids": [
+                "srcinc_af7ebbc0d34c"
+              ]
+            }
+          ],
+          "status": "measured"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "people_bochengyin_drafts_eval_product_mvp_starts_with_first_attempt_artifact_report",
+          "--from-candidate",
+          "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "<family>"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "people_bochengyin_drafts_eval_product_mvp_starts_with_first_attempt_artifact_report",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "people_bochengyin_drafts_eval_product_mvp_starts_with_first_attempt_artifact_report"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "review_patterns_index": {
+      "candidate_id": "review_patterns_index",
+      "status": "observed",
+      "first_seen_at": "2026-05-24T12:42:59+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 14,
+      "doc_id": "review-patterns/index",
+      "task_id": null,
+      "title": "Review Patterns Index",
+      "path": "ai-wiki/review-patterns/index.md",
+      "suggested_family": "review_patterns_index",
+      "registered_family": null,
+      "readiness": {
+        "status": "not_ready",
+        "present": [
+          "replayable_memory_evidence",
+          "source_incident"
+        ],
+        "missing": [
+          "concrete_memory_doc",
+          "baseline_ref",
+          "prompt",
+          "rubric"
+        ]
+      },
+      "evidence": {
+        "reason": "direct retry or wrong-path avoidance signal; candidate for formal replay if a concrete source incident exists",
+        "trial_error_effects": {
+          "avoided_retry": 4,
+          "faster_resolution": 2
+        },
+        "trial_error_signal_count": 6,
+        "resolved_events": 2,
+        "total_events": 32,
+        "tasks": [
+          "2026-04-20-consolidate-memory-brainstorm",
+          "2026-04-20-team-coding-memory-scaffolds",
+          "2026-04-25-six-slot-impact-eval-protocol",
+          "add-linux-arm64-musl-and-win32-arm64-targets",
+          "add-windows-arm-smoke-release-workflow",
+          "brainstorm-user-owned-index-upgrade-surface",
+          "clarify-repo-evaluation-prompt-questions-2026-06-01",
+          "create-follow-up-prs-for-team-memory-upgrade",
+          "decide-if-release-is-ready-after-pr15",
+          "decide-next-step-after-pr13-and-pr14",
+          "document-impact-eval-round1-2026-04-24",
+          "fermi-estimate-monthly-aiwiki-savings-20260426",
+          "fix-release-platform-failures-2026-04-21",
+          "fix-windows-arm-smoke-version-check-2026-04-21",
+          "fix-windows-release-support",
+          "gitignore-telemetry-and-doctor-migration",
+          "impact-eval-cli-first-flow-2026-04-25",
+          "impact-eval-next-family-recommendation-20260423",
+          "impact-eval-release-distribution-integrity-results-20260424-182219",
+          "impact-eval-workflow-primary-v2-20260425",
+          "linkedin-post-feedback-2026-04-20",
+          "local-experiment-analysis-2026-04-24",
+          "move-managed-routing-to-toolkit-system-doc-pr",
+          "patch-and-merge-pr14-draft-metadata",
+          "prepare-release-pr-v0-1-11",
+          "push-personal-ai-wiki-design-drafts",
+          "release-0.1.12-pr-2026-04-21",
+          "release-0.1.13-2026-04-21",
+          "release-tag-and-skill-2026-04-21",
+          "standardize-impact-eval-first-round-layout-20260424",
+          "task-add-impact-family-todo-list",
+          "task-rebuild-impact-benchmark-baseline"
+        ],
+        "source_task_ids": [],
+        "source_session_ids": [],
+        "source_incident_timing": {
+          "active_seconds": 0,
+          "active_minutes": 0.0,
+          "evidence_count": 0,
+          "event_count": 0,
+          "sources": [],
+          "status": "not_recorded"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "review_patterns_index",
+          "--from-candidate",
+          "review-patterns/index",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "<family>"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "review_patterns_index",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "review_patterns_index"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "people_bochengyin_drafts_consolidation_should_layer_over_end_of_task_capture_and_avoid_shared_doc_churn": {
+      "candidate_id": "people_bochengyin_drafts_consolidation_should_layer_over_end_of_task_capture_and_avoid_shared_doc_churn",
+      "status": "candidate",
+      "first_seen_at": "2026-05-24T12:42:59+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 14,
+      "doc_id": "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+      "task_id": null,
+      "title": "Consolidation should layer over end-of-task capture and avoid shared doc churn",
+      "path": "ai-wiki/people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn.md",
+      "suggested_family": "people_bochengyin_drafts_consolidation_should_layer_over_end_of_task_capture_and_avoid_shared_doc_churn",
+      "registered_family": null,
+      "readiness": {
+        "status": "candidate",
+        "present": [
+          "replayable_memory_evidence",
+          "source_incident",
+          "concrete_memory_doc"
+        ],
+        "missing": [
+          "baseline_ref",
+          "prompt",
+          "rubric"
+        ]
+      },
+      "evidence": {
+        "reason": "direct retry or wrong-path avoidance signal; candidate for formal replay if a concrete source incident exists",
+        "trial_error_effects": {
+          "blocked_wrong_path": 1,
+          "changed_plan": 3
+        },
+        "trial_error_signal_count": 4,
+        "resolved_events": 15,
+        "total_events": 16,
+        "tasks": [
+          "2026-04-21-consolidate-drafts-and-promote-release-memory",
+          "2026-04-21-product-direction-review",
+          "aiwiki-toolkit-improvement-opportunities-2026-05-27",
+          "consolidation-review-queue-implementation-strategy",
+          "explain-the-discovered-continuous-impact-eval-candidates-their-underlying-proble",
+          "implement-consolidation-review-queue",
+          "karpathy-ai-wiki-toolkit",
+          "karpathy-html-markdown-ai-wiki-agent-memory-ai-wiki-toolkit-html",
+          "locate-unrun-eval-original-prompts-20260425",
+          "promote-draft-ai-wiki-people-bochengyin-index-md",
+          "prompt-vs-aiwiki-dogfood-2026-05-27",
+          "research-andrej-karpathy-skills-aiwikitoolkit-2026-05-02",
+          "task-add-impact-family-todo-list",
+          "task-identify-repeated-draft-clusters-for-consolidate-benchmark",
+          "task-propose-prompt-design-memory-and-result-capture",
+          "x-article-agent-framework-aiwiki-2026-04-27"
+        ],
+        "source_task_ids": [],
+        "source_session_ids": [
+          "019e42f4-1208-7213-9464-eebccd945521"
+        ],
+        "source_incident_timing": {
+          "active_seconds": 332,
+          "active_minutes": 5.53,
+          "evidence_count": 1,
+          "event_count": 1,
+          "sources": [
+            {
+              "active_seconds": 332,
+              "duration_ms": 332155,
+              "timing_label": "source active-turn estimate",
+              "timing_source": "codex_writeback_footer",
+              "source_session_id": "019e42f4-1208-7213-9464-eebccd945521",
+              "included_events": [
+                "task_complete",
+                "turn_aborted"
+              ],
+              "note": "Backfilled from the first AI Wiki Write-Back Path footer; counts active turns from the current user task start through the first write-back turn.",
+              "policy": "first_writeback_user_task_inclusive",
+              "session_file": "rollout-2026-05-20T11-15-52-019e42f4-1208-7213-9464-eebccd945521.jsonl",
+              "session_relpath": "2026/05/20/rollout-2026-05-20T11-15-52-019e42f4-1208-7213-9464-eebccd945521.jsonl",
+              "source_kind": "writeback_backfill",
+              "source_task_start_timestamp": "2026-05-20T01:17:26.619Z",
+              "task_complete_count": 1,
+              "turn_aborted_count": 0,
+              "cutoff_timestamp": "2026-05-20T01:22:58.761Z",
+              "cutoff_turn_id": "019e42f5-82c3-7eb1-bb09-a1c9104dfc2a",
+              "evidence_key": "019e42f4-1208-7213-9464-eebccd945521::-",
+              "event_ids": [
+                "srcinc_f36e0ba5ad6c"
+              ]
+            }
+          ],
+          "status": "measured"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "people_bochengyin_drafts_consolidation_should_layer_over_end_of_task_capture_and_avoid_shared_doc_churn",
+          "--from-candidate",
+          "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "<family>"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "people_bochengyin_drafts_consolidation_should_layer_over_end_of_task_capture_and_avoid_shared_doc_churn",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "people_bochengyin_drafts_consolidation_should_layer_over_end_of_task_capture_and_avoid_shared_doc_churn"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "people_bochengyin_drafts_memory_compilation_mvp_needs_eval_gated_benefit": {
+      "candidate_id": "people_bochengyin_drafts_memory_compilation_mvp_needs_eval_gated_benefit",
+      "status": "candidate",
+      "first_seen_at": "2026-05-24T12:42:59+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 20,
+      "doc_id": "people/bochengyin/drafts/memory-compilation-mvp-needs-eval-gated-benefit",
+      "task_id": null,
+      "title": "Memory compilation MVP needs eval-gated benefit",
+      "path": "ai-wiki/people/bochengyin/drafts/memory-compilation-mvp-needs-eval-gated-benefit.md",
+      "suggested_family": "people_bochengyin_drafts_memory_compilation_mvp_needs_eval_gated_benefit",
+      "registered_family": null,
+      "readiness": {
+        "status": "candidate",
+        "present": [
+          "replayable_memory_evidence",
+          "source_incident",
+          "concrete_memory_doc"
+        ],
+        "missing": [
+          "baseline_ref",
+          "prompt",
+          "rubric"
+        ]
+      },
+      "evidence": {
+        "reason": "direct retry or wrong-path avoidance signal; candidate for formal replay if a concrete source incident exists",
+        "trial_error_effects": {
+          "avoided_retry": 1,
+          "blocked_wrong_path": 1,
+          "changed_plan": 1,
+          "faster_resolution": 1
+        },
+        "trial_error_signal_count": 4,
+        "resolved_events": 6,
+        "total_events": 13,
+        "tasks": [
+          "aiwiki-toolkit-improvement-opportunities-2026-05-27",
+          "aiwikitoolkit-code",
+          "clarify-trial-and-error-reduction-evidence-scope",
+          "eval-as-product-mvp-report-command",
+          "explain-the-discovered-continuous-impact-eval-candidates-their-underlying-proble",
+          "feedback-diagnosis-implementation-strategy",
+          "identify-the-next-product-todo-for-ai-wiki-toolkit",
+          "implement-feedback-diagnosis-report",
+          "implement-route-success-criteria-2026-05-02",
+          "implementation-prompt-aiwiki-toolkit-evaluate-repo",
+          "research-andrej-karpathy-skills-aiwikitoolkit-2026-05-02",
+          "route-policy-optimization-auto-research-metrics",
+          "would-you-load-memory-md"
+        ],
+        "source_task_ids": [],
+        "source_session_ids": [
+          "019dce8e-194a-7401-9821-aaf197219fa4"
+        ],
+        "source_incident_timing": {
+          "active_seconds": 94,
+          "active_minutes": 1.57,
+          "evidence_count": 1,
+          "event_count": 1,
+          "sources": [
+            {
+              "active_seconds": 94,
+              "duration_ms": 93660,
+              "timing_label": "source active-turn estimate",
+              "timing_source": "codex_writeback_footer",
+              "source_session_id": "019dce8e-194a-7401-9821-aaf197219fa4",
+              "included_events": [
+                "task_complete",
+                "turn_aborted"
+              ],
+              "note": "Backfilled from the first AI Wiki Write-Back Path footer; counts active turns from the current user task start through the first write-back turn.",
+              "policy": "first_writeback_user_task_inclusive",
+              "session_file": "rollout-2026-04-27T20-48-32-019dce8e-194a-7401-9821-aaf197219fa4.jsonl",
+              "session_relpath": "2026/04/27/rollout-2026-04-27T20-48-32-019dce8e-194a-7401-9821-aaf197219fa4.jsonl",
+              "source_kind": "writeback_backfill",
+              "source_task_start_timestamp": "2026-04-27T13:02:31.518Z",
+              "task_complete_count": 1,
+              "turn_aborted_count": 0,
+              "cutoff_timestamp": "2026-04-27T13:04:05.176Z",
+              "cutoff_turn_id": "019dcf08-c45b-7831-9ec8-0c189eaa17e9",
+              "evidence_key": "019dce8e-194a-7401-9821-aaf197219fa4::-",
+              "event_ids": [
+                "srcinc_b3be5de45b9d"
+              ]
+            }
+          ],
+          "status": "measured"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "people_bochengyin_drafts_memory_compilation_mvp_needs_eval_gated_benefit",
+          "--from-candidate",
+          "people/bochengyin/drafts/memory-compilation-mvp-needs-eval-gated-benefit",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "<family>"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "people_bochengyin_drafts_memory_compilation_mvp_needs_eval_gated_benefit",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "people_bochengyin_drafts_memory_compilation_mvp_needs_eval_gated_benefit"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "people_bochengyin_drafts_npm_publish_recovery_needs_explicit_auth_mode_and_per_package_trusted_publisher": {
+      "candidate_id": "people_bochengyin_drafts_npm_publish_recovery_needs_explicit_auth_mode_and_per_package_trusted_publisher",
+      "status": "candidate",
+      "first_seen_at": "2026-05-24T12:42:59+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 14,
+      "doc_id": "people/bochengyin/drafts/npm-publish-recovery-needs-explicit-auth-mode-and-per-package-trusted-publisher",
+      "task_id": null,
+      "title": "people/bochengyin/drafts/npm-publish-recovery-needs-explicit-auth-mode-and-per-package-trusted-publisher",
+      "path": null,
+      "suggested_family": "people_bochengyin_drafts_npm_publish_recovery_needs_explicit_auth_mode_and_per_package_trusted_publisher",
+      "registered_family": null,
+      "readiness": {
+        "status": "candidate",
+        "present": [
+          "replayable_memory_evidence",
+          "source_incident",
+          "concrete_memory_doc"
+        ],
+        "missing": [
+          "baseline_ref",
+          "prompt",
+          "rubric"
+        ]
+      },
+      "evidence": {
+        "reason": "direct retry or wrong-path avoidance signal; candidate for formal replay if a concrete source incident exists",
+        "trial_error_effects": {
+          "avoided_retry": 2,
+          "faster_resolution": 3
+        },
+        "trial_error_signal_count": 5,
+        "resolved_events": 6,
+        "total_events": 7,
+        "tasks": [
+          "add-aiwiki-drafts-pr",
+          "confirm-root-trust-and-update-readme-enterprise-notes",
+          "delete-npm-publish-token-after-trusted-publish",
+          "explain-npm-trusted-publisher-setup",
+          "rerun-v0-1-22-npm-trusted-publish-after-trust-config",
+          "review-trust-log-and-corporate-npm-install-risk",
+          "run-v0-1-22-npm-publish-trusted-recovery"
+        ],
+        "source_task_ids": [],
+        "source_session_ids": [],
+        "source_incident_timing": {
+          "active_seconds": 0,
+          "active_minutes": 0.0,
+          "evidence_count": 0,
+          "event_count": 0,
+          "sources": [],
+          "status": "not_recorded"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "people_bochengyin_drafts_npm_publish_recovery_needs_explicit_auth_mode_and_per_package_trusted_publisher",
+          "--from-candidate",
+          "people/bochengyin/drafts/npm-publish-recovery-needs-explicit-auth-mode-and-per-package-trusted-publisher",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "<family>"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "people_bochengyin_drafts_npm_publish_recovery_needs_explicit_auth_mode_and_per_package_trusted_publisher",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "people_bochengyin_drafts_npm_publish_recovery_needs_explicit_auth_mode_and_per_package_trusted_publisher"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "people_bochengyin_drafts_introducing_new_npm_package_names_needs_a_bootstrap_publish_plan": {
+      "candidate_id": "people_bochengyin_drafts_introducing_new_npm_package_names_needs_a_bootstrap_publish_plan",
+      "status": "candidate",
+      "first_seen_at": "2026-05-24T12:42:59+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 14,
+      "doc_id": "people/bochengyin/drafts/introducing-new-npm-package-names-needs-a-bootstrap-publish-plan",
+      "task_id": null,
+      "title": "Introducing new npm package names needs a bootstrap publish plan",
+      "path": "ai-wiki/people/bochengyin/drafts/introducing-new-npm-package-names-needs-a-bootstrap-publish-plan.md",
+      "suggested_family": "people_bochengyin_drafts_introducing_new_npm_package_names_needs_a_bootstrap_publish_plan",
+      "registered_family": null,
+      "readiness": {
+        "status": "candidate",
+        "present": [
+          "replayable_memory_evidence",
+          "source_incident",
+          "concrete_memory_doc"
+        ],
+        "missing": [
+          "baseline_ref",
+          "prompt",
+          "rubric"
+        ]
+      },
+      "evidence": {
+        "reason": "direct retry or wrong-path avoidance signal; candidate for formal replay if a concrete source incident exists",
+        "trial_error_effects": {
+          "avoided_retry": 3,
+          "faster_resolution": 1
+        },
+        "trial_error_signal_count": 4,
+        "resolved_events": 0,
+        "total_events": 6,
+        "tasks": [
+          "confirm-root-trust-and-update-readme-enterprise-notes",
+          "explain-npm-trusted-publisher-setup",
+          "release-v0-1-22-install-and-test-route-context-packet",
+          "rerun-v0-1-22-npm-trusted-publish-after-trust-config",
+          "review-trust-log-and-corporate-npm-install-risk",
+          "run-v0-1-22-npm-publish-trusted-recovery"
+        ],
+        "source_task_ids": [],
+        "source_session_ids": [],
+        "source_incident_timing": {
+          "active_seconds": 0,
+          "active_minutes": 0.0,
+          "evidence_count": 0,
+          "event_count": 0,
+          "sources": [],
+          "status": "not_recorded"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "people_bochengyin_drafts_introducing_new_npm_package_names_needs_a_bootstrap_publish_plan",
+          "--from-candidate",
+          "people/bochengyin/drafts/introducing-new-npm-package-names-needs-a-bootstrap-publish-plan",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "<family>"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "people_bochengyin_drafts_introducing_new_npm_package_names_needs_a_bootstrap_publish_plan",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "people_bochengyin_drafts_introducing_new_npm_package_names_needs_a_bootstrap_publish_plan"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "people_bochengyin_drafts_impact_eval_prompts_should_backsolve_from_concrete_history": {
+      "candidate_id": "people_bochengyin_drafts_impact_eval_prompts_should_backsolve_from_concrete_history",
+      "status": "candidate",
+      "first_seen_at": "2026-05-24T12:42:59+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 14,
+      "doc_id": "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+      "task_id": null,
+      "title": "Impact eval prompts should backsolve from concrete history",
+      "path": "ai-wiki/people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history.md",
+      "suggested_family": "people_bochengyin_drafts_impact_eval_prompts_should_backsolve_from_concrete_history",
+      "registered_family": null,
+      "readiness": {
+        "status": "candidate",
+        "present": [
+          "replayable_memory_evidence",
+          "source_incident",
+          "concrete_memory_doc"
+        ],
+        "missing": [
+          "baseline_ref",
+          "prompt",
+          "rubric"
+        ]
+      },
+      "evidence": {
+        "reason": "direct retry or wrong-path avoidance signal; candidate for formal replay if a concrete source incident exists",
+        "trial_error_effects": {
+          "blocked_wrong_path": 1,
+          "changed_plan": 4,
+          "faster_resolution": 5
+        },
+        "trial_error_signal_count": 10,
+        "resolved_events": 9,
+        "total_events": 18,
+        "tasks": [
+          "ai-wiki-toolkit-metrics-think-hard",
+          "build-a-continuous-impact-eval-loop-automatically-discover-new-eval-families-fro",
+          "clarify-roadmap-for-continuous-automatic-discovery-of-new-impact-eval-families-a",
+          "eval-as-product-mvp-report-command",
+          "evaluate-another-agent-s-assessment-that-ai-wiki-toolkit-has-first-version-workf",
+          "explain-the-discovered-continuous-impact-eval-candidates-their-underlying-proble",
+          "find-new-eval-prompt-candidates-beyond-five-families",
+          "identify-the-next-product-todo-for-ai-wiki-toolkit",
+          "impact-eval-original-prompt-only-20260425",
+          "impact-eval-plan-release-distribution-integrity-20260423",
+          "impact-eval-workflow-primary-v2-20260425",
+          "implement-eval-impact-family-discovery-trial-error-candidate-discovery-family-le",
+          "implement-the-three-step-autonomous-impact-eval-runner-v0-single-slot-run-v1-all",
+          "run-postinstall-archive-staging-eval-2026-04-30",
+          "scaffold-aiwiki-evidence-integrity-family-2026-05-01",
+          "task-fix-save-result-untracked-capture",
+          "task-prompt-design-scope-layering",
+          "write-release-distribution-integrity-prompts-20260424"
+        ],
+        "source_task_ids": [],
+        "source_session_ids": [],
+        "source_incident_timing": {
+          "active_seconds": 0,
+          "active_minutes": 0.0,
+          "evidence_count": 0,
+          "event_count": 0,
+          "sources": [],
+          "status": "not_recorded"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "people_bochengyin_drafts_impact_eval_prompts_should_backsolve_from_concrete_history",
+          "--from-candidate",
+          "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "<family>"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "people_bochengyin_drafts_impact_eval_prompts_should_backsolve_from_concrete_history",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "people_bochengyin_drafts_impact_eval_prompts_should_backsolve_from_concrete_history"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "people_bochengyin_drafts_npm_postinstall_must_not_delete_its_own_download_archive": {
+      "candidate_id": "people_bochengyin_drafts_npm_postinstall_must_not_delete_its_own_download_archive",
+      "status": "promoted",
+      "first_seen_at": "2026-05-24T12:42:59+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 14,
+      "doc_id": "people/bochengyin/drafts/npm-postinstall-must-not-delete-its-own-download-archive",
+      "task_id": null,
+      "title": "npm postinstall must not delete its own download archive",
+      "path": "ai-wiki/people/bochengyin/drafts/npm-postinstall-must-not-delete-its-own-download-archive.md",
+      "suggested_family": "people_bochengyin_drafts_npm_postinstall_must_not_delete_its_own_download_archive",
+      "registered_family": "postinstall_archive_staging",
+      "readiness": {
+        "status": "runnable",
+        "present": [
+          "replayable_memory_evidence",
+          "source_incident",
+          "concrete_memory_doc",
+          "baseline_ref",
+          "prompt",
+          "rubric_or_manual_scoring"
+        ],
+        "missing": []
+      },
+      "evidence": {
+        "reason": "direct retry or wrong-path avoidance signal; candidate for formal replay if a concrete source incident exists",
+        "trial_error_effects": {
+          "avoided_retry": 1
+        },
+        "trial_error_signal_count": 1,
+        "resolved_events": 4,
+        "total_events": 6,
+        "tasks": [
+          "assess-other-aiwiki-reuse-saved-time-candidates-20260426",
+          "automate-postinstall-eval-family-2026-04-30",
+          "could-you-please-use-the-route-and-some-other-features-to-evaluate-whether-this",
+          "find-new-eval-prompt-candidates-beyond-five-families",
+          "locate-unrun-eval-original-prompts-20260425",
+          "task-add-impact-family-todo-list"
+        ],
+        "source_task_ids": [],
+        "source_session_ids": [],
+        "source_incident_timing": {
+          "active_seconds": 0,
+          "active_minutes": 0.0,
+          "evidence_count": 0,
+          "event_count": 0,
+          "sources": [],
+          "status": "not_recorded"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "people_bochengyin_drafts_npm_postinstall_must_not_delete_its_own_download_archive",
+          "--from-candidate",
+          "people/bochengyin/drafts/npm-postinstall-must-not-delete-its-own-download-archive",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "postinstall_archive_staging"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "people_bochengyin_drafts_npm_postinstall_must_not_delete_its_own_download_archive",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "people_bochengyin_drafts_npm_postinstall_must_not_delete_its_own_download_archive"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "people_bochengyin_drafts_user_owned_ai_wiki_index_should_not_be_an_upgrade_surface": {
+      "candidate_id": "people_bochengyin_drafts_user_owned_ai_wiki_index_should_not_be_an_upgrade_surface",
+      "status": "promoted",
+      "first_seen_at": "2026-05-24T12:42:59+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 20,
+      "doc_id": "people/bochengyin/drafts/user-owned-ai-wiki-index-should-not-be-an-upgrade-surface",
+      "task_id": null,
+      "title": "User-owned AI wiki index should not be an upgrade surface",
+      "path": "ai-wiki/people/bochengyin/drafts/user-owned-ai-wiki-index-should-not-be-an-upgrade-surface.md",
+      "suggested_family": "people_bochengyin_drafts_user_owned_ai_wiki_index_should_not_be_an_upgrade_surface",
+      "registered_family": "scaffold_prompt_workflow_compliance",
+      "readiness": {
+        "status": "runnable",
+        "present": [
+          "replayable_memory_evidence",
+          "source_incident",
+          "concrete_memory_doc",
+          "baseline_ref",
+          "prompt",
+          "rubric_or_manual_scoring"
+        ],
+        "missing": []
+      },
+      "evidence": {
+        "reason": "direct retry or wrong-path avoidance signal; candidate for formal replay if a concrete source incident exists",
+        "trial_error_effects": {
+          "blocked_wrong_path": 1,
+          "faster_resolution": 1
+        },
+        "trial_error_signal_count": 2,
+        "resolved_events": 3,
+        "total_events": 8,
+        "tasks": [
+          "context-routing-budget-design-refinement",
+          "context-routing-budget-index-runtime",
+          "could-you-please-use-the-route-and-some-other-features-to-evaluate-whether-this",
+          "impact-eval-three-family-setup-20260425",
+          "implement-context-routing-index-cards",
+          "promote-draft-ai-wiki-people-bochengyin-index-md",
+          "promote-user-owned-index-boundary-into-shared-memory",
+          "what-files-you-will-initially-loaded-automatically-when-we-start-a-new-chat-i-kn"
+        ],
+        "source_task_ids": [],
+        "source_session_ids": [],
+        "source_incident_timing": {
+          "active_seconds": 0,
+          "active_minutes": 0.0,
+          "evidence_count": 0,
+          "event_count": 0,
+          "sources": [],
+          "status": "not_recorded"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "people_bochengyin_drafts_user_owned_ai_wiki_index_should_not_be_an_upgrade_surface",
+          "--from-candidate",
+          "people/bochengyin/drafts/user-owned-ai-wiki-index-should-not-be-an-upgrade-surface",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "scaffold_prompt_workflow_compliance"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "people_bochengyin_drafts_user_owned_ai_wiki_index_should_not_be_an_upgrade_surface",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "people_bochengyin_drafts_user_owned_ai_wiki_index_should_not_be_an_upgrade_surface"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "clarify_trial_and_error_reduction_evidence_scope": {
+      "candidate_id": "clarify_trial_and_error_reduction_evidence_scope",
+      "status": "observed",
+      "first_seen_at": "2026-05-23T22:52:17+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 22,
+      "doc_id": null,
+      "task_id": "clarify-trial-and-error-reduction-evidence-scope",
+      "title": null,
+      "path": null,
+      "suggested_family": "clarify_trial_and_error_reduction_evidence_scope",
+      "registered_family": null,
+      "readiness": {
+        "status": "not_ready",
+        "present": [
+          "replayable_memory_evidence"
+        ],
+        "missing": [
+          "source_incident",
+          "concrete_memory_doc",
+          "baseline_ref",
+          "prompt",
+          "rubric"
+        ]
+      },
+      "evidence": {
+        "reason": "task notes mention missed memory or trial/error failure signals",
+        "trial_error_effects": {},
+        "trial_error_signal_count": 0,
+        "resolved_events": 2,
+        "total_events": 3,
+        "tasks": [],
+        "source_task_ids": [],
+        "source_session_ids": [],
+        "source_incident_timing": {
+          "active_seconds": 0,
+          "active_minutes": 0.0,
+          "evidence_count": 0,
+          "event_count": 0,
+          "sources": [],
+          "status": "not_recorded"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "clarify_trial_and_error_reduction_evidence_scope",
+          "--from-candidate",
+          "clarify-trial-and-error-reduction-evidence-scope",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "<family>"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "clarify_trial_and_error_reduction_evidence_scope",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "clarify_trial_and_error_reduction_evidence_scope"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "include_interrupted_fail_time_in_efficiency_table_20260426": {
+      "candidate_id": "include_interrupted_fail_time_in_efficiency_table_20260426",
+      "status": "observed",
+      "first_seen_at": "2026-05-23T22:52:17+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 21,
+      "doc_id": null,
+      "task_id": "include-interrupted-fail-time-in-efficiency-table-20260426",
+      "title": null,
+      "path": null,
+      "suggested_family": "include_interrupted_fail_time_in_efficiency_table_20260426",
+      "registered_family": null,
+      "readiness": {
+        "status": "not_ready",
+        "present": [
+          "replayable_memory_evidence"
+        ],
+        "missing": [
+          "source_incident",
+          "concrete_memory_doc",
+          "baseline_ref",
+          "prompt",
+          "rubric"
+        ]
+      },
+      "evidence": {
+        "reason": "task notes mention missed memory or trial/error failure signals",
+        "trial_error_effects": {},
+        "trial_error_signal_count": 0,
+        "resolved_events": 1,
+        "total_events": 1,
+        "tasks": [],
+        "source_task_ids": [],
+        "source_session_ids": [],
+        "source_incident_timing": {
+          "active_seconds": 0,
+          "active_minutes": 0.0,
+          "evidence_count": 0,
+          "event_count": 0,
+          "sources": [],
+          "status": "not_recorded"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "include_interrupted_fail_time_in_efficiency_table_20260426",
+          "--from-candidate",
+          "include-interrupted-fail-time-in-efficiency-table-20260426",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "<family>"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "include_interrupted_fail_time_in_efficiency_table_20260426",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "include_interrupted_fail_time_in_efficiency_table_20260426"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    },
+    "task_explain_ai_wiki_footer_terms_2026_04_24": {
+      "candidate_id": "task_explain_ai_wiki_footer_terms_2026_04_24",
+      "status": "observed",
+      "first_seen_at": "2026-05-23T22:52:17+10:00",
+      "last_seen_at": "2026-06-04T07:26:34+10:00",
+      "seen_count": 21,
+      "doc_id": null,
+      "task_id": "task-explain-ai-wiki-footer-terms-2026-04-24",
+      "title": null,
+      "path": null,
+      "suggested_family": "task_explain_ai_wiki_footer_terms_2026_04_24",
+      "registered_family": null,
+      "readiness": {
+        "status": "not_ready",
+        "present": [
+          "replayable_memory_evidence"
+        ],
+        "missing": [
+          "source_incident",
+          "concrete_memory_doc",
+          "baseline_ref",
+          "prompt",
+          "rubric"
+        ]
+      },
+      "evidence": {
+        "reason": "task notes mention missed memory or trial/error failure signals",
+        "trial_error_effects": {},
+        "trial_error_signal_count": 0,
+        "resolved_events": 0,
+        "total_events": 1,
+        "tasks": [],
+        "source_task_ids": [],
+        "source_session_ids": [],
+        "source_incident_timing": {
+          "active_seconds": 0,
+          "active_minutes": 0.0,
+          "evidence_count": 0,
+          "event_count": 0,
+          "sources": [],
+          "status": "not_recorded"
+        }
+      },
+      "next_commands": {
+        "init": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "init",
+          "--name",
+          "task_explain_ai_wiki_footer_terms_2026_04_24",
+          "--from-candidate",
+          "task-explain-ai-wiki-footer-terms-2026-04-24",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "show_registered": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "show",
+          "<family>"
+        ],
+        "draft": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "draft",
+          "--candidate",
+          "task_explain_ai_wiki_footer_terms_2026_04_24",
+          "--baseline-ref",
+          "<baseline-ref>"
+        ],
+        "promote_check": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "family",
+          "promote",
+          "--candidate",
+          "task_explain_ai_wiki_footer_terms_2026_04_24"
+        ],
+        "schedule_report": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "schedule",
+          "report"
+        ]
+      }
+    }
+  }
+}

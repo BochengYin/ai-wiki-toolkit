@@ -17,7 +17,7 @@ Use this skill when `ai-wiki/people/*/drafts/` has accumulated related notes and
    - `ai-wiki/problems/index.md`
    - `ai-wiki/features/index.md`
    - relevant files under `ai-wiki/trails/` when chronology matters
-   - `ai-wiki/metrics/` and `_toolkit/metrics/*.json` only as weak signals
+   - `ai-wiki/metrics/` and `_toolkit/metrics/*` only as weak signals
 3. Cluster drafts by durable topic, repeated failure mode, or repeated rule, not by filename alone.
 4. For each cluster, choose one next action using [references/candidate-types.md](references/candidate-types.md).
 5. Use [references/promotion-targets.md](references/promotion-targets.md) to propose the best destination when a cluster is mature enough for shared or repo-level memory.

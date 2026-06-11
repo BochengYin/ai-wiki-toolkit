@@ -1,0 +1,412 @@
+{
+  "schema_version": "impact-eval-schedule-report-v1",
+  "generated_at": "2026-05-23T22:52:31+10:00",
+  "period_id": "smoke-20260523225229",
+  "repo_root": "/Users/by/AI Project/ai-wiki-toolkit",
+  "repo_wiki_dir": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki",
+  "summary": {
+    "formal_family_count": 7,
+    "runnable_family_count": 7,
+    "candidate_status_counts": {
+      "candidate": 3,
+      "observed": 5,
+      "promoted": 5
+    },
+    "indexed_run_count": 1,
+    "recent_run_count": 1
+  },
+  "families": [
+    {
+      "name": "aiwiki_evidence_integrity",
+      "status": "runnable",
+      "missing": [],
+      "spec_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/families/aiwiki_evidence_integrity/spec.toml",
+      "prompt_family": "aiwiki_evidence_integrity",
+      "prompt_root": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/prompts/aiwiki_evidence_integrity",
+      "prompt_levels": [
+        "original"
+      ],
+      "prompt_present": true,
+      "rubric_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/rubrics/aiwiki_evidence_integrity.json",
+      "rubric_present": false,
+      "historical_issue": "AI wiki evidence could log document-level reuse without task-level coverage, count managed toolkit docs as knowledge reuse, and omit mandatory end-of-task update outcomes.",
+      "baseline_ref": "8228ba6^",
+      "memory_fixtures": {
+        "raw_docs": 3,
+        "raw_overlays": 0,
+        "consolidated_docs": 2,
+        "consolidated_overlays": 0,
+        "ambient_exclude_paths": 6,
+        "strict_scaffold_exclude_paths": 8
+      },
+      "next_commands": {
+        "plan": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "plan",
+          "--family",
+          "aiwiki_evidence_integrity"
+        ],
+        "prepare": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "prepare",
+          "--family",
+          "aiwiki_evidence_integrity"
+        ],
+        "benchmark": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "benchmark",
+          "--family",
+          "aiwiki_evidence_integrity"
+        ]
+      }
+    },
+    {
+      "name": "ownership_boundary",
+      "status": "runnable",
+      "missing": [],
+      "spec_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/families/ownership_boundary/spec.toml",
+      "prompt_family": "ownership_boundary",
+      "prompt_root": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/prompts/ownership_boundary",
+      "prompt_levels": [
+        "full",
+        "medium",
+        "original",
+        "short"
+      ],
+      "prompt_present": true,
+      "rubric_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/rubrics/ownership_boundary.json",
+      "rubric_present": false,
+      "historical_issue": "Contributor-only branch and PR workflow helpers can be misdesigned as distributed package features.",
+      "baseline_ref": "34cd5a3^",
+      "memory_fixtures": {
+        "raw_docs": 3,
+        "raw_overlays": 0,
+        "consolidated_docs": 2,
+        "consolidated_overlays": 0,
+        "ambient_exclude_paths": 3,
+        "strict_scaffold_exclude_paths": 4
+      },
+      "next_commands": {
+        "plan": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "plan",
+          "--family",
+          "ownership_boundary"
+        ],
+        "prepare": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "prepare",
+          "--family",
+          "ownership_boundary"
+        ],
+        "benchmark": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "benchmark",
+          "--family",
+          "ownership_boundary"
+        ]
+      }
+    },
+    {
+      "name": "postinstall_archive_staging",
+      "status": "runnable",
+      "missing": [],
+      "spec_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/families/postinstall_archive_staging/spec.toml",
+      "prompt_family": "postinstall_archive_staging",
+      "prompt_root": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/prompts/postinstall_archive_staging",
+      "prompt_levels": [
+        "original"
+      ],
+      "prompt_present": true,
+      "rubric_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/rubrics/postinstall_archive_staging.json",
+      "rubric_present": false,
+      "historical_issue": "The npm postinstall wrapper can delete its own downloaded release archive when extraction cleans the install target directory.",
+      "baseline_ref": "408ff40^",
+      "memory_fixtures": {
+        "raw_docs": 1,
+        "raw_overlays": 0,
+        "consolidated_docs": 0,
+        "consolidated_overlays": 0,
+        "ambient_exclude_paths": 3,
+        "strict_scaffold_exclude_paths": 5
+      },
+      "next_commands": {
+        "plan": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "plan",
+          "--family",
+          "postinstall_archive_staging"
+        ],
+        "prepare": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "prepare",
+          "--family",
+          "postinstall_archive_staging"
+        ],
+        "benchmark": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "benchmark",
+          "--family",
+          "postinstall_archive_staging"
+        ]
+      }
+    },
+    {
+      "name": "release_distribution_integrity",
+      "status": "runnable",
+      "missing": [],
+      "spec_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/families/release_distribution_integrity/spec.toml",
+      "prompt_family": "release_distribution_integrity",
+      "prompt_root": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/prompts/release_distribution_integrity",
+      "prompt_levels": [
+        "medium",
+        "original",
+        "short"
+      ],
+      "prompt_present": true,
+      "rubric_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/rubrics/release_distribution_integrity.json",
+      "rubric_present": false,
+      "historical_issue": "Public release target changes can drift across release workflows, npm metadata, archive handling, docs, and verification.",
+      "baseline_ref": "06a47cd^",
+      "memory_fixtures": {
+        "raw_docs": 1,
+        "raw_overlays": 0,
+        "consolidated_docs": 1,
+        "consolidated_overlays": 0,
+        "ambient_exclude_paths": 3,
+        "strict_scaffold_exclude_paths": 5
+      },
+      "next_commands": {
+        "plan": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "plan",
+          "--family",
+          "release_distribution_integrity"
+        ],
+        "prepare": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "prepare",
+          "--family",
+          "release_distribution_integrity"
+        ],
+        "benchmark": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "benchmark",
+          "--family",
+          "release_distribution_integrity"
+        ]
+      }
+    },
+    {
+      "name": "release_runtime_compatibility",
+      "status": "runnable",
+      "missing": [],
+      "spec_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/families/release_runtime_compatibility/spec.toml",
+      "prompt_family": "release_runtime_compatibility",
+      "prompt_root": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/prompts/release_runtime_compatibility",
+      "prompt_levels": [
+        "original"
+      ],
+      "prompt_present": true,
+      "rubric_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/rubrics/release_runtime_compatibility.json",
+      "rubric_present": false,
+      "historical_issue": "Linux release binaries can publish and install successfully while still failing at runtime on an older glibc baseline.",
+      "baseline_ref": "f946ed6^",
+      "memory_fixtures": {
+        "raw_docs": 1,
+        "raw_overlays": 0,
+        "consolidated_docs": 0,
+        "consolidated_overlays": 1,
+        "ambient_exclude_paths": 3,
+        "strict_scaffold_exclude_paths": 4
+      },
+      "next_commands": {
+        "plan": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "plan",
+          "--family",
+          "release_runtime_compatibility"
+        ],
+        "prepare": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "prepare",
+          "--family",
+          "release_runtime_compatibility"
+        ],
+        "benchmark": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "benchmark",
+          "--family",
+          "release_runtime_compatibility"
+        ]
+      }
+    },
+    {
+      "name": "scaffold_prompt_workflow_compliance",
+      "status": "runnable",
+      "missing": [],
+      "spec_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/families/scaffold_prompt_workflow_compliance/spec.toml",
+      "prompt_family": "scaffold_prompt_workflow_compliance",
+      "prompt_root": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/prompts/scaffold_prompt_workflow_compliance",
+      "prompt_levels": [
+        "original"
+      ],
+      "prompt_present": true,
+      "rubric_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/rubrics/scaffold_prompt_workflow_compliance.json",
+      "rubric_present": false,
+      "historical_issue": "Scaffold and prompt behavior changes can miss tests, install verification, prompt-block boundary checks, or user-agnostic shared prompt guidance.",
+      "baseline_ref": "b1366fe^",
+      "memory_fixtures": {
+        "raw_docs": 3,
+        "raw_overlays": 0,
+        "consolidated_docs": 3,
+        "consolidated_overlays": 0,
+        "ambient_exclude_paths": 3,
+        "strict_scaffold_exclude_paths": 3
+      },
+      "next_commands": {
+        "plan": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "plan",
+          "--family",
+          "scaffold_prompt_workflow_compliance"
+        ],
+        "prepare": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "prepare",
+          "--family",
+          "scaffold_prompt_workflow_compliance"
+        ],
+        "benchmark": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "benchmark",
+          "--family",
+          "scaffold_prompt_workflow_compliance"
+        ]
+      }
+    },
+    {
+      "name": "windows_arm_smoke_cli_output",
+      "status": "runnable",
+      "missing": [],
+      "spec_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/families/windows_arm_smoke_cli_output/spec.toml",
+      "prompt_family": "windows_arm_smoke_cli_output",
+      "prompt_root": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/prompts/windows_arm_smoke_cli_output",
+      "prompt_levels": [
+        "original"
+      ],
+      "prompt_present": true,
+      "rubric_path": "/Users/by/AI Project/ai-wiki-toolkit/evals/impact/rubrics/windows_arm_smoke_cli_output.json",
+      "rubric_present": false,
+      "historical_issue": "Windows ARM smoke checks can fail even when the binary is healthy if version assertions compare against the bare package version instead of the full CLI output.",
+      "baseline_ref": "e0d6fa9^",
+      "memory_fixtures": {
+        "raw_docs": 0,
+        "raw_overlays": 1,
+        "consolidated_docs": 1,
+        "consolidated_overlays": 0,
+        "ambient_exclude_paths": 3,
+        "strict_scaffold_exclude_paths": 4
+      },
+      "next_commands": {
+        "plan": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "plan",
+          "--family",
+          "windows_arm_smoke_cli_output"
+        ],
+        "prepare": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "prepare",
+          "--family",
+          "windows_arm_smoke_cli_output"
+        ],
+        "benchmark": [
+          "aiwiki-toolkit",
+          "eval",
+          "impact",
+          "benchmark",
+          "--family",
+          "windows_arm_smoke_cli_output"
+        ]
+      }
+    }
+  ],
+  "candidate_queue": {
+    "summary": {
+      "active_count": 13,
+      "stale_count": 0,
+      "status_counts": {
+        "candidate": 3,
+        "observed": 5,
+        "promoted": 5
+      }
+    },
+    "outputs": {
+      "latest_json": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/candidates/latest.json",
+      "latest_markdown": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/candidates/latest.md",
+      "state": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/candidates/state.json"
+    }
+  },
+  "recent_runs": [
+    {
+      "period_id": "smoke-20260523225229",
+      "recorded_at": "2026-05-23T22:52:29+10:00",
+      "family": "windows_arm_smoke_cli_output",
+      "run_dir": "/private/tmp/aiwiki_first_round/windows_arm_smoke_cli_output/runs/smoke-20260523225229-windows_arm_smoke_cli_output",
+      "score_policy": "command-exit",
+      "runner_success": true,
+      "primary_outcome": "neutral_signal",
+      "first_attempt_success_delta": 0.0,
+      "avg_score_delta": 0.0,
+      "records": 6,
+      "bundle_dir": "/private/tmp/aiwiki_first_round/windows_arm_smoke_cli_output/runs/smoke-20260523225229-windows_arm_smoke_cli_output/report_bundle"
+    }
+  ],
+  "outputs": {
+    "json": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/reports/smoke-20260523225229/report.json",
+    "markdown": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/reports/smoke-20260523225229/report.md",
+    "latest_json": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/reports/latest.json",
+    "latest_markdown": "/Users/by/AI Project/ai-wiki-toolkit/ai-wiki/_toolkit/evals/reports/latest.md"
+  }
+}
