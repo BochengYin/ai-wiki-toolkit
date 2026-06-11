@@ -30,14 +30,18 @@ agent can keep organized over time instead of starting from scratch on every tas
 
 ## What You Get
 
-- A repo-local `ai-wiki/` tree for constraints, conventions, decisions, workflows, problems,
-  features, trails, work state, metrics, and personal drafts.
+- A repo-local `ai-wiki/` tree with a bounded `memory/index.md` entrypoint plus compatibility
+  areas for constraints, conventions, decisions, workflows, problems, features, trails, work state,
+  metrics, and personal drafts.
 - A home-level `~/ai-wiki/system/` namespace for cross-project memory.
-- Managed prompt blocks for `AGENT.md`, `AGENTS.md`, or `CLAUDE.md`.
-- Task-aware routing with `aiwiki-toolkit route`, which gives agents a small, source-cited context
-  packet instead of dumping the whole wiki into every task.
+- A managed prompt block in `AGENTS.md` by default, with compatibility for existing `AGENT.md`
+  or `CLAUDE.md` files.
+- A bounded memory workflow: read `ai-wiki/memory/index.md` first, open at most one strongly
+  relevant memory file, and avoid dumping the whole wiki into every task.
 - Repo-local skills for clarify-before-code, reuse evidence, write-back checks, review-learning
   capture, and draft consolidation.
+- Optional `aiwiki-toolkit route` diagnostics for inspecting memory selection quality when you are
+  deliberately tuning or debugging routing behavior.
 - Local telemetry and reports that show which memory was reused, where routing was noisy, and which
   drafts may deserve human review.
 - An impact-eval harness for replaying historical repo failures with and without ambient AI wiki
@@ -119,15 +123,17 @@ The normal agent workflow is:
 
 1. `aiwiki-toolkit install` creates the repo-local wiki, managed prompt block, repo-local skills,
    local identity file, and generated toolkit layer.
-2. At task start, the agent runs `aiwiki-toolkit route --task "<current user request>"`.
-3. The route packet points the agent to the most relevant source docs using index cards,
-   `must_load` docs, and source-cited rules.
+2. At task start, the managed `AGENTS.md` block performs one cheap local check for
+   `ai-wiki/_toolkit/system.md`.
+3. If AI Wiki is enabled, the agent follows the bounded read workflow: read
+   `ai-wiki/memory/index.md` when present, then open at most one strongly relevant linked memory
+   file.
 4. The agent works normally, then records which user-owned memory was actually consulted.
-5. At task end, the agent prints reuse evidence and checks whether the task produced a durable
-   lesson worth writing back.
+5. At task end, the agent prints reuse evidence and writes back only to `ai-wiki/memory/` when
+   there was a durable public/local trial-error signal or reusable clarification.
 
-Markdown remains the source of truth. Route packets, metrics, diagnostics, and reports are generated
-views that help the agent choose what to read and help humans audit whether the workflow is working.
+Markdown remains the source of truth. Metrics, diagnostics, route packets, and reports are generated
+views that help humans audit whether the workflow is working.
 
 ## What Gets Created
 
@@ -140,6 +146,7 @@ ai-wiki/
   conventions/
   decisions.md
   features/
+  memory/index.md
   metrics/
   people/<handle>/drafts/
   problems/
@@ -150,7 +157,7 @@ ai-wiki/
   _toolkit/
 .agents/skills/ai-wiki-*/
 .env.aiwiki
-AGENT.md / AGENTS.md / CLAUDE.md managed block
+AGENTS.md managed block (or an existing AGENT.md / CLAUDE.md)
 ```
 
 At home scope:
@@ -192,7 +199,7 @@ Prompt files are updated only inside:
 # Install or refresh the managed layer in the current git repo.
 aiwiki-toolkit install
 
-# Generate a task-aware context packet for the current agent task.
+# Optional: generate a diagnostic context packet when tuning or debugging memory selection.
 aiwiki-toolkit route --task "fix the failing release smoke test"
 
 # Check starter docs, managed prompt blocks, local state, and rule drift.
