@@ -93,53 +93,6 @@ _STOPWORDS = {
 }
 
 _TASK_TYPE_KEYWORDS: dict[str, set[str]] = {
-    "release_distribution": {
-        "asset",
-        "binary",
-        "brew",
-        "ci",
-        "distribution",
-        "glibc",
-        "homebrew",
-        "musl",
-        "npm",
-        "package",
-        "publish",
-        "release",
-        "smoke",
-        "version",
-        "workflow",
-    },
-    "scaffold_prompt_workflow": {
-        "agent",
-        "agents",
-        "ai-wiki",
-        "aiwiki",
-        "claude",
-        "codex",
-        "install",
-        "managed",
-        "prompt",
-        "route",
-        "scaffold",
-        "skill",
-        "toolkit",
-        "_toolkit",
-    },
-    "eval_workflow": {
-        "baseline",
-        "benchmark",
-        "eval",
-        "evaluate",
-        "evaluation",
-        "experiment",
-        "impact",
-        "metric",
-        "replay",
-        "rubric",
-        "score",
-        "task-family",
-    },
     "memory_governance": {
         "conflict",
         "consolidate",
@@ -203,48 +156,7 @@ _TASK_TYPE_KEYWORDS: dict[str, set[str]] = {
     },
 }
 
-_EVAL_WORKFLOW_STRONG_KEYWORDS = {
-    "benchmark",
-    "eval",
-    "evaluation",
-    "families",
-    "family",
-    "impact",
-    "project-a",
-    "rubric",
-    "rubrics",
-    "score",
-    "scoring",
-}
-
 _KIND_PRIORITIES_BY_TASK_TYPE: dict[str, dict[str, int]] = {
-    "release_distribution": {
-        "constraints": 6,
-        "convention": 7,
-        "decisions": 5,
-        "problem": 7,
-        "review_pattern": 4,
-        "workflows": 6,
-    },
-    "scaffold_prompt_workflow": {
-        "constraints": 8,
-        "convention": 7,
-        "convention_index": 3,
-        "decisions": 6,
-        "feature": 3,
-        "problem": 4,
-        "review_pattern": 5,
-        "workflows": 5,
-    },
-    "eval_workflow": {
-        "convention": 4,
-        "decisions": 4,
-        "draft": 4,
-        "feature": 5,
-        "problem": 5,
-        "trail": 4,
-        "workflows": 4,
-    },
     "memory_governance": {
         "constraints": 7,
         "convention": 7,
@@ -289,57 +201,7 @@ _KIND_PRIORITIES_BY_TASK_TYPE: dict[str, dict[str, int]] = {
     },
 }
 
-_DOMAIN_TAG_KEYWORDS: dict[str, set[str]] = {
-    "release_distribution": {
-        "binary",
-        "brew",
-        "homebrew",
-        "npm",
-        "package",
-        "publish",
-        "release",
-        "version",
-    },
-    "ci_workflow": {
-        "actions",
-        "ci",
-        "smoke",
-        "workflow",
-    },
-    "memory_governance": {
-        "consolidate",
-        "context",
-        "draft",
-        "memory",
-        "packet",
-        "promotion",
-        "reuse",
-        "route",
-        "router",
-        "taxonomy",
-        "write-back",
-    },
-    "workflow_state": {
-        "active",
-        "blocked",
-        "done",
-        "epic",
-        "ledger",
-        "processing",
-        "status",
-        "todo",
-        "work",
-    },
-    "task_evaluation": {
-        "benchmark",
-        "eval",
-        "evaluate",
-        "evaluation",
-        "replay",
-        "rubric",
-        "score",
-    },
-}
+_DOMAIN_TAG_KEYWORDS: dict[str, set[str]] = {}
 
 _GUARDRAIL_TAG_KEYWORDS: dict[str, set[str]] = {
     "user_owned_docs": {
@@ -810,199 +672,16 @@ _WORKFLOW_SUPPORT_REQUEST_PHRASES = (
     "修复",
 )
 
-_ROUTE_WORKFLOW_CONTRACTS: tuple[dict[str, Any], ...] = (
-    {
-        "id": "weekly-report-diagnostics",
-        "name": "Weekly Report Diagnostics",
-        "trigger_phrases": ("weekly report", "weekly html report", "weekly-report"),
-        "trigger_tokens": {"weekly", "report", "diagnosis", "diagnostic", "coverage", "promotion"},
-        "required_steps": [
-            "load local metrics",
-            "compute coverage, promotion, noisy, and not_helpful signals",
-            "render the weekly report artifact",
-            "record the task-level reuse check",
-        ],
-        "supporting_docs_allowed_when": ["workflow_change", "bug_fix", "exception_case"],
-        "bucket_id": "workflow_contract",
-    },
-    {
-        "id": "memory-promotion",
-        "name": "Memory Promotion",
-        "trigger_phrases": ("promote draft", "promotion candidate", "draft reuse"),
-        "trigger_tokens": {"promote", "promotion", "candidate", "draft", "reuse"},
-        "required_steps": [
-            "load promotion thresholds",
-            "inspect reuse evidence for the candidate memory",
-            "preserve user-owned shared docs unless promotion is explicitly confirmed",
-            "record the reuse/write-back outcome",
-        ],
-        "supporting_docs_allowed_when": ["workflow_change", "bug_fix", "exception_case"],
-        "bucket_id": "memory_metrics",
-    },
-    {
-        "id": "reuse-metrics",
-        "name": "Reuse Metrics",
-        "trigger_phrases": ("reuse metrics", "reuse events", "task checks", "record-reuse"),
-        "trigger_tokens": {"reuse", "metrics", "task-check", "task-checks", "telemetry"},
-        "required_steps": [
-            "read per-handle reuse events and task checks",
-            "exclude managed _toolkit docs from user-owned reuse metrics",
-            "aggregate by task and document",
-            "record the task-level reuse check",
-        ],
-        "supporting_docs_allowed_when": ["workflow_change", "bug_fix", "exception_case"],
-        "bucket_id": "memory_metrics",
-    },
-    {
-        "id": "diagnostics-provenance",
-        "name": "Diagnostics Provenance",
-        "trigger_phrases": ("diagnostics provenance", "telemetry provenance", "source incident"),
-        "trigger_tokens": {"diagnosis", "diagnostic", "provenance", "source", "incident", "timing"},
-        "required_steps": [
-            "identify the source incident or diagnostic event",
-            "preserve provenance fields and timing source",
-            "separate generated diagnostics from source Markdown",
-            "record whether the diagnostic evidence changed the task outcome",
-        ],
-        "supporting_docs_allowed_when": ["workflow_change", "bug_fix", "exception_case"],
-        "bucket_id": "source_incident_timing",
-    },
-    {
-        "id": "release-flow",
-        "name": "Release Flow",
-        "trigger_phrases": ("release to npm", "release ai-wiki-toolkit", "push current changes"),
-        "trigger_tokens": {"release", "publish", "npm", "version", "merge", "push"},
-        "required_steps": [
-            "verify the worktree and target branch",
-            "run the focused release or smoke checks",
-            "publish through the configured distribution path",
-            "verify the installed package or release artifact",
-        ],
-        "supporting_docs_allowed_when": ["workflow_change", "bug_fix", "exception_case"],
-        "bucket_id": "release_distribution",
-    },
-)
+_ROUTE_WORKFLOW_CONTRACTS: tuple[dict[str, Any], ...] = ()
 
-_ROUTE_BUCKET_DEFINITIONS: tuple[dict[str, Any], ...] = (
-    {
-        "id": "release_distribution",
-        "keywords": {"asset", "binary", "distribution", "npm", "package", "publish", "release", "version"},
-    },
-    {
-        "id": "prompt_design",
-        "keywords": {"design", "families", "family", "prompt", "prompts", "task-family"},
-    },
-    {
-        "id": "manifest_or_runner",
-        "keywords": {"execution", "manifest", "orchestrator", "run", "runner", "workspace", "workspaces"},
-    },
-    {
-        "id": "artifact_capture",
-        "keywords": {"artifact", "artifacts", "capture", "diff", "result", "results", "save", "untracked"},
-    },
-    {
-        "id": "rubric_scoring",
-        "keywords": {"rubric", "rubrics", "score", "scoring"},
-    },
-    {
-        "id": "report_quality",
-        "keywords": {"change", "churn", "metrics", "neutral", "profile", "quality", "report"},
-    },
-    {
-        "id": "route_usefulness",
-        "keywords": {"misses", "noise", "noisy", "precision", "recall", "route", "routing", "selected", "usefulness"},
-    },
-    {
-        "id": "source_incident_timing",
-        "keywords": {"incident", "provenance", "session", "source", "timing", "transcript"},
-    },
-    {
-        "id": "public_metrics",
-        "keywords": {"dashboard", "metric", "metrics", "proof", "public", "report"},
-    },
-    {
-        "id": "memory_consolidation",
-        "keywords": {"consolidate", "consolidation", "draft", "memory", "promote", "promotion"},
-    },
-)
+_ROUTE_BUCKET_DEFINITIONS: tuple[dict[str, Any], ...] = ()
 
-_ROUTE_BUCKET_ALIASES: dict[str, set[str]] = {
-    "release_distribution": {"release_distribution"},
-    "prompt_design": {"prompt_design"},
-    "manifest_or_runner": {"manifest_or_runner"},
-    "artifact_capture": {"artifact_capture"},
-    "rubric_scoring": {"rubric_scoring"},
-    "report_quality": {"report_quality", "public_metrics"},
-    "route_usefulness": {"route_usefulness"},
-    "source_incident_timing": {"source_incident_timing"},
-    "public_metrics": {"public_metrics", "report_quality"},
-    "memory_consolidation": {"memory_consolidation", "memory_metrics"},
-    "memory_metrics": {"memory_metrics", "public_metrics", "route_usefulness"},
-    "workflow_contract": {"workflow_contract"},
-}
+_ROUTE_BUCKET_ALIASES: dict[str, set[str]] = {}
 
-_EVAL_STAGE_SLOT_IDS = {
-    "artifact_capture",
-    "manifest_or_runner",
-    "prompt_design",
-    "public_metrics",
-    "report_quality",
-    "route_usefulness",
-    "rubric_scoring",
-    "source_incident_timing",
-}
+_EVAL_STAGE_SLOT_IDS: set[str] = set()
 _EVAL_STAGE_SCORING_MODES = {"off", "soft"}
 
-_EVAL_STAGE_DEFINITIONS: tuple[dict[str, Any], ...] = (
-    {
-        "id": "prompt_design",
-        "keywords": {"design", "families", "family", "prompt", "prompts", "task-family"},
-        "phrases": ("prompt design", "design prompts", "task family", "task-family"),
-        "intent_categories": {"prompting", "design"},
-    },
-    {
-        "id": "manifest_or_runner",
-        "keywords": {"execution", "manifest", "orchestrator", "run", "runner", "workspace", "workspaces"},
-        "phrases": ("run manifest", "eval manifest", "auto runner", "auto-runner"),
-        "intent_categories": {"runner", "execution"},
-    },
-    {
-        "id": "artifact_capture",
-        "keywords": {"artifact", "artifacts", "capture", "diff", "result", "results", "save", "untracked"},
-        "phrases": ("artifact capture", "result capture", "capture result", "save result"),
-        "intent_categories": {"capture"},
-    },
-    {
-        "id": "rubric_scoring",
-        "keywords": {"rubric", "rubrics", "score", "scoring"},
-        "phrases": ("rubric scoring", "score run", "score result"),
-        "intent_categories": {"prompting"},
-    },
-    {
-        "id": "report_quality",
-        "keywords": {"change", "churn", "neutral", "profile", "quality", "report"},
-        "phrases": ("report quality", "neutral impact", "change profile"),
-        "intent_categories": {"reporting"},
-    },
-    {
-        "id": "route_usefulness",
-        "keywords": {"misses", "noise", "noisy", "precision", "recall", "route", "routing", "selected", "usefulness"},
-        "phrases": ("route precision", "route usefulness", "missed useful", "selected docs"),
-        "intent_categories": {"design", "reporting"},
-    },
-    {
-        "id": "source_incident_timing",
-        "keywords": {"incident", "provenance", "session", "source", "timing", "transcript"},
-        "phrases": ("source incident", "incident timing", "session provenance"),
-        "intent_categories": {"provenance"},
-    },
-    {
-        "id": "public_metrics",
-        "keywords": {"dashboard", "metric", "metrics", "proof", "public"},
-        "phrases": ("public metrics", "proof stack", "external metrics"),
-        "intent_categories": {"reporting"},
-    },
-)
+_EVAL_STAGE_DEFINITIONS: tuple[dict[str, Any], ...] = ()
 
 _CHINESE_INTENT_SYNONYMS: tuple[tuple[tuple[str, ...], set[str]], ...] = (
     (("实现", "改", "修改", "补", "加", "修", "修复", "写进", "接进"), {"implement", "update", "fix"}),
@@ -1051,40 +730,6 @@ _ENGLISH_TASK_SYNONYMS: dict[str, set[str]] = {
 }
 
 _ROUTE_CONCERN_SIGNAL_KEYWORDS: dict[str, set[str]] = {
-    "release_distribution": {
-        "asset",
-        "binary",
-        "brew",
-        "distribution",
-        "glibc",
-        "homebrew",
-        "musl",
-        "npm",
-        "package",
-        "publish",
-        "release",
-        "version",
-    },
-    "ci_workflow": {
-        "actions",
-        "ci",
-        "github",
-        "smoke",
-        "workflow",
-        "workflows",
-    },
-    "task_evaluation": {
-        "benchmark",
-        "eval",
-        "evaluate",
-        "evaluation",
-        "impact",
-        "metric",
-        "replay",
-        "rubric",
-        "score",
-        "scoring",
-    },
     "memory_governance": {
         "context",
         "draft",
@@ -1140,27 +785,6 @@ _AUTHORITATIVE_KINDS = {
 }
 
 _SUCCESS_CRITERIA_BY_TASK_TYPE: dict[str, list[dict[str, str]]] = {
-    "release_distribution": [
-        {
-            "criterion": "Release and distribution behavior stays aligned across published targets.",
-            "verification": "Run the targeted release, distribution, or smoke tests that cover the changed target matrix.",
-            "reason": "release_distribution task",
-        },
-    ],
-    "scaffold_prompt_workflow": [
-        {
-            "criterion": "Managed prompt, scaffold, or toolkit changes stay inside package-owned surfaces.",
-            "verification": "Review the diff for user-owned AI wiki docs and run targeted scaffold, prompt, or doctor tests.",
-            "reason": "scaffold_prompt_workflow task",
-        },
-    ],
-    "eval_workflow": [
-        {
-            "criterion": "Eval output is reproducible and exposes the primary product signal.",
-            "verification": "Run the targeted eval/report command and confirm baseline, treatment, score, and first-pass fields are present.",
-            "reason": "eval_workflow task",
-        },
-    ],
     "memory_governance": [
         {
             "criterion": "Stable Markdown remains the source of truth for memory behavior.",
@@ -1518,28 +1142,7 @@ def _classify_route_mode(
     if name == "question_only":
         disallowed_actions.extend(action for action in ("run_commands",) if action not in disallowed_actions)
 
-    eligible_doc_slots = {
-        "code": [
-            "artifact_capture",
-            "manifest_or_runner",
-            "release_distribution",
-            "rubric_scoring",
-            "workflow_contract",
-        ],
-        "fixed_workflow": ["workflow_contract"],
-        "plan": [
-            "memory_consolidation",
-            "prompt_design",
-            "public_metrics",
-            "report_quality",
-            "route_usefulness",
-            "source_incident_timing",
-            "workflow_contract",
-        ],
-        "question_only": ["public_metrics", "route_usefulness", "workflow_contract"],
-        "review": ["release_distribution", "route_usefulness", "workflow_contract"],
-        "report": ["public_metrics", "report_quality", "source_incident_timing", "workflow_contract"],
-    }.get(name, [])
+    eligible_doc_slots: list[str] = []
 
     return {
         "name": name,
@@ -1575,30 +1178,12 @@ def _classify_intent_buckets(
         matched_terms = sorted(task_tokens & set(definition["keywords"]))
         if not matched_terms:
             continue
-        if bucket_id == "release_distribution" and "release_distribution" not in domain_tags:
-            continue
-        if bucket_id in {"prompt_design", "manifest_or_runner", "artifact_capture", "rubric_scoring", "report_quality"}:
-            if task_type != "eval_workflow" and "task_evaluation" not in domain_tags:
-                continue
         buckets.append(
             {
                 "id": bucket_id,
                 "role": "primary" if not buckets else "secondary",
                 "quota": 1,
                 "matched_terms": matched_terms[:8],
-                "matched_phrases": [],
-            }
-        )
-
-    if route_mode.get("name") in {"plan", "question_only"} and not any(
-        bucket["id"] == "public_metrics" for bucket in buckets
-    ):
-        buckets.append(
-            {
-                "id": "public_metrics",
-                "role": "mode_default",
-                "quota": 1,
-                "matched_terms": [],
                 "matched_phrases": [],
             }
         )
@@ -1626,9 +1211,9 @@ def _classify_eval_stage(
 ) -> dict[str, Any]:
     """Classify the active eval/workflow stage before document selection."""
 
-    active = (
-        task_type == "eval_workflow"
-        or "task_evaluation" in domain_tags
+    active = bool(_EVAL_STAGE_DEFINITIONS) and (
+        task_type in _KIND_PRIORITIES_BY_TASK_TYPE
+        or bool(domain_tags)
         or bool(task_tokens & {"missed", "noise", "precision", "recall", "route", "routing", "usefulness"})
     )
     intent_categories = {
@@ -1979,42 +1564,9 @@ def _phase_bucket_ids(
         for bucket in intent_buckets
         if isinstance(bucket.get("id"), str) and bucket.get("id")
     ]
-    if phase_id == "workflow":
-        return [str(workflow_contract.get("bucket_id") or "workflow_contract")] if workflow_contract else ["workflow_contract"]
-    if phase_id in {"question", "plan", "review"}:
-        preferred = {
-            "memory_consolidation",
-            "memory_metrics",
-            "prompt_design",
-            "public_metrics",
-            "report_quality",
-            "route_usefulness",
-            "source_incident_timing",
-            "workflow_contract",
-        }
-    elif phase_id == "validate":
-        preferred = {
-            "artifact_capture",
-            "public_metrics",
-            "report_quality",
-            "release_distribution",
-            "route_usefulness",
-            "rubric_scoring",
-        }
-    elif phase_id in {"git", "push", "pr"}:
-        preferred = {"release_distribution", "workflow_contract"}
-    elif phase_id == "report":
-        preferred = {"public_metrics", "report_quality", "source_incident_timing"}
-    else:
-        preferred = {
-            "artifact_capture",
-            "manifest_or_runner",
-            "release_distribution",
-            "rubric_scoring",
-            "workflow_contract",
-        }
-    matched = [bucket_id for bucket_id in bucket_ids if bucket_id in preferred]
-    return matched or bucket_ids[:3]
+    if phase_id == "workflow" and workflow_contract:
+        return [str(workflow_contract.get("bucket_id") or "workflow_contract")]
+    return bucket_ids[:3]
 
 
 def _phase_doc_refs(
@@ -2329,9 +1881,6 @@ def _should_use_changed_path_signals(
 
 
 def _classify_task_type(tokens: set[str]) -> str:
-    eval_matches = tokens & _EVAL_WORKFLOW_STRONG_KEYWORDS
-    if len(eval_matches) >= 2 and {"benchmark", "eval", "evaluation", "impact", "rubric", "rubrics"} & eval_matches:
-        return "eval_workflow"
     scored: list[tuple[int, str]] = []
     for task_type, keywords in _TASK_TYPE_KEYWORDS.items():
         scored.append((len(tokens & keywords), task_type))
@@ -2410,7 +1959,7 @@ def _classify_guardrail_tags(tokens: set[str]) -> list[str]:
 def _classify_effort(tokens: set[str], task_type: str) -> str:
     if tokens & _LOW_EFFORT_OPERATIONAL_KEYWORDS and not tokens & _NON_LOW_EFFORT_KEYWORDS:
         return "low"
-    if task_type in {"memory_governance", "eval_workflow"} or tokens & _DEEP_EFFORT_KEYWORDS:
+    if task_type == "memory_governance" or tokens & _DEEP_EFFORT_KEYWORDS:
         return "deep"
     return "normal"
 
@@ -2494,11 +2043,11 @@ def _build_route_self_audit(
             )
 
     if mode_name in {"plan", "question_only"}:
+        implementation_slots = set(_EVAL_STAGE_SLOT_IDS)
         implementation_slot_docs = [
             candidate.get("doc_id")
             for candidate in selected
-            if set(candidate.get("doc_slots") or [])
-            & {"artifact_capture", "manifest_or_runner", "release_distribution", "rubric_scoring"}
+            if implementation_slots and set(candidate.get("doc_slots") or []) & implementation_slots
         ]
         if implementation_slot_docs:
             observations.append(

@@ -230,7 +230,7 @@ def install_workspace(
 
     prompt_targets = existing_prompt_targets(paths.repo_root)
     if not prompt_targets:
-        prompt_targets = [paths.repo_root / "AGENT.md"]
+        prompt_targets = [paths.repo_root / "AGENTS.md"]
 
     for path in prompt_targets:
         if upsert_managed_block_file(path, resolved_handle):

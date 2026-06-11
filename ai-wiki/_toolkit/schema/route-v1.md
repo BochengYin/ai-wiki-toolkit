@@ -10,9 +10,14 @@ remain the source of truth.
 - `schema_version`: currently `route-v1`.
 - `task_id`: stable task id, either supplied by the caller or derived from the task text.
 - `task`: current user request text, when supplied by the agent.
-- `route.task_type`: coarse task class such as `scaffold_prompt_workflow`, `release_distribution`, `memory_governance`, `workflow_state`, `eval_workflow`, or `general`.
-- `route.risk_tags`: task risks such as `user_owned_docs`, `managed_prompt_block`, `release_distribution`, `ci_workflow`, `memory_governance`, `workflow_state`, or `task_evaluation`.
+- `route.task_type`: coarse task class such as `memory_governance`, `workflow_state`, `review_feedback`, `docs_positioning`, `bug_fix`, or `general`.
+- `route.domain_tags`: optional task domains. The default packet intentionally avoids repo- or benchmark-specific domain labels.
+- `route.guardrail_tags`: protection domains such as `user_owned_docs` or `managed_prompt_block`.
 - `route.changed_paths`: path signals supplied by the caller or inferred from `git status --short`.
+- `route.mentioned_labels`: route labels mentioned in the prompt as labels, such as `code/bug_fix`, that should not automatically become actual user intent.
+- `route.task_type_arbitration`: explanation when route mode or mentioned labels cause the coarse task type to be adjusted.
+- `route.route_self_audit`: packet-level mismatch checks for suspicious mode/task type conflicts, weak workflow triggers, or label-as-intent errors. Suspicious audits should be recorded as taxonomy evidence after task review.
+- `phase_plan`: shadow current-phase output with agent surface mode, permissions, docs, goals, criteria, and reroute inputs. It does not replace active `intent_buckets`.
 - `actor`: resolved local actor handle from CLI/environment, `.env.aiwiki`, git config, or fallback.
 - `route.effort`: coarse effort level such as `low`, `normal`, or `deep`.
 - `context_budget`: safety cap and document limits for the packet. The word value is not a fill target; route may use less.
@@ -33,7 +38,7 @@ remain the source of truth.
 1. Every `must_follow` rule must cite a user-owned source path.
 2. Drafts and trails may provide `context_notes`, but they should not become authoritative rules unless promoted by the existing human-confirmed workflow.
 3. Managed `_toolkit/**` docs can guide routing behavior, but they should not be recorded as user-owned reuse events.
-4. If the packet looks wrong or incomplete, agents should fall back to the baseline read order in `ai-wiki/_toolkit/system.md`.
+4. If the packet looks wrong or incomplete, agents should fall back to the bounded read workflow in `ai-wiki/_toolkit/system.md`.
 5. Record reuse only for user-owned docs actually consulted or materially used, not for every packet candidate.
 6. Treat `work_context` items with `actor_relation=assignee` as actionable for the current actor. Treat other matched work as context unless the user explicitly asks to work on it.
 7. Prefer index cards and runtime references over loading broad full documents. Simple operational tasks should follow the specific workflow they need instead of pulling in broad memory.

@@ -31,7 +31,7 @@ def test_doctor_is_clean_for_latest_navigation_and_rule_structure(
     assert "INFO  ai-wiki/metrics/source-incidents/alice.jsonl No post-turn source incident capture evidence is recorded yet." in result.output
     assert "OK    ai-wiki/index.md `ai-wiki/index.md` exists. It is repo-owned and is not compared against starter navigation drift." in result.output
     assert "OK    ai-wiki/workflows.md `ai-wiki/workflows.md` points to the managed baseline workflow doc." in result.output
-    assert "OK    AGENT.md `AGENT.md` already references the current managed-system prompt entrypoint." in result.output
+    assert "OK    AGENTS.md `AGENTS.md` already references the current managed-system prompt entrypoint." in result.output
 
 
 def test_doctor_reports_post_turn_capture_evidence(repo_env: dict[str, Path]) -> None:

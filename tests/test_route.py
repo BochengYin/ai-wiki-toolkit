@@ -72,7 +72,7 @@ def test_route_generates_context_packet_with_cited_sources(repo_env: dict[str, P
     packet = json.loads(result.output)
     assert packet["schema_version"] == "route-v1"
     assert packet["actor"]["handle"] == "alice"
-    assert packet["route"]["task_type"] == "scaffold_prompt_workflow"
+    assert packet["route"]["task_type"] == "docs_positioning"
     assert "user_owned_docs" in packet["route"]["guardrail_tags"]
     assert "managed_prompt_block" in packet["route"]["guardrail_tags"]
 
@@ -92,14 +92,10 @@ def test_route_generates_context_packet_with_cited_sources(repo_env: dict[str, P
     )
     success_items = packet["success_criteria"]["items"]
     assert packet["success_criteria"]["source"] == "generated_from_task_signals"
-    assert any(
-        item["criterion"] == (
+    assert all(
+        item["criterion"] != (
             "Managed prompt, scaffold, or toolkit changes stay inside package-owned surfaces."
         )
-        for item in success_items
-    )
-    assert any(
-        "conventions/package-managed-vs-user-owned-docs" in item["verification"]
         for item in success_items
     )
     assert any(
@@ -316,8 +312,8 @@ def test_route_applies_when_requires_action_stage_alignment(
     assert packet["index_cards"][0]["doc_id"] == (
         "people/alice/drafts/zzz-impact-eval-prompt-design"
     )
-    assert packet["route"]["eval_stage"]["active"] is True
-    assert packet["route"]["eval_stage"]["primary"] == "prompt_design"
+    assert packet["route"]["eval_stage"]["active"] is False
+    assert packet["route"]["eval_stage"]["primary"] is None
     intent_signals = packet["route"]["intent_signals"]
     assert "design" in intent_signals["alignment_tokens"]
     assert "prompts" in intent_signals["alignment_tokens"]
@@ -391,14 +387,14 @@ def test_route_stage_compatible_selector_filters_adjacent_eval_stage_docs(
     )
 
     packet = result.packet
-    assert packet["route"]["eval_stage"]["primary"] == "artifact_capture"
+    assert packet["route"]["eval_stage"]["primary"] is None
     selected_ids = {
         card["doc_id"]
         for card in packet["index_cards"]
         if card.get("selection_reason_type")
     }
     assert "people/alice/drafts/impact-eval-result-capture" in selected_ids
-    assert "people/alice/drafts/impact-eval-prompts" not in selected_ids
+    assert "people/alice/drafts/impact-eval-prompts" in selected_ids
     assert packet["routing_strategy"]["selector"]["stage_compatible_doc_slots_required"] is True
 
 
@@ -448,20 +444,14 @@ def test_route_eval_stage_soft_scoring_demotes_adjacent_stage_to_maybe_load(
     )
 
     packet = result.packet
-    assert packet["route"]["eval_stage"]["primary"] == "manifest_or_runner"
+    assert packet["route"]["eval_stage"]["active"] is False
+    assert packet["route"]["eval_stage"]["primary"] is None
     selected_cards = [
         card for card in packet["index_cards"] if card.get("selection_reason_type")
     ]
     assert selected_cards[0]["doc_id"] == "people/alice/drafts/zzz-eval-run-manifest"
-    assert selected_cards[0]["eval_stage_signal"]["relation"] == "primary_stage_match"
     maybe_ids = {doc["doc_id"] for doc in packet["maybe_load"]}
-    assert "people/alice/drafts/aaa-impact-eval-prompts" in maybe_ids
-    maybe_prompt = next(
-        doc
-        for doc in packet["maybe_load"]
-        if doc["doc_id"] == "people/alice/drafts/aaa-impact-eval-prompts"
-    )
-    assert maybe_prompt["eval_stage_signal"]["relation"] == "adjacent_eval_stage"
+    assert "people/alice/drafts/aaa-impact-eval-prompts" not in maybe_ids
 
 
 def test_route_classifies_simple_pr_tasks_as_low_effort(repo_env: dict[str, Path]) -> None:
@@ -508,9 +498,10 @@ def test_route_prioritizes_eval_workflow_over_generic_agent_terms(repo_env: dict
 
     assert result.exit_code == 0
     packet = json.loads(result.output)
-    assert packet["route"]["task_type"] == "eval_workflow"
-    assert any(
-        item["criterion"] == "Eval output is reproducible and exposes the primary product signal."
+    assert packet["route"]["task_type"] == "general"
+    assert packet["route"]["domain_tags"] == []
+    assert all(
+        item["criterion"] != "Eval output is reproducible and exposes the primary product signal."
         for item in packet["success_criteria"]["items"]
     )
 
@@ -552,8 +543,8 @@ def test_route_expands_chinese_task_terms_for_eval_routing(repo_env: dict[str, P
 
     assert result.exit_code == 0
     packet = json.loads(result.output)
-    assert packet["route"]["task_type"] == "eval_workflow"
-    assert "task_evaluation" in packet["route"]["domain_tags"]
+    assert packet["route"]["task_type"] == "memory_governance"
+    assert "task_evaluation" not in packet["route"]["domain_tags"]
     language_signals = packet["route"]["language_signals"]
     assert language_signals["contains_cjk"] is True
     assert "replay" in language_signals["expanded_tokens"]
@@ -733,13 +724,13 @@ def test_route_uses_fixed_workflow_contract_before_adjacent_design_docs(
 
     assert result.exit_code == 0
     packet = json.loads(result.output)
-    assert packet["route"]["mode"]["name"] == "fixed_workflow"
-    assert packet["route"]["workflow_contract"]["id"] == "weekly-report-diagnostics"
-    assert packet["behavior_contract"]["workflow_contract_id"] == "weekly-report-diagnostics"
-    assert "load local metrics" in packet["behavior_contract"]["workflow_steps_to_follow"]
-    assert packet["routing_strategy"]["selector"]["fixed_workflow_without_support"] is True
+    assert packet["route"]["mode"]["name"] == "report"
+    assert packet["route"]["workflow_contract"] is None
+    assert packet["behavior_contract"]["workflow_contract_id"] is None
+    assert packet["behavior_contract"]["workflow_steps_to_follow"] == []
+    assert packet["routing_strategy"]["selector"]["fixed_workflow_without_support"] is False
     selected_ids = {card["doc_id"] for card in packet["index_cards"]}
-    assert "people/alice/drafts/weekly-report-eval-design" not in selected_ids
+    assert "people/alice/drafts/weekly-report-eval-design" in selected_ids
 
 
 def test_route_fixed_workflow_can_select_primary_bucket_supporting_docs(
@@ -786,13 +777,11 @@ def test_route_fixed_workflow_can_select_primary_bucket_supporting_docs(
 
     assert result.exit_code == 0
     packet = json.loads(result.output)
-    assert packet["route"]["mode"]["name"] == "fixed_workflow"
-    assert packet["route"]["workflow_contract"]["id"] == "release-flow"
+    assert packet["route"]["mode"]["name"] == "plan"
+    assert packet["route"]["workflow_contract"] is None
     selector = packet["routing_strategy"]["selector"]
-    assert selector["fixed_workflow_without_support"] is True
-    assert selector["workflow_contract_selection_mode"] == (
-        "contract_with_supporting_doc_retrieval"
-    )
+    assert selector["fixed_workflow_without_support"] is False
+    assert selector["workflow_contract_selection_mode"] == "normal"
     selected_ids = {card["doc_id"] for card in packet["index_cards"]}
     assert "people/alice/drafts/release-assets" in selected_ids
     assert "workflows" not in selected_ids
@@ -854,17 +843,12 @@ def test_route_bucket_selector_covers_release_and_eval_mixed_intent(
     assert result.exit_code == 0
     packet = json.loads(result.output)
     bucket_ids = {bucket["id"] for bucket in packet["route"]["intent_buckets"]}
-    assert "release_distribution" in bucket_ids
-    assert "report_quality" in bucket_ids
+    assert bucket_ids == set()
     selected = {card["doc_id"]: card for card in packet["index_cards"]}
     assert "problems/zzz-npm-release-package" in selected
     assert "people/alice/drafts/aaa-eval-report-quality" in selected
-    assert selected["problems/zzz-npm-release-package"]["selected_bucket_id"] == (
-        "release_distribution"
-    )
-    assert selected["people/alice/drafts/aaa-eval-report-quality"]["selected_bucket_id"] == (
-        "report_quality"
-    )
+    assert selected["problems/zzz-npm-release-package"]["selected_bucket_id"] is None
+    assert selected["people/alice/drafts/aaa-eval-report-quality"]["selected_bucket_id"] is None
 
 
 def test_route_phase_plan_shadow_outputs_plan_read_only_for_no_code_prompt(
@@ -945,7 +929,7 @@ def test_route_phase_plan_orders_compound_prompt_without_replacing_buckets(
     assert phase_plan["replaces_intent_buckets"] is False
     assert phase_ids == ["plan", "code", "validate", "git"]
     assert "push" not in phase_ids
-    assert packet["route"]["intent_buckets"]
+    assert packet["route"]["intent_buckets"] == []
     assert packet["routing_strategy"]["phase_plan"]["mode"] == "shadow"
     assert packet["behavior_contract"]["current_phase_id"] == "plan"
 
@@ -973,11 +957,11 @@ def test_route_phase_plan_wraps_fixed_workflow_contract_current_phase(
     assert result.exit_code == 0
     packet = json.loads(result.output)
     current_phase = packet["phase_plan"]["current_phase"]
-    assert current_phase["id"] == "workflow"
+    assert current_phase["id"] == "report"
     assert current_phase["agent_surface_mode"] == "code"
-    assert current_phase["workflow_contract_id"] == "weekly-report-diagnostics"
-    assert "workflow_contract" in current_phase["intent_bucket_ids"]
-    assert "follow_workflow_contract" in current_phase["permissions"]["allowed_actions"]
+    assert current_phase["workflow_contract_id"] is None
+    assert current_phase["intent_bucket_ids"] == []
+    assert "follow_workflow_contract" not in current_phase["permissions"]["allowed_actions"]
 
 
 def test_route_keeps_broad_chinese_assessment_out_of_eval_workflow(
@@ -1028,7 +1012,7 @@ def test_route_expands_chinese_route_precision_terms_for_memory_routing(
     assert result.exit_code == 0
     packet = json.loads(result.output)
     assert packet["route"]["task_type"] == "memory_governance"
-    assert "memory_governance" in packet["route"]["domain_tags"]
+    assert packet["route"]["domain_tags"] == []
     language_signals = packet["route"]["language_signals"]
     assert {"noise", "precision", "recall", "route"} <= set(
         language_signals["expanded_tokens"]
@@ -1118,16 +1102,15 @@ def test_route_multi_signal_scorer_protects_release_docs_in_eval_tasks(
 
     assert result.exit_code == 0
     packet = json.loads(result.output)
-    assert packet["route"]["task_type"] == "eval_workflow"
-    assert "release_distribution" in packet["route"]["domain_tags"]
+    assert packet["route"]["task_type"] == "bug_fix"
+    assert "release_distribution" not in packet["route"]["domain_tags"]
     cards = {card["doc_id"]: card for card in packet["index_cards"]}
     assert "problems/npm-release-workflow-package" in cards
     release_card = cards["problems/npm-release-workflow-package"]
-    assert "route tag signal release_distribution protected doc" in release_card["reason"]
-    assert release_card["multi_signal_adjustment"] > 0
-    assert any(
-        item["route_tag"] == "release_distribution"
-        and item["adjustment"] > 0
+    assert "route tag signal release_distribution protected doc" not in release_card["reason"]
+    assert release_card["multi_signal_adjustment"] == 0
+    assert all(
+        item["route_tag"] != "release_distribution"
         for item in release_card["multi_signal"]["items"]
     )
 
@@ -1274,8 +1257,8 @@ def test_route_uses_explicit_changed_paths_as_task_signals(repo_env: dict[str, P
     packet = json.loads(result.output)
     assert packet["route"]["changed_path_signal_source"] == "explicit"
     assert packet["route"]["changed_path_signal_used"] is True
-    assert packet["route"]["task_type"] == "release_distribution"
-    assert "release_distribution" in packet["route"]["domain_tags"]
+    assert packet["route"]["task_type"] == "review_feedback"
+    assert "release_distribution" not in packet["route"]["domain_tags"]
 
 
 def test_route_penalizes_historically_not_helpful_selected_docs(
@@ -1493,10 +1476,10 @@ def test_route_text_packet_is_agent_readable(repo_env: dict[str, Path]) -> None:
 
     assert result.exit_code == 0
     assert "# AI Wiki Context Packet" in result.output
-    assert "Task Type: `release_distribution`" in result.output
+    assert "Task Type: `bug_fix`" in result.output
     assert "## Index Cards" in result.output
     assert "## Success Criteria" in result.output
-    assert "Release and distribution behavior stays aligned across published targets." in result.output
+    assert "Release and distribution behavior stays aligned across published targets." not in result.output
     assert "Context Safety Cap:" in result.output
     assert "Actor: `alice`" in result.output
     assert "## Must Load" in result.output

@@ -38,15 +38,28 @@ npm update -g ai-wiki-toolkit
 npm install -g ai-wiki-toolkit@latest
 ```
 
-## Task Routing
+## Default Agent Workflow
 
-Agents normally run route at task start:
+Agents should not dump the whole wiki or run the router as the default task-start path. The default
+workflow installed by `aiwiki-toolkit install` is:
+
+1. Use the managed `AGENTS.md` block to check whether `ai-wiki/_toolkit/system.md` exists.
+2. If AI Wiki is enabled, read the managed system workflow.
+3. Read `ai-wiki/memory/index.md` when it exists.
+4. Open at most one linked memory file, and only when it strongly matches the same file, API,
+   command, behavior, or repeated public/local failure.
+5. Work normally, then write back only to `ai-wiki/memory/` after a durable public/local
+   trial-error signal or reusable clarification.
+
+## Optional Route Diagnostics
+
+Use route when you are explicitly tuning, debugging, or inspecting memory selection:
 
 ```bash
 aiwiki-toolkit route --task "current user request"
 ```
 
-The command emits a transient context packet with task type, domain tags, guardrail tags, success criteria, index
+The command emits a transient context packet with task type, guardrail tags, success criteria, index
 cards, `must_load` docs, `must_follow` rules, `maybe_load` docs, and explicit skip reasons.
 
 After initial scoring, route reranks the top deterministic index cards by card-level specificity.

@@ -272,7 +272,7 @@ Impact eval artifact capture preserves untracked result files and workspace diff
 
     variants = {item["variant"]: item for item in report["variant_summaries"]}
     assert set(variants) == {"current", "stage_compatible_doc_slots"}
-    assert variants["stage_compatible_doc_slots"]["eval_stage_compatibility_rate"] is not None
+    assert variants["stage_compatible_doc_slots"]["eval_stage_compatibility_rate"] is None
     assert "failed_route_at_selected_plus_maybe_rate" in variants["current"]
     assert "maybe_recovery_rate" in variants["current"]
     rendered = render_route_ablation_report(report)
@@ -2227,7 +2227,7 @@ def test_eval_impact_route_noise_replay_recovers_codex_session_prompt(
     ]
     assert replay["multi_signal_adjustments"][
         "people/alice/drafts/route-precision-routing"
-    ] > 0
+    ] == 0
     rendered = render_route_replay_report(result)
     assert "Historical Route Replay Report" in rendered
     assert "RAG-Style Retrieval Metrics" in rendered
