@@ -28,7 +28,7 @@ def test_install_command_matches_init_behavior(repo_env: dict[str, Path]) -> Non
     assert result.exit_code == 0
     assert (repo_env["repo"] / "ai-wiki" / "people" / "alice" / "drafts").is_dir()
     assert (repo_env["repo"] / ".env.aiwiki").exists()
-    assert (repo_env["repo"] / "AGENT.md").exists()
+    assert (repo_env["repo"] / "AGENTS.md").exists()
     assert (repo_env["repo"] / "ai-wiki" / "_toolkit" / "index.md").exists()
     assert (repo_env["repo"] / "ai-wiki" / "_toolkit" / "workflows.md").exists()
     assert (repo_env["repo"] / "ai-wiki" / "conventions" / "index.md").exists()
@@ -237,7 +237,7 @@ def test_uninstall_default_removes_managed_layer_but_preserves_user_docs(
     assert (repo / "ai-wiki" / "constraints.md").read_text(encoding="utf-8") == "# User constraints\n"
     assert (repo / "ai-wiki" / "review-patterns" / "boundary.md").exists()
     assert (repo / "ai-wiki" / "people" / "alice" / "drafts" / "draft.md").exists()
-    assert not (repo / "AGENT.md").exists()
+    assert not (repo / "AGENTS.md").exists()
 
     opencode_written = json.loads((repo / "opencode.json").read_text(encoding="utf-8"))
     assert opencode_written == {"otherTool": {"enabled": True}}
@@ -294,7 +294,7 @@ def test_reinstall_restores_managed_layer_without_overwriting_user_docs(
 
     assert reinstall_result.exit_code == 0
     assert (repo / "ai-wiki" / "_toolkit" / "system.md").exists()
-    assert (repo / "AGENT.md").exists()
+    assert (repo / "AGENTS.md").exists()
     assert (repo / "ai-wiki" / "constraints.md").read_text(encoding="utf-8") == "# User constraints\n"
 
 
@@ -387,7 +387,7 @@ def test_install_with_second_handle_adds_person_tree_without_churning_shared_fil
     repo = repo_env["repo"]
     alice_draft = repo / "ai-wiki" / "people" / "alice" / "drafts" / "alice-note.md"
     alice_draft.write_text("# Alice note\n", encoding="utf-8")
-    agent_before = (repo / "AGENT.md").read_text(encoding="utf-8")
+    agents_before = (repo / "AGENTS.md").read_text(encoding="utf-8")
     index_before = (repo / "ai-wiki" / "index.md").read_text(encoding="utf-8")
     workflows_before = (repo / "ai-wiki" / "workflows.md").read_text(encoding="utf-8")
 
@@ -400,7 +400,7 @@ def test_install_with_second_handle_adds_person_tree_without_churning_shared_fil
     assert (repo / "ai-wiki" / "people" / "bob" / "index.md").exists()
     assert (repo / "ai-wiki" / "people" / "bob" / "drafts").is_dir()
     assert alice_draft.read_text(encoding="utf-8") == "# Alice note\n"
-    assert (repo / "AGENT.md").read_text(encoding="utf-8") == agent_before
+    assert (repo / "AGENTS.md").read_text(encoding="utf-8") == agents_before
     assert (repo / "ai-wiki" / "index.md").read_text(encoding="utf-8") == index_before
     assert (repo / "ai-wiki" / "workflows.md").read_text(encoding="utf-8") == workflows_before
 
@@ -504,5 +504,5 @@ def test_uninstall_with_purge_and_yes_removes_repo_docs_but_preserves_shared_hom
     assert (repo_env["home_dir"] / "system" / "preferences.md").read_text(encoding="utf-8") == (
         "# Shared preferences\n"
     )
-    assert not (repo_env["repo"] / "AGENT.md").exists()
+    assert not (repo_env["repo"] / "AGENTS.md").exists()
     assert "Shared home wiki preserved: yes" in result.output

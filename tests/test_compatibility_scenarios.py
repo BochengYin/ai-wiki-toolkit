@@ -39,7 +39,7 @@ def test_upgrade_scenario_only_changes_managed_toolkit_and_prompt(
     user_constraints = repo_env["repo"] / "ai-wiki" / "constraints.md"
     repo_toolkit = repo_env["repo"] / "ai-wiki" / "_toolkit" / "system.md"
     home_toolkit = repo_env["home_dir"] / "system" / "_toolkit" / "system.md"
-    agent = repo_env["repo"] / "AGENT.md"
+    agent = repo_env["repo"] / "AGENTS.md"
 
     user_index.write_text("# User-owned index\n", encoding="utf-8")
     user_constraints.write_text("# User-owned constraints\n", encoding="utf-8")
