@@ -1,0 +1,1570 @@
+{
+  "schema_version": "applies-when-control-treatment-comparison-v1",
+  "generated_at": "2026-06-04T23:46:23.381108+00:00",
+  "control_summary": {
+    "trace_count": 57,
+    "selected_doc_count": 320,
+    "useful_doc_count": 226,
+    "selected_useful_doc_count": 112,
+    "selected_but_unused_doc_count": 207,
+    "selected_not_helpful_doc_count": 1,
+    "missed_useful_doc_count": 52,
+    "route_precision": 0.35,
+    "route_noise_rate": 0.65
+  },
+  "treatment_summary": {
+    "trace_count": 57,
+    "selected_doc_count": 320,
+    "useful_doc_count": 226,
+    "selected_useful_doc_count": 113,
+    "selected_but_unused_doc_count": 206,
+    "selected_not_helpful_doc_count": 1,
+    "missed_useful_doc_count": 52,
+    "route_precision": 0.353125,
+    "route_noise_rate": 0.646875
+  },
+  "summary_delta": {
+    "route_precision": 0.0031250000000000444,
+    "route_noise_rate": -0.0031250000000000444,
+    "selected_doc_count": 0,
+    "selected_useful_doc_count": 1,
+    "missed_useful_doc_count": 0
+  },
+  "paired_trace_count": 57,
+  "paired_wins": 4,
+  "paired_losses": 3,
+  "paired_ties": 50,
+  "paired": [
+    {
+      "trace_id": "rt_4bed9de6ab35",
+      "task_id": "promote-draft-ai-wiki-people-bochengyin-index-md",
+      "control_precision": 0.16666666666666666,
+      "treatment_precision": 0.16666666666666666,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/context-routing-budget-should-be-sparse-and-index-backed",
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/feedback-diagnosis-mvp-should-start-as-explicit-generated-report",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/karpathy-skills-suggest-success-criteria-and-cross-agent-packaging",
+        "people/bochengyin/drafts/user-owned-ai-wiki-index-should-not-be-an-upgrade-surface"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/context-routing-budget-should-be-sparse-and-index-backed",
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/feedback-diagnosis-mvp-should-start-as-explicit-generated-report",
+        "people/bochengyin/drafts/karpathy-skills-suggest-success-criteria-and-cross-agent-packaging",
+        "people/bochengyin/drafts/user-owned-ai-wiki-index-should-not-be-an-upgrade-surface",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "control_missed_useful": [
+        "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+        "people/bochengyin/index"
+      ],
+      "treatment_missed_useful": [
+        "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+        "people/bochengyin/index"
+      ]
+    },
+    {
+      "trace_id": "rt_12a1480b6887",
+      "task_id": "draft-reuse-3-promote",
+      "control_precision": 0.0,
+      "treatment_precision": 0.0,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/ai-wiki-reuse-metrics-should-exclude-managed-docs-and-shard-by-handle",
+        "people/bochengyin/drafts/codex-session-recovery-should-search-jsonl-and-state-db",
+        "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/karpathy-skills-suggest-success-criteria-and-cross-agent-packaging",
+        "people/bochengyin/drafts/linux-release-binaries-need-runtime-checks-against-an-older-glibc-baseline"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/ai-wiki-reuse-metrics-should-exclude-managed-docs-and-shard-by-handle",
+        "people/bochengyin/drafts/codex-session-recovery-should-search-jsonl-and-state-db",
+        "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/linux-release-binaries-need-runtime-checks-against-an-older-glibc-baseline",
+        "people/bochengyin/drafts/route-usefulness-eval-needs-route-traces-and-actual-use-comparison"
+      ],
+      "control_missed_useful": [
+        "conventions/index",
+        "people/bochengyin/drafts/agent-framework-layers-should-guide-ai-wiki-toolkit-roadmap",
+        "people/bochengyin/drafts/consolidation-review-queue-should-use-diagnostics-as-prioritization-layer",
+        "work/events/bochengyin"
+      ],
+      "treatment_missed_useful": [
+        "conventions/index",
+        "people/bochengyin/drafts/agent-framework-layers-should-guide-ai-wiki-toolkit-roadmap",
+        "people/bochengyin/drafts/consolidation-review-queue-should-use-diagnostics-as-prioritization-layer",
+        "work/events/bochengyin"
+      ]
+    },
+    {
+      "trace_id": "rt_0c00f779caee",
+      "task_id": "code",
+      "control_precision": 0.0,
+      "treatment_precision": 0.0,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "constraints",
+        "decisions",
+        "workflows"
+      ],
+      "treatment_selected": [
+        "constraints",
+        "decisions",
+        "workflows"
+      ],
+      "control_missed_useful": [
+        "people/bochengyin/drafts/ai-wiki-reuse-metrics-should-exclude-managed-docs-and-shard-by-handle",
+        "people/bochengyin/drafts/ai-wiki-usefulness-metrics-need-task-level-checks-plus-doc-events"
+      ],
+      "treatment_missed_useful": [
+        "people/bochengyin/drafts/ai-wiki-reuse-metrics-should-exclude-managed-docs-and-shard-by-handle",
+        "people/bochengyin/drafts/ai-wiki-usefulness-metrics-need-task-level-checks-plus-doc-events"
+      ]
+    },
+    {
+      "trace_id": "rt_96ae917ebf4c",
+      "task_id": "weekly-report-saved-time-coverage-promotion-noisy-diagnosis-telemetry-provenance",
+      "control_precision": 0.0,
+      "treatment_precision": 0.0,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/context-routing-budget-should-be-sparse-and-index-backed",
+        "people/bochengyin/drafts/end-of-task-ai-wiki-update-check-must-always-run",
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/feedback-diagnosis-mvp-should-start-as-explicit-generated-report",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/context-routing-budget-should-be-sparse-and-index-backed",
+        "people/bochengyin/drafts/end-of-task-ai-wiki-update-check-must-always-run",
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/feedback-diagnosis-mvp-should-start-as-explicit-generated-report",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/route-usefulness-eval-needs-route-traces-and-actual-use-comparison"
+      ],
+      "control_missed_useful": [
+        "people/bochengyin/drafts/ai-wiki-reuse-metrics-should-exclude-managed-docs-and-shard-by-handle",
+        "people/bochengyin/drafts/ai-wiki-usefulness-metrics-need-task-level-checks-plus-doc-events"
+      ],
+      "treatment_missed_useful": [
+        "people/bochengyin/drafts/ai-wiki-reuse-metrics-should-exclude-managed-docs-and-shard-by-handle",
+        "people/bochengyin/drafts/ai-wiki-usefulness-metrics-need-task-level-checks-plus-doc-events"
+      ]
+    },
+    {
+      "trace_id": "rt_040ffa2691a2",
+      "task_id": "karpathy-ai-wiki-toolkit",
+      "control_precision": 0.3333333333333333,
+      "treatment_precision": 0.3333333333333333,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "constraints",
+        "conventions/distribution-target-matrix-must-match-published-assets",
+        "decisions",
+        "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+        "people/bochengyin/drafts/karpathy-skills-suggest-success-criteria-and-cross-agent-packaging",
+        "workflows"
+      ],
+      "treatment_selected": [
+        "constraints",
+        "conventions/distribution-target-matrix-must-match-published-assets",
+        "decisions",
+        "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+        "people/bochengyin/drafts/karpathy-skills-suggest-success-criteria-and-cross-agent-packaging",
+        "workflows"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_5090bc3a3004",
+      "task_id": "karpathy-html-markdown-ai-wiki-agent-memory-ai-wiki-toolkit-html",
+      "control_precision": 0.3333333333333333,
+      "treatment_precision": 0.3333333333333333,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "constraints",
+        "decisions",
+        "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+        "people/bochengyin/drafts/karpathy-skills-suggest-success-criteria-and-cross-agent-packaging",
+        "people/bochengyin/drafts/memory-compilation-mvp-needs-eval-gated-benefit",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "treatment_selected": [
+        "constraints",
+        "decisions",
+        "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/karpathy-skills-suggest-success-criteria-and-cross-agent-packaging",
+        "people/bochengyin/drafts/memory-compilation-mvp-needs-eval-gated-benefit"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_99735d95acbd",
+      "task_id": "weekly-html-report-self-involving",
+      "control_precision": 0.0,
+      "treatment_precision": 0.0,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "constraints",
+        "decisions",
+        "workflows"
+      ],
+      "treatment_selected": [
+        "constraints",
+        "decisions",
+        "workflows"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_1957a27d5841",
+      "task_id": "ai-wiki-toolkit-ai-wiki-toolkit-handle-git-conflict",
+      "control_precision": 0.0,
+      "treatment_precision": 0.0,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "constraints",
+        "conventions/distribution-target-matrix-must-match-published-assets",
+        "decisions",
+        "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+        "people/bochengyin/drafts/managed-toolkit-workflows-need-a-toc-and-scope-aware-conflict-checks",
+        "workflows"
+      ],
+      "treatment_selected": [
+        "constraints",
+        "conventions/distribution-target-matrix-must-match-published-assets",
+        "decisions",
+        "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+        "people/bochengyin/drafts/managed-toolkit-workflows-need-a-toc-and-scope-aware-conflict-checks",
+        "workflows"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_44659a6d6b05",
+      "task_id": "push-current-changes-and-release-a-new-version",
+      "control_precision": 0.16666666666666666,
+      "treatment_precision": 0.16666666666666666,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "constraints",
+        "conventions/distribution-target-matrix-must-match-published-assets",
+        "conventions/package-managed-vs-user-owned-docs",
+        "people/bochengyin/drafts/linux-release-binaries-need-runtime-checks-against-an-older-glibc-baseline",
+        "problems/linux-musl-pyinstaller-needs-binutils-objdump",
+        "workflows"
+      ],
+      "treatment_selected": [
+        "constraints",
+        "conventions/distribution-target-matrix-must-match-published-assets",
+        "conventions/package-managed-vs-user-owned-docs",
+        "people/bochengyin/drafts/linux-release-binaries-need-runtime-checks-against-an-older-glibc-baseline",
+        "problems/linux-musl-pyinstaller-needs-binutils-objdump",
+        "workflows"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_56cfc27f3431",
+      "task_id": "evaluate-another-agent-s-assessment-that-ai-wiki-toolkit-has-first-version-workf",
+      "control_precision": 0.6666666666666666,
+      "treatment_precision": 0.5,
+      "precision_delta": -0.16666666666666663,
+      "control_selected": [
+        "people/bochengyin/drafts/computer-use-vscode-codex-multiline-prompts-need-clipboard-paste",
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/route-usefulness-eval-needs-route-traces-and-actual-use-comparison",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/computer-use-vscode-codex-multiline-prompts-need-clipboard-paste",
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/route-usefulness-eval-needs-route-traces-and-actual-use-comparison",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_69cf290b0e40",
+      "task_id": "implement-the-next-eval-productization-slice-after-eval-impact-report-add-lightw",
+      "control_precision": 0.3333333333333333,
+      "treatment_precision": 0.3333333333333333,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/computer-use-vscode-codex-multiline-prompts-need-clipboard-paste",
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/computer-use-vscode-codex-multiline-prompts-need-clipboard-paste",
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_01542fc82e58",
+      "task_id": "continue-eval-productization-after-adding-eval-impact-manifest-implement-the-nex",
+      "control_precision": 0.5,
+      "treatment_precision": 0.5,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/adjacent-consolidated-guidance-can-underperform-task-specific-raw-drafts-in-impact-evals",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/adjacent-consolidated-guidance-can-underperform-task-specific-raw-drafts-in-impact-evals",
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_bec1134035e2",
+      "task_id": "decide-the-next-implementation-step-after-adding-eval-impact-manifest-and-eval-i",
+      "control_precision": 0.16666666666666666,
+      "treatment_precision": 0.16666666666666666,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/adjacent-consolidated-guidance-can-underperform-task-specific-raw-drafts-in-impact-evals",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/adjacent-consolidated-guidance-can-underperform-task-specific-raw-drafts-in-impact-evals",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_98bcf2266e86",
+      "task_id": "implement-eval-impact-prepare-command-after-eval-impact-plan-create-workspaces-a",
+      "control_precision": 0.16666666666666666,
+      "treatment_precision": 0.16666666666666666,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-no-target-aiwiki-slots-must-exclude-task-specific-workflow-memory",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-no-target-aiwiki-slots-must-exclude-task-specific-workflow-memory",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_684c4ef56226",
+      "task_id": "decide-next-step-after-implementing-eval-impact-plan-prepare-manifest-report-sum",
+      "control_precision": 0.16666666666666666,
+      "treatment_precision": 0.16666666666666666,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_4600e1b7f8f7",
+      "task_id": "complete-eval-impact-automation-lifecycle-by-adding-capture-validate-and-score-c",
+      "control_precision": 0.6666666666666666,
+      "treatment_precision": 0.6666666666666666,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "control_missed_useful": [
+        "constraints",
+        "conventions/package-managed-vs-user-owned-docs",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "treatment_missed_useful": [
+        "constraints",
+        "conventions/package-managed-vs-user-owned-docs",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check"
+      ]
+    },
+    {
+      "trace_id": "rt_f3df6f7225d0",
+      "task_id": "implement-the-three-step-autonomous-impact-eval-runner-v0-single-slot-run-v1-all",
+      "control_precision": 0.6666666666666666,
+      "treatment_precision": 0.5,
+      "precision_delta": -0.16666666666666663,
+      "control_selected": [
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-no-target-aiwiki-slots-must-exclude-task-specific-workflow-memory",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-no-target-aiwiki-slots-must-exclude-task-specific-workflow-memory",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics"
+      ],
+      "control_missed_useful": [
+        "constraints",
+        "conventions/package-managed-vs-user-owned-docs",
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check"
+      ],
+      "treatment_missed_useful": [
+        "constraints",
+        "conventions/package-managed-vs-user-owned-docs",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ]
+    },
+    {
+      "trace_id": "rt_79d8c7efa393",
+      "task_id": "add-a-rubric-judge-scoring-policy-to-the-autonomous-impact-eval-runner-so-eval-i",
+      "control_precision": 0.6666666666666666,
+      "treatment_precision": 0.8333333333333334,
+      "precision_delta": 0.16666666666666674,
+      "control_selected": [
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "control_missed_useful": [
+        "constraints",
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report"
+      ],
+      "treatment_missed_useful": [
+        "constraints"
+      ]
+    },
+    {
+      "trace_id": "rt_7dec7fbdd3fe",
+      "task_id": "answer-whether-the-current-ai-wiki-toolkit-can-be-downloaded-installed-and-used",
+      "control_precision": 0.3333333333333333,
+      "treatment_precision": 0.3333333333333333,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/local-dogfooding-should-check-source-cli-vs-installed-entrypoint",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "control_missed_useful": [
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report"
+      ],
+      "treatment_missed_useful": [
+        "people/bochengyin/drafts/local-dogfooding-should-check-source-cli-vs-installed-entrypoint"
+      ]
+    },
+    {
+      "trace_id": "rt_118a2c38db14",
+      "task_id": "clarify-whether-users-must-run-plan-prepare-run-report-separately-or-whether-the",
+      "control_precision": 0.16666666666666666,
+      "treatment_precision": 0.16666666666666666,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/computer-use-vscode-codex-multiline-prompts-need-clipboard-paste",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "control_missed_useful": [
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report"
+      ],
+      "treatment_missed_useful": [
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report"
+      ]
+    },
+    {
+      "trace_id": "rt_72af0ca6ff12",
+      "task_id": "explain-with-examples-which-parts-of-eval-impact-workflow-are-currently-automate",
+      "control_precision": 0.3333333333333333,
+      "treatment_precision": 0.3333333333333333,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/computer-use-vscode-codex-multiline-prompts-need-clipboard-paste",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_4c010dd21dd2",
+      "task_id": "clarify-whether-eval-impact-users-need-a-family-discovery-command-before-they-ca",
+      "control_precision": 0.3333333333333333,
+      "treatment_precision": 0.3333333333333333,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/adjacent-consolidated-guidance-can-underperform-task-specific-raw-drafts-in-impact-evals",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/adjacent-consolidated-guidance-can-underperform-task-specific-raw-drafts-in-impact-evals",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-no-target-aiwiki-slots-must-exclude-task-specific-workflow-memory",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_9f459c483da8",
+      "task_id": "design-the-eval-impact-family-discovery-step-including-how-it-should-identify-tr",
+      "control_precision": 0.6666666666666666,
+      "treatment_precision": 0.6666666666666666,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_8ac2ab5d6fa9",
+      "task_id": "identify-what-the-current-project-still-needs-to-implement-eval-impact-family-di",
+      "control_precision": 0.6666666666666666,
+      "treatment_precision": 0.6666666666666666,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/route-usefulness-eval-needs-route-traces-and-actual-use-comparison",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/route-usefulness-eval-needs-route-traces-and-actual-use-comparison",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "control_missed_useful": [
+        "constraints"
+      ],
+      "treatment_missed_useful": [
+        "constraints"
+      ]
+    },
+    {
+      "trace_id": "rt_612d4376c511",
+      "task_id": "implement-eval-impact-family-discovery-trial-error-candidate-discovery-family-le",
+      "control_precision": 0.6666666666666666,
+      "treatment_precision": 0.6666666666666666,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_e6dbd1d57877",
+      "task_id": "clarify-roadmap-for-continuous-automatic-discovery-of-new-impact-eval-families-a",
+      "control_precision": 0.5,
+      "treatment_precision": 0.5,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_236bb7903311",
+      "task_id": "build-a-continuous-impact-eval-loop-automatically-discover-new-eval-families-fro",
+      "control_precision": 0.6666666666666666,
+      "treatment_precision": 0.6666666666666666,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff"
+      ],
+      "control_missed_useful": [
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "treatment_missed_useful": [
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ]
+    },
+    {
+      "trace_id": "rt_82743fe03d68",
+      "task_id": "push-the-continuous-impact-eval-loop-changes-reinstall-the-local-aiwiki-toolkit",
+      "control_precision": 0.3333333333333333,
+      "treatment_precision": 0.3333333333333333,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance"
+      ],
+      "control_missed_useful": [
+        "constraints",
+        "conventions/distribution-target-matrix-must-match-published-assets",
+        "problems/windows-arm-smoke-version-checks-need-full-cli-output"
+      ],
+      "treatment_missed_useful": [
+        "constraints",
+        "conventions/distribution-target-matrix-must-match-published-assets",
+        "problems/windows-arm-smoke-version-checks-need-full-cli-output"
+      ]
+    },
+    {
+      "trace_id": "rt_6b198b7c06f2",
+      "task_id": "merge-pr-73-release-ai-wiki-toolkit-to-npm-update-the-local-installed-package-th",
+      "control_precision": 0.0,
+      "treatment_precision": 0.16666666666666666,
+      "precision_delta": 0.16666666666666666,
+      "control_selected": [
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics"
+      ],
+      "treatment_selected": [
+        "conventions/distribution-target-matrix-must-match-published-assets",
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "control_missed_useful": [
+        "workflows"
+      ],
+      "treatment_missed_useful": [
+        "workflows"
+      ]
+    },
+    {
+      "trace_id": "rt_4fb0bc1d04ee",
+      "task_id": "explain-the-discovered-continuous-impact-eval-candidates-their-underlying-proble",
+      "control_precision": 0.6666666666666666,
+      "treatment_precision": 0.6666666666666666,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics"
+      ],
+      "control_missed_useful": [
+        "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+        "people/bochengyin/drafts/local-dogfooding-should-check-source-cli-vs-installed-entrypoint",
+        "people/bochengyin/drafts/memory-compilation-mvp-needs-eval-gated-benefit"
+      ],
+      "treatment_missed_useful": [
+        "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+        "people/bochengyin/drafts/local-dogfooding-should-check-source-cli-vs-installed-entrypoint",
+        "people/bochengyin/drafts/memory-compilation-mvp-needs-eval-gated-benefit"
+      ]
+    },
+    {
+      "trace_id": "rt_812cd43f792d",
+      "task_id": "implement-source-incident-trial-error-timing-extraction-for-impact-eval-candidat",
+      "control_precision": 0.5,
+      "treatment_precision": 0.5,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/memory-compilation-mvp-needs-eval-gated-benefit",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "control_missed_useful": [
+        "people/bochengyin/drafts/codex-session-recovery-should-search-jsonl-and-state-db"
+      ],
+      "treatment_missed_useful": [
+        "people/bochengyin/drafts/codex-session-recovery-should-search-jsonl-and-state-db"
+      ]
+    },
+    {
+      "trace_id": "rt_caec87d24e69",
+      "task_id": "implement-source-incident-trial-error-timing-extraction-for-impact-eval-candidat",
+      "control_precision": 0.5,
+      "treatment_precision": 0.5,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/memory-compilation-mvp-needs-eval-gated-benefit",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "control_missed_useful": [
+        "people/bochengyin/drafts/codex-session-recovery-should-search-jsonl-and-state-db"
+      ],
+      "treatment_missed_useful": [
+        "people/bochengyin/drafts/codex-session-recovery-should-search-jsonl-and-state-db"
+      ]
+    },
+    {
+      "trace_id": "rt_52b1ad2fd2cf",
+      "task_id": "merge-the-source-incident-timing-feature-into-the-repo-release-the-npm-package-u",
+      "control_precision": 0.3333333333333333,
+      "treatment_precision": 0.3333333333333333,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "constraints",
+        "conventions/distribution-target-matrix-must-match-published-assets",
+        "conventions/package-managed-vs-user-owned-docs",
+        "people/bochengyin/drafts/repo-local-contributor-workflows-should-stay-out-of-the-package-layer",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance",
+        "workflows"
+      ],
+      "treatment_selected": [
+        "constraints",
+        "conventions/distribution-target-matrix-must-match-published-assets",
+        "conventions/package-managed-vs-user-owned-docs",
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/repo-local-contributor-workflows-should-stay-out-of-the-package-layer",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_1c3ea51a7c84",
+      "task_id": "explain-why-historical-local-codex-sessions-are-not-enough-to-safely-infer-sourc",
+      "control_precision": 0.3333333333333333,
+      "treatment_precision": 0.3333333333333333,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/codex-session-recovery-should-search-jsonl-and-state-db",
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/codex-session-recovery-should-search-jsonl-and-state-db",
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_92e56a935a02",
+      "task_id": "clarify-why-source-session-ids-were-not-saved-when-writing-ai-wiki-memory-and-in",
+      "control_precision": 0.3333333333333333,
+      "treatment_precision": 0.3333333333333333,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/codex-session-recovery-should-search-jsonl-and-state-db",
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance",
+        "people/bochengyin/drafts/toolkit-installed-repo-local-skills-should-skip-existing-files",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/codex-session-recovery-should-search-jsonl-and-state-db",
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/route-usefulness-eval-needs-route-traces-and-actual-use-comparison",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_2e7d99263aa3",
+      "task_id": "implement-write-back-provenance-backfill-for-source-incident-timing-find-first-a",
+      "control_precision": 0.6666666666666666,
+      "treatment_precision": 0.6666666666666666,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/codex-session-recovery-should-search-jsonl-and-state-db",
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/local-dogfooding-should-check-source-cli-vs-installed-entrypoint",
+        "people/bochengyin/drafts/route-usefulness-eval-needs-route-traces-and-actual-use-comparison",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/codex-session-recovery-should-search-jsonl-and-state-db",
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/local-dogfooding-should-check-source-cli-vs-installed-entrypoint",
+        "people/bochengyin/drafts/route-usefulness-eval-needs-route-traces-and-actual-use-comparison",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_1519d6b856de",
+      "task_id": "clarify-whether-an-agent-can-know-current-session-id-and-duration-at-the-moment",
+      "control_precision": 0.0,
+      "treatment_precision": 0.0,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/feedback-diagnosis-mvp-should-start-as-explicit-generated-report",
+        "people/bochengyin/drafts/local-dogfooding-should-check-source-cli-vs-installed-entrypoint",
+        "people/bochengyin/drafts/opencode-runtime-skill-exposure-needs-prompt-visible-fallback",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/feedback-diagnosis-mvp-should-start-as-explicit-generated-report",
+        "people/bochengyin/drafts/local-dogfooding-should-check-source-cli-vs-installed-entrypoint",
+        "people/bochengyin/drafts/opencode-runtime-skill-exposure-needs-prompt-visible-fallback",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_3e8623f398da",
+      "task_id": "implement-post-turn-source-incident-capture-for-ai-wiki-write-back-after-a-codex",
+      "control_precision": 0.3333333333333333,
+      "treatment_precision": 0.3333333333333333,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "constraints",
+        "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/managed-toolkit-workflows-need-a-toc-and-scope-aware-conflict-checks",
+        "people/bochengyin/drafts/repo-local-contributor-workflows-should-stay-out-of-the-package-layer",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance"
+      ],
+      "treatment_selected": [
+        "constraints",
+        "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/repo-local-contributor-workflows-should-stay-out-of-the-package-layer",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_f8e5c1f5f668",
+      "task_id": "session-ai-wiki-load-load-index-constraints-decisions-workflows",
+      "control_precision": 0.6666666666666666,
+      "treatment_precision": 0.6666666666666666,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "constraints",
+        "decisions",
+        "index",
+        "people/bochengyin/drafts/codex-session-recovery-should-search-jsonl-and-state-db",
+        "people/bochengyin/drafts/context-routing-budget-should-be-sparse-and-index-backed",
+        "workflows"
+      ],
+      "treatment_selected": [
+        "constraints",
+        "decisions",
+        "index",
+        "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+        "people/bochengyin/drafts/context-routing-budget-should-be-sparse-and-index-backed",
+        "workflows"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_17851c2f07fd",
+      "task_id": "ai-wiki-changes-push-repo",
+      "control_precision": 0.6666666666666666,
+      "treatment_precision": 0.6666666666666666,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "constraints",
+        "conventions/package-managed-vs-user-owned-docs",
+        "workflows"
+      ],
+      "treatment_selected": [
+        "constraints",
+        "conventions/package-managed-vs-user-owned-docs",
+        "workflows"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_1895ed92462c",
+      "task_id": "ai-wiki-toolkit-trial-and-error-source-incident",
+      "control_precision": 0.5,
+      "treatment_precision": 0.5,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "constraints",
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/local-dogfooding-should-check-source-cli-vs-installed-entrypoint",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics"
+      ],
+      "treatment_selected": [
+        "constraints",
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/local-dogfooding-should-check-source-cli-vs-installed-entrypoint",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_6e223e721b2b",
+      "task_id": "ai-wiki-toolkit-package-post-turn-hook",
+      "control_precision": 0.8333333333333334,
+      "treatment_precision": 0.8333333333333334,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "constraints",
+        "conventions/distribution-target-matrix-must-match-published-assets",
+        "conventions/package-managed-vs-user-owned-docs",
+        "decisions",
+        "people/bochengyin/drafts/introducing-new-npm-package-names-needs-a-bootstrap-publish-plan",
+        "workflows"
+      ],
+      "treatment_selected": [
+        "constraints",
+        "conventions/distribution-target-matrix-must-match-published-assets",
+        "conventions/package-managed-vs-user-owned-docs",
+        "decisions",
+        "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+        "workflows"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_d8d2aefc491a",
+      "task_id": "post-turn-hook-install-post-turn-capture-doctor-hook",
+      "control_precision": 0.5,
+      "treatment_precision": 0.5,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "constraints",
+        "decisions",
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/post-turn-hooks-should-be-opt-in",
+        "workflows"
+      ],
+      "treatment_selected": [
+        "constraints",
+        "decisions",
+        "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/post-turn-hooks-should-be-opt-in",
+        "workflows"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_e9e4565a0ce4",
+      "task_id": "push-current-changes-to-remote-merge-the-pr-then-release-npm-for-ai-wiki-toolkit",
+      "control_precision": 0.3333333333333333,
+      "treatment_precision": 0.3333333333333333,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "constraints",
+        "conventions/distribution-target-matrix-must-match-published-assets",
+        "people/bochengyin/drafts/distribution-target-matrix-must-match-published-assets",
+        "people/bochengyin/drafts/linux-release-binaries-need-runtime-checks-against-an-older-glibc-baseline",
+        "people/bochengyin/drafts/npm-postinstall-must-not-delete-its-own-download-archive",
+        "people/bochengyin/drafts/pr-flow-finish-needs-rebase-sync-after-local-main-ahead"
+      ],
+      "treatment_selected": [
+        "constraints",
+        "conventions/distribution-target-matrix-must-match-published-assets",
+        "people/bochengyin/drafts/distribution-target-matrix-must-match-published-assets",
+        "people/bochengyin/drafts/linux-release-binaries-need-runtime-checks-against-an-older-glibc-baseline",
+        "people/bochengyin/drafts/npm-postinstall-must-not-delete-its-own-download-archive",
+        "people/bochengyin/drafts/pr-flow-finish-needs-rebase-sync-after-local-main-ahead"
+      ],
+      "control_missed_useful": [
+        "people/bochengyin/drafts/release-assets-should-not-be-blocked-by-homebrew-tap-sync"
+      ],
+      "treatment_missed_useful": [
+        "people/bochengyin/drafts/release-assets-should-not-be-blocked-by-homebrew-tap-sync"
+      ]
+    },
+    {
+      "trace_id": "rt_e02354228c65",
+      "task_id": "ai-wiki-toolkit-index-indexing",
+      "control_precision": 0.16666666666666666,
+      "treatment_precision": 0.16666666666666666,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "constraints",
+        "conventions/index",
+        "conventions/package-managed-vs-user-owned-docs",
+        "decisions",
+        "people/bochengyin/drafts/context-routing-budget-should-be-sparse-and-index-backed",
+        "people/bochengyin/drafts/user-owned-ai-wiki-index-should-not-be-an-upgrade-surface"
+      ],
+      "treatment_selected": [
+        "constraints",
+        "conventions/index",
+        "conventions/package-managed-vs-user-owned-docs",
+        "decisions",
+        "people/bochengyin/drafts/context-routing-budget-should-be-sparse-and-index-backed",
+        "people/bochengyin/drafts/user-owned-ai-wiki-index-should-not-be-an-upgrade-surface"
+      ],
+      "control_missed_useful": [
+        "index"
+      ],
+      "treatment_missed_useful": [
+        "index"
+      ]
+    },
+    {
+      "trace_id": "rt_423ef4efbaf5",
+      "task_id": "ai-wiki-toolkit-vector-indexing",
+      "control_precision": 0.0,
+      "treatment_precision": 0.0,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "constraints",
+        "conventions/package-managed-vs-user-owned-docs",
+        "decisions",
+        "people/bochengyin/drafts/vector-indexing-not-needed-for-current-ai-wiki-routing",
+        "workflows"
+      ],
+      "treatment_selected": [
+        "constraints",
+        "conventions/package-managed-vs-user-owned-docs",
+        "decisions",
+        "people/bochengyin/drafts/vector-indexing-not-needed-for-current-ai-wiki-routing",
+        "workflows"
+      ],
+      "control_missed_useful": [
+        "people/bochengyin/drafts/context-routing-budget-should-be-sparse-and-index-backed"
+      ],
+      "treatment_missed_useful": [
+        "people/bochengyin/drafts/context-routing-budget-should-be-sparse-and-index-backed"
+      ]
+    },
+    {
+      "trace_id": "rt_80dcccbe0bc2",
+      "task_id": "ai-wiki-toolkit-metrics-think-hard",
+      "control_precision": 0.5,
+      "treatment_precision": 0.3333333333333333,
+      "precision_delta": -0.16666666666666669,
+      "control_selected": [
+        "constraints",
+        "decisions",
+        "metrics/index",
+        "people/bochengyin/drafts/ai-wiki-usefulness-metrics-need-task-level-checks-plus-doc-events",
+        "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics",
+        "workflows"
+      ],
+      "treatment_selected": [
+        "constraints",
+        "decisions",
+        "metrics/index",
+        "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+        "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics",
+        "workflows"
+      ],
+      "control_missed_useful": [
+        "people/bochengyin/drafts/context-routing-budget-should-be-sparse-and-index-backed",
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/route-usefulness-eval-needs-route-traces-and-actual-use-comparison",
+        "people/bochengyin/drafts/vector-indexing-not-needed-for-current-ai-wiki-routing",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "treatment_missed_useful": [
+        "people/bochengyin/drafts/ai-wiki-usefulness-metrics-need-task-level-checks-plus-doc-events",
+        "people/bochengyin/drafts/context-routing-budget-should-be-sparse-and-index-backed",
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/route-usefulness-eval-needs-route-traces-and-actual-use-comparison",
+        "people/bochengyin/drafts/vector-indexing-not-needed-for-current-ai-wiki-routing",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ]
+    },
+    {
+      "trace_id": "rt_be3f0b7e2ba0",
+      "task_id": "redacted-external-form-task",
+      "control_precision": 0.0,
+      "treatment_precision": 0.0,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "constraints",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance",
+        "workflows"
+      ],
+      "treatment_selected": [
+        "constraints",
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_5e472b1a1a04",
+      "task_id": "codex-security-application-field-why-does-ai-wiki-toolkit-need-codex-security",
+      "control_precision": 0.16666666666666666,
+      "treatment_precision": 0.16666666666666666,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "constraints",
+        "conventions/distribution-target-matrix-must-match-published-assets",
+        "decisions",
+        "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "workflows"
+      ],
+      "treatment_selected": [
+        "constraints",
+        "conventions/distribution-target-matrix-must-match-published-assets",
+        "decisions",
+        "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+        "people/bochengyin/drafts/external-ai-wiki-metrics-need-a-proof-stack-not-a-dashboard",
+        "workflows"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_eb8a1856f363",
+      "task_id": "aiwikitoolkit-code",
+      "control_precision": 0.3333333333333333,
+      "treatment_precision": 0.3333333333333333,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "constraints",
+        "decisions",
+        "workflows"
+      ],
+      "treatment_selected": [
+        "constraints",
+        "decisions",
+        "workflows"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_106660ef5c78",
+      "task_id": "route-policy-optimization-auto-research-metrics",
+      "control_precision": 0.16666666666666666,
+      "treatment_precision": 0.16666666666666666,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics",
+        "people/bochengyin/drafts/route-usefulness-eval-needs-route-traces-and-actual-use-comparison",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics",
+        "people/bochengyin/drafts/route-usefulness-eval-needs-route-traces-and-actual-use-comparison",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_493eeceec296",
+      "task_id": "ai-wiki-toolkit-development",
+      "control_precision": 0.2,
+      "treatment_precision": 0.2,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "constraints",
+        "conventions/distribution-target-matrix-must-match-published-assets",
+        "conventions/package-managed-vs-user-owned-docs",
+        "decisions",
+        "workflows"
+      ],
+      "treatment_selected": [
+        "constraints",
+        "conventions/distribution-target-matrix-must-match-published-assets",
+        "conventions/package-managed-vs-user-owned-docs",
+        "decisions",
+        "workflows"
+      ],
+      "control_missed_useful": [
+        "work/index"
+      ],
+      "treatment_missed_useful": [
+        "work/index"
+      ]
+    },
+    {
+      "trace_id": "rt_bc1a61799573",
+      "task_id": "workflow-vs-skills-aiwiki-toolkit-evaluation-review-repo",
+      "control_precision": 0.3333333333333333,
+      "treatment_precision": 0.3333333333333333,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "constraints",
+        "conventions/package-managed-vs-user-owned-docs",
+        "people/bochengyin/drafts/karpathy-skills-suggest-success-criteria-and-cross-agent-packaging",
+        "people/bochengyin/drafts/local-dogfooding-should-check-source-cli-vs-installed-entrypoint",
+        "people/bochengyin/drafts/toolkit-installed-repo-local-skills-should-skip-existing-files",
+        "workflows"
+      ],
+      "treatment_selected": [
+        "constraints",
+        "conventions/package-managed-vs-user-owned-docs",
+        "people/bochengyin/drafts/karpathy-skills-suggest-success-criteria-and-cross-agent-packaging",
+        "people/bochengyin/drafts/local-dogfooding-should-check-source-cli-vs-installed-entrypoint",
+        "people/bochengyin/drafts/toolkit-installed-repo-local-skills-should-skip-existing-files",
+        "workflows"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_32e28038cf83",
+      "task_id": "aiwiki-toolkit-evaluate-repo",
+      "control_precision": 0.16666666666666666,
+      "treatment_precision": 0.16666666666666666,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+        "people/bochengyin/drafts/route-usefulness-eval-needs-route-traces-and-actual-use-comparison",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/route-usefulness-eval-needs-route-traces-and-actual-use-comparison"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_27cd7439ffe5",
+      "task_id": "implementation-prompt-aiwiki-toolkit-evaluate-repo",
+      "control_precision": 0.0,
+      "treatment_precision": 0.16666666666666666,
+      "precision_delta": 0.16666666666666666,
+      "control_selected": [
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/impact-eval-no-target-aiwiki-slots-must-exclude-task-specific-workflow-memory",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/impact-eval-no-target-aiwiki-slots-must-exclude-task-specific-workflow-memory",
+        "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+        "people/bochengyin/drafts/route-usefulness-eval-needs-route-traces-and-actual-use-comparison"
+      ],
+      "control_missed_useful": [],
+      "treatment_missed_useful": []
+    },
+    {
+      "trace_id": "rt_c8e8e55de0a1",
+      "task_id": "ai-wiki-toolkit-agent-codebase",
+      "control_precision": 0.25,
+      "treatment_precision": 0.25,
+      "precision_delta": 0.0,
+      "control_selected": [
+        "constraints",
+        "conventions/package-managed-vs-user-owned-docs",
+        "decisions",
+        "workflows"
+      ],
+      "treatment_selected": [
+        "constraints",
+        "conventions/package-managed-vs-user-owned-docs",
+        "decisions",
+        "workflows"
+      ],
+      "control_missed_useful": [
+        "people/bochengyin/drafts/agent-framework-layers-should-guide-ai-wiki-toolkit-roadmap",
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/external-ai-wiki-metrics-need-a-proof-stack-not-a-dashboard",
+        "people/bochengyin/drafts/route-usefulness-eval-needs-route-traces-and-actual-use-comparison"
+      ],
+      "treatment_missed_useful": [
+        "people/bochengyin/drafts/agent-framework-layers-should-guide-ai-wiki-toolkit-roadmap",
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/external-ai-wiki-metrics-need-a-proof-stack-not-a-dashboard",
+        "people/bochengyin/drafts/route-usefulness-eval-needs-route-traces-and-actual-use-comparison"
+      ]
+    },
+    {
+      "trace_id": "rt_7bd59fe86762",
+      "task_id": "project-a-eval-report-diagnostics",
+      "control_precision": 0.3333333333333333,
+      "treatment_precision": 0.5,
+      "precision_delta": 0.16666666666666669,
+      "control_selected": [
+        "constraints",
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/memory-compilation-mvp-needs-eval-gated-benefit",
+        "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics"
+      ],
+      "treatment_selected": [
+        "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+        "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+        "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance",
+        "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics",
+        "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes"
+      ],
+      "control_missed_useful": [
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/shared-ai-wiki-prompt-blocks-need-one-shot-local-gates",
+        "people/bochengyin/drafts/source-incident-timing-needs-provenance"
+      ],
+      "treatment_missed_useful": [
+        "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+        "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+        "people/bochengyin/drafts/shared-ai-wiki-prompt-blocks-need-one-shot-local-gates"
+      ]
+    }
+  ]
+}

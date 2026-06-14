@@ -36,7 +36,7 @@ Unless a family clearly needs a different harness, reuse the Manual v2 workflow-
 Reference implementation:
 
 - `evals/impact/notes/index.md`
-- `evals/impact/reports/current.md`
+- `evals/impact/reports/synthesis/current.md`
 - `evals/impact/runbooks/ownership_boundary.md`
 - `evals/impact/notes/manual_v2_original_10_repo_findings.md`
 - `evals/impact/notes/ownership_boundary_round1_findings.md`

@@ -21,6 +21,7 @@ TELEMETRY_IGNORE_PATHS = (
     "ai-wiki/metrics/reuse-events/",
     "ai-wiki/metrics/route-traces/",
     "ai-wiki/metrics/source-incidents/",
+    "ai-wiki/metrics/taxonomy-evidence/",
     "ai-wiki/metrics/task-checks/",
     "ai-wiki/_toolkit/consolidation/",
     "ai-wiki/_toolkit/diagnostics/",
@@ -39,6 +40,7 @@ def gitignore_block_body() -> str:
         ai-wiki/metrics/reuse-events/
         ai-wiki/metrics/route-traces/
         ai-wiki/metrics/source-incidents/
+        ai-wiki/metrics/taxonomy-evidence/
         ai-wiki/metrics/task-checks/
         ai-wiki/_toolkit/consolidation/
         ai-wiki/_toolkit/diagnostics/
@@ -60,11 +62,11 @@ def repo_starter_files(handle: str) -> dict[str, str]:
 
             Use this file as a repo-owned map and overview.
 
-            Package-managed start-of-task routing lives in `_toolkit/system.md` and may evolve without requiring this file to change.
+            Package-managed start-of-task workflow guidance lives in `_toolkit/system.md` and may evolve without requiring this file to change.
 
             ## Areas
 
-            - `_toolkit/system.md` carries the managed start-of-task workflow and evolving read order.
+            - `_toolkit/system.md` carries the managed start-of-task workflow and bounded read rules.
             - `_toolkit/index.md` maps package-managed collaboration rules, baseline workflows, and schemas.
             - `constraints.md` maps hard constraints and non-negotiables.
             - `conventions/index.md` maps shared team conventions that coding agents should follow.
@@ -72,11 +74,12 @@ def repo_starter_files(handle: str) -> dict[str, str]:
             - `review-patterns/index.md` maps reusable review rules and reviewer expectations.
             - `problems/index.md` maps reusable problem-solution memories.
             - `features/index.md` maps feature-specific working memory, clarified requirements, and accepted assumptions.
+            - `memory/index.md` maps bounded public/local trial-error memories.
             - `workflows.md` maps repo-specific workflows that extend the managed baseline.
             - `trails/index.md` maps task-specific chronology, dead ends, and release trails.
             - `work/index.md` maps the append-only work ledger for todos, active tasks, and epics.
             - `people/<handle>/index.md` maps handle-local draft notes and working history.
-            - `metrics/` contains user-owned evidence logs such as `reuse-events/<handle>.jsonl`, `route-traces/<handle>.jsonl`, `source-incidents/<handle>.jsonl`, and `task-checks/<handle>.jsonl`.
+            - `metrics/` contains user-owned evidence logs such as `reuse-events/<handle>.jsonl`, `route-traces/<handle>.jsonl`, `source-incidents/<handle>.jsonl`, `taxonomy-evidence/<handle>.jsonl`, and `task-checks/<handle>.jsonl`.
             """
         ).strip()
         + "\n",
@@ -244,6 +247,41 @@ def repo_starter_files(handle: str) -> dict[str, str]:
             """
         ).strip()
         + "\n",
+        "memory/index.md": dedent(
+            """
+            # Memory Index
+
+            This folder contains bounded, public/local trial-error memory for future coding agents.
+
+            ## Read Rule
+
+            Read this index first, then open at most one linked memory file before acting.
+
+            Open a memory file only when it strongly matches the current source file, API, command,
+            behavior, or repeated public/local failure surface.
+
+            Do not use hidden evaluator failures, hidden test names, private benchmark answers, or
+            prior hidden-derived fixes as memory.
+
+            ## Entries
+
+            No public/local trial-error memory has been recorded yet.
+
+            ## Suggested Entry Shape
+
+            Each memory file should include:
+
+            - Trigger
+            - Public/Local Signal
+            - Failed Attempt
+            - Fix Or Rule
+            - Applies When
+            - Do Not Use When
+            - Related Files
+            - Source Pointer
+            """
+        ).strip()
+        + "\n",
         "work/index.md": dedent(
             """
             # Work Ledger Index
@@ -314,10 +352,13 @@ def repo_starter_files(handle: str) -> dict[str, str]:
             - `reuse-events/<handle>.jsonl` stores per-handle document-level AI wiki reuse observations.
             - `route-traces/<handle>.jsonl` stores per-handle route packet selection traces.
             - `source-incidents/<handle>.jsonl` stores per-handle source incident timing evidence.
+            - `taxonomy-evidence/<handle>.jsonl` stores per-handle taxonomy post-hoc evidence candidates.
             - `task-checks/<handle>.jsonl` stores per-handle task-level AI wiki reuse checks.
             - `aiwiki-toolkit record-reuse ...` appends one document-level observation for the current handle and refreshes handle-scoped managed metrics.
             - `aiwiki-toolkit source-incident backfill-writeback ...` appends historical source incident timing evidence to a separate per-handle ledger.
             - `aiwiki-toolkit source-incident capture-post-turn ...` captures the latest completed write-back turn for post-turn hooks or wrappers.
+            - `aiwiki-toolkit record-taxonomy-evidence ...` appends one taxonomy post-hoc evidence observation without activating taxonomy.
+            - `aiwiki-toolkit taxonomy candidates ...` induces inactive TaxonomyCandidate reports from repeated taxonomy evidence without activating taxonomy.
             - `aiwiki-toolkit record-reuse-check ...` appends one task-level reuse check for the current handle and refreshes handle-scoped managed metrics.
             - The installer manages a `.gitignore` block so `.env.aiwiki`, telemetry logs, and generated `_toolkit/catalog.json`, `_toolkit/metrics/*`, `_toolkit/diagnostics/*`, `_toolkit/consolidation/*`, and `_toolkit/reports/*` files stay local by default.
             - `aiwiki-toolkit refresh-metrics` regenerates package-managed aggregate views if you need a fresh local snapshot.
@@ -401,26 +442,27 @@ def managed_repo_toolkit_files() -> dict[str, str]:
 
             ## Start Of Task
 
-            1. Run `aiwiki-toolkit route --task "<current user request>"` when available to generate a task-aware AI Wiki Context Packet.
-            2. Use the packet's `success_criteria`, `must_load`, `must_follow`, `context_notes`, and `skip` sections as the first-pass routing layer for the task.
-            3. Treat the packet as a generated view with cited sources, not as canonical memory; the Markdown files under `ai-wiki/` remain the source of truth.
-            4. If routing is unavailable, fails, or looks insufficient, continue with the baseline read order below.
-            5. Read `ai-wiki/constraints.md` for hard constraints and non-negotiables.
-            6. Read `ai-wiki/conventions/index.md` for shared team conventions that should guide implementation.
-            7. Read `ai-wiki/decisions.md` for durable project decisions and tradeoffs.
-            8. Read `ai-wiki/review-patterns/index.md` for reusable review rules and reviewer expectations.
-            9. Read `ai-wiki/problems/index.md` before implementing or testing similar behavior.
-            10. Read `ai-wiki/features/index.md` when task-specific requirements, assumptions, or acceptance criteria matter.
-            11. Read `ai-wiki/workflows.md` for repo-specific workflows that extend the managed baseline.
-            12. Read `ai-wiki/trails/index.md` when debugging chronology or dead ends may help.
-            13. Read `ai-wiki/_toolkit/work/report.md` when the route packet reports relevant active, processing, blocked, or planned work.
-            14. Read `ai-wiki/people/<handle>/index.md` when continuing draft work.
-            15. Read `ai-wiki/_toolkit/index.md` when you need package-managed schema, metrics, work views, or directory guidance beyond this workflow.
-            16. Use `ai-wiki/index.md` as a repo-owned map when you need a quick overview of local AI wiki areas.
-            17. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md`.
-            18. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
-            19. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
-            20. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them to produce end-of-task AI wiki evidence and write-back outcomes.
+            1. Do not run a router or load broad wiki areas by default.
+            2. If `ai-wiki/memory/index.md` exists, read that index first. Treat it as a routing index, not as task evidence.
+            3. Open at most one linked memory file before acting, and only when it directly matches the current source file, API, command, behavior, or repeated public/local failure.
+            4. If no memory index exists or no entry is strongly relevant, proceed without memory instead of searching `ai-wiki/**`.
+            5. Read `ai-wiki/constraints.md` only when the task involves code edits, release, security, compatibility, data handling, or user-owned AI wiki files.
+            6. Read another specific user-owned AI wiki doc only when the memory index, constraints file, user request, or current work explicitly points to it.
+            7. Use `ai-wiki/index.md` only as a map when you need to locate a specific user-owned doc; do not use it as permission to read every area.
+            8. `aiwiki-toolkit route` is optional diagnostic tooling. Use it only when the user asks for routing, you are debugging route quality, or the bounded memory index is insufficient for a clearly memory-relevant task.
+            9. If repo docs are not enough, read `<home>/ai-wiki/system/_toolkit/system.md` and then `<home>/ai-wiki/system/index.md` only when cross-project memory is directly relevant.
+            10. If `ai-wiki-clarify-before-code` is available, use it before implementation when ambiguity materially affects coding.
+            11. If `ai-wiki-capture-review-learning` is available, use it when reusable review feedback appears.
+            12. If `ai-wiki-reuse-check` and `ai-wiki-update-check` skills are available, use them to produce end-of-task AI wiki evidence and write-back outcomes.
+
+            ## Bounded Memory Read
+
+            1. Prefer `ai-wiki/memory/index.md` over direct filesystem search.
+            2. Open at most one memory file during task start.
+            3. Open a memory file only for a strong match: same file, API, command, behavior, or repeated public/local failure surface.
+            4. Do not read memory solely because it was written in the previous task or previous chain step.
+            5. Do not read all memory files.
+            6. Never use hidden evaluator failures, hidden test names, private benchmark answers, or prior hidden-derived fixes as memory.
 
             ## Runtime Skill Fallback
 
@@ -446,81 +488,26 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             ## AI Wiki Write-Back Outcome
 
             1. Produce one AI wiki write-back outcome at the end of every completed task, even when you expect the result to be `None`.
-            2. Before returning `None`, run memory candidate detection for:
-               - a new or refined team convention
-               - reusable PR review learning
-               - feature clarification memory
-               - a durable decision note
-               - a reusable problem-solution memory
-               - missed relevant memory
-               - a conflict, refinement, or supersession with existing memory
-               - a person preference that should stay personal for now
-            3. Use concrete task signals before returning `None`, especially:
-               - repeated release, CI, or platform failure
-               - workflow, packaging, or environment assumption mismatch
-               - tooling fixes future agents may need again
-               - multi-turn requirement clarification or accepted implementation assumptions
-               - acceptance criteria or unresolved feature questions that emerged during the task
-            4. Choose exactly one outcome:
-               - `None`: you checked and found no durable lesson worth recording.
-               - `Draft`: you found a durable lesson, recorded it under `ai-wiki/people/<handle>/drafts/`, and it is not yet ready for shared promotion.
-               - `PromotionCandidate`: you recorded or updated a draft, the two-signal gate is satisfied, and human confirmation is still required before creating `ai-wiki/review-patterns/*.md` or `ai-wiki/conventions/*.md`.
-            5. Prefer small durable memory over long task transcripts or generic summaries.
-            6. If new memory conflicts with existing conventions, decisions, features, problems, or person preferences, flag it as a conflict, refinement, or supersession instead of silently overwriting.
-            7. If a relevant existing AI wiki doc should have been used but was missed, treat that as missed relevant memory instead of silently returning `None`.
-            8. Always print exactly one final status line:
+            2. Before returning `None`, check only for durable public/local write-back signals:
+               - a failed local/public check that changed the fix
+               - repeated public trial-and-error on the same source file, API, command, or behavior
+               - a reusable tooling, packaging, or environment mismatch found through local/public evidence
+               - a reusable clarification from the user that future tasks in this repo should apply
+            3. Do not write memory from hidden evaluator failures, hidden test names, private benchmark answers, or prior hidden-derived fixes.
+            4. Do not write back after a clean one-shot task unless it produced a reusable clarification or public/local trial-error lesson.
+            5. If memory is recorded, write or update a small file under `ai-wiki/memory/` and add or update one entry in `ai-wiki/memory/index.md` with the trigger, related files, and source pointer.
+            6. Choose exactly one outcome:
+               - `None`: you checked and found no durable public/local lesson worth recording.
+               - `MemoryRecorded`: you recorded a small public/local trial-error or clarification memory under `ai-wiki/memory/`.
+            7. Prefer small durable memory over long task transcripts or generic summaries.
+            8. If new memory conflicts with existing constraints or user-owned memory, flag the conflict instead of silently overwriting.
+            9. If a relevant existing AI wiki doc should have been used but was missed, mention the miss instead of silently returning `None`.
+            10. Always print exactly one final status line:
                - `AI Wiki Write-Back: none`
-               - `AI Wiki Write-Back: draft recorded`
-               - `AI Wiki Write-Back: promotion candidate`
-            9. If the outcome is `Draft` or `PromotionCandidate`, also print:
+               - `AI Wiki Write-Back: memory recorded`
+            11. If the outcome is `MemoryRecorded`, also print:
                - `AI Wiki Write-Back Path: <path>`
 
-            ## Review Draft Workflow
-
-            1. Record new review findings in `ai-wiki/people/<handle>/drafts/`.
-            2. A draft becomes a promotion candidate only when either:
-               - the same issue has been observed at least twice
-               - a reviewer judges it reusable and can write a stable rule
-            3. Agents may mark a draft as a promotion candidate, but shared patterns require human confirmation.
-
-            ## Shared Pattern Workflow
-
-            1. Put reusable review rules in `ai-wiki/review-patterns/`.
-            2. Shared patterns must use the standard sections:
-               - `Problem Pattern`
-               - `Why It Happens`
-               - `Bad Example`
-               - `Preferred Pattern`
-               - `Review Checklist`
-            3. Each shared pattern should point back to its source draft via `derived_from`.
-
-            ## Team Memory Placement
-
-            1. Put shared team rules in `ai-wiki/conventions/`.
-            2. Put reusable problem-solution memories in `ai-wiki/problems/`.
-            3. Put feature-specific clarifications in `ai-wiki/features/`.
-            4. Keep reviewer-specific or person-specific preferences under `ai-wiki/people/<handle>/` until they are clearly team-wide.
-
-            ## Structured Note Metadata
-
-            Review drafts and shared patterns use YAML frontmatter with:
-
-            - `title`
-            - `author_handle`
-            - `model`
-            - `source_kind`
-            - `status`
-            - `created_at`
-            - `updated_at`
-
-            Review drafts also include:
-
-            - `promotion_candidate`
-            - `promotion_basis`
-
-            Shared patterns also include:
-
-            - `derived_from`
             """
         ).strip()
         + "\n",
@@ -532,30 +519,24 @@ def managed_repo_toolkit_files() -> dict[str, str]:
 
             ## AI Wiki Maintenance
 
-            1. Start each non-trivial task by running `aiwiki-toolkit route --task "<current user request>"` when available.
-            2. Use the route packet to decide success criteria and which user-owned docs to consult first, but record reuse only for docs actually consulted or materially used.
+            1. Start with the bounded memory read from `system.md`: read `ai-wiki/memory/index.md` if present, then open at most one strongly relevant linked memory file.
+            2. Do not run `aiwiki-toolkit route` as the normal task-start path. Use it only for explicit route diagnostics or when the bounded index is insufficient for a clearly memory-relevant task.
             3. Produce one AI wiki reuse evidence footer at the end of every completed task.
             4. First classify the task as `relevant`, `optional`, or `not_relevant` for AI wiki use.
             5. Record one `aiwiki-toolkit record-reuse` event per consulted user-owned AI wiki doc.
             6. Do not log managed `_toolkit/**` docs with `record-reuse`; if they changed the plan or behavior, cite their paths in a progress update or the final note instead.
             7. Record one `aiwiki-toolkit record-reuse-check` entry for the task using `wiki_used` or `no_wiki_use`.
             8. Treat the footer as the user-facing evidence surface; telemetry and generated aggregates are the local machine-readable record behind it.
-            9. The installer manages a `.gitignore` block that ignores `.env.aiwiki`, `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/route-traces/`, `ai-wiki/metrics/source-incidents/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/consolidation/`, `ai-wiki/_toolkit/diagnostics/`, `ai-wiki/_toolkit/metrics/`, `ai-wiki/_toolkit/reports/`, `ai-wiki/_toolkit/work/`, and `ai-wiki/_toolkit/catalog.json` so local identity, telemetry, and generated views stay local by default.
+            9. The installer manages a `.gitignore` block that ignores `.env.aiwiki`, `ai-wiki/metrics/reuse-events/`, `ai-wiki/metrics/route-traces/`, `ai-wiki/metrics/source-incidents/`, `ai-wiki/metrics/taxonomy-evidence/`, `ai-wiki/metrics/task-checks/`, `ai-wiki/_toolkit/consolidation/`, `ai-wiki/_toolkit/diagnostics/`, `ai-wiki/_toolkit/metrics/`, `ai-wiki/_toolkit/reports/`, `ai-wiki/_toolkit/work/`, and `ai-wiki/_toolkit/catalog.json` so local identity, telemetry, and generated views stay local by default.
             10. If those local-state paths were tracked before you upgraded, run `aiwiki-toolkit doctor` and follow the suggested `git rm --cached` fix once to untrack them.
             11. Produce one AI wiki write-back outcome at the end of every completed task, even when the result is `None`.
             12. If runtime skill exposure is missing, follow the Runtime Skill Fallback section in `system.md` and manually read the relevant repo-local skill files under `.agents/skills/`.
-            13. Before returning `None`, run memory candidate detection for problem-solution memory, feature clarification memory, convention candidates, missed relevant memory, and conflict or supersession.
-            14. Always end with exactly one status line: `AI Wiki Write-Back: none`, `draft recorded`, or `promotion candidate`.
-            15. If the result is `Draft` or `PromotionCandidate`, also print `AI Wiki Write-Back Path: <path>`.
-            16. Do not write every task summary into the wiki; capture only durable memory.
-            17. Put shared team conventions in `ai-wiki/conventions/`.
-            18. Put reusable repo-specific review lessons in `ai-wiki/review-patterns/`.
-            19. Put reusable problem-solution memories in `ai-wiki/problems/`.
-            20. Put feature clarifications in `ai-wiki/features/`.
-            21. Put task-specific chronology and dead ends in `ai-wiki/trails/`.
-            22. Put todo, active, processing, blocked, review, done, and archived work state in `ai-wiki/work/events/<handle>.jsonl` via `aiwiki-toolkit work`.
-            23. Put raw personal draft notes in `ai-wiki/people/<handle>/drafts/`.
-            24. Promote only stable, reviewable rules into shared patterns or conventions.
+            13. Before returning `None`, check for public/local trial-error, reusable clarification, missed relevant memory, and conflicts with existing memory.
+            14. Write back only after a concrete durable signal such as failed local/public checks, repeated trial-and-error, or a reusable clarification. Do not write every task summary into the wiki.
+            15. Put recorded memories under `ai-wiki/memory/` and keep `ai-wiki/memory/index.md` as the bounded read entrypoint.
+            16. Always end with exactly one status line: `AI Wiki Write-Back: none` or `AI Wiki Write-Back: memory recorded`.
+            17. If memory was recorded, also print `AI Wiki Write-Back Path: <path>`.
+            18. Put todo, active, processing, blocked, review, done, and archived work state in `ai-wiki/work/events/<handle>.jsonl` via `aiwiki-toolkit work`.
             """
         ).strip()
         + "\n",
@@ -573,9 +554,14 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             - `schema_version`: currently `route-v1`.
             - `task_id`: stable task id, either supplied by the caller or derived from the task text.
             - `task`: current user request text, when supplied by the agent.
-            - `route.task_type`: coarse task class such as `scaffold_prompt_workflow`, `release_distribution`, `memory_governance`, `workflow_state`, `eval_workflow`, or `general`.
-            - `route.risk_tags`: task risks such as `user_owned_docs`, `managed_prompt_block`, `release_distribution`, `ci_workflow`, `memory_governance`, `workflow_state`, or `task_evaluation`.
+            - `route.task_type`: coarse task class such as `memory_governance`, `workflow_state`, `review_feedback`, `docs_positioning`, `bug_fix`, or `general`.
+            - `route.domain_tags`: optional task domains. The default packet intentionally avoids repo- or benchmark-specific domain labels.
+            - `route.guardrail_tags`: protection domains such as `user_owned_docs` or `managed_prompt_block`.
             - `route.changed_paths`: path signals supplied by the caller or inferred from `git status --short`.
+            - `route.mentioned_labels`: route labels mentioned in the prompt as labels, such as `code/bug_fix`, that should not automatically become actual user intent.
+            - `route.task_type_arbitration`: explanation when route mode or mentioned labels cause the coarse task type to be adjusted.
+            - `route.route_self_audit`: packet-level mismatch checks for suspicious mode/task type conflicts, weak workflow triggers, or label-as-intent errors. Suspicious audits should be recorded as taxonomy evidence after task review.
+            - `phase_plan`: shadow current-phase output with agent surface mode, permissions, docs, goals, criteria, and reroute inputs. It does not replace active `intent_buckets`.
             - `actor`: resolved local actor handle from CLI/environment, `.env.aiwiki`, git config, or fallback.
             - `route.effort`: coarse effort level such as `low`, `normal`, or `deep`.
             - `context_budget`: safety cap and document limits for the packet. The word value is not a fill target; route may use less.
@@ -596,7 +582,7 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             1. Every `must_follow` rule must cite a user-owned source path.
             2. Drafts and trails may provide `context_notes`, but they should not become authoritative rules unless promoted by the existing human-confirmed workflow.
             3. Managed `_toolkit/**` docs can guide routing behavior, but they should not be recorded as user-owned reuse events.
-            4. If the packet looks wrong or incomplete, agents should fall back to the baseline read order in `ai-wiki/_toolkit/system.md`.
+            4. If the packet looks wrong or incomplete, agents should fall back to the bounded read workflow in `ai-wiki/_toolkit/system.md`.
             5. Record reuse only for user-owned docs actually consulted or materially used, not for every packet candidate.
             6. Treat `work_context` items with `actor_relation=assignee` as actionable for the current actor. Treat other matched work as context unless the user explicitly asks to work on it.
             7. Prefer index cards and runtime references over loading broad full documents. Simple operational tasks should follow the specific workflow they need instead of pulling in broad memory.
@@ -827,6 +813,8 @@ def managed_repo_toolkit_files() -> dict[str, str]:
 
             User-owned source incident timing evidence lives in `ai-wiki/metrics/source-incidents/<handle>.jsonl`.
 
+            User-owned taxonomy post-hoc evidence lives in `ai-wiki/metrics/taxonomy-evidence/<handle>.jsonl`.
+
             User-owned reuse checks live in `ai-wiki/metrics/task-checks/<handle>.jsonl`.
 
             Package-managed aggregate files are regenerated under `ai-wiki/_toolkit/metrics/`.
@@ -897,7 +885,8 @@ def managed_repo_toolkit_files() -> dict[str, str]:
             - `task_id`
             - `task_type`
             - `effort`
-            - `risk_tags`
+            - `domain_tags`
+            - `guardrail_tags`
             - `changed_paths`
             - `selected_doc_ids`
             - `must_load_doc_ids`
@@ -1018,7 +1007,7 @@ def repo_skill_starter_files() -> dict[str, str]:
             """
             ---
             name: ai-wiki-update-check
-            description: Produce the mandatory end-of-task AI wiki write-back outcome for ai-wiki-toolkit. Use it to detect durable memory candidates, decide whether the result is None, Draft, or PromotionCandidate, and emit the required final status line.
+            description: Produce the mandatory end-of-task AI wiki write-back outcome for ai-wiki-toolkit. Use it to record only public/local trial-error memory or reusable clarification memory, then emit the required final status line.
             ---
 
             # AI Wiki Write-Back Check
@@ -1029,34 +1018,28 @@ def repo_skill_starter_files() -> dict[str, str]:
 
             ## Core Workflow
 
-            1. Review the task outcome, changes made, and lessons learned.
-            2. Before returning `None`, run memory candidate detection for:
-               - a team convention
-               - reusable PR review learning
-               - feature clarification memory
-               - a durable decision note
-               - a reusable problem-solution memory
-               - missed relevant memory
-               - a conflict, refinement, or supersession with existing memory
-               - a person preference that should stay personal for now
-            3. Check concrete task signals before returning `None`, especially repeated release, CI, or platform failures; workflow or packaging assumption mismatches; environment or tooling fixes future agents may need; multi-turn clarification; accepted assumptions; emerging acceptance criteria; and unresolved feature questions.
-            4. Choose exactly one outcome: `None`, `Draft`, or `PromotionCandidate`.
-            5. If the outcome is `Draft` or `PromotionCandidate`, create or update a note under `ai-wiki/people/<handle>/drafts/`.
-            6. Emit the final result using the exact output contract in [references/output-contract.md](references/output-contract.md).
-            7. Use [references/decision-rules.md](references/decision-rules.md) for the decision gate, promotion rules, memory candidate detection, conflict handling, and note placement rules.
-            8. Do not claim current-turn source incident duration from inside the prompt-level skill. If a runner supports post-turn hooks, it may call `aiwiki-toolkit source-incident capture-post-turn --apply` after the final response lands.
+            1. Review the completed task, local/public checks, and user-visible outcome.
+            2. Before returning `None`, check only for durable public/local write-back signals:
+               - a failed local/public check that changed the fix
+               - repeated public trial-and-error on the same source file, API, command, or behavior
+               - a reusable tooling, packaging, or environment mismatch found through local/public evidence
+               - a reusable clarification from the user that future tasks in this repo should apply
+            3. Do not write memory from hidden evaluator failures, hidden test names, private benchmark answers, or prior hidden-derived fixes.
+            4. Do not write back after a clean one-shot task unless it produced a reusable clarification or public/local trial-error lesson.
+            5. Choose exactly one outcome: `None` or `MemoryRecorded`.
+            6. If the outcome is `MemoryRecorded`, create or update a small note under `ai-wiki/memory/` and update `ai-wiki/memory/index.md`.
+            7. Emit the final result using the exact output contract in [references/output-contract.md](references/output-contract.md).
+            8. Use [references/decision-rules.md](references/decision-rules.md) for the decision gate, memory shape, conflict handling, and index update rules.
 
             ## Constraints
 
             - Do not skip the write-back outcome just because no durable lesson is expected.
             - Do not write every task summary into the wiki.
-            - Do not create or update `ai-wiki/review-patterns/*.md` without human confirmation.
-            - Do not promote a reviewer preference into a team convention unless the promotion rules are met.
-            - Do not treat "no wiki docs were opened" as proof that no durable memory was produced.
-            - If new memory conflicts with existing memory, flag it as a conflict, refinement, or supersession.
+            - Do not write from hidden evaluator results or private benchmark answers.
+            - Do not treat "no wiki docs were opened" as proof that no public/local trial-error memory was produced.
+            - If new memory conflicts with existing memory, flag the conflict instead of silently overwriting.
             - Prefer small durable memory over long transcripts.
-            - Keep project-specific knowledge in `ai-wiki/`.
-            - Keep cross-project knowledge in `<home>/ai-wiki/system/`.
+            - Keep project-specific memory in `ai-wiki/memory/`.
             """
         ).strip()
         + "\n",
@@ -1069,75 +1052,64 @@ def repo_skill_starter_files() -> dict[str, str]:
             - `None`
               Use when you completed the check and found no durable lesson worth recording.
 
-            - `Draft`
-              Use when there is a durable lesson worth keeping, but it is still raw, task-specific, or not yet validated as a shared rule.
-
-            - `PromotionCandidate`
-              Use when a draft exists or was updated and the lesson satisfies the promotion gate, but human confirmation is still required before creating or updating `ai-wiki/review-patterns/*.md` or `ai-wiki/conventions/*.md`.
-
-            ## Promotion Gate
-
-            Only choose `PromotionCandidate` when at least one of these is true:
-
-            - the same issue has been observed at least twice
-            - a reviewer judges it reusable and can express it as a stable rule
+            - `MemoryRecorded`
+              Use when there is a durable public/local trial-error lesson or reusable clarification worth keeping for future tasks.
 
             ## What To Check
 
-            At task end, check whether the task produced:
+            At task end, check only whether the task produced:
 
-            - a new or refined team convention
-            - reusable PR review learning
-            - feature clarification memory
-            - a durable decision note
-            - a reusable problem-solution memory
-            - missed relevant memory
-            - a conflict, refinement, or supersession with existing memory
-            - a person preference that should stay personal for now
+            - a public/local trial-error lesson
+            - a reusable clarification from the user
+            - a missed-memory note about a relevant memory that should have been used
+            - a conflict with existing memory that future agents must not miss
 
             ## Memory Candidate Detection
 
             Before returning `None`, check whether the task produced any of these signals.
 
-            ### Problem-Solution Candidate Signals
+            ### Trial-Error Candidate Signals
 
-            - repeated failure across release, CI, or platform work
-            - workflow, packaging, or environment assumption mismatch
-            - user correction of an agent mistake that could recur
-            - tooling or environment fix that future agents may need again
-            - workaround discovered after debugging
+            - a failed local command, public test, build, lint, typecheck, package check, or documented public workflow changed the fix
+            - repeated failed attempts on the same source file, API, command, or behavior changed the approach
+            - a public/local environment, packaging, or tooling assumption was wrong and the correction is reusable
 
-            ### Feature Memory Candidate Signals
+            ### Clarification Candidate Signals
 
-            - multi-turn clarification
-            - accepted implementation assumption
-            - acceptance criteria that emerged during the task
-            - feature behavior that changed from the initial understanding
-            - unresolved question that still matters for the feature
+            - the user clarified behavior, acceptance criteria, or a repo rule that should guide future tasks
+            - the clarification is not obvious from code or existing docs
+            - the clarification can be applied without hidden/private benchmark knowledge
 
-            ### Convention, Conflict, And Missed-Memory Signals
+            ### Missed-Memory And Conflict Signals
 
-            - a reusable rule now spans code, tests, docs, or release workflow changes
-            - the task revealed conflict, refinement, or supersession with existing memory
+            - the task revealed conflict with existing memory
             - a relevant AI wiki doc should have been used but the agent only found it after user correction, review, or later failure
             - the task repeated work that existing team memory should have prevented
 
             ## Writing Targets
 
-            - Put raw personal notes in `ai-wiki/people/<handle>/drafts/`.
-            - Put shared team conventions in `ai-wiki/conventions/` only after human confirmation or explicit team confirmation.
-            - Put shared, reusable repo review rules in `ai-wiki/review-patterns/` only after human confirmation.
-            - Put reusable problem-solution memories in `ai-wiki/problems/`.
-            - Put feature clarifications in `ai-wiki/features/`.
-            - Put durable project decisions in `ai-wiki/decisions.md` or a linked decision note if the repo splits decisions.
-            - Put missed-relevant-memory follow-ups in `ai-wiki/people/<handle>/drafts/` until the repo chooses a dedicated incident format.
-            - Keep project-specific lessons in `ai-wiki/`.
-            - Keep cross-project lessons in `<home>/ai-wiki/system/`.
+            - Put public/local trial-error memories in `ai-wiki/memory/<slug>.md`.
+            - Keep `ai-wiki/memory/index.md` as the bounded read entrypoint.
+            - Add one short index entry with trigger, related files, and source pointer.
+            - Do not write broad conventions, review patterns, feature docs, decisions, or person preferences from this default write-back path.
+
+            ## Memory Shape
+
+            Each memory file should be short and include:
+
+            - Trigger
+            - Public/Local Signal
+            - Failed Attempt
+            - Fix Or Rule
+            - Applies When
+            - Do Not Use When
+            - Related Files
+            - Source Pointer
 
             ## Conflict Handling
 
-            - If new memory conflicts with existing conventions, decisions, features, problems, or person preferences, flag it as a conflict, refinement, or supersession.
-            - Narrow scope when the new memory only applies to one feature, module, or reviewer.
+            - If new memory conflicts with existing memory, flag the conflict in the memory file and index entry.
+            - Narrow scope when the new memory only applies to one feature, module, file, API, command, or public/local failure surface.
             """
         ).strip()
         + "\n",
@@ -1148,10 +1120,9 @@ def repo_skill_starter_files() -> dict[str, str]:
             Choose exactly one user-facing write-back status line:
 
             - `AI Wiki Write-Back: none`
-            - `AI Wiki Write-Back: draft recorded`
-            - `AI Wiki Write-Back: promotion candidate`
+            - `AI Wiki Write-Back: memory recorded`
 
-            If the outcome is `Draft` or `PromotionCandidate`, also print:
+            If the outcome is `MemoryRecorded`, also print:
 
             - `AI Wiki Write-Back Path: <path>`
 
@@ -1163,18 +1134,11 @@ def repo_skill_starter_files() -> dict[str, str]:
             AI Wiki Write-Back: none
             ```
 
-            Durable lesson, not yet ready for promotion:
+            Public/local trial-error memory recorded:
 
             ```text
-            AI Wiki Write-Back: draft recorded
-            AI Wiki Write-Back Path: ai-wiki/people/<handle>/drafts/<file>.md
-            ```
-
-            Ready to ask for promotion:
-
-            ```text
-            AI Wiki Write-Back: promotion candidate
-            AI Wiki Write-Back Path: ai-wiki/people/<handle>/drafts/<file>.md
+            AI Wiki Write-Back: memory recorded
+            AI Wiki Write-Back Path: ai-wiki/memory/<file>.md
             ```
             """
         ).strip()
@@ -1970,7 +1934,7 @@ def prompt_block_body() -> str:
         If `ai-wiki/_toolkit/system.md` exists:
 
         - **Read `ai-wiki/_toolkit/system.md` immediately BEFORE proceeding with any other work.**
-        - Follow its start-of-task routing, required reads, reuse evidence, and write-back workflow for this session.
+        - Follow its bounded read, reuse evidence, and public-only write-back workflow for this session.
         - If a toolkit command is unavailable, use the fallback instructions in that file.
         - **All subsequent responses in this session MUST follow the AI Wiki workflow.**
 

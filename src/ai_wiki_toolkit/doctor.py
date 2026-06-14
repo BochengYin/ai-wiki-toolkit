@@ -692,6 +692,7 @@ def _tracked_telemetry_paths(repo_root: Path) -> list[str] | None:
                 "ai-wiki/metrics/reuse-events",
                 "ai-wiki/metrics/route-traces",
                 "ai-wiki/metrics/source-incidents",
+                "ai-wiki/metrics/taxonomy-evidence",
                 "ai-wiki/metrics/task-checks",
                 "ai-wiki/_toolkit/consolidation",
                 "ai-wiki/_toolkit/diagnostics",
@@ -807,7 +808,7 @@ def _check_prompt_targets(result: DoctorResult) -> None:
             severity="INFO",
             code="no_prompt_targets",
             path="repo-root",
-            message="No supported prompt file exists yet (`AGENT.md`, `AGENTS.md`, or `CLAUDE.md`).",
+            message="No supported prompt file exists yet (`AGENTS.md`, `AGENT.md`, or `CLAUDE.md`).",
             suggested_fix="Run `aiwiki-toolkit install` if you want the managed prompt block created.",
         )
         return

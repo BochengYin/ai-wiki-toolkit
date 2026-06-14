@@ -17,8 +17,11 @@ changes agent behavior on repeated repo problems.
 Primary repo-local documentation for the current benchmark lives in:
 
 - `evals/impact/public/ai_wiki_impact_eval_pilot.md`
+- `evals/impact/public/coding_agent_eval_harness.md`
+- `evals/impact/public/agent_failure_postmortem_pack.md`
 - `evals/impact/notes/index.md`
-- `evals/impact/reports/current.md`
+- `evals/impact/reports/synthesis/current.md`
+- `evals/impact/reports/project-a-2026-06-04/project_a_diagnostics_2026-06-04.md`
 - `evals/impact/TODO.md`
 - `evals/impact/runbooks/ownership_boundary.md`
 - `evals/impact/runbooks/release_distribution_integrity.md`
@@ -37,6 +40,25 @@ The current documented benchmark families are:
 - `scaffold_prompt_workflow_compliance`
 - `postinstall_archive_staging`
 - `aiwiki_evidence_integrity`
+
+Current Project A analysis helpers:
+
+```bash
+aiwiki-toolkit eval impact route-noise report --since 30d
+aiwiki-toolkit eval impact route-noise cohort --post-change-since 2026-06-04T08:20:53+10:00
+aiwiki-toolkit eval impact route-noise replay --before 2026-06-04T08:20:53+10:00 --catalog-cutoff trace-routed-at --rerank-top 20
+aiwiki-toolkit eval impact neutral report --period-id project-a-rerun-2026-06-03
+```
+
+Use the three route-quality reports for different claims:
+
+- `route-noise report`: historical telemetry summary.
+- `route-noise cohort`: forward-looking post-change evidence from new evaluable tasks.
+- `route-noise replay`: retrospective projection that recovers historical route prompts from local
+  Codex session JSONL, replays them through the current router, and compares against historical
+  downstream reuse events. Use `--catalog-cutoff trace-routed-at` when evaluating historical traces
+  so docs created after the original route are filtered out instead of counted as available memory.
+  Use `--rerank-top 0` for an ablation without the deterministic index-card reranker.
 
 ## Manual v2: Workflow-Primary Framing
 

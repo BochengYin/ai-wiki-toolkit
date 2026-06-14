@@ -31,7 +31,7 @@ def test_doctor_is_clean_for_latest_navigation_and_rule_structure(
     assert "INFO  ai-wiki/metrics/source-incidents/alice.jsonl No post-turn source incident capture evidence is recorded yet." in result.output
     assert "OK    ai-wiki/index.md `ai-wiki/index.md` exists. It is repo-owned and is not compared against starter navigation drift." in result.output
     assert "OK    ai-wiki/workflows.md `ai-wiki/workflows.md` points to the managed baseline workflow doc." in result.output
-    assert "OK    AGENT.md `AGENT.md` already references the current managed-system prompt entrypoint." in result.output
+    assert "OK    AGENTS.md `AGENTS.md` already references the current managed-system prompt entrypoint." in result.output
 
 
 def test_doctor_reports_post_turn_capture_evidence(repo_env: dict[str, Path]) -> None:
@@ -306,4 +306,4 @@ def test_doctor_warns_when_telemetry_paths_are_still_tracked(repo_env: dict[str,
     assert result.exit_code == 1
     assert "WARN  .gitignore Git still tracks AI wiki local-state paths despite the ignore rules." in result.output
     assert "Untrack legacy local-state paths once:" in result.output
-    assert "git rm -r --cached --ignore-unmatch .env.aiwiki ai-wiki/metrics/reuse-events ai-wiki/metrics/route-traces ai-wiki/metrics/source-incidents ai-wiki/metrics/task-checks ai-wiki/_toolkit/consolidation ai-wiki/_toolkit/diagnostics ai-wiki/_toolkit/metrics ai-wiki/_toolkit/reports ai-wiki/_toolkit/work ai-wiki/_toolkit/catalog.json" in result.output
+    assert "git rm -r --cached --ignore-unmatch .env.aiwiki ai-wiki/metrics/reuse-events ai-wiki/metrics/route-traces ai-wiki/metrics/source-incidents ai-wiki/metrics/taxonomy-evidence ai-wiki/metrics/task-checks ai-wiki/_toolkit/consolidation ai-wiki/_toolkit/diagnostics ai-wiki/_toolkit/metrics ai-wiki/_toolkit/reports ai-wiki/_toolkit/work ai-wiki/_toolkit/catalog.json" in result.output

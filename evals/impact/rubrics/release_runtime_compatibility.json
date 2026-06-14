@@ -1,0 +1,49 @@
+{
+  "schema_version": "impact-eval-rubric-v1",
+  "name": "release-runtime-compatibility-v1",
+  "description": "Deterministic artifact checks for catching Linux binary runtime compatibility issues before release or npm publishing.",
+  "success": [
+    {
+      "id": "older-build-baseline",
+      "artifact": "workspace_diff",
+      "contains_any": [
+        "ubuntu-22.04",
+        "python:3.11-bookworm",
+        "python:3.11-bullseye",
+        "bookworm",
+        "bullseye"
+      ],
+      "description": "Moves Linux build or verification onto an older-compatible baseline instead of only testing a new runner."
+    },
+    {
+      "id": "runtime-smoke-before-publish",
+      "artifact": "workspace_diff",
+      "contains_any": [
+        "node:24-bookworm",
+        "node:24-trixie",
+        "runtime smoke",
+        "npm install -g"
+      ],
+      "description": "Runs the actual release/npm binary in a target runtime before publishing."
+    },
+    {
+      "id": "tests-updated",
+      "artifact": "changed_files",
+      "changed_file_prefix": "tests/",
+      "description": "Adds focused tests or smoke workflow checks for runtime compatibility."
+    }
+  ],
+  "partial": [
+    {
+      "id": "smoke-added-without-build-baseline",
+      "artifact": "workspace_diff",
+      "contains_any": [
+        "node:24-bookworm",
+        "aiwiki-toolkit --version",
+        "ai-wiki-toolkit --version"
+      ],
+      "description": "Adds runtime smoke coverage but may still build the binary on a too-new baseline."
+    }
+  ],
+  "fail": []
+}

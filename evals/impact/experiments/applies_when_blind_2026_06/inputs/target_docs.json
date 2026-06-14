@@ -1,0 +1,162 @@
+[
+  {
+    "rank": 1,
+    "doc_id": "constraints",
+    "selected_count": 24,
+    "path": "ai-wiki/constraints.md",
+    "exists": true,
+    "recovery_status": "not_found"
+  },
+  {
+    "rank": 2,
+    "doc_id": "people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner",
+    "selected_count": 24,
+    "path": "ai-wiki/people/bochengyin/drafts/eval-run-manifest-should-precede-auto-runner.md",
+    "exists": true,
+    "recovery_status": "source_incident_exact"
+  },
+  {
+    "rank": 3,
+    "doc_id": "people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history",
+    "selected_count": 22,
+    "path": "ai-wiki/people/bochengyin/drafts/impact-eval-prompts-should-backsolve-from-concrete-history.md",
+    "exists": true,
+    "recovery_status": "exact_footer_match"
+  },
+  {
+    "rank": 4,
+    "doc_id": "people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics",
+    "selected_count": 20,
+    "path": "ai-wiki/people/bochengyin/drafts/trial-error-reduction-should-extend-memory-diagnostics.md",
+    "exists": true,
+    "recovery_status": "source_incident_exact"
+  },
+  {
+    "rank": 5,
+    "doc_id": "people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check",
+    "selected_count": 18,
+    "path": "ai-wiki/people/bochengyin/drafts/eval-product-run-requests-need-family-scope-check.md",
+    "exists": true,
+    "recovery_status": "source_incident_exact"
+  },
+  {
+    "rank": 6,
+    "doc_id": "workflows",
+    "selected_count": 17,
+    "path": "ai-wiki/workflows.md",
+    "exists": true,
+    "recovery_status": "not_found"
+  },
+  {
+    "rank": 7,
+    "doc_id": "people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes",
+    "selected_count": 16,
+    "path": "ai-wiki/people/bochengyin/drafts/workflow-primary-impact-evals-compare-working-modes.md",
+    "exists": true,
+    "recovery_status": "exact_footer_match"
+  },
+  {
+    "rank": 8,
+    "doc_id": "decisions",
+    "selected_count": 15,
+    "path": "ai-wiki/decisions.md",
+    "exists": true,
+    "recovery_status": "not_found"
+  },
+  {
+    "rank": 9,
+    "doc_id": "people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost",
+    "selected_count": 15,
+    "path": "ai-wiki/people/bochengyin/drafts/efficiency-eval-should-include-source-incident-cost.md",
+    "exists": true,
+    "recovery_status": "source_incident_exact"
+  },
+  {
+    "rank": 10,
+    "doc_id": "people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files",
+    "selected_count": 14,
+    "path": "ai-wiki/people/bochengyin/drafts/impact-eval-result-capture-must-include-untracked-files.md",
+    "exists": true,
+    "recovery_status": "exact_footer_match"
+  },
+  {
+    "rank": 11,
+    "doc_id": "people/bochengyin/drafts/source-incident-timing-needs-provenance",
+    "selected_count": 13,
+    "path": "ai-wiki/people/bochengyin/drafts/source-incident-timing-needs-provenance.md",
+    "exists": true,
+    "recovery_status": "source_incident_exact"
+  },
+  {
+    "rank": 12,
+    "doc_id": "people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff",
+    "selected_count": 12,
+    "path": "ai-wiki/people/bochengyin/drafts/manual-impact-evals-need-visible-session-export-and-first-pass-cutoff.md",
+    "exists": true,
+    "recovery_status": "exact_footer_match"
+  },
+  {
+    "rank": 13,
+    "doc_id": "people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics",
+    "selected_count": 11,
+    "path": "ai-wiki/people/bochengyin/drafts/neutral-impact-eval-runs-need-change-profile-quality-metrics.md",
+    "exists": true,
+    "recovery_status": "source_incident_exact"
+  },
+  {
+    "rank": 14,
+    "doc_id": "people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report",
+    "selected_count": 9,
+    "path": "ai-wiki/people/bochengyin/drafts/eval-product-mvp-starts-with-first-attempt-artifact-report.md",
+    "exists": true,
+    "recovery_status": "source_incident_exact"
+  },
+  {
+    "rank": 15,
+    "doc_id": "conventions/package-managed-vs-user-owned-docs",
+    "selected_count": 9,
+    "path": "ai-wiki/conventions/package-managed-vs-user-owned-docs.md",
+    "exists": true,
+    "recovery_status": "not_found"
+  },
+  {
+    "rank": 16,
+    "doc_id": "conventions/distribution-target-matrix-must-match-published-assets",
+    "selected_count": 8,
+    "path": "ai-wiki/conventions/distribution-target-matrix-must-match-published-assets.md",
+    "exists": true,
+    "recovery_status": "not_found"
+  },
+  {
+    "rank": 17,
+    "doc_id": "people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn",
+    "selected_count": 7,
+    "path": "ai-wiki/people/bochengyin/drafts/consolidation-should-layer-over-end-of-task-capture-and-avoid-shared-doc-churn.md",
+    "exists": true,
+    "recovery_status": "source_incident_exact"
+  },
+  {
+    "rank": 18,
+    "doc_id": "people/bochengyin/drafts/route-usefulness-eval-needs-route-traces-and-actual-use-comparison",
+    "selected_count": 6,
+    "path": "ai-wiki/people/bochengyin/drafts/route-usefulness-eval-needs-route-traces-and-actual-use-comparison.md",
+    "exists": true,
+    "recovery_status": "source_incident_exact"
+  },
+  {
+    "rank": 19,
+    "doc_id": "people/bochengyin/drafts/karpathy-skills-suggest-success-criteria-and-cross-agent-packaging",
+    "selected_count": 5,
+    "path": "ai-wiki/people/bochengyin/drafts/karpathy-skills-suggest-success-criteria-and-cross-agent-packaging.md",
+    "exists": true,
+    "recovery_status": "source_incident_exact"
+  },
+  {
+    "rank": 20,
+    "doc_id": "people/bochengyin/drafts/codex-session-recovery-should-search-jsonl-and-state-db",
+    "selected_count": 5,
+    "path": "ai-wiki/people/bochengyin/drafts/codex-session-recovery-should-search-jsonl-and-state-db.md",
+    "exists": true,
+    "recovery_status": "source_incident_exact"
+  }
+]

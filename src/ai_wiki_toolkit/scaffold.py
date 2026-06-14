@@ -156,6 +156,7 @@ def install_workspace(
         paths.repo_wiki_dir / "metrics" / "reuse-events",
         paths.repo_wiki_dir / "metrics" / "route-traces",
         paths.repo_wiki_dir / "metrics" / "source-incidents",
+        paths.repo_wiki_dir / "metrics" / "taxonomy-evidence",
         paths.repo_wiki_dir / "metrics" / "task-checks",
         paths.repo_wiki_dir / "work",
         paths.repo_wiki_dir / "work" / "events",
@@ -229,7 +230,7 @@ def install_workspace(
 
     prompt_targets = existing_prompt_targets(paths.repo_root)
     if not prompt_targets:
-        prompt_targets = [paths.repo_root / "AGENT.md"]
+        prompt_targets = [paths.repo_root / "AGENTS.md"]
 
     for path in prompt_targets:
         if upsert_managed_block_file(path, resolved_handle):

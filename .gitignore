@@ -13,6 +13,10 @@ uv.lock
 npm/vendor/
 .DS_Store
 ~$*.pptx
+# Local impact eval outputs can include absolute paths, session ids, and rollout provenance.
+evals/impact/local_experiment/
+evals/impact/reports/*.json
+evals/impact/reports/**/*.json
 
 # <!-- aiwiki-toolkit:start -->
 # Ignore AI wiki local state so normal agent use does not dirty git status.
@@ -20,10 +24,10 @@ npm/vendor/
 ai-wiki/metrics/reuse-events/
 ai-wiki/metrics/route-traces/
 ai-wiki/metrics/source-incidents/
+ai-wiki/metrics/taxonomy-evidence/
 ai-wiki/metrics/task-checks/
 ai-wiki/_toolkit/consolidation/
 ai-wiki/_toolkit/diagnostics/
-ai-wiki/_toolkit/evals/
 ai-wiki/_toolkit/metrics/
 ai-wiki/_toolkit/reports/
 ai-wiki/_toolkit/work/

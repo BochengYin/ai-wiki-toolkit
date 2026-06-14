@@ -1,0 +1,47 @@
+{
+  "schema_version": "impact-eval-rubric-v1",
+  "name": "postinstall-archive-staging-v1",
+  "description": "Deterministic artifact checks for staging downloaded npm wrapper archives outside directories that extraction cleanup may remove.",
+  "success": [
+    {
+      "id": "archive-staged-outside-target",
+      "artifact": "workspace_diff",
+      "contains_any": [
+        "os.tmpdir",
+        "mkdtemp",
+        "_downloads",
+        "downloadDir",
+        "downloadRoot"
+      ],
+      "description": "Stages the downloaded release archive outside the target directory that extraction cleans."
+    },
+    {
+      "id": "npm-wrapper-touched",
+      "artifact": "changed_files",
+      "changed_file_prefix": "npm/",
+      "description": "Fixes the npm wrapper rather than rebuilding the Python CLI."
+    },
+    {
+      "id": "tests-updated",
+      "artifact": "changed_files",
+      "changed_file_prefix": "tests/",
+      "description": "Adds a regression test for the archive-staging failure."
+    }
+  ],
+  "partial": [
+    {
+      "id": "archive-failure-localized",
+      "artifact": "workspace_diff",
+      "contains": "download.tar.gz",
+      "description": "Touches the failing archive path but may not fully preserve the downloaded archive across cleanup."
+    }
+  ],
+  "fail": [
+    {
+      "id": "python-cli-reimplementation",
+      "artifact": "workspace_diff",
+      "contains": "reimplement",
+      "description": "Moves toward reimplementing the Python CLI instead of keeping the npm wrapper thin."
+    }
+  ]
+}

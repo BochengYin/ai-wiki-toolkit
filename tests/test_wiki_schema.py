@@ -114,12 +114,38 @@ def test_build_repo_catalog_includes_short_description_and_routing_hint(tmp_path
             "kind": "feature",
             "path": "ai-wiki/features/bulk-actions.md",
             "reference_path": "ai-wiki/features/bulk-actions.md",
+            "applies_when": "Task touches multi-record selection or batch edits.",
             "routing_hint": "Task touches multi-record selection or batch edits.",
             "short_description": "Use when changing multiple records at once.",
             "source": "user_owned",
             "title": "Bulk actions",
         }
     ]
+
+
+def test_build_repo_catalog_includes_optional_frontmatter_timestamps(tmp_path: Path) -> None:
+    repo_wiki = tmp_path / "ai-wiki"
+    (repo_wiki / "people" / "alice" / "drafts").mkdir(parents=True)
+    (repo_wiki / "people" / "alice" / "drafts" / "route-cutoff.md").write_text(
+        "\n".join(
+            [
+                "---",
+                'title: "Route cutoff"',
+                "created_at: 2026-06-03T09:00:00+00:00",
+                "updated_at: 2026-06-04T09:00:00+00:00",
+                "---",
+                "",
+                "# Route cutoff",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    catalog = build_repo_catalog(repo_wiki)
+
+    assert catalog["documents"][0]["created_at"] == "2026-06-03T09:00:00+00:00"
+    assert catalog["documents"][0]["updated_at"] == "2026-06-04T09:00:00+00:00"
 
 
 def test_build_repo_catalog_skips_status_as_short_description(tmp_path: Path) -> None:

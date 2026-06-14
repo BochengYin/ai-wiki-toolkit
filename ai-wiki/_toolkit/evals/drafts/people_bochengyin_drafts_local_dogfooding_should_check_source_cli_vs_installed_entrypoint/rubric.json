@@ -1,0 +1,14 @@
+{
+  "schema_version": "impact-eval-rubric-v1",
+  "name": "people_bochengyin_drafts_local_dogfooding_should_check_source_cli_vs_installed_entrypoint",
+  "success": [
+    {
+      "id": "artifact-backed-change",
+      "artifact": "workspace_diff",
+      "contains": "diff --git",
+      "description": "The run produces an artifact-backed workspace change."
+    }
+  ],
+  "partial": [],
+  "fail": []
+}

@@ -21,6 +21,23 @@ from ai_wiki_toolkit.diagnostics import (
     generate_memory_diagnostics,
 )
 from ai_wiki_toolkit.doctor import run_doctor
+from ai_wiki_toolkit.impact_analysis import (
+    generate_neutral_impact_eval_report,
+    generate_route_ablation_report,
+    generate_route_cohort_report,
+    generate_route_noise_report,
+    generate_route_replay_report,
+    render_neutral_impact_eval_report,
+    render_neutral_impact_eval_report_json,
+    render_route_ablation_report,
+    render_route_ablation_report_json,
+    render_route_cohort_report,
+    render_route_cohort_report_json,
+    render_route_noise_report,
+    render_route_noise_report_json,
+    render_route_replay_report,
+    render_route_replay_report_json,
+)
 from ai_wiki_toolkit.impact_eval import (
     DEFAULT_PLAN_MODEL,
     DEFAULT_PLAN_PROMPT_LEVELS,
@@ -30,6 +47,7 @@ from ai_wiki_toolkit.impact_eval import (
     DEFAULT_SOURCE_MODE,
     RUN_SCORE_POLICIES,
     SCORE_LABELS,
+    backfill_historical_impact_eval_run_index,
     capture_impact_eval_result,
     draft_impact_eval_family_candidate,
     discover_impact_eval_families,
@@ -60,6 +78,8 @@ from ai_wiki_toolkit.impact_eval import (
     render_impact_eval_family_detail_json,
     render_impact_eval_family_init_result,
     render_impact_eval_family_init_result_json,
+    render_impact_eval_history_backfill_result,
+    render_impact_eval_history_backfill_result_json,
     render_impact_eval_manifest,
     render_impact_eval_manifest_json,
     render_impact_eval_prepare_result,
@@ -96,11 +116,34 @@ from ai_wiki_toolkit.paths import (
     resolve_user_handle_candidate,
     usable_user_handle,
 )
+from ai_wiki_toolkit.project_a import (
+    generate_project_a_diagnostics,
+    render_project_a_diagnostics,
+    render_project_a_diagnostics_json,
+)
 from ai_wiki_toolkit.route import (
+    DEFAULT_ROUTE_RERANK_TOP,
     DEFAULT_ROUTE_SAFETY_CAP_WORDS,
     generate_route_packet,
     render_route_packet_json,
     render_route_packet_text,
+)
+from ai_wiki_toolkit.agent_harness import (
+    generate_agent_harness_behavior_report,
+    render_agent_harness_behavior_report,
+    render_agent_harness_behavior_report_json,
+)
+from ai_wiki_toolkit.feedback import (
+    DEFAULT_TAXONOMY_CANDIDATE_MIN_EVIDENCE,
+    TAXONOMY_EVIDENCE_CONFIDENCES,
+    TAXONOMY_EVIDENCE_SIGNAL_TYPES,
+    generate_taxonomy_candidate_report,
+    record_taxonomy_evidence,
+)
+from ai_wiki_toolkit.route_activation import (
+    generate_route_activation_report,
+    render_route_activation_report,
+    render_route_activation_report_json,
 )
 from ai_wiki_toolkit.repo_evaluation import (
     DEFAULT_REPO_EVALUATION_MAX_ITEMS,
@@ -155,10 +198,14 @@ evaluate_app = typer.Typer(help="Generate AI wiki repo evaluation reports.")
 eval_app = typer.Typer(help="Report AI wiki impact eval results.")
 impact_eval_app = typer.Typer(help="Inspect and summarize impact eval artifacts.")
 impact_eval_family_app = typer.Typer(help="Discover and scaffold impact eval families.")
+impact_eval_neutral_app = typer.Typer(help="Analyze neutral impact eval family runs.")
+impact_eval_project_a_app = typer.Typer(help="Report Project A coding-agent eval harness health.")
+impact_eval_route_noise_app = typer.Typer(help="Analyze route precision and noise for eval work.")
 impact_eval_schedule_app = typer.Typer(help="Run and report scheduled impact eval loops.")
 promote_app = typer.Typer(help="Mark handle-local promotion candidates from useful reuse evidence.")
 report_app = typer.Typer(help="Generate AI wiki local reports.")
 source_incident_app = typer.Typer(help="Backfill and inspect source incident timing evidence.")
+taxonomy_app = typer.Typer(help="Inspect taxonomy evidence and induced candidates.")
 app.add_typer(work_app, name="work")
 app.add_typer(diagnose_app, name="diagnose")
 app.add_typer(consolidate_app, name="consolidate")
@@ -167,8 +214,12 @@ app.add_typer(eval_app, name="eval")
 app.add_typer(promote_app, name="promote")
 app.add_typer(report_app, name="report")
 app.add_typer(source_incident_app, name="source-incident")
+app.add_typer(taxonomy_app, name="taxonomy")
 eval_app.add_typer(impact_eval_app, name="impact")
 impact_eval_app.add_typer(impact_eval_family_app, name="family")
+impact_eval_app.add_typer(impact_eval_neutral_app, name="neutral")
+impact_eval_app.add_typer(impact_eval_project_a_app, name="project-a")
+impact_eval_app.add_typer(impact_eval_route_noise_app, name="route-noise")
 impact_eval_app.add_typer(impact_eval_schedule_app, name="schedule")
 
 PROMPTED_IDENTITY_SOURCE = "prompted-handle"
@@ -354,7 +405,10 @@ def route(
     changed_paths: list[str] | None = typer.Option(
         None,
         "--changed-path",
-        help="Optional path signal. Repeat to add multiple paths. Defaults to git status paths.",
+        help=(
+            "Optional path signal. Repeat to add multiple paths. Explicit paths always influence "
+            "routing; git status paths are displayed and only influence generic tasks."
+        ),
     ),
     budget_words: int = typer.Option(
         DEFAULT_ROUTE_SAFETY_CAP_WORDS,
@@ -368,6 +422,13 @@ def route(
         min=1,
         max=20,
         help="Maximum number of must-load documents to include.",
+    ),
+    rerank_top: int = typer.Option(
+        DEFAULT_ROUTE_RERANK_TOP,
+        "--rerank-top",
+        min=0,
+        max=100,
+        help="Number of top deterministic index cards to rerank after initial scoring. Use 0 to disable.",
     ),
     output_format: str = typer.Option(
         "text",
@@ -401,6 +462,7 @@ def route(
             changed_paths=changed_paths or [],
             budget_words=budget_words,
             max_docs=max_docs,
+            rerank_top=rerank_top,
         )
     except RepoRootNotFoundError as exc:
         typer.echo(str(exc), err=True)
@@ -2342,6 +2404,651 @@ def eval_impact_benchmark(
         typer.echo(rendered, nl=False)
 
 
+@impact_eval_route_noise_app.command("report")
+def eval_impact_route_noise_report(
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root. Defaults to the current repo.",
+    ),
+    repo_wiki_dir: Path | None = typer.Option(
+        None,
+        "--repo-wiki-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="AI wiki directory. Defaults to <repo-root>/ai-wiki.",
+    ),
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional handle filter. Defaults to the resolved local handle.",
+    ),
+    since: str | None = typer.Option(
+        DEFAULT_REPO_EVALUATION_SINCE,
+        "--since",
+        help="Optional ISO timestamp or duration such as 30d.",
+    ),
+    max_items: int = typer.Option(
+        DEFAULT_DIAGNOSTICS_MAX_ITEMS,
+        "--max-items",
+        min=1,
+        help="Maximum rows to include in each report section.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Generate a route precision/noise report for impact-eval work."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = generate_route_noise_report(
+            repo_root=repo_root,
+            repo_wiki_dir=repo_wiki_dir,
+            handle=handle,
+            since=since,
+            max_items=max_items,
+        )
+    except (FileNotFoundError, RuntimeError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read route diagnostic data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_route_noise_report_json(result)
+        if normalized_format == "json"
+        else render_route_noise_report(result)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_route_noise_app.command("cohort")
+def eval_impact_route_noise_cohort(
+    post_change_since: str = typer.Option(
+        ...,
+        "--post-change-since",
+        help="ISO timestamp marking the start of the post-change route cohort.",
+    ),
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root. Defaults to the current repo.",
+    ),
+    repo_wiki_dir: Path | None = typer.Option(
+        None,
+        "--repo-wiki-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="AI wiki directory. Defaults to <repo-root>/ai-wiki.",
+    ),
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional handle filter. Defaults to the resolved local handle.",
+    ),
+    target_evaluable_traces: int = typer.Option(
+        57,
+        "--target-evaluable-traces",
+        min=1,
+        help="Post-change evaluable route traces required before the cohort is complete.",
+    ),
+    baseline_evaluable_traces: int = typer.Option(
+        57,
+        "--baseline-evaluable-traces",
+        min=1,
+        help="Number of latest pre-change evaluable route traces to use as baseline.",
+    ),
+    only_evaluable: bool = typer.Option(
+        True,
+        "--only-evaluable/--include-unevaluated",
+        help="Count only traces with document-level reuse events.",
+    ),
+    max_items: int = typer.Option(
+        DEFAULT_DIAGNOSTICS_MAX_ITEMS,
+        "--max-items",
+        min=1,
+        help="Maximum trace rows to include per cohort.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Compare pre-change and post-change route precision cohorts."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = generate_route_cohort_report(
+            post_change_since=post_change_since,
+            repo_root=repo_root,
+            repo_wiki_dir=repo_wiki_dir,
+            handle=handle,
+            target_evaluable_traces=target_evaluable_traces,
+            baseline_evaluable_traces=baseline_evaluable_traces,
+            only_evaluable=only_evaluable,
+            max_items=max_items,
+        )
+    except (FileNotFoundError, RuntimeError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read route cohort data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_route_cohort_report_json(result)
+        if normalized_format == "json"
+        else render_route_cohort_report(result)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_route_noise_app.command("replay")
+def eval_impact_route_noise_replay(
+    before: str | None = typer.Option(
+        None,
+        "--before",
+        help="Only replay evaluable route traces before this ISO timestamp.",
+    ),
+    catalog_cutoff: str = typer.Option(
+        "current",
+        "--catalog-cutoff",
+        help="Catalog cutoff policy for replay. Choices: current, trace-routed-at.",
+    ),
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root. Defaults to the current repo.",
+    ),
+    repo_wiki_dir: Path | None = typer.Option(
+        None,
+        "--repo-wiki-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="AI wiki directory. Defaults to <repo-root>/ai-wiki.",
+    ),
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional handle filter. Defaults to the resolved local handle.",
+    ),
+    target_evaluable_traces: int = typer.Option(
+        57,
+        "--target-evaluable-traces",
+        min=1,
+        help="Number of latest evaluable historical traces to replay.",
+    ),
+    codex_sessions_root: Path | None = typer.Option(
+        None,
+        "--codex-sessions-root",
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Codex sessions root. Defaults to ~/.codex/sessions.",
+    ),
+    codex_state_db: Path | None = typer.Option(
+        None,
+        "--codex-state-db",
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="Codex state DB. Defaults to ~/.codex/state_5.sqlite.",
+    ),
+    max_docs: int = typer.Option(
+        6,
+        "--max-docs",
+        min=1,
+        max=20,
+        help="Maximum number of route docs for each replay.",
+    ),
+    rerank_top: int = typer.Option(
+        DEFAULT_ROUTE_RERANK_TOP,
+        "--rerank-top",
+        min=0,
+        max=100,
+        help="Number of top deterministic index cards to rerank for each replay route. Use 0 to disable.",
+    ),
+    budget_words: int = typer.Option(
+        3000,
+        "--budget-words",
+        min=100,
+        help="Safety cap for each replayed route packet.",
+    ),
+    max_items: int = typer.Option(
+        DEFAULT_DIAGNOSTICS_MAX_ITEMS,
+        "--max-items",
+        min=1,
+        help="Maximum replay rows to include in the report artifact.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Replay historical route prompts through the current route scorer."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = generate_route_replay_report(
+            repo_root=repo_root,
+            repo_wiki_dir=repo_wiki_dir,
+            handle=handle,
+            before=before,
+            catalog_cutoff=catalog_cutoff,
+            target_evaluable_traces=target_evaluable_traces,
+            codex_sessions_root=codex_sessions_root,
+            codex_state_db=codex_state_db,
+            max_docs=max_docs,
+            rerank_top=rerank_top,
+            budget_words=budget_words,
+            max_items=max_items,
+        )
+    except (FileNotFoundError, RuntimeError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read route replay data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_route_replay_report_json(result)
+        if normalized_format == "json"
+        else render_route_replay_report(result)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_route_noise_app.command("ablation")
+def eval_impact_route_noise_ablation(
+    before: str | None = typer.Option(
+        None,
+        "--before",
+        help="Only replay evaluable route traces before this ISO timestamp.",
+    ),
+    catalog_cutoff: str = typer.Option(
+        "trace-routed-at",
+        "--catalog-cutoff",
+        help="Catalog cutoff policy for replay. Choices: current, trace-routed-at.",
+    ),
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root. Defaults to the current repo.",
+    ),
+    repo_wiki_dir: Path | None = typer.Option(
+        None,
+        "--repo-wiki-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="AI wiki directory. Defaults to <repo-root>/ai-wiki.",
+    ),
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional handle filter. Defaults to the resolved local handle.",
+    ),
+    target_evaluable_traces: int = typer.Option(
+        57,
+        "--target-evaluable-traces",
+        min=1,
+        help="Number of latest evaluable historical traces to replay.",
+    ),
+    codex_sessions_root: Path | None = typer.Option(
+        None,
+        "--codex-sessions-root",
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Codex sessions root. Defaults to ~/.codex/sessions.",
+    ),
+    codex_state_db: Path | None = typer.Option(
+        None,
+        "--codex-state-db",
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="Codex state DB. Defaults to ~/.codex/state_5.sqlite.",
+    ),
+    max_docs: int = typer.Option(
+        6,
+        "--max-docs",
+        min=1,
+        max=20,
+        help="Maximum number of route docs for each replay.",
+    ),
+    rerank_top: int = typer.Option(
+        DEFAULT_ROUTE_RERANK_TOP,
+        "--rerank-top",
+        min=0,
+        max=100,
+        help="Number of top deterministic index cards to rerank for each replay route.",
+    ),
+    budget_words: int = typer.Option(
+        3000,
+        "--budget-words",
+        min=100,
+        help="Safety cap for each replayed route packet.",
+    ),
+    variant: list[str] | None = typer.Option(
+        None,
+        "--variant",
+        help="Ablation variant to include. Repeatable. Defaults to the standard six variants.",
+    ),
+    max_items: int = typer.Option(
+        DEFAULT_DIAGNOSTICS_MAX_ITEMS,
+        "--max-items",
+        min=1,
+        help="Maximum replay rows to include in each embedded replay report artifact.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional JSON output file written from the same ablation run.",
+    ),
+) -> None:
+    """Run route replay ablations over the same recovered route cohort."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = generate_route_ablation_report(
+            repo_root=repo_root,
+            repo_wiki_dir=repo_wiki_dir,
+            handle=handle,
+            before=before,
+            catalog_cutoff=catalog_cutoff,
+            target_evaluable_traces=target_evaluable_traces,
+            codex_sessions_root=codex_sessions_root,
+            codex_state_db=codex_state_db,
+            max_docs=max_docs,
+            rerank_top=rerank_top,
+            budget_words=budget_words,
+            variants=tuple(variant or ()),
+            max_items=max_items,
+        )
+    except (FileNotFoundError, RuntimeError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read route ablation data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    if json_output is not None:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(render_route_ablation_report_json(result), encoding="utf-8")
+    rendered = (
+        render_route_ablation_report_json(result)
+        if normalized_format == "json"
+        else render_route_ablation_report(result)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_neutral_app.command("report")
+def eval_impact_neutral_report(
+    period_id: str = typer.Option(
+        ...,
+        "--period-id",
+        help="Scheduled run period id to analyze, such as project-a-rerun-2026-06-03.",
+    ),
+    families: list[str] | None = typer.Option(
+        None,
+        "--family",
+        help="Optional family filter. Repeat for multiple families.",
+    ),
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root containing evals/impact/. Defaults to the current repo.",
+    ),
+    repo_wiki_dir: Path | None = typer.Option(
+        None,
+        "--repo-wiki-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="AI wiki directory. Defaults to <repo-root>/ai-wiki.",
+    ),
+    neutral_only: bool = typer.Option(
+        True,
+        "--neutral-only/--include-all",
+        help="Report only families whose primary outcome is neutral_signal.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Generate a slot-level report for neutral impact-eval families."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = generate_neutral_impact_eval_report(
+            period_id=period_id,
+            repo_root=repo_root,
+            repo_wiki_dir=repo_wiki_dir,
+            families=tuple(families or ()),
+            neutral_only=neutral_only,
+        )
+    except (FileNotFoundError, RuntimeError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read neutral impact eval data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_neutral_impact_eval_report_json(result)
+        if normalized_format == "json"
+        else render_neutral_impact_eval_report(result)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_project_a_app.command("report")
+def eval_impact_project_a_report(
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root containing evals/impact/. Defaults to the current repo.",
+    ),
+    repo_wiki_dir: Path | None = typer.Option(
+        None,
+        "--repo-wiki-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="AI wiki directory. Defaults to <repo-root>/ai-wiki.",
+    ),
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional handle filter. Defaults to the resolved local handle.",
+    ),
+    since: str | None = typer.Option(
+        DEFAULT_REPO_EVALUATION_SINCE,
+        "--since",
+        help="Optional ISO timestamp or duration such as 30d.",
+    ),
+    candidate_max_items: int = typer.Option(
+        DEFAULT_DIAGNOSTICS_MAX_ITEMS,
+        "--candidate-max-items",
+        min=1,
+        help="Maximum candidate/diagnostic items to include in underlying reports.",
+    ),
+    period_id: str | None = typer.Option(
+        None,
+        "--period-id",
+        help="Optional schedule-report period id. Defaults to the current ISO week.",
+    ),
+    run_checks: bool = typer.Option(
+        False,
+        "--run-checks/--skip-checks",
+        help="Run pytest, npm pack dry-run, and git diff whitespace checks before reporting.",
+    ),
+    write: bool = typer.Option(
+        True,
+        "--write/--no-write",
+        help="Write evals/impact/reports/project_a_diagnostics_<date> artifacts.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Generate one Project A diagnostic report across tests, evals, runs, and routing."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = generate_project_a_diagnostics(
+            repo_root=repo_root,
+            repo_wiki_dir=repo_wiki_dir,
+            handle=handle,
+            since=since,
+            candidate_max_items=candidate_max_items,
+            period_id=period_id,
+            run_checks=run_checks,
+            write=write,
+        )
+    except (FileNotFoundError, RuntimeError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read Project A diagnostic data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_project_a_diagnostics_json(result)
+        if normalized_format == "json"
+        else render_project_a_diagnostics(result)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
 @impact_eval_schedule_app.command("report")
 def eval_impact_schedule_report(
     repo_root: Path | None = typer.Option(
@@ -2439,6 +3146,310 @@ def eval_impact_schedule_report(
         render_impact_eval_schedule_report_json(result)
         if normalized_format == "json"
         else render_impact_eval_schedule_report(result)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_schedule_app.command("backfill-history")
+def eval_impact_schedule_backfill_history(
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root containing evals/impact/. Defaults to the current repo.",
+    ),
+    repo_wiki_dir: Path | None = typer.Option(
+        None,
+        "--repo-wiki-dir",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="AI wiki directory. Defaults to <repo-root>/ai-wiki.",
+    ),
+    notes: list[Path] | None = typer.Option(
+        None,
+        "--note",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="Historical findings note to register. Repeat to override default note discovery.",
+    ),
+    replace_existing: bool = typer.Option(
+        True,
+        "--replace-existing/--append",
+        help="Replace prior historical backfill entries before writing the run index.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Register historical manual findings notes in the scheduled run index."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = backfill_historical_impact_eval_run_index(
+            repo_root=repo_root,
+            repo_wiki_dir=repo_wiki_dir,
+            note_paths=tuple(notes or ()),
+            replace_existing=replace_existing,
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read impact eval history data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_impact_eval_history_backfill_result_json(result)
+        if normalized_format == "json"
+        else render_impact_eval_history_backfill_result(result)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_route_noise_app.command("behavior")
+def eval_impact_route_noise_behavior(
+    suite: Path = typer.Option(
+        ...,
+        "--suite",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="Agent Harness behavior-test suite JSON.",
+    ),
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root. Defaults to the current repo.",
+    ),
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional handle for managed report output. Defaults to the resolved local handle.",
+    ),
+    max_docs: int = typer.Option(
+        6,
+        "--max-docs",
+        min=1,
+        max=20,
+        help="Maximum route docs to use when a behavior case generates a route packet.",
+    ),
+    rerank_top: int = typer.Option(
+        DEFAULT_ROUTE_RERANK_TOP,
+        "--rerank-top",
+        min=0,
+        max=100,
+        help="Number of top deterministic index cards to rerank for generated route packets.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    write: bool = typer.Option(
+        False,
+        "--write/--no-write",
+        help="Write generated reports under ai-wiki/_toolkit/reports/route-behavior/.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Evaluate Agent Harness behavior expectations from route packet hints."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = generate_agent_harness_behavior_report(
+            suite_path=suite,
+            repo_root=repo_root,
+            handle=handle,
+            max_docs=max_docs,
+            rerank_top=rerank_top,
+            write=write,
+        )
+    except (FileNotFoundError, RuntimeError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read Agent Harness behavior data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_agent_harness_behavior_report_json(result.report)
+        if normalized_format == "json"
+        else render_agent_harness_behavior_report(result.report)
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(rendered, nl=False)
+
+
+@impact_eval_route_noise_app.command("activation")
+def eval_impact_route_noise_activation(
+    replay_report: Path = typer.Option(
+        ...,
+        "--replay-report",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="Route replay report JSON.",
+    ),
+    behavior_report: Path = typer.Option(
+        ...,
+        "--behavior-report",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="Agent Harness behavior report JSON.",
+    ),
+    repo_root: Path | None = typer.Option(
+        None,
+        "--repo-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Repository root. Defaults to the current repo.",
+    ),
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional handle for managed report output. Defaults to the resolved local handle.",
+    ),
+    min_replayed_traces: int = typer.Option(
+        57,
+        "--min-replayed-traces",
+        min=1,
+        help="Minimum replayed historical traces required before activation.",
+    ),
+    min_behavior_cases: int = typer.Option(
+        4,
+        "--min-behavior-cases",
+        min=1,
+        help="Minimum behavior cases required before activation.",
+    ),
+    min_precision_delta: float = typer.Option(
+        0.0,
+        "--min-precision-delta",
+        help="Minimum replay precision delta required before activation.",
+    ),
+    max_noise_delta: float = typer.Option(
+        0.0,
+        "--max-noise-delta",
+        help="Maximum replay noise delta allowed before activation.",
+    ),
+    min_selected_useful_delta: int = typer.Option(
+        0,
+        "--min-selected-useful-delta",
+        help="Minimum selected-useful doc delta required before activation.",
+    ),
+    max_missed_useful_delta: int = typer.Option(
+        0,
+        "--max-missed-useful-delta",
+        help="Maximum missed-useful doc delta allowed before activation.",
+    ),
+    max_precision_regression_items: int = typer.Option(
+        0,
+        "--max-precision-regression-items",
+        min=0,
+        help="Maximum per-item precision regressions allowed before activation.",
+    ),
+    max_noise_regression_items: int = typer.Option(
+        0,
+        "--max-noise-regression-items",
+        min=0,
+        help="Maximum per-item noise regressions allowed before activation.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    write: bool = typer.Option(
+        False,
+        "--write/--no-write",
+        help="Write generated reports under ai-wiki/_toolkit/reports/route-activation/.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Optional output file. Defaults to stdout only.",
+    ),
+) -> None:
+    """Combine route-core replay and Agent Harness behavior activation decisions."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        result = generate_route_activation_report(
+            replay_report_path=replay_report,
+            behavior_report_path=behavior_report,
+            repo_root=repo_root,
+            handle=handle,
+            min_replayed_traces=min_replayed_traces,
+            min_behavior_cases=min_behavior_cases,
+            min_precision_delta=min_precision_delta,
+            max_noise_delta=max_noise_delta,
+            min_selected_useful_delta=min_selected_useful_delta,
+            max_missed_useful_delta=max_missed_useful_delta,
+            max_precision_regression_items=max_precision_regression_items,
+            max_noise_regression_items=max_noise_regression_items,
+            write=write,
+        )
+    except (FileNotFoundError, RuntimeError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except json.JSONDecodeError as exc:
+        typer.echo(f"Could not read route activation data: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    rendered = (
+        render_route_activation_report_json(result.report)
+        if normalized_format == "json"
+        else render_route_activation_report(result.report)
     )
     if output is not None:
         output.parent.mkdir(parents=True, exist_ok=True)
@@ -3286,6 +4297,202 @@ def record_reuse_check_command(
     typer.echo(f"Check log: {result.check_log_path}")
     typer.echo(f"Document stats: {result.document_stats_path}")
     typer.echo(f"Task stats: {result.task_stats_path}")
+
+
+@app.command("record-taxonomy-evidence")
+def record_taxonomy_evidence_command(
+    task_id: str = typer.Option(
+        ...,
+        "--task-id",
+        help="Stable task identifier for grouping taxonomy evidence.",
+    ),
+    task: str = typer.Option(
+        ...,
+        "--task",
+        help="Original task text or concise task summary that produced the evidence.",
+    ),
+    signal_type: str = typer.Option(
+        ...,
+        "--signal-type",
+        help=f"Taxonomy evidence signal. Choices: {', '.join(TAXONOMY_EVIDENCE_SIGNAL_TYPES)}.",
+    ),
+    reason: str = typer.Option(
+        ...,
+        "--reason",
+        help="Concrete reason this task produced taxonomy evidence.",
+    ),
+    confidence: str = typer.Option(
+        "medium",
+        "--confidence",
+        help=f"Confidence for this evidence. Choices: {', '.join(TAXONOMY_EVIDENCE_CONFIDENCES)}.",
+    ),
+    selected_doc_ids: list[str] | None = typer.Option(
+        None,
+        "--selected-doc-id",
+        help="Doc id selected by route. Repeat to record multiple docs.",
+    ),
+    used_doc_ids: list[str] | None = typer.Option(
+        None,
+        "--used-doc-id",
+        help="Doc id actually used downstream. Repeat to record multiple docs.",
+    ),
+    missed_doc_ids: list[str] | None = typer.Option(
+        None,
+        "--missed-doc-id",
+        help="Useful doc id missed by route. Repeat to record multiple docs.",
+    ),
+    candidate_category_hint: str | None = typer.Option(
+        None,
+        "--candidate-category-hint",
+        help="Optional category hint proposed by the evidence. This does not activate taxonomy.",
+    ),
+    wrong_category: str | None = typer.Option(
+        None,
+        "--wrong-category",
+        help="Optional category, bucket, or slot that appeared wrong for this task.",
+    ),
+    suggested_category_hint: str | None = typer.Option(
+        None,
+        "--suggested-category-hint",
+        help="Optional corrected category hint, often from user correction.",
+    ),
+    route_trace_id: str | None = typer.Option(
+        None,
+        "--route-trace-id",
+        help="Optional route trace id that produced the selected docs.",
+    ),
+    agent_name: str | None = typer.Option(
+        None,
+        "--agent-name",
+        help="Optional agent identifier such as codex or claude-code.",
+    ),
+    model: str | None = typer.Option(
+        None,
+        "--model",
+        help="Optional model name. Defaults to AIWIKI_TOOLKIT_MODEL or detected host model env vars.",
+    ),
+    notes: str | None = typer.Option(
+        None,
+        "--notes",
+        help="Optional free-form note for this taxonomy evidence.",
+    ),
+    recorded_at: str | None = typer.Option(
+        None,
+        "--recorded-at",
+        help="Optional explicit timestamp. Defaults to the current local time in ISO-8601 format.",
+    ),
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional override for the handle shard used under ai-wiki/metrics/.",
+    ),
+) -> None:
+    """Append one taxonomy post-hoc evidence observation without activating taxonomy."""
+    try:
+        result = record_taxonomy_evidence(
+            task_id=task_id,
+            task=task,
+            signal_type=signal_type,
+            reason=reason,
+            confidence=confidence,
+            selected_doc_ids=selected_doc_ids or [],
+            used_doc_ids=used_doc_ids or [],
+            missed_doc_ids=missed_doc_ids or [],
+            candidate_category_hint=candidate_category_hint,
+            wrong_category=wrong_category,
+            suggested_category_hint=suggested_category_hint,
+            route_trace_id=route_trace_id,
+            agent_name=agent_name,
+            model=model,
+            notes=notes,
+            recorded_at=recorded_at,
+            handle=handle,
+        )
+    except RepoRootNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except RepoWikiNotInitializedError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+
+    typer.echo(f"Recorded taxonomy evidence: {result.evidence_id}")
+    typer.echo(f"Recorded at: {result.recorded_at}")
+    typer.echo(f"Author handle: {result.author_handle}")
+    typer.echo(f"Evidence log: {result.evidence_log_path}")
+    typer.echo("Active taxonomy changed: no")
+
+
+@taxonomy_app.command("candidates")
+def taxonomy_candidates(
+    handle: str | None = typer.Option(
+        None,
+        "--handle",
+        help="Optional author handle filter for taxonomy evidence logs. Defaults to all handles.",
+    ),
+    min_evidence: int = typer.Option(
+        DEFAULT_TAXONOMY_CANDIDATE_MIN_EVIDENCE,
+        "--min-evidence",
+        min=2,
+        help="Minimum repeated evidence events required for Gate 1.",
+    ),
+    shadow_validation_json: Path | None = typer.Option(
+        None,
+        "--shadow-validation-json",
+        help="Optional JSON file keyed by candidate id or cluster key with Gate 2 replay/behavior results.",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--format",
+        help="Output format. Choices: text, json.",
+    ),
+    write: bool = typer.Option(
+        False,
+        "--write/--no-write",
+        help="Write generated reports under ai-wiki/_toolkit/reports/taxonomy-candidates/.",
+    ),
+) -> None:
+    """Induce inactive TaxonomyCandidate records from post-hoc evidence."""
+    normalized_format = output_format.strip().lower()
+    if normalized_format not in {"text", "json"}:
+        typer.echo("Invalid --format. Expected one of: text, json.", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        paths = build_paths()
+        if not paths.repo_wiki_dir.exists():
+            raise RepoWikiNotInitializedError(
+                "Repo AI wiki is not initialized. Run `aiwiki-toolkit install` first."
+            )
+        shadow_validations = None
+        if shadow_validation_json is not None:
+            loaded = json.loads(shadow_validation_json.read_text(encoding="utf-8"))
+            if not isinstance(loaded, dict):
+                raise ValueError("--shadow-validation-json must contain a JSON object.")
+            shadow_validations = loaded
+        result = generate_taxonomy_candidate_report(
+            paths.repo_wiki_dir,
+            handle=handle,
+            min_evidence=min_evidence,
+            shadow_validations=shadow_validations,
+            write=write,
+        )
+    except RepoRootNotFoundError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except RepoWikiNotInitializedError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        typer.echo(f"Could not generate taxonomy candidates: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    if normalized_format == "json":
+        typer.echo(result.json_text, nl=False)
+    else:
+        typer.echo(result.markdown, nl=False)
 
 
 @work_app.command("capture")

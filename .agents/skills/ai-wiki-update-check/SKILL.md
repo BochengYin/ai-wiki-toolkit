@@ -1,6 +1,6 @@
 ---
 name: ai-wiki-update-check
-description: Produce the mandatory end-of-task AI wiki write-back outcome for ai-wiki-toolkit. Use it to detect durable memory candidates, decide whether the result is None, Draft, or PromotionCandidate, and emit the required final status line.
+description: Produce the mandatory end-of-task AI wiki write-back outcome for ai-wiki-toolkit. Use it to record only public/local trial-error memory or reusable clarification memory, then emit the required final status line.
 ---
 
 # AI Wiki Write-Back Check
@@ -11,31 +11,25 @@ This outcome is mandatory even when the correct result is `None`.
 
 ## Core Workflow
 
-1. Review the task outcome, changes made, and lessons learned.
-2. Before returning `None`, run memory candidate detection for:
-   - a team convention
-   - reusable PR review learning
-   - feature clarification memory
-   - a durable decision note
-   - a reusable problem-solution memory
-   - missed relevant memory
-   - a conflict, refinement, or supersession with existing memory
-   - a person preference that should stay personal for now
-3. Check concrete task signals before returning `None`, especially repeated release, CI, or platform failures; workflow or packaging assumption mismatches; environment or tooling fixes future agents may need; multi-turn clarification; accepted assumptions; emerging acceptance criteria; and unresolved feature questions.
-4. Choose exactly one outcome: `None`, `Draft`, or `PromotionCandidate`.
-5. If the outcome is `Draft` or `PromotionCandidate`, create or update a note under `ai-wiki/people/<handle>/drafts/`.
-6. Emit the final result using the exact output contract in [references/output-contract.md](references/output-contract.md).
-7. Use [references/decision-rules.md](references/decision-rules.md) for the decision gate, promotion rules, memory candidate detection, conflict handling, and note placement rules.
-8. Do not claim current-turn source incident duration from inside the prompt-level skill. If a runner supports post-turn hooks, it may call `aiwiki-toolkit source-incident capture-post-turn --apply` after the final response lands.
+1. Review the completed task, local/public checks, and user-visible outcome.
+2. Before returning `None`, check only for durable public/local write-back signals:
+   - a failed local/public check that changed the fix
+   - repeated public trial-and-error on the same source file, API, command, or behavior
+   - a reusable tooling, packaging, or environment mismatch found through local/public evidence
+   - a reusable clarification from the user that future tasks in this repo should apply
+3. Do not write memory from hidden evaluator failures, hidden test names, private benchmark answers, or prior hidden-derived fixes.
+4. Do not write back after a clean one-shot task unless it produced a reusable clarification or public/local trial-error lesson.
+5. Choose exactly one outcome: `None` or `MemoryRecorded`.
+6. If the outcome is `MemoryRecorded`, create or update a small note under `ai-wiki/memory/` and update `ai-wiki/memory/index.md`.
+7. Emit the final result using the exact output contract in [references/output-contract.md](references/output-contract.md).
+8. Use [references/decision-rules.md](references/decision-rules.md) for the decision gate, memory shape, conflict handling, and index update rules.
 
 ## Constraints
 
 - Do not skip the write-back outcome just because no durable lesson is expected.
 - Do not write every task summary into the wiki.
-- Do not create or update `ai-wiki/review-patterns/*.md` without human confirmation.
-- Do not promote a reviewer preference into a team convention unless the promotion rules are met.
-- Do not treat "no wiki docs were opened" as proof that no durable memory was produced.
-- If new memory conflicts with existing memory, flag it as a conflict, refinement, or supersession.
+- Do not write from hidden evaluator results or private benchmark answers.
+- Do not treat "no wiki docs were opened" as proof that no public/local trial-error memory was produced.
+- If new memory conflicts with existing memory, flag the conflict instead of silently overwriting.
 - Prefer small durable memory over long transcripts.
-- Keep project-specific knowledge in `ai-wiki/`.
-- Keep cross-project knowledge in `<home>/ai-wiki/system/`.
+- Keep project-specific memory in `ai-wiki/memory/`.

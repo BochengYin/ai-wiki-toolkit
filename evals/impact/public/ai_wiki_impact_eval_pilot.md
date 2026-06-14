@@ -651,7 +651,7 @@ Detailed family notes:
 
 Current synthesis:
 
-- `evals/impact/reports/current.md`
+- `evals/impact/reports/synthesis/current.md`
 
 ## Appendix C: Footer Details
 
