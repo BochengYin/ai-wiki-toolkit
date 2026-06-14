@@ -14,7 +14,10 @@ prior hidden-derived fixes as memory.
 
 ## Entries
 
-No public/local trial-error memory has been recorded yet.
+- [Run scaffold previews from the seed repo cwd](scaffold-previews-use-seed-repo-cwd.md):
+  when previewing toolkit scaffold/install output into a synthetic repo or
+  harness fixture, set cwd to the intended seed repo and verify the source
+  checkout remains clean.
 
 ## Suggested Entry Shape
 
