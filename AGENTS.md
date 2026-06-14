@@ -32,7 +32,7 @@ This repository may have an AI Wiki only in some local checkouts. `ai-wiki/` may
 If `ai-wiki/_toolkit/system.md` exists:
 
 - **Read `ai-wiki/_toolkit/system.md` immediately BEFORE proceeding with any other work.**
-- Follow its start-of-task routing, required reads, reuse evidence, and write-back workflow for this session.
+- Follow its bounded read, reuse evidence, and public-only write-back workflow for this session.
 - If a toolkit command is unavailable, use the fallback instructions in that file.
 - **All subsequent responses in this session MUST follow the AI Wiki workflow.**
 

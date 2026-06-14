@@ -112,13 +112,14 @@ def test_init_appends_managed_block_when_prompt_file_has_no_intro_heading(
     assert "## AI Wiki Local Workflow Gate" in text
 
 
-def test_init_creates_agent_when_no_prompt_files_exist(
+def test_init_creates_agents_when_no_prompt_files_exist(
     repo_env: dict[str, Path],
 ) -> None:
     result = runner.invoke(app, ["init", "--handle", "alice"])
 
     assert result.exit_code == 0
-    assert (repo_env["repo"] / "AGENT.md").exists()
+    assert (repo_env["repo"] / "AGENTS.md").exists()
+    assert not (repo_env["repo"] / "AGENT.md").exists()
     assert not (repo_env["repo"] / "CLAUDE.md").exists()
 
 
@@ -127,13 +128,13 @@ def test_init_does_not_churn_prompt_block_across_different_handles(
 ) -> None:
     first = runner.invoke(app, ["init", "--handle", "alice"])
     assert first.exit_code == 0
-    agent_path = repo_env["repo"] / "AGENT.md"
-    first_text = agent_path.read_text(encoding="utf-8")
+    agents_path = repo_env["repo"] / "AGENTS.md"
+    first_text = agents_path.read_text(encoding="utf-8")
 
     second = runner.invoke(app, ["init", "--handle", "bob"])
 
     assert second.exit_code == 0
-    assert agent_path.read_text(encoding="utf-8") == first_text
+    assert agents_path.read_text(encoding="utf-8") == first_text
 
 
 def test_init_appends_managed_block_when_marker_strings_appear_inline(

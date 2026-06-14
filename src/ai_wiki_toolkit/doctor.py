@@ -807,7 +807,7 @@ def _check_prompt_targets(result: DoctorResult) -> None:
             severity="INFO",
             code="no_prompt_targets",
             path="repo-root",
-            message="No supported prompt file exists yet (`AGENT.md`, `AGENTS.md`, or `CLAUDE.md`).",
+            message="No supported prompt file exists yet (`AGENTS.md`, `AGENT.md`, or `CLAUDE.md`).",
             suggested_fix="Run `aiwiki-toolkit install` if you want the managed prompt block created.",
         )
         return
