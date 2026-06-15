@@ -14,7 +14,9 @@ prior hidden-derived fixes as memory.
 
 ## Entries
 
-No public/local trial-error memory has been recorded yet.
+- [SWE-Chain 015 Agent Writeback PRD Rules](swe-chain-015-agent-writeback-prd-rules.md):
+  read when running, reviewing, or modifying the `swe-chain-015-flask-agent-skill-writeback` experiment,
+  especially runner normal-end hook protocol and quarantine/audit rules.
 
 ## Suggested Entry Shape
 
