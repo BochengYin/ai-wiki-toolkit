@@ -4,6 +4,12 @@ All notable changes to `ai-wiki-toolkit` are documented in this file.
 
 ## Unreleased
 
+## v0.1.40
+
+### Changed
+
+- Clarified the default installed AI Wiki workflow as no-router, main-thread reuse/write-back, with route and post-turn capture left as optional diagnostics/measurement.
+
 ## v0.1.39
 
 ### Added

@@ -41,15 +41,17 @@ npm install -g ai-wiki-toolkit@latest
 ## Default Agent Workflow
 
 Agents should not dump the whole wiki or run the router as the default task-start path. The default
-workflow installed by `aiwiki-toolkit install` is:
+workflow installed by `aiwiki-toolkit install` is no-router and main-thread:
 
 1. Use the managed `AGENTS.md` block to check whether `ai-wiki/_toolkit/system.md` exists.
 2. If AI Wiki is enabled, read the managed system workflow.
 3. Read `ai-wiki/memory/index.md` when it exists.
 4. Open at most one linked memory file, and only when it strongly matches the same file, API,
    command, behavior, or repeated public/local failure.
-5. Work normally, then write back only to `ai-wiki/memory/` after a durable public/local
-   trial-error signal or reusable clarification.
+5. Work normally. Do not launch a separate router, hook, or forked writeback session for the default
+   path.
+6. At task end, the same task thread records reuse evidence and writes back only to
+   `ai-wiki/memory/` after a durable public/local trial-error signal or reusable clarification.
 
 ## Optional Route Diagnostics
 

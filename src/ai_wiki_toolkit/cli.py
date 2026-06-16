@@ -208,8 +208,12 @@ def _echo_install_result(result) -> None:
         "Recommendation: configure git user.name and git user.email for stable handle resolution."
     )
     typer.echo(
-        "Recommendation: if your agent runner supports post-turn hooks, configure it to run "
-        "`aiwiki-toolkit source-incident capture-post-turn --apply`."
+        "Default workflow: no router; agents read the bounded memory index and perform "
+        "main-thread reuse/write-back through repo-local skills."
+    )
+    typer.echo(
+        "Optional measurement: post-turn source incident capture can be configured later; "
+        "it is not required for memory write-back."
     )
     for path in result.updated_skill_files:
         typer.echo(f"Updated skill file: {path}")
