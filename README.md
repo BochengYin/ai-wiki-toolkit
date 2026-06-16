@@ -40,6 +40,8 @@ agent can keep organized over time instead of starting from scratch on every tas
   relevant memory file, and avoid dumping the whole wiki into every task.
 - Repo-local skills for clarify-before-code, reuse evidence, write-back checks, review-learning
   capture, and draft consolidation.
+- A no-router default path: agents use the memory index and their own retrieval judgment, then
+  write durable public/local lessons from the main task thread.
 - Optional `aiwiki-toolkit route` diagnostics for inspecting memory selection quality when you are
   deliberately tuning or debugging routing behavior.
 - Local telemetry and reports that show which memory was reused, where routing was noisy, and which
@@ -52,7 +54,8 @@ or hidden agent state.
 
 ## Why Believe This?
 
-The current public evidence is a dogfooded pilot, not a statistically powered benchmark.
+The current public evidence is a set of dogfooded case studies, not a statistically powered
+benchmark.
 
 I replayed five real historical problems from building `ai-wiki-toolkit` itself. Each family
 compared a fresh agent run with no AI wiki workflow against a fresh agent run using the normal
@@ -81,6 +84,11 @@ The caveats matter: this is one repository, the memories were written from the s
 history, and the result should be read as artifact-backed case-study evidence rather than a general
 success-rate estimate. The full pilot write-up is in
 [evals/impact/public/ai_wiki_impact_eval_pilot.md](evals/impact/public/ai_wiki_impact_eval_pilot.md).
+
+The current default workflow is also informed by the Flask SWE-Chain no-router dogfood run. In that
+case study, the no-router setup completed the full Flask `2.0.0 -> 2.3.3` chain and matched the
+strongest prior Build+fix F1 band without a separate router or forked writeback session. See
+[evals/impact/public/flask_swe_chain_dogfood_no_router_report.md](evals/impact/public/flask_swe_chain_dogfood_no_router_report.md).
 
 ## Quickstart
 
@@ -128,9 +136,10 @@ The normal agent workflow is:
 3. If AI Wiki is enabled, the agent follows the bounded read workflow: read
    `ai-wiki/memory/index.md` when present, then open at most one strongly relevant linked memory
    file.
-4. The agent works normally, then records which user-owned memory was actually consulted.
-5. At task end, the agent prints reuse evidence and writes back only to `ai-wiki/memory/` when
-   there was a durable public/local trial-error signal or reusable clarification.
+4. The agent works normally. No router or forked writeback session is required for the default path.
+5. At task end, the same task thread records which user-owned memory was actually consulted, prints
+   reuse evidence, and writes back only to `ai-wiki/memory/` when there was a durable public/local
+   trial-error signal or reusable clarification.
 
 Markdown remains the source of truth. Metrics, diagnostics, route packets, and reports are generated
 views that help humans audit whether the workflow is working.

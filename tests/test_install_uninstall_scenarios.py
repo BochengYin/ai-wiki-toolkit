@@ -74,10 +74,51 @@ def test_install_command_matches_init_behavior(repo_env: dict[str, Path]) -> Non
         in result.output
     )
     assert (
-        "Recommendation: if your agent runner supports post-turn hooks, configure it to run "
-        "`aiwiki-toolkit source-incident capture-post-turn --apply`."
+        "Default workflow: no router; agents read the bounded memory index and perform "
+        "main-thread reuse/write-back through repo-local skills."
         in result.output
     )
+    assert (
+        "Optional measurement: post-turn source incident capture can be configured later; "
+        "it is not required for memory write-back."
+        in result.output
+    )
+
+
+def test_install_sets_no_router_main_thread_memory_workflow(
+    repo_env: dict[str, Path],
+) -> None:
+    result = runner.invoke(app, ["install", "--handle", "alice"])
+
+    assert result.exit_code == 0
+    repo = repo_env["repo"]
+    system = (repo / "ai-wiki" / "_toolkit" / "system.md").read_text(encoding="utf-8")
+    workflows = (repo / "ai-wiki" / "_toolkit" / "workflows.md").read_text(
+        encoding="utf-8"
+    )
+    prompt = (repo / "AGENTS.md").read_text(encoding="utf-8")
+
+    assert "Do not run a router or load broad wiki areas by default." in system
+    assert "`aiwiki-toolkit route` is optional diagnostic tooling." in system
+    assert "Produce one AI wiki write-back outcome" in system
+    assert "Do not run `aiwiki-toolkit route` as the normal task-start path." in workflows
+    assert "Follow its bounded read, reuse evidence, and public-only write-back workflow" in prompt
+    assert (
+        repo
+        / ".agents"
+        / "skills"
+        / "ai-wiki-reuse-check"
+        / "SKILL.md"
+    ).exists()
+    assert (
+        repo
+        / ".agents"
+        / "skills"
+        / "ai-wiki-update-check"
+        / "SKILL.md"
+    ).exists()
+    assert not (repo / ".codex" / "hooks" / "aiwiki_enqueue_writeback.py").exists()
+    assert not (repo / ".agent" / "_toolkit" / "writeback").exists()
 
 
 def test_install_tolerates_duplicate_options_in_git_config(
