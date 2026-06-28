@@ -11,9 +11,32 @@ The user clarified on 2026-06-16 that this experiment should use the original
 dogfood AI Wiki setup, remove the router layer, and let the agent write back
 inside the same Codex thread. The experiment was created locally at:
 
-`/Users/by/AI Project/AI wiki Toolkit test repos/swe-chain-018-flask-dogfood-no-router-writeback`
+`artifacts://local-swe-chain/swe-chain-018-flask-dogfood-no-router-writeback`
 
 The local manifest and report are under that experiment's `run_config/`.
+
+On 2026-06-16 the user clarified the next formal cross-repo panel should be
+named `AI Wiki Native Writeback` / `aiwiki-native-writeback`, and should compare
+three groups per repo:
+
+- `raw-codex`
+- `codex-init-agents` using Codex `/init`, not `aiwiki-toolkit init`
+- `aiwiki-native-writeback`
+
+The first gate is a five-repo panel: Flask, pytest 7, urllib3, Jinja2, and attrs.
+If that gate completes without major issues, continue the same three-group
+protocol across the remaining available SWE-chain repos before freezing final
+claims.
+
+In the 019 follow-up panel, the remaining xarray chains produced two public/local
+failure modes:
+
+- `xarray_2022.11.0_to_2023.7.0 / aiwiki-native-writeback` generated 25 current
+  rows and an eval, but stopped during `2023.5.0 -> 2023.6.0` after the build row
+  failed and the fix agent exited with code 1.
+- `xarray_2025.6.0_to_2026.2.0` ran all three groups, but each group failed in
+  the first build-agent call before writing any current row; the eval files have
+  `None` metrics because there were no current rows to score.
 
 ## Failed Attempt
 
@@ -58,12 +81,28 @@ For `swe-chain-018-flask-dogfood-no-router-writeback`:
   separate outcome and should not be reported as F1. Older 014 eval artifacts do
   not include `final_holdout` classification rows, so report those as `N/A`
   instead of inferring them from pass rates.
+- For cross-repo product claims, use the `AI Wiki Native Writeback` name and the
+  `aiwiki-native-writeback` slug. Keep old 018 artifact names intact for
+  reproducibility.
+- Compare three groups per repo: raw Codex, Codex `/init` generated
+  instructions, and AI Wiki Native Writeback installed on top of the initialized
+  instructions.
+- Treat the five-repo panel as the first gate. If it passes without major
+  issues, continue the same protocol for the remaining SWE-chain repos before
+  freezing final cross-repo claims.
+- When a remaining-repo chain stops because Codex exits before or during an
+  agent build/fix phase, record it as a chain-level agent startup/fix failure.
+  Do not report `None` metrics or missing rows as model performance; explicitly
+  separate "no score because no current rows" from F1 comparisons.
+- If a partial chain has an eval, report metrics only for the available current
+  rows and state which version step failed or was skipped.
 
 ## Applies When
 
 - Running the 018 Flask dogfood no-router treatment.
-- Creating a follow-up dogfood no-router treatment.
+- Creating a follow-up AI Wiki Native Writeback / no-router treatment.
 - Comparing 018 against 015 or other writeback experiments.
+- Designing or running the cross-repo three-group SWE-chain panel.
 
 ## Do Not Use When
 
@@ -76,18 +115,19 @@ For `swe-chain-018-flask-dogfood-no-router-writeback`:
 
 ## Related Files
 
-- `/Users/by/AI Project/AI wiki Toolkit test repos/swe-chain-018-flask-dogfood-no-router-writeback/run_config/experiment_manifest.json`
-- `/Users/by/AI Project/AI wiki Toolkit test repos/swe-chain-018-flask-dogfood-no-router-writeback/run_config/formal_report.md`
-- `/Users/by/AI Project/AI wiki Toolkit test repos/swe-chain-018-flask-dogfood-no-router-writeback/run_config/comparison_report.md`
-- `/Users/by/AI Project/AI wiki Toolkit test repos/swe-chain-018-flask-dogfood-no-router-writeback/run_config/smoke_report.md`
-- `/Users/by/AI Project/AI wiki Toolkit test repos/swe-chain-018-flask-dogfood-no-router-writeback/groups/dogfood-no-router-writeback/generate/task.py`
-- `/Users/by/AI Project/AI wiki Toolkit test repos/swe-chain-018-flask-dogfood-no-router-writeback/groups/dogfood-no-router-writeback/prompts/developer_build.j2`
-- `/Users/by/AI Project/AI wiki Toolkit test repos/swe-chain-018-flask-dogfood-no-router-writeback/groups/dogfood-no-router-writeback/prompts/developer_fix.j2`
-- `/Users/by/AI Project/ai-wiki-toolkit/evals/impact/public/flask_swe_chain_dogfood_no_router_report.md`
-- `/Users/by/AI Project/ai-wiki-toolkit/src/ai_wiki_toolkit/cli.py`
-- `/Users/by/AI Project/ai-wiki-toolkit/tests/test_install_uninstall_scenarios.py`
-- `/Users/by/AI Project/ai-wiki-toolkit/README.md`
-- `/Users/by/AI Project/ai-wiki-toolkit/docs/usage.md`
+- `artifacts://local-swe-chain/swe-chain-018-flask-dogfood-no-router-writeback/run_config/experiment_manifest.json`
+- `artifacts://local-swe-chain/swe-chain-018-flask-dogfood-no-router-writeback/run_config/formal_report.md`
+- `artifacts://local-swe-chain/swe-chain-018-flask-dogfood-no-router-writeback/run_config/comparison_report.md`
+- `artifacts://local-swe-chain/swe-chain-018-flask-dogfood-no-router-writeback/run_config/smoke_report.md`
+- `artifacts://local-swe-chain/swe-chain-018-flask-dogfood-no-router-writeback/groups/dogfood-no-router-writeback/generate/task.py`
+- `artifacts://local-swe-chain/swe-chain-018-flask-dogfood-no-router-writeback/groups/dogfood-no-router-writeback/prompts/developer_build.j2`
+- `artifacts://local-swe-chain/swe-chain-018-flask-dogfood-no-router-writeback/groups/dogfood-no-router-writeback/prompts/developer_fix.j2`
+- `evals/impact/public/flask_swe_chain_dogfood_no_router_report.md`
+- `<repo>/src/ai_wiki_toolkit/cli.py`
+- `<repo>/tests/test_install_uninstall_scenarios.py`
+- `<repo>/README.md`
+- `<repo>/docs/usage.md`
+- `artifacts://swe-chain-019/stage_b_progress.md`
 
 ## Source Pointer
 
@@ -95,3 +135,4 @@ For `swe-chain-018-flask-dogfood-no-router-writeback`:
   experiment.
 - Captured by: Codex.
 - Captured at: 2026-06-16.
+- Updated from local 019 Stage B xarray panel results on 2026-06-26.

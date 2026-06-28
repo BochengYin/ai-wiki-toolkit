@@ -1,0 +1,48 @@
+schema_version: 0.1
+setup_id: swe-chain-021-exact-match-stop
+setup_version: v1
+created_for_report_date: 2026-06-28
+exploration: Exact-match gate plus Stop hook path
+protocol_arms:
+  - exact
+harness_components:
+  launcher: harness.launcher.run-sh.swe-chain-019.v1
+  chain_runner: harness.runner.generate-chain.swe-chain-019.v1
+  task_runner: harness.task.generate-task.swe-chain-019.v1
+  gate_and_hook_setup: aiwiki.gate.exact-match-stop.v1
+agent_policy:
+  runner: codex
+  provider: openai
+  model: gpt-5.5
+  effort: high
+  execution_location: host_codex_with_isolated_host_app
+  build_fix_session_policy: same_step_session_may_resume
+aiwiki_surface:
+  prompt_gate: exact_match_memory_selection
+  hook_path: stop_hook_writeback_path
+  router_default: disabled_for_default_path
+hooks:
+  lifecycle_hooks:
+    - Stop
+  writeback_timing: stop_hook_after_agent_turn
+memory_policy:
+  read_gate: exact_match_gate_before_prompt_exposure
+  writeback: stop_hook_path
+  leakage_boundary: no_final_holdout_or_future_step_memory
+artifact_outputs:
+  - eval_json
+  - isolated_host_app_hooks_json
+source_tables:
+  - source-of-truth/buildfix-absolute-metrics.md
+  - source-of-truth/cross-model-net-improvement.md
+  - source-of-truth/coverage-status.md
+known_caveats:
+  - Exact-match is early and mechanism-specific.
+  - Some chains were filled after the initial audit refresh and must be tracked by setup version.
+staleness_triggers:
+  - exact-match gate logic changes
+  - Stop hook config changes
+  - AI Wiki prompt surface changes
+  - source-of-truth exact-fill values refresh
+public_redaction:
+  local_paths: use manifests/local-paths.yaml only

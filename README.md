@@ -1,94 +1,68 @@
 # ai-wiki-toolkit
 
-`ai-wiki-toolkit` is a repository-native memory harness for coding agents.
+Latest SWE-Chain memory report draft:
+[evals/impact/aiwiki-memory-report/report.md](evals/impact/aiwiki-memory-report/report.md).
 
-It gives agents a durable, reviewable place to read project memory from and write reusable lessons
-back to, so future sessions do not keep rediscovering the same repo-specific rules, mistakes, and
-workflow details.
+Historical public impact reports:
 
-The core idea is simple: keep agent memory in Markdown files next to the code, wire the repo prompt
-so agents know how to use it, and record whether memory actually helped during real work.
+- [2026-04-25: Impact eval pilot](evals/impact/public/ai_wiki_impact_eval_pilot.md)
+- [2026-06-14: Flask SWE-Chain memory eval](evals/impact/public/flask_swe_chain_memory_eval_report.md)
+- [2026-06-15: Flask SWE-Chain agent-skill writeback](evals/impact/public/flask_swe_chain_agent_skill_writeback_report.md)
+- [2026-06-16: Flask SWE-Chain dogfood no-router](evals/impact/public/flask_swe_chain_dogfood_no_router_report.md)
+- [Public materials index](evals/impact/public/README.md)
 
-## Why This Exists
+`ai-wiki-toolkit` is a repository-native memory harness for coding agents. It
+creates a durable, reviewable Markdown workspace where agents can read
+repo-specific memory, record whether that memory helped, and write back small
+public/local lessons after real work.
 
-Coding agents often repeat the same trial-and-error loops:
+The larger research question is whether repository agents can become
+self-improving without relying on hidden state, broad context dumps, or
+unreviewable memory. Current experiments show a mixed answer: AI Wiki-style
+memory can help on some repo tasks, but it is not the best mechanism for every
+repository, agent, or workflow. This project is now focused on finding the most
+reliable mechanism for repo-level agent self-improvement: what should be exposed
+to the agent, when memory should be written, how retrieval should be bounded,
+and how to measure improvements without introducing unrelated regressions.
 
-- repo conventions live in chats, review comments, and individual memory
-- previous release mistakes and debugging fixes are rediscovered instead of reused
-- ad hoc RAG or file uploads answer one question but do not maintain project memory
-- shared prompt files drift when multiple people and agents edit them
+## Current Research Status
 
-`ai-wiki-toolkit` turns that scattered knowledge into a repo-local memory workflow. The goal is not
-to replace the agent. The goal is to give Claude Code, Codex, and similar coding agents a stable
-project memory layer they can consult before acting and update after learning something durable.
+Early dogfood experiments on `ai-wiki-toolkit` historical failures were
+encouraging: repo-visible memory helped fresh agents avoid several repeated
+mistakes around ownership boundaries, release hazards, runtime checks, and
+scaffold workflow discipline.
 
-It is inspired by Andrej Karpathy's LLM Wiki idea: a persistent Markdown knowledge base that an
-agent can keep organized over time instead of starting from scratch on every task.
+The broader SWE-Chain experiments are more nuanced. Across real repository
+upgrade chains, AI Wiki variants are not uniformly better than raw or `/init`
+baselines. Some mechanisms help on specific repos; others over-frame the task or
+increase unrelated regressions. The current report therefore treats AI Wiki as a
+candidate repo-level self-improvement layer, not as a solved product claim.
+There is not yet one AI Wiki setup that is known to fit every repository. The
+product is still being shaped, and the setups described below are current
+working designs that may change as the experiments continue.
 
-- Karpathy's X post: https://x.com/karpathy/status/2039805659525644595
-- Karpathy's gist: https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f
+For the latest results and artifact structure, see:
 
-## What You Get
+- [SWE-Chain memory report draft](evals/impact/aiwiki-memory-report/report.md)
+- [Report artifact package](evals/impact/aiwiki-memory-report/README.md)
+- [Source-of-truth tables](evals/impact/aiwiki-memory-report/source-of-truth/README.md)
+- [Earlier impact pilot](evals/impact/public/ai_wiki_impact_eval_pilot.md)
 
-- A repo-local `ai-wiki/` tree with a bounded `memory/index.md` entrypoint plus compatibility
-  areas for constraints, conventions, decisions, workflows, problems, features, trails, work state,
-  metrics, and personal drafts.
+## What It Installs
+
+- A repo-local `ai-wiki/` tree with bounded memory, conventions, decisions,
+  problems, workflows, metrics, and work state.
+- A managed prompt block in `AGENTS.md` by default, with compatibility for
+  existing `AGENT.md` or `CLAUDE.md`.
+- Repo-local skills for clarify-before-code, reuse evidence, write-back checks,
+  review-learning capture, and draft consolidation.
 - A home-level `~/ai-wiki/system/` namespace for cross-project memory.
-- A managed prompt block in `AGENTS.md` by default, with compatibility for existing `AGENT.md`
-  or `CLAUDE.md` files.
-- A bounded memory workflow: read `ai-wiki/memory/index.md` first, open at most one strongly
-  relevant memory file, and avoid dumping the whole wiki into every task.
-- Repo-local skills for clarify-before-code, reuse evidence, write-back checks, review-learning
-  capture, and draft consolidation.
-- A no-router default path: agents use the memory index and their own retrieval judgment, then
-  write durable public/local lessons from the main task thread.
-- Optional `aiwiki-toolkit route` diagnostics for inspecting memory selection quality when you are
-  deliberately tuning or debugging routing behavior.
-- Local telemetry and reports that show which memory was reused, where routing was noisy, and which
-  drafts may deserve human review.
-- An impact-eval harness for replaying historical repo failures with and without ambient AI wiki
-  memory.
+- Local telemetry and generated reports for auditing whether memory was used
+  and whether it helped.
 
-This is deliberately file-based. It does not require a server, vector database, embeddings service,
-or hidden agent state.
-
-## Why Believe This?
-
-The current public evidence is a set of dogfooded case studies, not a statistically powered
-benchmark.
-
-I replayed five real historical problems from building `ai-wiki-toolkit` itself. Each family
-compared a fresh agent run with no AI wiki workflow against a fresh agent run using the normal
-ambient AI wiki workflow. The task prompt did not point at the target memory or provide the expected
-solution.
-
-Aggregate primary comparison:
-
-- 4 of 5 families directionally favored the ambient AI wiki workflow.
-- 1 of 5 families was neutral.
-- 0 of 5 families favored the no-AI-wiki workflow.
-
-| family | historical problem | no AI wiki | ambient AI wiki | artifact |
-| --- | --- | --- | --- | --- |
-| `ownership_boundary` | Would the agent put a contributor-only PR helper into package code instead of repo-local workflow code? | fail | success | [notes](evals/impact/notes/manual_v2_cli_original_ownership_20260425_findings.md) |
-| `release_distribution_integrity` | Would the agent keep release assets, npm metadata, runtime target maps, docs, and smoke checks aligned? | partial | success | [notes](evals/impact/notes/manual_v2_cli_original_release_distribution_20260425_findings.md) |
-| `windows_arm_smoke_cli_output` | Would the agent compare Windows ARM smoke output against the full CLI version string? | success | success | [notes](evals/impact/notes/manual_v2_cli_original_windows_arm_20260425_findings.md) |
-| `release_runtime_compatibility` | Would the agent catch Linux binary runtime compatibility before publishing, instead of only checking install success? | partial | success | [notes](evals/impact/notes/manual_v2_cli_original_release_runtime_20260425_findings.md) |
-| `scaffold_prompt_workflow_compliance` | Would the agent keep scaffold names, prompt routing, docs, and tests aligned with the repo memory workflow? | partial | success | [notes](evals/impact/notes/manual_v2_cli_original_scaffold_prompt_workflow_20260425_findings.md) |
-
-The conservative claim is that repo-visible AI memory helped fresh agents avoid repeated historical
-mistakes in this pilot suite, especially around ownership boundaries, release hazards, runtime
-verification, and scaffold workflow discipline.
-
-The caveats matter: this is one repository, the memories were written from the same project's
-history, and the result should be read as artifact-backed case-study evidence rather than a general
-success-rate estimate. The full pilot write-up is in
-[evals/impact/public/ai_wiki_impact_eval_pilot.md](evals/impact/public/ai_wiki_impact_eval_pilot.md).
-
-The current default workflow is also informed by the Flask SWE-Chain no-router dogfood run. In that
-case study, the no-router setup completed the full Flask `2.0.0 -> 2.3.3` chain and matched the
-strongest prior Build+fix F1 band without a separate router or forked writeback session. See
-[evals/impact/public/flask_swe_chain_dogfood_no_router_report.md](evals/impact/public/flask_swe_chain_dogfood_no_router_report.md).
+The default path is no-router: agents read `ai-wiki/memory/index.md`, open at
+most one strongly relevant memory file, work normally, and write back only small
+durable lessons when there is public/local evidence worth keeping.
 
 ## Quickstart
 
@@ -110,9 +84,10 @@ cd /path/to/your/repo
 aiwiki-toolkit install
 ```
 
-The npm package is a thin meta package that installs the matching platform-specific binary package.
-It does not run install-time download scripts, so `npm install -g ai-wiki-toolkit --ignore-scripts`
-is compatible with the package topology.
+The npm package is a thin meta package that installs the matching
+platform-specific binary package. It does not run install-time download scripts,
+so `npm install -g ai-wiki-toolkit --ignore-scripts` is compatible with the
+package topology.
 
 ### Local Development
 
@@ -122,29 +97,31 @@ cd /path/to/your/repo
 aiwiki-toolkit install
 ```
 
-The tool works best when `git user.name` and `git user.email` are configured. If no handle can be
-detected, `install` prompts for a stable local team ID or accepts `--handle your-handle`.
+The tool works best when `git user.name` and `git user.email` are configured.
+If no handle can be detected, `install` prompts for a stable local team ID or
+accepts `--handle your-handle`.
 
 ## How It Works
 
-The normal agent workflow is:
-
-1. `aiwiki-toolkit install` creates the repo-local wiki, managed prompt block, repo-local skills,
-   local identity file, and generated toolkit layer.
-2. At task start, the managed `AGENTS.md` block performs one cheap local check for
+1. `aiwiki-toolkit install` creates the repo-local wiki, managed prompt block,
+   repo-local skills, local identity file, and generated toolkit layer.
+2. At task start, the managed prompt block performs one cheap local check for
    `ai-wiki/_toolkit/system.md`.
 3. If AI Wiki is enabled, the agent follows the bounded read workflow: read
-   `ai-wiki/memory/index.md` when present, then open at most one strongly relevant linked memory
-   file.
-4. The agent works normally. No router or forked writeback session is required for the default path.
-5. At task end, the same task thread records which user-owned memory was actually consulted, prints
-   reuse evidence, and writes back only to `ai-wiki/memory/` when there was a durable public/local
-   trial-error signal or reusable clarification.
+   `ai-wiki/memory/index.md` when present, then open at most one strongly
+   relevant linked memory file.
+4. The agent works normally. No router or forked writeback session is required
+   for the default path.
+5. At task end, the same task thread records which user-owned memory was
+   consulted, prints reuse evidence, and writes back only to `ai-wiki/memory/`
+   when there was a durable public/local trial-error signal or reusable
+   clarification.
 
-Markdown remains the source of truth. Metrics, diagnostics, route packets, and reports are generated
-views that help humans audit whether the workflow is working.
+Markdown remains the source of truth. Metrics, diagnostics, route packets, and
+reports are generated views that help humans audit whether the workflow is
+working.
 
-## What Gets Created
+## Created Files
 
 Inside the repo:
 
@@ -166,7 +143,7 @@ ai-wiki/
   _toolkit/
 .agents/skills/ai-wiki-*/
 .env.aiwiki
-AGENTS.md managed block (or an existing AGENT.md / CLAUDE.md)
+AGENTS.md managed block (or existing AGENT.md / CLAUDE.md)
 ```
 
 At home scope:
@@ -177,23 +154,23 @@ At home scope:
   _toolkit/
 ```
 
-`repo/ai-wiki/` is for project-specific memory. `~/ai-wiki/system/` is for reusable cross-project
-memory.
+`repo/ai-wiki/` is for project-specific memory. `~/ai-wiki/system/` is for
+reusable cross-project memory.
 
 ## Safety Model
 
-The compatibility boundary is intentionally strict:
-
 - User-owned Markdown under `ai-wiki/` is stable project data.
-- `install` creates missing starter files but does not overwrite existing user-owned wiki docs.
+- `install` creates missing starter files but does not overwrite existing
+  user-owned wiki docs.
 - Package-managed writes are limited to `ai-wiki/_toolkit/**`,
-  `~/ai-wiki/system/_toolkit/**`, managed prompt blocks, `.gitignore` managed blocks,
-  package-owned `.agents/skills/ai-wiki-*`, and the namespaced `aiwikiToolkit` key in
-  `opencode.json`.
+  `~/ai-wiki/system/_toolkit/**`, managed prompt blocks, `.gitignore` managed
+  blocks, package-owned `.agents/skills/ai-wiki-*`, and the namespaced
+  `aiwikiToolkit` key in `opencode.json`.
 - Routine local telemetry is sharded by handle and gitignored by default.
-- Generated metrics, work views, diagnostics, reports, eval views, and consolidation queues are
-  regenerated under `_toolkit/**`.
-- Uninstall preserves user-owned `ai-wiki/**/*.md` and `~/ai-wiki/system/**/*.md` by default.
+- Generated metrics, work views, diagnostics, reports, eval views, and
+  consolidation queues are regenerated under `_toolkit/**`.
+- Uninstall preserves user-owned `ai-wiki/**/*.md` and
+  `~/ai-wiki/system/**/*.md` by default.
 
 Prompt files are updated only inside:
 
@@ -208,7 +185,7 @@ Prompt files are updated only inside:
 # Install or refresh the managed layer in the current git repo.
 aiwiki-toolkit install
 
-# Optional: generate a diagnostic context packet when tuning or debugging memory selection.
+# Optional diagnostic context packet for tuning or debugging memory selection.
 aiwiki-toolkit route --task "fix the failing release smoke test"
 
 # Check starter docs, managed prompt blocks, local state, and rule drift.
@@ -232,29 +209,19 @@ aiwiki-toolkit record-reuse-check \
 aiwiki-toolkit diagnose memory
 aiwiki-toolkit diagnose memory --focus route
 
-# Generate a local repo evaluation and improvement advisor report.
+# Generate local reports.
 aiwiki-toolkit evaluate repo --since 30d
-
-# Generate a local usefulness report.
 aiwiki-toolkit report usefulness --handle your-handle
-
-# Generate a human-reviewable weekly queue.
 aiwiki-toolkit report weekly --handle your-handle
-
-# Inspect impact-eval families and captured runs.
-aiwiki-toolkit eval impact families
-aiwiki-toolkit eval impact report --run-dir /path/to/eval-run
 ```
 
 See [docs/usage.md](docs/usage.md) for the longer command guide.
 
-`aiwiki-toolkit evaluate repo --since 30d` is a local operator report for reviewing workflow
-coverage, route quality, memory quality, draft queues, impact-eval readiness, and asset-selection
-opportunities. It is report-only and human-review-first; it is not a public benchmark proof.
-
 ## Documentation
 
 - [Detailed usage and command guide](docs/usage.md)
+- [Latest SWE-Chain memory report draft](evals/impact/aiwiki-memory-report/report.md)
+- [SWE-Chain report artifact package](evals/impact/aiwiki-memory-report/README.md)
 - [Impact eval pilot](evals/impact/public/ai_wiki_impact_eval_pilot.md)
 - [Impact eval reports](evals/impact/reports/README.md)
 - [Releasing](docs/releasing.md)
@@ -263,42 +230,23 @@ opportunities. It is report-only and human-review-first; it is not a public benc
 - [npm publishing](docs/npm-publish.md)
 - [Usefulness metrics v2](docs/ai-wiki-usefulness-metrics-v2.md)
 
-## Compatibility And Distribution
-
-The public distribution model is:
+## Distribution
 
 - GitHub Releases are the source of truth for versioned release binaries.
-- Homebrew tap `BochengYin/tap` consumes those release assets for macOS and Linux users.
-- npm package `ai-wiki-toolkit` is a meta package that depends on platform-specific npm binary
-  packages for macOS, Linux, and Windows users who prefer `npm install -g`.
-- `python -m pip install -e ".[dev]"` remains the simplest contributor setup inside this repo.
+- Homebrew tap `BochengYin/tap` consumes release assets for macOS and Linux.
+- npm package `ai-wiki-toolkit` is a meta package that depends on
+  platform-specific npm binary packages for macOS, Linux, and Windows.
+- `python -m pip install -e ".[dev]"` remains the simplest contributor setup
+  inside this repo.
 
-For npm installs, use npm itself to update both the meta package and the matching platform binary:
+For npm installs, use npm to update both the meta package and matching platform
+binary:
 
 ```bash
 npm update -g ai-wiki-toolkit
 ```
 
-`aiwiki-toolkit` does not implement a self-update command. The package manager remains the source of
-truth for install and upgrade state.
+`aiwiki-toolkit` does not implement a self-update command. The package manager
+remains the source of truth for install and upgrade state.
 
 Release history is tracked in [CHANGELOG.md](CHANGELOG.md).
-
-## Path Examples
-
-The repo-local wiki is always:
-
-```text
-ai-wiki/
-```
-
-The home-level system wiki resolves from the current user's home directory:
-
-```text
-macOS:   /Users/<username>/ai-wiki/system
-Linux:   /home/<username>/ai-wiki/system
-Windows: C:\Users\<username>\ai-wiki\system
-```
-
-In Python terms, the path comes from `Path.home() / "ai-wiki" / "system"`, so it follows the current
-platform automatically.

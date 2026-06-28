@@ -1,0 +1,11 @@
+schema_version: 0.1
+description: >
+  Copy this file to local-paths.yaml for local refresh work. local-paths.yaml
+  is ignored by git and may contain local absolute paths.
+artifact_roots:
+  swe-chain-019: /path/to/local/swe-chain-019-aiwiki-native-writeback-panel-v1
+  swe-chain-020: /path/to/local/swe-chain-020-flask-aiwiki-lifecycle-hooks
+  swe-chain-021: /path/to/local/swe-chain-021-aiwiki-exact-match-stop
+resolution_examples:
+  artifacts://swe-chain-019/raw-codex/flask_2.0.0_to_2.3.3/eval.json: >
+    ${artifact_roots.swe-chain-019}/groups/raw-codex/results/flask_2.0.0_to_2.3.3/codex-openai-gpt-5.5/eval.json

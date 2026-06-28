@@ -1,0 +1,52 @@
+schema_version: 0.1
+setup_id: swe-chain-019-native-writeback
+setup_version: v1
+created_for_report_date: 2026-06-28
+exploration: Native AI Wiki writeback panel
+protocol_arms:
+  - raw
+  - init
+  - native
+harness_components:
+  launcher: harness.launcher.run-sh.swe-chain-019.v1
+  chain_runner: harness.runner.generate-chain.swe-chain-019.v1
+  task_runner: harness.task.generate-task.swe-chain-019.v1
+agent_policy:
+  runner: codex
+  provider: openai
+  model: gpt-5.5
+  effort: high
+  execution_location: host_codex_for_codex_runs
+  build_fix_session_policy: same_step_session_may_resume
+aiwiki_surface:
+  raw: disabled
+  init: frozen_init_prompt_only
+  native: aiwiki_prompt_workflow_with_bounded_memory_index
+  router_default: disabled_for_no_router_benchmark_path
+hooks:
+  lifecycle_hooks: none_for_native_panel
+  writeback_timing: main_thread_workflow
+memory_policy:
+  read_gate: bounded_memory_index
+  writeback: main_thread_ai_wiki_reuse_and_writeback_footer
+  leakage_boundary: no_final_holdout_or_future_step_memory
+artifact_outputs:
+  - chain_json
+  - eval_json
+  - record_jsonl
+  - live_log_jsonl
+source_tables:
+  - source-of-truth/buildfix-absolute-metrics.md
+  - source-of-truth/cross-model-net-improvement.md
+  - source-of-truth/coverage-status.md
+known_caveats:
+  - Native memory can influence implementation path directly.
+  - Cross-runner claims remain directional until runner parity is aligned.
+staleness_triggers:
+  - launcher component hash changes
+  - chain runner component hash changes
+  - task runner component hash changes
+  - AI Wiki prompt gate or bounded memory read rules change
+  - source-of-truth raw eval artifacts refresh
+public_redaction:
+  local_paths: use manifests/local-paths.yaml only
