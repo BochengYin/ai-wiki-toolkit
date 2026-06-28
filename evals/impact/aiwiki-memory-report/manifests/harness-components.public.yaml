@@ -1,0 +1,56 @@
+schema_version: 0.1
+description: >
+  Versioned public component registry for harness scripts, prompt surfaces,
+  AI Wiki setup surfaces, and hook/writeback mechanisms. Component records use
+  logical IDs and hashes instead of local absolute paths.
+components:
+  - component_id: harness.launcher.run-sh.swe-chain-019.v1
+    kind: launcher_script
+    display_name: group run.sh launcher
+    source_scope: swe-chain-019 representative group copy
+    version_label: 2026-06-17-raw-codex-copy
+    sha256: 487a67a90706a16d54e88e33194e61848a25bfdeb46c1d440ba3c9f5c310f2ae
+    public_status: fingerprint_only
+    notes: Thin group launcher that invokes python -m generate.chain with --resume.
+
+  - component_id: harness.runner.generate-chain.swe-chain-019.v1
+    kind: python_runner
+    display_name: generate/chain.py
+    source_scope: swe-chain-019 representative group copy
+    version_label: 2026-06-17-raw-codex-copy
+    sha256: 46f06402e9c33a57e57ca5a39c796db178df5a26bb6bc62cb20fbb74355d2669
+    public_status: fingerprint_only
+    notes: Chain runner that loads data rows, resumes from chain.json, runs ChainTask steps, and saves step state.
+
+  - component_id: harness.task.generate-task.swe-chain-019.v1
+    kind: python_task_runner
+    display_name: generate/task.py
+    source_scope: swe-chain-019 representative group copy
+    version_label: 2026-06-17-raw-codex-copy
+    sha256: 99db4cd69b923ab676cdc33e77ebcacbe334600309e2b041f5857ad80a26a0ca
+    public_status: fingerprint_only
+    notes: Step runner for build, revealed feedback, bounded fix, final holdout, and release.
+
+  - component_id: aiwiki.install.native-no-router.v1
+    kind: aiwiki_setup
+    display_name: AI Wiki native no-router setup
+    source_scope: swe-chain-019 native writeback panel
+    version_label: 2026-06-28-refresh
+    public_status: described
+    notes: Installs AI Wiki prompt workflow with bounded memory index and no default router path.
+
+  - component_id: aiwiki.hooks.lifecycle-stop.v1
+    kind: hook_setup
+    display_name: Codex lifecycle Stop hook setup
+    source_scope: swe-chain-020 lifecycle hook exploration
+    version_label: 2026-06-23-strict-stop-family
+    public_status: described
+    notes: Stop-oriented lifecycle hook variants recorded through isolated host app hook configs.
+
+  - component_id: aiwiki.gate.exact-match-stop.v1
+    kind: prompt_gate_and_hook_setup
+    display_name: exact-match prompt gate plus Stop path
+    source_scope: swe-chain-021 exact-match Stop exploration
+    version_label: 2026-06-28-exact-fill-refresh
+    public_status: described
+    notes: Exact-match prompt gate with Stop hook/writeback path for selected memory exposure.

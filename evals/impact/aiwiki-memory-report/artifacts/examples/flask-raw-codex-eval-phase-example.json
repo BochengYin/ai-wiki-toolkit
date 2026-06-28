@@ -1,0 +1,24 @@
+{
+  "schema_version": "0.1",
+  "run_id": "swe-chain-019/raw-codex/flask_2.0.0_to_2.3.3",
+  "eval_chain_rows": 45,
+  "unique_migration_pairs": 17,
+  "example_rows": [
+    {
+      "prev_version": "2.0.0",
+      "next_version": "2.0.1",
+      "phase": "build"
+    },
+    {
+      "prev_version": "2.0.0",
+      "next_version": "2.0.1",
+      "phase": "fix_1"
+    },
+    {
+      "prev_version": "2.0.0",
+      "next_version": "2.0.1",
+      "phase": "final_holdout"
+    }
+  ],
+  "coverage_rule": "Count unique (prev_version, next_version) pairs, not phase rows."
+}

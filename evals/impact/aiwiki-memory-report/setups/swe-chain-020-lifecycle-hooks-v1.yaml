@@ -1,0 +1,52 @@
+schema_version: 0.1
+setup_id: swe-chain-020-lifecycle-hooks
+setup_version: v1
+created_for_report_date: 2026-06-28
+exploration: AI Wiki lifecycle hook and Stop-hook ablation
+protocol_arms:
+  - stop
+harness_components:
+  launcher: harness.launcher.run-sh.swe-chain-019.v1
+  chain_runner: harness.runner.generate-chain.swe-chain-019.v1
+  task_runner: harness.task.generate-task.swe-chain-019.v1
+  hook_setup: aiwiki.hooks.lifecycle-stop.v1
+agent_policy:
+  runner: codex
+  provider: openai
+  model: gpt-5.5
+  effort: high
+  execution_location: host_codex_with_isolated_host_app_for_hook_variants
+  build_fix_session_policy: same_step_session_may_resume
+aiwiki_surface:
+  prompt_gate: ai_wiki_prompt_plus_lifecycle_hook_surface
+  router_default: disabled_or_bypassed_for_benchmark_path
+hooks:
+  lifecycle_hooks:
+    - Stop
+    - PostToolUse
+    - SessionStart
+    - UserPromptSubmit
+  variants: configured_per_isolated_host_app
+  writeback_timing: lifecycle_hook_invocation_after_agent_turn
+memory_policy:
+  read_gate: prompt_and_hook_dependent
+  writeback: lifecycle_stop_or_variant_specific_hook_path
+  leakage_boundary: final_holdout_and_future_step_output_must_not_enter_memory
+artifact_outputs:
+  - eval_json
+  - hook_outputs
+  - isolated_host_app_hooks_json
+source_tables:
+  - source-of-truth/buildfix-absolute-metrics.md
+  - source-of-truth/020-flask-hook-ablation.md
+  - source-of-truth/coverage-status.md
+known_caveats:
+  - Hook variants are mechanism exploration, not a clean native-vs-stop A/B.
+  - Flask hook ablation table must stay separate from cross-repo stop-only cells.
+staleness_triggers:
+  - hook config changes
+  - lifecycle hook runtime changes
+  - isolated host app prompt changes
+  - source-of-truth hook ablation values refresh
+public_redaction:
+  local_paths: use manifests/local-paths.yaml only

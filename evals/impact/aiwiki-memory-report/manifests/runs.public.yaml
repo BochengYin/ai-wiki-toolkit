@@ -1,0 +1,68 @@
+schema_version: 0.1
+description: >
+  Public logical run registry for the AI Wiki memory report. This file uses
+  stable IDs and artifact URIs instead of local absolute paths.
+runs:
+  - run_id: swe-chain-019/raw-codex/flask_2.0.0_to_2.3.3
+    family: swe-chain-019-aiwiki-native-writeback-panel-v1
+    arm: raw
+    runner: codex
+    provider: openai
+    model: gpt-5.5
+    effort: high
+    chain: flask_2.0.0_to_2.3.3
+    setup: swe-chain-019-native-writeback@v1
+    artifacts:
+      chain_json: artifacts://swe-chain-019/raw-codex/flask_2.0.0_to_2.3.3/chain.json
+      eval_json: artifacts://swe-chain-019/raw-codex/flask_2.0.0_to_2.3.3/eval.json
+    source_tables:
+      - source-of-truth/buildfix-absolute-metrics.md
+      - source-of-truth/coverage-status.md
+
+  - run_id: swe-chain-019/aiwiki-native-writeback/flask_2.0.0_to_2.3.3
+    family: swe-chain-019-aiwiki-native-writeback-panel-v1
+    arm: native
+    runner: codex
+    provider: openai
+    model: gpt-5.5
+    effort: high
+    chain: flask_2.0.0_to_2.3.3
+    setup: swe-chain-019-native-writeback@v1
+    artifacts:
+      chain_json: artifacts://swe-chain-019/aiwiki-native-writeback/flask_2.0.0_to_2.3.3/chain.json
+      eval_json: artifacts://swe-chain-019/aiwiki-native-writeback/flask_2.0.0_to_2.3.3/eval.json
+    source_tables:
+      - source-of-truth/buildfix-absolute-metrics.md
+      - source-of-truth/cross-model-net-improvement.md
+      - source-of-truth/coverage-status.md
+
+  - run_id: swe-chain-020/aiwiki-lifecycle-hooks/flask_2.0.0_to_2.3.3
+    family: swe-chain-020-flask-aiwiki-lifecycle-hooks
+    arm: stop
+    runner: codex
+    provider: openai
+    model: gpt-5.5
+    effort: high
+    chain: flask_2.0.0_to_2.3.3
+    setup: swe-chain-020-lifecycle-hooks@v1
+    artifacts:
+      eval_json: artifacts://swe-chain-020/aiwiki-lifecycle-hooks/flask_2.0.0_to_2.3.3/eval.json
+    source_tables:
+      - source-of-truth/buildfix-absolute-metrics.md
+      - source-of-truth/020-flask-hook-ablation.md
+
+  - run_id: swe-chain-021/aiwiki-exact-match-stop/flask_2.0.0_to_2.3.3
+    family: swe-chain-021-aiwiki-exact-match-stop
+    arm: exact
+    runner: codex
+    provider: openai
+    model: gpt-5.5
+    effort: high
+    chain: flask_2.0.0_to_2.3.3
+    setup: swe-chain-021-exact-match-stop@v1
+    artifacts:
+      eval_json: artifacts://swe-chain-021/aiwiki-exact-match-stop/flask_2.0.0_to_2.3.3/eval.json
+    source_tables:
+      - source-of-truth/buildfix-absolute-metrics.md
+      - source-of-truth/cross-model-net-improvement.md
+      - source-of-truth/coverage-status.md

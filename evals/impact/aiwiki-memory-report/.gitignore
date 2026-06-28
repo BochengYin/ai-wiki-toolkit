@@ -1,0 +1,12 @@
+# Keep the report workspace lightweight. Raw SWE-Chain run artifacts are large
+# and remain in the local experiment roots referenced by the materials.
+raw-artifacts/
+scratch/
+materials/
+manifests/local-paths.yaml
+manifests/*.private.yaml
+*.log
+*.jsonl
+*.sqlite
+*.db
+*.tmp

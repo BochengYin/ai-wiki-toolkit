@@ -21,6 +21,7 @@ ai-wiki/metrics/reuse-events/
 ai-wiki/metrics/route-traces/
 ai-wiki/metrics/source-incidents/
 ai-wiki/metrics/task-checks/
+ai-wiki/work/events/
 ai-wiki/_toolkit/consolidation/
 ai-wiki/_toolkit/diagnostics/
 ai-wiki/_toolkit/evals/
